@@ -1,0 +1,47 @@
+# --- Secrets and local config (never commit) ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+local.settings.json
+.azure/
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+dist/
+build/
+
+# --- Node / Next.js ---
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+npm-debug.log*
+.pnpm-debug.log*
+
+# --- Azure Functions ---
+.python_packages/
+functions/bin/
+functions/obj/
+
+# --- Generated match data (large; only curated samples are committed) ---
+data/generated/
+data/seasons/
+
+# --- Editors / OS ---
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
