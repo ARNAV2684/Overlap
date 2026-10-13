@@ -11,6 +11,14 @@
 - **Numbers come from code, words come from the agents.** Agents only cite numbers from a moment's evidence pack.
 - **Commit your own work under your own name,** so everyone's contribution is visible.
 
+## Spec first, then code
+
+Every folder has a `specs/` folder of templates and comment-only placeholder files. For any piece of work:
+
+1. Fill in the spec it follows (the placeholder's `Spec:` line names it) and get it agreed in a PR.
+2. Only then write the code, replacing the placeholder's comments.
+3. If the code needs something the spec doesn't say, update the spec in the same PR.
+
 ## Branches and pull requests
 
 - `main` is always deployable. Nobody pushes to it directly.

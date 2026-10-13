@@ -1,0 +1,8 @@
+# late_pressure_surge.yaml — Example storyline
+#
+# Purpose: one team raises its press after the 70th minute
+# Inputs:  -
+# Outputs: -
+# Spec:    generator/specs/storylines.md
+#
+# Status: placeholder. Nothing is implemented yet. Write and agree the spec first.

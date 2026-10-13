@@ -1,0 +1,8 @@
+# azure.yaml — azd project
+#
+# Purpose: describe the services azd deploys
+# Inputs:  -
+# Outputs: -
+# Spec:    infra/specs/resources.md
+#
+# Status: placeholder. Nothing is implemented yet. Write and agree the spec first.
