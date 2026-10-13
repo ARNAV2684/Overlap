@@ -7,7 +7,8 @@ every action into numbers, and a team of agents on Microsoft Foundry explains *w
 with a chart, checks every number before it reaches the screen, and personalises the view for analysts, casual
 fans, followers of one player, and fans in other languages.
 
-> 🚧 **Status: planning.** The repository structure and shared documents are in place. No code yet.
+> 🚧 **Status: planning.** Every folder has placeholder files and spec templates. Specs are written and agreed
+> first, then code. No code yet.
 
 ## How it fits together
 
