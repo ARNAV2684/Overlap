@@ -5,7 +5,7 @@
 | Change | Restore and package the original single-match browser demo at 20× |
 | Why | Make the existing local event timeline and pitch reproducible |
 | Author / owner | Pranav |
-| Status | In progress; local validation passed, ready for review |
+| Status | In progress; local validation passed, PR #6 open for review |
 | Reviewed commit | main · b8d449d1bbd6c3f432e98ea0c9e895087e632bd0 |
 | Branch | `mock/single-match-demo` |
 | Governing spec | Merged `CONTRACTS.md` §2–§4 and §7; existing provisional mock web behavior documented in `mock/README.md`. This packages an existing temporary preview, not the production web app or screen relay. |
@@ -37,4 +37,4 @@
   - **Not checked:** Windows/Linux execution, Event Hubs readback, production Azure or complete message-delivery reliability. These are outside this direct preview's acceptance criteria.
   - **Setup:** Follow `mock/single-match-demo/README.md`. Ports 8787 and 8788 must be free; no Docker, Azure subscription or keys are required for the basic demo.
   - **Scope:** Six added files only. No production code, shared contracts, emulator settings, generated data, logs, environments or secrets are included.
-  - **PR:** Pending publication. The plan remains active until review and merge.
+  - **PR:** [#6 — Add single-match live browser demo at 20×](https://github.com/ARNAV2684/Overlap/pull/6). The plan remains active until review and merge.
