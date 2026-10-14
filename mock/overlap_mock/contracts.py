@@ -49,7 +49,7 @@ def _coord(v, what: str):
 
 
 def validate_setup(s: dict) -> None:
-    _check(set(s) <= SETUP_FIELDS and SETUP_FIELDS <= set(s), f"setup fields: {sorted(set(s) ^ SETUP_FIELDS)}")
+    _check(set(s) <= SETUP_FIELDS <= set(s), f"setup fields: {sorted(set(s) ^ SETUP_FIELDS)}")
     _check(bool(ID_MATCH.match(s["match_id"])), "setup match_id format")
     _check(re.match(r"^S\d+$", s["season_id"]) is not None, "season_id format")
     _check(set(s["venue"]) == {"name", "city"}, "venue fields")

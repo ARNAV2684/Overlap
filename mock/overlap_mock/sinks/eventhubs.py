@@ -91,6 +91,6 @@ class EventHubsSink:
             await self._send(self.tracking, match_id, tr)
             for i in items:
                 self.sent[i.kind] += 1
-        except Exception as ex:  # the SDK already retried; log and keep the stream going
+        except Exception as ex:  # noqa: BLE001  the SDK already retried; log and keep the stream going
             self.failures += 1
             print(f"[hubs] send failed for {match_id} ({len(items)} messages): {ex}", file=sys.stderr)
