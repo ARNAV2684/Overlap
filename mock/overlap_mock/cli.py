@@ -5,6 +5,7 @@
   mock record   [--match ID|all] [--out DIR]  write recorded match files
   mock play     [--match ID|all] [--speed N] [--hubs off|emulator|azure] [--web] [--stdout off|events|all] [--loop]
   mock tail     [--hubs emulator|azure] [--seconds N]   read the hubs back and summarise what arrived
+  mock watch    [--hubs emulator|azure] [--port 8788]   live viewer page reading both hubs
 """
 
 from __future__ import annotations
@@ -197,6 +198,15 @@ def cmd_tail(args):
     asyncio.run(_tail_async(args))
 
 
+def cmd_watch(args):
+    from .viewer import Viewer
+    viewer = Viewer(args.hubs, args.namespace, args.consumer_group, args.start, args.host, args.port)
+    try:
+        asyncio.run(viewer.run())
+    except KeyboardInterrupt:
+        pass
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(prog="mock", description="TEMPORARY mock of the generator's live output")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -234,6 +244,16 @@ def main(argv=None):
     p.add_argument("--consumer-group", default="$Default")
     p.add_argument("--seconds", type=float, default=20.0)
     p.set_defaults(fn=cmd_tail)
+
+    p = sub.add_parser("watch", help="live viewer page reading both hubs")
+    p.add_argument("--hubs", choices=["emulator", "azure"], default="emulator")
+    p.add_argument("--namespace", help="Azure only: <name>.servicebus.windows.net (or OVERLAP_EVENTHUBS_NAMESPACE)")
+    p.add_argument("--consumer-group", default="$Default", help="read-only group; never stats, relay or archiver")
+    p.add_argument("--from", dest="start", choices=["latest", "start"], default="latest",
+                   help="where tracking starts (events are always read from the start to rebuild scores)")
+    p.add_argument("--host", default="localhost")
+    p.add_argument("--port", type=int, default=8788)
+    p.set_defaults(fn=cmd_watch)
 
     args = ap.parse_args(argv)
     for stream in (sys.stdout, sys.stderr):

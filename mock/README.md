@@ -73,6 +73,28 @@ Bodies are the JSON objects from `CONTRACTS.md` §2–§4, `content_type: applic
    The emulator uses Microsoft's fixed local connection string (in `overlap_mock/sinks/eventhubs.py`). It only
    works against localhost and is not a secret.
 
+**See it flowing (live viewer):** in a second terminal, while `mock play --hubs emulator` runs,
+
+```bash
+uv run mock watch --hubs emulator          # then open http://localhost:8788/
+```
+
+The page reads both hubs as consumer group `$Default` (read-only: it never moves the `stats`, `relay` or `archiver`
+reading positions and stores no checkpoints) and shows, for every match on the hubs:
+
+- messages per second on `match-events` and `match-tracking`
+- scoreboard, clock and phase
+- a live pitch with all players (sprinting players get a yellow ring at 25 km/h and above) and the ball, drawn in the
+  `CONTRACTS.md` pitch frame (east = right, north = up, no flips)
+- the latest events, and a warning if `seq` goes backwards or skips
+
+`match-events` is read from the beginning so a viewer started mid-match still knows the teams and score;
+`match-tracking` starts from the latest frame (`--from start` replays it all). A `setup` message starts a fresh run
+for its match. If you replay a match ID the hubs already hold, restart the emulator first
+(`docker compose down` then `up -d` in `emulator/`), otherwise the old run shows as a `seq` warning. Works the same
+against Azure with `--hubs azure --namespace …` (needs the *Data Receiver* role). Keep the feed at 1×–5× while
+watching: the emulator throttles at high message rates.
+
 **Real Azure:** `az login`, then
 
 ```bash
