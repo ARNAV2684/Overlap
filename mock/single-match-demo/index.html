@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Overlap · Live stream</title><link rel="stylesheet" href="style.css"><script defer src="app.js"></script></head>
+<body>
+<main>
+  <header><div class="brand"><span class="logo">◒</span> OVERLAP <span class="slash">/</span><span class="subbrand">Live stream</span></div><span id="connection" class="badge waiting">Connecting</span></header>
+  <div class="intro"><div><span class="eyebrow">LOCAL MATCH OBSERVATORY</span><h1>Watch the data move.</h1><p>Real incoming messages from your running synthetic match.</p></div><div class="source">SOURCE <strong>Mock WebSocket · localhost:8787</strong><span>Direct mock preview · separate from Event Hubs readback</span></div></div>
+  <div id="notice" role="status">Connecting to the match stream…</div>
+  <section class="scoreboard" aria-label="Match score">
+    <div class="team"><span class="team-dot home"></span><div><small>HOME</small><strong id="home">Home team</strong></div></div>
+    <div class="score-center"><span id="phase">WAITING</span><div id="score">– : –</div><strong id="clock">–:–</strong><small id="match-id">SYN-9001</small></div>
+    <div class="team away-team"><div><small>AWAY</small><strong id="away">Away team</strong></div><span class="team-dot away"></span></div>
+  </section>
+  <section class="metrics" aria-label="Live counters">
+    <div><small>MESSAGES RECEIVED</small><strong id="messages">0</strong><span>Since this connection</span></div>
+    <div><small>LIVE MATCH EVENTS</small><strong id="events">0</strong><span>Passes, shots, fouls & more</span></div>
+    <div><small>TRACKING FRAMES</small><strong id="frames">0</strong><span>All frames received live</span></div>
+    <div><small>LAST MESSAGE</small><strong id="last-received">Waiting</strong><span id="rate">0 messages / last 10 seconds</span></div>
+  </section>
+  <div class="workspace">
+    <section class="panel feed-panel"><div class="panel-heading"><div><h2>Event timeline <span class="live-dot"></span></h2><p>Newest received first · select a row to inspect its data</p></div><button id="pause" type="button">Pause feed</button></div>
+      <div class="toolbar"><div class="tabs" role="group" aria-label="Message filter"><button class="active" data-filter="events">Match events</button><button data-filter="tracking">Tracking</button><button data-filter="all">All data</button></div><span id="row-count">0 records</span></div>
+      <div class="table-head"><span>MATCH ELAPSED</span><span>EVENT / DETAILS</span><span>RECEIVED LOCALLY</span></div>
+      <div id="feed" class="feed" aria-label="Live event feed"><p class="empty">Waiting for your first message…</p></div>
+      <div class="feed-footer">Elapsed = time in the match. Received = this browser’s wall clock. “History” rows came from the startup snapshot. Latest 120 displayed; 600 event/state rows and 600 tracking frames retained.</div>
+    </section>
+    <aside>
+      <section class="panel pitch-panel"><div class="panel-heading"><div><h2>Live positions</h2><p>Latest received tracking frame</p></div><span id="pitch-time" class="mono">–</span></div><canvas id="pitch" width="840" height="560" aria-label="Latest player and ball positions"></canvas><div class="pitch-legend"><span><i class="home"></i> Home</span><span><i class="away"></i> Away</span><span><i class="ball"></i> Ball</span></div><p class="pitch-note">The mock delivers five tracking frames together, about once a second at 1×. The pitch shows the newest frame.</p></section>
+      <section class="panel inspect-panel"><div class="panel-heading"><div><h2>Message inspector</h2><p id="inspect-label">Select any timeline row</p></div><button id="clear-selection">Follow latest</button></div><pre id="payload">Incoming event data will appear here.</pre></section>
+    </aside>
+  </div>
+  <footer>SYNTHETIC DATA <span>Live local delivery. No paid services. Keep the mock’s terminal running.</span></footer>
+</main>
+</body></html>
