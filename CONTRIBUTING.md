@@ -35,8 +35,10 @@ Layer owners and the hot shared files that need extra care are listed in [`plans
 
 Every folder has a `specs/` folder of templates and comment-only placeholder files. For any piece of work:
 
-1. Fill in the spec it follows (the placeholder's `Spec:` line names it) and get it agreed in a PR.
-2. Only then write the code, replacing the placeholder's comments.
+1. Fill in the spec it follows (the placeholder's `Spec:` line names it) and get it agreed in a PR. The PR that
+   agrees it sets the spec's status line to `> **Status: agreed.**`.
+2. Only then write the code, replacing the placeholder's comments. Keep the `Spec:` line in the file's header: CI
+   uses it to find the governing spec.
 3. If the code needs something the spec doesn't say, update the spec in the same PR.
 
 ## Branches and pull requests
@@ -47,6 +49,35 @@ Every folder has a `specs/` folder of templates and comment-only placeholder fil
 - Keep PRs small and focused: one layer or one feature at a time.
 - A change to a message shape updates [`CONTRACTS.md`](CONTRACTS.md) in the same PR, and both sides of the
   hand-off agree before it merges.
+
+## Checks on every PR
+
+GitHub Actions runs these on every pull request into `main`. **Blocking** checks must pass before merging;
+**warnings** appear on the PR but don't stop it.
+
+| Check | What it looks at | Blocking? |
+|---|---|---|
+| **Policy** | AI-attribution lines (tool co-author trailers, "generated with" footers, session links) in commit messages, the PR title and description, and the branch name | Blocking |
+| | Branch name `<area>/<short-description>`; the PR template filled in; every commit under its author's own GitHub noreply identity | Warning |
+| **Private blocklist** | Terms that must never be public (kept in the repository secret `POLICY_BLOCKLIST`, never in the repo) in the PR text, commit messages, file paths and added lines. Matches are reported by number only | Blocking |
+| **Secrets scan** | Keys, tokens and connection strings in the PR's commits (gitleaks) | Blocking |
+| **Scope and spec gate** | Changed code whose governing spec isn't `agreed`; a PR with no plan in `plans/active/` | Warning |
+| **Scope comment** | One bot comment on the PR, updated on every push: layers and hot shared files touched, owners to tell (from `plans/REGISTRY.md`), and other open PRs or active plans touching the same files | Information |
+| **Python** | `ruff check` on changed `.py` files; `pytest` for each changed project with tests; `uv run mock validate` when `mock/` changes | Blocking |
+| **Web** | Lint, typecheck and build, once `web/package.json` exists | Blocking |
+| **Infra** | `bicep build` and `bicep lint` on changed `.bicep` files | Blocking |
+
+To run the same checks locally before pushing:
+
+```bash
+python3 .github/scripts/pr_policy.py policy      # compares your branch with origin/main
+python3 .github/scripts/pr_policy.py scope
+uvx ruff@0.17.0 check <your .py files>
+```
+
+The blocklist secret is maintained by Arnav: one term per line, `meta:` in front of a term that only applies to
+commit messages, PR text and branch names. Pull requests from forks can't read it, so their blocklist check is
+skipped and a reviewer checks by hand.
 
 ## Commit messages
 
@@ -62,4 +93,4 @@ Adopted as each layer's code lands:
 | Python (generator, stats, archiver, agents, MCP server, Functions) | Python 3.12, `uv`, `ruff`, `pytest` |
 | Web app | Next.js (App Router), TypeScript |
 | Infrastructure | `azd` + Bicep |
-| CI | GitHub Actions: lint, tests and build on every PR |
+| CI | GitHub Actions on every PR (see "Checks on every PR") |
