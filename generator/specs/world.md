@@ -29,7 +29,7 @@ season aggregates, while keeping batch runs quick. The fixture list belongs to
 | Club | Style it resembles | Formation | Status |
 |---|---|---|---|
 | A | Elite possession side: patient short build-up, very high press and defensive line, wide in possession, dominates the ball | 4-3-3 | Proposed |
-| B | Mid-table second-tier-level side: compact mid-to-low block, more direct, quick to counter, presses in bursts rather than all match | 4-2-3-1 | Proposed (style and formation to be confirmed by Azeem) |
+| B | Mid-table second-tier-level side: compact mid-to-low block, more direct, quick to counter, presses in bursts rather than all match | 4-2-3-1 | Proposed (style confirmed by Azeem, 2026-10-15) |
 
 The two must differ on at least three style parameters by 0.3 or more, so the contrast shows up in possession, PPDA,
 press height and pass length.

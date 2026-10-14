@@ -95,7 +95,7 @@ private mapping (local, gitignored) ──┘ (only read by an optional name-dis
 
 | Decision | Proposed choice | Reason | Credible alternative and tradeoff | Status / person needed |
 |---|---|---|---|---|
-| Reference clubs | Two clubs with clearly different styles: A = possession and high press (light blue kit); B = contrasting style (mid-to-low block, direct, counters), chosen by Azeem | The contrast is what tests whether stats and agents notice style | One club only: cheaper, but nothing to contrast against | Proposed · B chosen; style values to confirm (Azeem) |
+| Reference clubs | Two clubs with clearly different styles: A = possession and high press (light blue kit); B = contrasting style (mid-to-low block, direct, counters), chosen by Azeem | The contrast is what tests whether stats and agents notice style | One club only: cheaper, but nothing to contrast against | Proposed · B and its style confirmed by Azeem, 2026-10-15 |
 | Where reference data lives | Hand-authored `generator/reference_clubs.yaml` (invented names, attributes, style) | Readable, reviewable in a PR, no code change to tweak a rating | Python constants: harder to review | Proposed |
 | Real-to-invented mapping | Local `generator/reference_map.private.yaml`, gitignored, never committed | Keeps real names out of the public repo (PR #7 rule) | Shared doc outside the repo: fine too | Proposed |
 | Attribute set | World holds a richer internal set (pace, acceleration, passing, vision, dribbling, finishing, tackling, positioning, aerial, stamina, composure, goalkeeping) plus preferred foot and weak-foot quality; the match setup keeps sending only the six contract attributes | Engine needs more detail; no contract change needed now | Extend `CONTRACTS.md` §2: needs every consumer to agree, not worth it yet | Proposed |
@@ -220,7 +220,7 @@ exists; AC-05 checks shape, not behaviour.
 | ID | Risk, assumption, or unresolved decision | Consequence if wrong or delayed | Owner / decision maker | Resolution or fallback | Blocks which work? |
 |---|---|---|---|---|---|
 | R-01 | PR #7 not approved | Reference profiles not allowed | Arnav | Fall back to two invented clubs with the same contrasting styles | M1 merge |
-| R-02 | Reference club B's proposed style values may not match how its real team plays now | A wrong answer key for B | Azeem | Azeem confirms or corrects the §4 values before the spec merges | M1 merge |
+| R-02 | Reference club B's proposed style values may not match how its real team plays now | A wrong answer key for B | Azeem | Resolved: Azeem confirmed the §4 values on 2026-10-15 | None |
 | R-03 | A reference name or kit too close to the real one | Public IP problem in the demo | Azeem, reviewed by Arnav | AC-06 plus review in the M2 PR | M2 |
 | R-04 | Engine time squeezed by world work | 20 Oct target missed | Azeem | Keep M2 to one day; scope cuts in §12 | 20 Oct target |
 
@@ -252,7 +252,7 @@ exists; AC-05 checks shape, not behaviour.
 **Implementation readiness:** M1 (writing the spec) is ready once Azeem says go; M2 is blocked by M1 merging and the
 private rosters.  
 **Relevant specification agreement:** pending (`generator/specs/world.md`).  
-**Next action and owner:** Azeem confirms reference club B's style values; spec PR reviewed by Arnav · Azeem.
+**Next action and owner:** Arnav reviews the spec PR · Azeem follows up.
 
 ### Handover after implementation
 
