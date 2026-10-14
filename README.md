@@ -54,6 +54,8 @@ Shared documents:
 ## Data
 
 All match data in this repository is **synthetic**: clubs, players and matches are invented by our generator.
+A few clubs and players are *reference profiles*, with invented names but style and attributes hand-set to resemble
+real teams, so we can check the output makes sense (see [`CONTRIBUTING.md`](CONTRIBUTING.md)).
 Calibration targets come from publicly available aggregate statistics, cited in [`CALIBRATION.md`](CALIBRATION.md).
 
 ## License

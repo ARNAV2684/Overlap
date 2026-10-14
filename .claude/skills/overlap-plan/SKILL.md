@@ -46,8 +46,12 @@ Tell the user briefly that the Overlap planning workflow is being applied and wh
 ### 5. Project rules (non-negotiable)
 - **Synthetic data only.** Never use, import, scrape or calibrate from real match data. Public aggregate facts are
   allowed and are cited in `CALIBRATION.md`.
-- **No real football IP:** no real club names, crests, player names or league branding in code, UI, data,
-  screenshots or video. Everything is invented.
+- **No real football IP:** no real club names, crests, player names, venues or league branding in code, UI, data,
+  screenshots or video. Every name and crest is invented.
+- **Reference profiles are allowed:** a few clubs and players have style and attributes hand-set to resemble real
+  teams and players. Their names, crests, venues and kit designs stay invented (kit colours may echo the real team's).
+  Never write the real team or player a profile is modelled on anywhere in this repository, and never copy ratings
+  from a game's ratings database.
 - **No earlier projects:** do not import code, data, names, palettes or architecture from any earlier project,
   and do not mention any earlier project in this repository.
 - **Numbers come from code, words come from AI.** Agents may only cite numbers that exist in a moment's evidence

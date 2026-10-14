@@ -2,6 +2,8 @@
 
 A probabilistic match simulation: hand-written rules plus seeded dice rolls, tuned until the output matches public
 real-football averages. It is not a trained model. Everything it produces (clubs, players, matches) is invented.
+Some clubs and players are reference profiles: invented names, with style and attributes hand-set to resemble real
+teams and players (see [`CONTRIBUTING.md`](../CONTRIBUTING.md)).
 
 ## Define before you code
 
