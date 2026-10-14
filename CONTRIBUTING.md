@@ -67,7 +67,7 @@ GitHub Actions runs these on every pull request into `main`. **Blocking** checks
 | **Web** | Lint, typecheck and build, once `web/package.json` exists | Blocking |
 | **Infra** | `bicep build` and `bicep lint` on changed `.bicep` files | Blocking |
 
-To run the same checks locally before pushing:
+To run the same checks locally before pushing (use `python` instead of `python3` on Windows):
 
 ```bash
 python3 .github/scripts/pr_policy.py policy      # compares your branch with origin/main
