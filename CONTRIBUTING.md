@@ -11,6 +11,21 @@
 - **Numbers come from code, words come from the agents.** Agents only cite numbers from a moment's evidence pack.
 - **Commit your own work under your own name,** so everyone's contribution is visible.
 
+## Plan before you build
+
+Before implementing anything, plan it with the `overlap-plan` skill
+([`.claude/skills/overlap-plan`](.claude/skills/overlap-plan/SKILL.md); `/overlap-plan` in Claude Code,
+`$overlap-plan` in Codex):
+
+1. **Plan:** `/overlap-plan propose <what>` (or `sprint <n> of <plan>`, or a quick plan for a small change). The
+   plan lists exactly which files will change and checks them against everyone else's active plans, open PRs and
+   branches.
+2. **Review:** share the plan (saved in [`plans/active/`](plans/)); the owners of anything it affects agree.
+3. **Go:** implementation starts only when the author says **go**, and stays inside the plan's file map.
+4. **Validate:** `/overlap-plan validate` before opening the PR.
+
+Layer owners and the hot shared files that need extra care are listed in [`plans/REGISTRY.md`](plans/REGISTRY.md).
+
 ## Spec first, then code
 
 Every folder has a `specs/` folder of templates and comment-only placeholder files. For any piece of work:
