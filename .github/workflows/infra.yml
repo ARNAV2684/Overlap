@@ -1,0 +1,53 @@
+# Infrastructure checks: build and lint every changed Bicep file. No Azure access needed.
+name: Infra
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: infra-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  bicep:
+    name: Bicep (build, lint)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      BICEP_VERSION: v0.48.1
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - id: d
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          files=$(git diff --name-only --diff-filter=d "${BASE}...${HEAD}" -- '*.bicep' | tr '\n' ' ')
+          echo "files=${files}" >> "$GITHUB_OUTPUT"
+          [ -z "$files" ] && echo "::notice::No Bicep files changed; skipping."
+          true
+      - name: Install Bicep
+        if: steps.d.outputs.files != ''
+        run: |
+          curl -sSfL -o bicep "https://github.com/Azure/bicep/releases/download/${BICEP_VERSION}/bicep-linux-x64"
+          chmod +x bicep && sudo mv bicep /usr/local/bin/bicep
+          bicep --version
+      - name: Build and lint
+        if: steps.d.outputs.files != ''
+        env:
+          FILES: ${{ steps.d.outputs.files }}
+        run: |
+          status=0
+          for f in $FILES; do
+            echo "::group::$f"
+            bicep build "$f" --stdout > /dev/null || status=1
+            bicep lint "$f" || status=1
+            echo "::endgroup::"
+          done
+          exit $status

@@ -1,0 +1,108 @@
+# Python checks, only for what a pull request changed. Always triggers so the required check is never left waiting;
+# jobs skip themselves when there is nothing to check.
+name: Python
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: python-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  detect:
+    name: Detect Python changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      files: ${{ steps.d.outputs.files }}
+      projects: ${{ steps.d.outputs.projects }}
+      ci_scripts: ${{ steps.d.outputs.ci_scripts }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - id: d
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          files=$(git diff --name-only --diff-filter=d "${BASE}...${HEAD}" -- '*.py' | tr '\n' ' ')
+          echo "files=${files}" >> "$GITHUB_OUTPUT"
+          echo "projects=$(python3 .github/scripts/pr_policy.py projects)" >> "$GITHUB_OUTPUT"
+          if git diff --name-only "${BASE}...${HEAD}" | grep -q '^\.github/scripts/'; then
+            echo "ci_scripts=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ci_scripts=false" >> "$GITHUB_OUTPUT"
+          fi
+          echo "Changed Python files: ${files:-none}"
+
+  lint:
+    name: Lint (ruff)
+    needs: detect
+    if: needs.detect.outputs.files != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+      - name: ruff check on changed files
+        env:
+          FILES: ${{ needs.detect.outputs.files }}
+        run: uvx ruff@0.17.0 check --output-format=github $FILES
+
+  tests:
+    name: Tests (${{ matrix.project }})
+    needs: detect
+    if: needs.detect.outputs.projects != '[]' && needs.detect.outputs.projects != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        project: ${{ fromJSON(needs.detect.outputs.projects) }}
+    defaults:
+      run:
+        working-directory: ${{ matrix.project }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+      - run: uv sync
+      - name: pytest (if the project has tests)
+        run: |
+          if ls tests/test_*.py test_*.py >/dev/null 2>&1 || [ -d tests ]; then
+            uv run --with pytest pytest -q
+          else
+            echo "No tests in ${{ matrix.project }} yet."
+          fi
+      - name: Mock contract validation
+        if: matrix.project == 'mock'
+        run: uv run mock validate
+
+  ci-scripts:
+    name: CI script tests
+    needs: detect
+    if: needs.detect.outputs.ci_scripts == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: python3 -m unittest discover -s .github/scripts -v
+
+  result:
+    name: Python result
+    needs: [detect, lint, tests, ci-scripts]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Fail if any Python job failed (skipped jobs are fine)
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Job results: $RESULTS"
+          case " $RESULTS " in *" failure "*|*" cancelled "*) exit 1;; esac
