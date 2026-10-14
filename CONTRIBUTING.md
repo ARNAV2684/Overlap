@@ -4,8 +4,13 @@
 
 - **Synthetic data only.** Never import, scrape or calibrate from real match data. Public aggregate statistics are
   fine, and each one is cited in [`CALIBRATION.md`](CALIBRATION.md).
-- **No real football IP.** No real club names, crests, player names or league branding in code, UI, data,
-  screenshots or video. Everything is invented.
+- **No real football IP.** No real club names, crests, player names, venues or league branding in code, UI, data,
+  screenshots or video. Every name and crest is invented.
+- **Reference profiles are allowed.** A few clubs and players have their style and attributes hand-set to resemble
+  real teams and players, so we can tell at a glance whether the pipeline's output makes sense. Their names, crests,
+  venues and kit designs are still invented; kit colours may echo the real team's. The mapping from a reference
+  profile to the real team or player is never committed to this repository. Ratings are set by hand, never copied
+  from a game's ratings database. (Discussed with Arnav, 2026-10-15.)
 - **No secrets in the repo.** It's public. Services use managed identity; anything sensitive lives in Azure Key
   Vault. `.env` files stay local.
 - **Numbers come from code, words come from the agents.** Agents only cite numbers from a moment's evidence pack.
