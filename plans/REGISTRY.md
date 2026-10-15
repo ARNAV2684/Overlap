@@ -22,6 +22,27 @@ This file is maintained by Arnav. AI assistants read it but never add or change 
 A change to a folder you do not own needs that folder's owner to agree first, and goes in its own small commit.
 "Unassigned" folders need Arnav's agreement.
 
+## Deliverables
+
+What each owner is responsible for delivering, as assigned by Arnav. A plan covering one deliverable does not make
+the others someone else's: each owner plans their deliverables one by one, but all of them stay theirs until done.
+AI assistants read this section as the source of truth for scope and never edit it.
+
+### Azeem · Layer 1 · Synthetic generator (the whole box)
+
+| # | Deliverable | Files (`generator/`) | Governing spec |
+|---|---|---|---|
+| G1 | World builder: clubs, players, styles, kits | `world.py`, `names.py`, `kits.py` | `specs/world.md` |
+| G2 | Match engine: possession by possession, decisions, outcomes, set pieces, discipline | `engine.py`, `state.py`, `decisions.py`, `outcomes.py`, `set_pieces.py`, `discipline.py`, `config.py` | `specs/engine.md`, `specs/actions.md`, `specs/set-pieces-and-discipline.md` |
+| G3 | Movement model: positions, speed and distance at 5 Hz | `movement.py` | `specs/movement.md` |
+| G4 | Storylines: scripted drama and answer keys | `storylines.py`, `storylines/*.yaml` | `specs/storylines.md` |
+| G5 | Live mode: streams setup, events and tracking to Event Hubs at 1×, 5× and 20× | `live.py`, `cli.py` | `specs/live-and-batch.md` |
+| G6 | Batch mode: full synthetic seasons and the realism report | `batch.py`, `realism_report.py` | `specs/live-and-batch.md` |
+| — | Tests and calibration targets for all of the above | `tests/`, `CALIBRATION.md` | — |
+
+**Done when** `live.py` (G5) replaces `mock/` as the source of setup, events and tracking on Event Hubs, and the
+realism report (G6) compares a generated season with `CALIBRATION.md`.
+
 ## Hot shared files
 
 Several layers depend on these. Change them only in small, dedicated commits or PRs, after telling the people listed.
