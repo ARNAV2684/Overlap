@@ -248,8 +248,8 @@ stats engine's metrics; the real connection is proven only when G5 streams into 
 1. **D9:** add an optional `conditions` object (weather and attendance) to the match setup in `CONTRACTS.md` §2, in
    its own small contract PR, so the agents and the web app can mention the weather. Recommendation: yes; no
    consumer has been built yet, so it is cheap now.
-   The same PR updates the penalty xG in `CONTRACTS.md` §8 (and `CALIBRATION.md`) from about 0.76 to Opta's
-   sourced 0.78, which `actions.md` §4 uses.
+   The same PR updates the penalty xG in `CONTRACTS.md` §8 from about 0.76 to Opta's sourced 0.78, which
+   `actions.md` §4 uses (`CALIBRATION.md` is updated in its own calibration-sources PR).
 2. **Stats xG:** the stats engine's xG uses the same inputs as the generator's shot model (`actions.md` §4).
 
 ## 15. Review, agreement, and handover

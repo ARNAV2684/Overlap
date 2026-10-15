@@ -202,8 +202,8 @@ allows:
 - `assist type`: through ball, cutback, cross (crosses and headers are lower), set piece, none;
 - `defenders in the way`: opponents inside the triangle from the ball to the posts;
 - `keeper out of position`: his distance from the line between the ball and the centre of the goal;
-- a **penalty** is fixed at **0.78**, Opta's value from its historical conversion rate. `CONTRACTS.md` §8 and
-  `CALIBRATION.md` still say about 0.76; both are updated to the sourced 0.78 in the conditions contract PR.
+- a **penalty** is fixed at **0.78**, Opta's value from its historical conversion rate. `CONTRACTS.md` §8 still says
+  about 0.76 and is updated in the conditions contract PR; `CALIBRATION.md` is updated in the calibration-sources PR.
 
 The coefficients live in `config.py` and are fitted so the model hits these **public anchor points**, each cited in
 [`CALIBRATION.md`](../../CALIBRATION.md):
