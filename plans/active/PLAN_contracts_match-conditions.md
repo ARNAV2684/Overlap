@@ -56,7 +56,7 @@ setup that carries `conditions` would fail it; see §7.
 
 | Dependency or shared area | Owner to coordinate with | What is needed / supplied | Status and needed-by milestone | How work can continue meanwhile |
 |---|---|---|---|---|
-| Setup consumers | Arnav (for unassigned layers), Vedant | Agreement to accept `conditions` | Pending · merge | Field is optional, nothing breaks |
+| Setup consumers | Arnav (for unassigned layers), Vedant | Agreement to accept `conditions`; the web app's strict setup schema (`PLAN_web_live-match-viewer`) must allow it | Pending · merge | Field is optional; the generator only sends it from G2 M2 |
 | Stats engine xG | Unassigned (Arnav decides) | Agreement on penalty 0.78 | Pending · merge | — |
 | `mock/` validator | Arnav | Accept `conditions` as optional, or not (§7) | Pending | Generator only sends `conditions` once the engine exists |
 
@@ -148,11 +148,13 @@ generator (engine.md §9) ──conditions in setup──▶ match-events hub �
 - **Proposed branch / PR boundaries:** `contracts/match-conditions`, contract only.
 - **Shared-file coordination:** `CONTRACTS.md` is hot: Arnav (unassigned consumers and stats) and Vedant (web) are
   told through the PR.
-- **Conflict scan result:** No overlaps found on 2026-10-16 at 75b7cba.
+- **Conflict scan result:** No plan or PR edits `CONTRACTS.md`; three active plans mention it (checked 2026-10-16 at 75b7cba):
 
 | Overlapping file or contract | Other plan / PR / branch | Its owner | Resolution (order, split, or agreed shared edit) | Status |
 |---|---|---|---|---|
-| — | No open PR or active plan changes `CONTRACTS.md` | — | — | — |
+| `CONTRACTS.md` §2 (mentioned) | `PLAN_web_live-match-viewer` (Draft) | Vedant | His plan doesn't change `CONTRACTS.md`, but validates the setup strictly with unknown fields rejected: his setup schema must accept the optional `conditions` (and reject unknown keys inside it). Agreed in this PR | Pending · Vedant |
+| `CONTRACTS.md` (mentioned) | `PLAN_ci_pr-checks` (In progress) | Arnav | Mentions only; its interface table says no message shapes change | No overlap |
+| `CONTRACTS.md` (mentioned) | `PLAN_generator_world-builder` (In progress) | Azeem | Mentions only; builds setups against §2 | No overlap |
 
 - **Integration procedure:** consumers read §2 when they build their setup parsing.
 - **Configuration or setup changes:** none.
