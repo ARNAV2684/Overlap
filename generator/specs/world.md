@@ -28,8 +28,8 @@ season aggregates, while keeping batch runs quick. The fixture list belongs to
 
 | Club | Style it resembles | Formation | Status |
 |---|---|---|---|
-| A | Elite possession side: patient short build-up, very high press and defensive line, wide in possession, dominates the ball | 4-3-3 | Proposed |
-| B | Mid-table second-tier-level side: compact mid-to-low block, more direct, quick to counter, presses in bursts rather than all match | 4-2-3-1 | Proposed (style confirmed by Azeem, 2026-10-15) |
+| A | Elite possession side: patient short build-up, very high press and defensive line, wide in possession, dominates the ball | 4-2-3-1 | Proposed |
+| B | Newly promoted side: compact low block with five at the back, more direct, quick to counter, presses in bursts rather than all match | 5-4-1 | Proposed (style confirmed by Azeem, 2026-10-15) |
 
 The two must differ on at least three style parameters by 0.3 or more, so the contrast shows up in possession, PPDA,
 press height and pass length.
@@ -166,9 +166,9 @@ Reference club B (proposed): `press_intensity` 0.45, `directness` 0.60, `width` 
 directness, line height and build-up, and is clearly weaker, so A vs B should show A dominating the ball and
 territory while B's chances come from counters and set pieces.
 
-**Formations.** `4-3-3`, `4-2-3-1`, `4-4-2`, `4-1-4-1`, `3-4-3`, `5-3-2` (the six the mock already uses, so screens
-built against the mock keep working). Each formation's slot order (goalkeeper first) and position labels live in
-`world.py`. Anchor positions on the pitch, and how they shift, belong to [`movement.md`](movement.md) §1.
+**Formations.** `4-3-3`, `4-2-3-1`, `4-4-2`, `4-1-4-1`, `3-4-3`, `5-3-2` (the six the mock already uses) plus
+`5-4-1`, which reference club B plays. Each formation's slot order (goalkeeper first) and position labels live in
+`world.py`; `5-4-1` is GK, RWB, CB, CB, CB, LWB, RM, CM, CM, LM, ST. Anchor positions on the pitch, and how they shift, belong to [`movement.md`](movement.md) §1.
 
 ## 5. Names
 
@@ -210,7 +210,8 @@ secondary.
 
 **Readable on dark and light backgrounds.** Within each pair, primary and secondary differ by a WCAG contrast ratio of
 at least **3:1**, so one of the two always stands out on any background. The web app draws a player dot as the
-primary with a secondary outline.
+primary with a secondary outline. A light primary therefore needs a dark secondary: light blue on white is only
+about 2.3:1 and fails, light blue on navy passes.
 
 **Distinguishable in a match.** The home club wears home colours. If the two primaries are closer than **ΔE2000 = 20**,
 the away club wears its away pair. The build fails if a club's home and away pairs both clash with any other club's
