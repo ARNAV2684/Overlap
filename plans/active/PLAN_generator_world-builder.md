@@ -10,10 +10,10 @@
 | Review coordinator | Arnav |
 | Affected component owners | Arnav (review, hot files); Vedant (web app reads club names, colours, lineups from the match setup); stats engine, agents and archiver owners: unassigned (Arnav decides) |
 | Proposal version and date | v0.1 · 2026-10-15 |
-| Status | In progress (M1: spec drafted on `generator/world-spec`) |
+| Status | In progress (M1 done: spec merged in PR #8; M2 on `generator/world-builder`) |
 | Plan tier and file | Full · `plans/active/PLAN_generator_world-builder.md` |
 | Repository | [ARNAV2684/Overlap](https://github.com/ARNAV2684/Overlap) |
-| Reviewed branch and commit | main · 38a8038 |
+| Reviewed branch and commit | main · 71ad1ef (M2); main · 38a8038 (M1) |
 | Architecture box / work area | Layer 1 · synthetic generator (world builder) |
 | Relevant issue, spec PR, or discussion | Depends on [PR #7](https://github.com/ARNAV2684/Overlap/pull/7) (reference profiles rule), open, awaiting Arnav |
 
@@ -128,7 +128,7 @@ Vedant's web app only reads the match setup, not the world file (checked with Ve
 
 | File or small related group | Add / modify / use unchanged | Responsibility | Governing spec and unanswered questions | Owner / shared reviewer |
 |---|---|---|---|---|
-| `generator/specs/world.md` | Modify (M1) | Answer §1–§7, with reference profiles | Itself · all open | Azeem / Arnav |
+| `generator/specs/world.md` | Modify (M1, M2) | M1: answer §1–§7, with reference profiles. M2: status set to agreed and wording kept in step with the code | Itself · agreed in PR #8 | Azeem / Arnav |
 | `generator/reference_clubs.yaml` | Add (M2) | The two reference clubs: names, city, venue, kits, formation, style, squads, attributes | `world.md` §1–§4, §6 | Azeem |
 | `generator/world.py` | Modify (M2) | Load, validate, assign ids, save world; build match setups | `world.md` §1–§4, §7 | Azeem |
 | `generator/names.py` | Modify (M2) | Name uniqueness checks now; invented name pools in M3 | `world.md` §5 | Azeem |
@@ -247,13 +247,35 @@ exists; AC-05 checks shape, not behaviour.
 
 | Reviewer | Proposal version | Finding / required change | Outcome | Date and reference |
 |---|---|---|---|---|
-| Arnav | v0.1 | — | Pending | — |
+| Arnav, Vedant, Pranav | v0.1 | Spec and plan approved (reported by Azeem) | Agreed for stated scope | 2026-10-14 · PR #8 merged |
 
-**Implementation readiness:** M1 (writing the spec) is ready once Azeem says go; M2 is blocked by M1 merging and the
-private rosters.  
-**Relevant specification agreement:** pending (`generator/specs/world.md`).  
-**Next action and owner:** Arnav reviews the spec PR · Azeem follows up.
+**Implementation readiness:** M1 done; M2 implemented (go from Azeem after PR #8 merged).  
+**Relevant specification agreement:** PR #8, merged 2026-10-14.  
+**Next action and owner:** M2 PR reviewed · Azeem. Then M3 (rest of the league) gets its own sprint plan.
 
 ### Handover after implementation
 
-Pending implementation.
+M2 (two reference clubs). M3 is not started.
+
+- Implementation PR and commit: branch `generator/world-builder`; PR to follow.
+- Acceptance results:
+  - **AC-01:** passed — spec merged in PR #8.
+  - **AC-02:** passed — `test_same_seed_gives_byte_identical_world`.
+  - **AC-03:** passed — `test_ratings_style_and_ids`, `test_squad_shape`, `test_names_unique`.
+  - **AC-04:** passed — `test_kits_readable_and_distinct`; home light blue/navy 6.8:1, amber/black 8.8:1; the two
+    home primaries are ΔE2000 46.5 apart.
+  - **AC-05:** passed — both A-vs-B and B-vs-A setups pass `validate_setup` from `mock/overlap_mock/contracts.py`
+    (run by hand from the repo root; the generator does not import the mock).
+  - **AC-06:** passed on Azeem's machine with the private mapping present; skipped in CI, where the file doesn't exist.
+  - Also checked: 26 tests pass (`pytest`), including broken-data cases and the CIEDE2000 reference value; `ruff
+    0.17.0` clean on every changed `.py` file. Strength: A 83.9, B 72.3.
+- Setup and integration instructions: `cd generator && uv sync && uv run pytest`; `python world.py` writes
+  `data/generated/world/S1.json` and prints a summary per club. `world.build_setup(home, away, ...)` returns a match
+  setup.
+- Differences from the agreed proposal: `world.py` can be run directly to save the world (the CLI comes with
+  `cli.py` later). `world.md` was added to the M2 file map (agreed with Azeem) to set its status to agreed and keep
+  it in step with the code: setup `pos` is the slot played, bench fill rule, `overall` is a plain mean, outfield
+  goalkeeping ≤ 20 and two-player slot cover are now build rules, the name denylist is marked M3. Squad data gained
+  secondary positions so every formation slot has a backup.
+- Known limitations and follow-up owner: feet are partly estimates (Azeem to confirm); no invented clubs yet (M3,
+  Azeem); behaviour on the pitch can only be checked once the engine exists.

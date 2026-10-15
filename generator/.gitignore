@@ -1,0 +1,7 @@
+# Private files: real names behind the reference profiles (never commit; see CONTRIBUTING.md)
+*.private.yaml
+*.private.txt
+
+# Local environment
+.venv/
+uv.lock
