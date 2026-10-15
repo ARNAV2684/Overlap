@@ -1,5 +1,58 @@
 @import "tailwindcss";
 
+/* Palette: raw colour scales (plan Phase 2.1). Components use semantic names from Phase 2.2, not these directly.
+   Defining orange and blue here replaces Tailwind's default scales, so bg-orange-500 etc. use these values. */
+@theme {
+  /* Greys: neutrals */
+  --color-greys-50: #fafafa;
+  --color-greys-100: #f5f5f5;
+  --color-greys-200: #e6e6e6;
+  --color-greys-300: #d3d3d3;
+  --color-greys-400: #a3a3a3;
+  --color-greys-500: #727272;
+  --color-greys-600: #535353;
+  --color-greys-700: #474747;
+  --color-greys-800: #272727;
+  --color-greys-900: #1a1a1a;
+  --color-greys-950: #0b0b0b;
+
+  /* Orange: primary (500 is the brand primary) */
+  --color-orange-50: #fff8ec;
+  --color-orange-100: #fff0d3;
+  --color-orange-200: #ffdea7;
+  --color-orange-300: #ffc56e;
+  --color-orange-400: #ffa234;
+  --color-orange-500: #ff860d;
+  --color-orange-600: #fc6f03;
+  --color-orange-700: #c95005;
+  --color-orange-800: #a03f0c;
+  --color-orange-900: #80350e;
+  --color-orange-950: #451905;
+
+  /* Blue: secondary */
+  --color-blue-50: #eff6ff;
+  --color-blue-100: #dbebfe;
+  --color-blue-200: #c0dcfd;
+  --color-blue-300: #94c7fc;
+  --color-blue-400: #62a8f8;
+  --color-blue-500: #3d86f4;
+  --color-blue-600: #2768e9;
+  --color-blue-700: #1f53d6;
+  --color-blue-800: #2044ad;
+  --color-blue-900: #1f3d89;
+  --color-blue-950: #1b2c5f;
+
+  /* Card colours: fixed by meaning, the same everywhere. Always shown with the words
+     "Yellow card" / "Red card". Each name becomes bg-/text-/border- utilities. */
+  --color-card-yellow: #facc15;
+  --color-card-yellow-ink: var(--color-greys-950); /* text ON a yellow chip */
+  --color-card-yellow-soft: color-mix(in oklab, #facc15 14%, transparent); /* row tint */
+  --color-card-red: #dc2626;
+  --color-card-red-ink: #ffffff; /* text ON a red chip */
+  --color-card-red-text: #f87171; /* red as TEXT on dark; #dc2626 alone is only 3.6:1 */
+  --color-card-red-soft: color-mix(in oklab, #dc2626 18%, transparent); /* row tint */
+}
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
