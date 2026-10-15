@@ -3,9 +3,15 @@
 // Purpose: show every colour token, text class and UI primitive in one place for review and screenshots
 // Inputs:  none
 // Outputs: a page in development; a 404 in production
-// Spec:    web/IMPLEMENTATION_PLAN.md Phase 3
+// Spec:    web/IMPLEMENTATION_PLAN.md Phase 3 (primitives), Phase 6 (layout components)
 
 import { notFound } from "next/navigation";
+import { AppFooter } from "@/components/layout/AppFooter";
+import { AppHeaderView } from "@/components/layout/AppHeader";
+import { AppShell } from "@/components/layout/AppShell";
+import { IntroHero } from "@/components/layout/IntroHero";
+import { NoticeBarView } from "@/components/layout/NoticeBar";
+import { SourceCard } from "@/components/layout/SourceCard";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { CardChip } from "@/components/ui/CardChip";
@@ -301,6 +307,27 @@ export default function DevUiPage() {
           Goal
           <VisuallyHidden> (this text is only read by screen readers)</VisuallyHidden>
         </p>
+      </Section>
+      <Section title="Layout (Phase 6): AppShell, AppHeader, IntroHero, SourceCard, NoticeBar, AppFooter">
+        <p className="text-caption text-ink-muted">
+          The live screen&apos;s frame with preview data (no store). The intro&apos;s title is an h2 here because this
+          page already has its h1; on the live screen IntroHero renders the h1.
+        </p>
+        <div className="overflow-hidden rounded-panel border border-line">
+          <AppShell className="pb-5">
+            <AppHeaderView status="live" />
+            <IntroHero titleAs="h2" aside={<SourceCard />} />
+            <NoticeBarView notice={{ text: "Connected. New messages appear automatically; earlier events are marked History.", tone: "info" }} />
+            <NoticeBarView notice={{ text: "Feed, counters and pitch paused. Reception and scoreboard continue; resume to catch up.", tone: "warning" }} />
+            <EmptyState title="Scoreboard, metrics and the workspace go here (Phases 7 to 9)" />
+            <AppFooter />
+          </AppShell>
+        </div>
+        <div className="space-y-2">
+          {statuses.map((status) => (
+            <AppHeaderView key={status} status={status} />
+          ))}
+        </div>
       </Section>
     </main>
   );
