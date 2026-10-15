@@ -78,6 +78,11 @@ what to use instead. Keyboard navigation and screen-reader text are still to be 
 | `pitch-line` | `pitch-surface` | 6.21 : 1 | 3 : 1 (UI / graphics) | Pass | Pitch lines on pitch |
 | `pitch-line` | `pitch-stripe` | 7.44 : 1 | 3 : 1 (UI / graphics) | Pass | Pitch lines on stripe |
 | `pitch-marker-edge` | `pitch-surface` | 13.15 : 1 | 3 : 1 (UI / graphics) | Pass | Marker outline on pitch |
+| `ink` | page glow, orange peak (12 %) | 16.19 : 1 | 4.5 : 1 (text) | Pass | Main text at the brightest point of the orange glow |
+| `ink-muted` | page glow, orange peak (12 %) | 6.70 : 1 | 4.5 : 1 (text) | Pass | Secondary text at the brightest point of the orange glow |
+| `secondary-text` | page glow, orange peak (12 %) | 6.82 : 1 | 4.5 : 1 (text) | Pass | Blue text at the brightest point of the orange glow |
+| `accent-text` | page glow, orange peak (12 %) | 8.42 : 1 | 4.5 : 1 (text) | Pass | Orange text at the brightest point of the orange glow |
+| `ink-muted` | page glow, blue peak (12 %) | 6.93 : 1 | 4.5 : 1 (text) | Pass | Secondary text at the brightest point of the blue glow |
 | `orange-500` | `pitch-surface` | 1.62 : 1 | known failure | Fail (as expected) | Orange kit fill alone on pitch: needs outline |
 | `blue-500` | `pitch-surface` | 2.37 : 1 | known failure | Fail (as expected) | Blue kit fill alone on pitch: needs outline |
 

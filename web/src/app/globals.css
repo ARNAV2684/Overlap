@@ -112,6 +112,15 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* Corner radii (plan Phase 2.5): rounded-card (scoreboard), rounded-panel, rounded-control (buttons, inputs),
+   rounded-pill (badges) */
+@theme {
+  --radius-card: 14px;
+  --radius-panel: 12px;
+  --radius-control: 6px;
+  --radius-pill: 999px;
+}
+
 :root {
   color-scheme: dark; /* dark theme only (decided) */
   --bg: var(--color-greys-950);
@@ -134,6 +143,10 @@
   --pitch-stripe: var(--color-greys-200);
   --pitch-line: var(--color-greys-700);
   --pitch-marker-edge: var(--color-greys-950);
+
+  /* Page background glow: orange top-right, blue top-left, at 12% so text keeps 6.7:1 or more at the brightest point */
+  --glow-orange: color-mix(in oklab, var(--color-orange-500) 12%, transparent);
+  --glow-blue: color-mix(in oklab, var(--color-blue-500) 12%, transparent);
 }
 
 /* Semantic colours and fonts as utilities: bg-surface, border-line, text-ink-muted, bg-primary text-primary-ink... */
@@ -164,7 +177,23 @@
 }
 
 body {
-  background: var(--bg);
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(ellipse 60% 45% at 85% 0%, var(--glow-orange), transparent),
+    radial-gradient(ellipse 55% 40% at 10% 0%, var(--glow-blue), transparent);
+  background-repeat: no-repeat;
+  background-attachment: fixed; /* glow stays in the viewport instead of stretching with a long page */
   color: var(--ink);
   font-family: var(--font-sans);
+  font-size: var(--text-body); /* base text is 14 px: this is a dense data screen */
+  line-height: var(--text-body--line-height);
+}
+
+/* Focus ring (plan Phase 2.5): every interactive element gets the same visible ring, 7:1 or more on the page and panels.
+   :where() keeps this at zero specificity, so a component can still override it deliberately. */
+@layer base {
+  :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
 }
