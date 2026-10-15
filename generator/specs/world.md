@@ -1,7 +1,8 @@
 # World spec
 
-> **Status: draft for review.** Plan: [`PLAN_generator_world-builder`](../../plans/active/PLAN_generator_world-builder.md).
-> Depends on the reference profiles rule in [`CONTRIBUTING.md`](../../CONTRIBUTING.md) (PR #7).
+> **Status: agreed.** Agreed in PR #8 (2026-10-14). Plan:
+> [`PLAN_generator_world-builder`](../../plans/active/PLAN_generator_world-builder.md). Reference profiles rule:
+> [`CONTRIBUTING.md`](../../CONTRIBUTING.md) (PR #7). Kept in step with `world.py`, `names.py` and `kits.py`.
 
 Decides every club, player and team trait the simulation uses. Every name, crest and venue is invented. A few clubs
 are **reference profiles**: their style and attributes are hand-set to resemble real teams and players, so we can
@@ -48,7 +49,7 @@ press height and pass length.
 | `strength` | number | Derived, never hand-set (§4) |
 | `reference` | bool | True for reference profiles; never says which real team |
 | `squad` | list of players | §2 |
-| `default_xi` | 11 player ids, goalkeeper first, in formation order | §2 |
+| `default_xi` | 11 players, goalkeeper first, in formation slot order (shirt numbers in the YAML, player ids in the saved world) | §2 |
 
 **Ids.** Hand-chosen for reference clubs, derived from the name for generated clubs (first letters of each word, then
 consonants of the main word). Every id must be unique in the world, must not be one of the mock's ids (`NBR`, `HBA`,
@@ -64,11 +65,14 @@ review). The build fails on a clash.
 _Answer:_
 
 **Size and shape.** 25 players: 3 GK, 9 defenders, 8 midfielders, 5 forwards. Reference clubs may follow their real
-team's shape between 22 and 28 players, with at least 2 goalkeepers.
+team's shape between 22 and 28 players, with at least 2 goalkeepers. Every slot in the club's formation must be
+playable (primary or secondary position) by at least 2 squad players, so losing one starter never leaves a slot
+empty; the build fails otherwise.
 
 **Positions.** The fourteen in the question: `GK`, `CB`, `LB`, `RB`, `LWB`, `RWB`, `DM`, `CM`, `AM`, `LM`, `RM`,
-`LW`, `RW`, `ST`. Each player has one primary position (sent as `pos` in the setup) and up to two secondary
-positions. A player in a secondary position plays with a small penalty set in the engine spec.
+`LW`, `RW`, `ST`. Each player has one primary position and up to two secondary positions (never the primary
+again). A player in a secondary position plays with a small penalty set in the engine spec. In the match setup,
+`pos` is the slot a starter plays in this match, and a substitute's primary position.
 
 **Shirt numbers.** 1–99, unique within a club (player ids are `TEAM-NN`, so a shirt is also the id). Reference clubs
 use hand-set numbers. Generated clubs try the usual numbers for the position (1 for a goalkeeper, 9 for a striker),
@@ -77,8 +81,9 @@ then the next free number.
 **Starting XI and bench.** Each club has a `default_xi`. A match uses it unless a player is unavailable (suspended,
 later injured); the replacement is the best-rated available player whose primary or secondary position matches the
 slot. The bench is **9** players, including exactly one goalkeeper, picked as the best remaining player for each of
-GK, CB, full-back, DM/CM, CM/AM, winger, ST, then the two best remaining. A setup lineup is 11 players,
-goalkeeper first, in the formation's slot order.
+GK, CB, full-back, DM/CM, CM/AM, winger, ST (by primary position), then filled to nine with the best remaining
+outfield players. A group with nobody left is skipped. "Best" means highest `overall`, then lowest shirt number. A
+setup lineup is 11 players, goalkeeper first, in the formation's slot order.
 
 ## 3. Player attributes
 
@@ -108,13 +113,13 @@ same names; the other six stay inside the generator, so no contract change is ne
 | `positioning` | | Being in the right place (defensive shape or attacking runs) |
 | `aerial` | | Heading and winning high balls |
 | `composure` | | Keeping quality under pressure and in big moments |
-| `goalkeeping` | | Shot stopping, handling and claiming (goalkeepers; others ≤ 20) |
+| `goalkeeping` | | Shot stopping, handling and claiming (outfield players 20 or less; the build fails otherwise) |
 
-**Hidden traits.** `preferred_foot` (`left`, `right`, `both`) and `weak_foot` (1–5). Injury proneness and big-game
-temperament are left out for now; `composure` covers pressure.
+**Hidden traits.** `preferred_foot` (`left`, `right`, `both`; default `right`) and `weak_foot` (1–5; default 3).
+Injury proneness and big-game temperament are left out for now; `composure` covers pressure.
 
-**Which attributes matter where.** Used for a player's `overall` (an average weighted by position, used for strength
-and bench picking). The engine spec decides how each attribute changes actions.
+**Which attributes matter where.** A player's `overall` is the plain mean of the four main attributes for their primary
+position, used for strength, replacements and bench picking. The engine spec decides how each attribute changes actions.
 
 | Position group | Main attributes |
 |---|---|
@@ -183,14 +188,14 @@ modelled on: it shares no surname with them and is at least 4 edits away from th
 reference player to the real player lives only in `generator/reference_map.private.yaml`, which is gitignored and
 never committed. A test reads it when it is present and checks the edit distance; without it, that test is skipped.
 
-**Generated players.** First and last names come from separate regional pools: British and Irish, Iberian and Latin
+**Generated players** (with the invented clubs, milestone M3)**.** First and last names come from separate regional pools: British and Irish, Iberian and Latin
 American, French, West African, Central and Eastern European, Nordic, Italian, Dutch and German, and Middle Eastern
 and South Asian. Mix per club: about 50% from one or two home regions and 50% from the rest, picked with the season
 seed.
 
-**Avoiding real names.** First and last names are drawn separately, so most pairs are new. A local denylist
-(`generator/name_denylist.private.txt`, gitignored) of well-known real full names is checked at build time when it is
-present. Club names are an invented city plus a common suffix (FC, Athletic, Rovers, United, Albion, Town) and are
+**Avoiding real names.** First and last names are drawn separately, so most pairs are new. From milestone M3, a
+local denylist (`generator/name_denylist.private.txt`, gitignored) of well-known real full names is checked at build
+time when it is present. Club names are an invented city plus a common suffix (FC, Athletic, Rovers, United, Albion, Town) and are
 reviewed by hand in the PR that adds them.
 
 **No duplicates.** Full names are unique across the whole world; surnames are unique within a club. The build fails
@@ -232,6 +237,8 @@ come from code and the season seed.
 **The saved world.** `data/generated/world/<season_id>.json` (for example `S1.json`), holding `world_version`,
 `season_id`, `seed` and every club with its full squad and all twelve attributes. It is gitignored and rebuilt from
 the YAML and seed; the same inputs always give a byte-identical file. Every match in a season reads the same file.
+Each club also records its derived `strength` and each player their `overall`. `python world.py` (from `generator/`)
+builds and saves it; the command line comes with `cli.py`.
 
 **Versioning.** `world_version` is an integer, bumped whenever the YAML or the generation rules change. A match setup
 records the `season_id` and `seed`, so any match can be replayed from the same world. Fatigue is per match (engine
