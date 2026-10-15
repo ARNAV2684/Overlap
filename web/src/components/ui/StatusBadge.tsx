@@ -8,8 +8,10 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import { LiveDot } from "@/components/ui/LiveDot";
+import type { ConnectionStatus } from "@/lib/store";
 
-export type ConnectionStatus = "connecting" | "live" | "stale" | "reconnecting" | "finished";
+// One definition of the statuses, shared with the store (src/lib/store.ts)
+export type { ConnectionStatus };
 
 const iconClass = "size-3.5 shrink-0 fill-none stroke-current stroke-2";
 
