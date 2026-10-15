@@ -174,6 +174,8 @@ export type MatchStore = {
   ingestRaw(raw: unknown, receivedAt: number | null): IngestResult | "rejected";
   /** The setup from a snapshot (it also arrives inside the first status envelope). */
   setSetup(setup: MatchSetup): void;
+  /** Adds to the rejected-message count, for envelopes the snapshot loader already refused. */
+  addRejected(count: number): void;
   /** Starts a new session: forgets rows, counters and applied seqs. Keeps the filter and pause state. */
   reset(): void;
   setConnection(status: ConnectionStatus): void;
@@ -574,6 +576,12 @@ export function createMatchStore(matchId: string, options: StoreOptions = {}): M
 
     setSetup(next) {
       applySetup(next);
+    },
+
+    addRejected(count) {
+      if (count <= 0) return;
+      rejected += count;
+      mark("connection");
     },
 
     reset() {

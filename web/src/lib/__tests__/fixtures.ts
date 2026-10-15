@@ -5,7 +5,7 @@
 // Outputs: a match setup, events, a tracking frame and envelopes (invented clubs and players only)
 // Spec:    web/IMPLEMENTATION_PLAN.md Phase 4.4
 
-import type { MatchEvent, MatchSetup, TrackingFrame } from "@/lib/contracts";
+import type { MatchEvent, MatchSetup, ParsedEnvelope, Phase, TrackingFrame } from "@/lib/contracts";
 
 const POSITIONS = ["GK", "RB", "CB", "CB", "LB", "DM", "CM", "CM", "RW", "ST", "LW"];
 
@@ -90,4 +90,43 @@ export function makeFrame(overrides: Partial<TrackingFrame> = {}): TrackingFrame
 /** Wraps data in an envelope. `seq` is the envelope's own counter, not the event's. */
 export function envelope(kind: string, data: unknown, overrides: Record<string, unknown> = {}) {
   return { seq: 7, kind, match_id: "SYN-0042", match_ms: 3_854_000, clock: "62:14", data, ...overrides };
+}
+
+// ---- typed envelopes for the store and socket tests (the seq is the envelope's own counter) -------------------------
+
+export const MATCH = "SYN-0042";
+
+const clockOf = (ms: number) => `${Math.floor(ms / 60_000)}:${String(Math.floor(ms / 1000) % 60).padStart(2, "0")}`;
+
+export function eventEnv(seq: number, over: Partial<MatchEvent> = {}, ms = seq * 1000): ParsedEnvelope {
+  const data = makeEvent({ event_id: `SYN-0042-${String(seq).padStart(5, "0")}`, seq, match_ms: ms, ...over });
+  return { seq, kind: "event", match_id: MATCH, match_ms: ms, clock: clockOf(ms), data };
+}
+
+export function posEnv(seq: number, ms = seq * 1000, frames = 5): ParsedEnvelope {
+  return {
+    seq,
+    kind: "positions",
+    match_id: MATCH,
+    match_ms: ms,
+    clock: clockOf(ms),
+    data: { frames: Array.from({ length: frames }, (_, i) => makeFrame({ match_ms: ms + i * 200 })) },
+  };
+}
+
+export function statusEnv(
+  seq: number,
+  phase: Phase,
+  score = { home: 0, away: 0 },
+  extra: { setup?: MatchSetup; period?: number } = {},
+  ms = seq * 1000,
+): ParsedEnvelope {
+  return {
+    seq,
+    kind: "status",
+    match_id: MATCH,
+    match_ms: ms,
+    clock: clockOf(ms),
+    data: { phase, period: extra.period ?? 1, score, ...(extra.setup ? { setup: extra.setup } : {}) },
+  };
 }
