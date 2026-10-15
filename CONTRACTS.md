@@ -84,6 +84,7 @@ Sent once, before kickoff.
   "season_id": "S1",
   "venue": { "name": "Riverside Ground", "city": "Northbridge" },
   "kickoff_utc": "2026-10-24T19:00:00Z",
+  "conditions": { "temperature_c": 11.5, "precipitation": "light", "wind_ms": 6.0, "attendance": 38250 },
   "storylines": ["late_pressure_surge"],
   "teams": {
     "home": {
@@ -104,6 +105,11 @@ Sent once, before kickoff.
 ```
 
 - `seed`: same seed, same match.
+- `conditions` (optional in v0): the match's weather and crowd, decided by the generator before kickoff.
+  `temperature_c` (°C, one decimal), `precipitation` (`none`, `light`, `heavy`), `wind_ms` (m/s, one decimal, ≥ 0),
+  `attendance` (whole number, ≥ 0). The generator always sends it; the temporary mock may leave it out, so
+  consumers accept a setup with or without it. Agents may describe conditions in words ("in heavy rain"); any
+  number about them reaches an agent only through an evidence pack.
 - `season_id` scopes every season aggregate (milestones, totals). No unscoped season reads.
 - `style` values are 0–1. Player ratings are 1–99. `lineup` is exactly 11 players, goalkeeper first; the example
   shows one for brevity.
@@ -286,7 +292,7 @@ Numbers come from code. These definitions are shared so the agents, charts and t
 
 | Metric | Definition |
 |---|---|
-| **xG** | Logistic model of distance, angle, body part and situation. Penalty ≈ 0.76. |
+| **xG** | Logistic model of distance, angle, body part and situation. Penalty = 0.78 (Opta's value, sourced in [`CALIBRATION.md`](CALIBRATION.md)). |
 | **Pass difficulty** (0–1) | Length, under pressure, forward progress, lines broken, receiver under pressure |
 | **Momentum** | Per team, per 5-minute bucket of `period_ms`: goal 5, shot on target 3, other shot 1.5, key pass 2, completed take-on 1, red card 3, yellow 1, substitution 0.5. A goal counts once, as a shot. |
 | **Momentum share** | A team's weighted actions ÷ both teams' over a window, in %. A **momentum swing** is a change in share between consecutive windows past a threshold. |
