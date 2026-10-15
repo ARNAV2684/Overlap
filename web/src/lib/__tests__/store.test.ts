@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { MatchEvent, ParsedEnvelope, Phase } from "@/lib/contracts";
+import type { ParsedEnvelope } from "@/lib/contracts";
 import {
   createMatchStore,
   FLUSH_MS,
@@ -10,51 +10,9 @@ import {
   VISIBLE_ROWS,
   type MatchStore,
 } from "@/lib/store";
-import { envelope, makeEvent, makeFrame, makeSetup } from "./fixtures";
+import { envelope, eventEnv, makeEvent, makeSetup, MATCH, posEnv, statusEnv } from "./fixtures";
 
-const MATCH = "SYN-0042";
 const T0 = 1_000_000;
-
-// ---- envelope builders (seq is the envelope's own counter)
-const clockOf = (ms: number) => `${Math.floor(ms / 60_000)}:${String(Math.floor(ms / 1000) % 60).padStart(2, "0")}`;
-
-function eventEnv(seq: number, over: Partial<MatchEvent> = {}, ms = seq * 1000): ParsedEnvelope {
-  const data = makeEvent({
-    event_id: `SYN-0042-${String(seq).padStart(5, "0")}`,
-    seq,
-    match_ms: ms,
-    ...over,
-  });
-  return { seq, kind: "event", match_id: MATCH, match_ms: ms, clock: clockOf(ms), data };
-}
-
-function posEnv(seq: number, ms = seq * 1000, frames = 5): ParsedEnvelope {
-  return {
-    seq,
-    kind: "positions",
-    match_id: MATCH,
-    match_ms: ms,
-    clock: clockOf(ms),
-    data: { frames: Array.from({ length: frames }, (_, i) => makeFrame({ match_ms: ms + i * 200 })) },
-  };
-}
-
-function statusEnv(
-  seq: number,
-  phase: Phase,
-  score = { home: 0, away: 0 },
-  extra: { setup?: ReturnType<typeof makeSetup>; period?: number } = {},
-  ms = seq * 1000,
-): ParsedEnvelope {
-  return {
-    seq,
-    kind: "status",
-    match_id: MATCH,
-    match_ms: ms,
-    clock: clockOf(ms),
-    data: { phase, period: extra.period ?? 1, score, ...(extra.setup ? { setup: extra.setup } : {}) },
-  };
-}
 
 // ---- helpers
 let store: MatchStore;
@@ -598,6 +556,15 @@ describe("validation of raw messages", () => {
     store.flush();
     expect(state().connection.rejected).toBe(12);
     expect(rejections).toHaveLength(5);
+  });
+
+  it("adds rejections reported by the snapshot loader to the same count", () => {
+    store.ingestRaw({ junk: 1 }, Date.now());
+    store.addRejected(3);
+    store.addRejected(0);
+    store.addRejected(-2);
+    store.flush();
+    expect(state().connection.rejected).toBe(4);
   });
 
   it("does not count a rejected message as received", () => {
