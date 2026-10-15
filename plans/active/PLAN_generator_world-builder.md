@@ -128,7 +128,7 @@ Vedant's web app only reads the match setup, not the world file (checked with Ve
 
 | File or small related group | Add / modify / use unchanged | Responsibility | Governing spec and unanswered questions | Owner / shared reviewer |
 |---|---|---|---|---|
-| `generator/specs/world.md` | Modify (M1) | Answer §1–§7, with reference profiles | Itself · all open | Azeem / Arnav |
+| `generator/specs/world.md` | Modify (M1, M2) | M1: answer §1–§7, with reference profiles. M2: status set to agreed and wording kept in step with the code | Itself · agreed in PR #8 | Azeem / Arnav |
 | `generator/reference_clubs.yaml` | Add (M2) | The two reference clubs: names, city, venue, kits, formation, style, squads, attributes | `world.md` §1–§4, §6 | Azeem |
 | `generator/world.py` | Modify (M2) | Load, validate, assign ids, save world; build match setups | `world.md` §1–§4, §7 | Azeem |
 | `generator/names.py` | Modify (M2) | Name uniqueness checks now; invented name pools in M3 | `world.md` §5 | Azeem |
@@ -267,13 +267,15 @@ M2 (two reference clubs). M3 is not started.
   - **AC-05:** passed — both A-vs-B and B-vs-A setups pass `validate_setup` from `mock/overlap_mock/contracts.py`
     (run by hand from the repo root; the generator does not import the mock).
   - **AC-06:** passed on Azeem's machine with the private mapping present; skipped in CI, where the file doesn't exist.
-  - Also checked: 23 tests pass (`pytest`), including broken-data cases and the CIEDE2000 reference value; `ruff
+  - Also checked: 26 tests pass (`pytest`), including broken-data cases and the CIEDE2000 reference value; `ruff
     0.17.0` clean on every changed `.py` file. Strength: A 83.9, B 72.3.
 - Setup and integration instructions: `cd generator && uv sync && uv run pytest`; `python world.py` writes
   `data/generated/world/S1.json` and prints a summary per club. `world.build_setup(home, away, ...)` returns a match
   setup.
 - Differences from the agreed proposal: `world.py` can be run directly to save the world (the CLI comes with
-  `cli.py` later). Squad data gained secondary positions so every formation slot has a backup
-  (`test_every_slot_has_cover`).
+  `cli.py` later). `world.md` was added to the M2 file map (agreed with Azeem) to set its status to agreed and keep
+  it in step with the code: setup `pos` is the slot played, bench fill rule, `overall` is a plain mean, outfield
+  goalkeeping ≤ 20 and two-player slot cover are now build rules, the name denylist is marked M3. Squad data gained
+  secondary positions so every formation slot has a backup.
 - Known limitations and follow-up owner: feet are partly estimates (Azeem to confirm); no invented clubs yet (M3,
   Azeem); behaviour on the pitch can only be checked once the engine exists.
