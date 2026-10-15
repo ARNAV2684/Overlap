@@ -361,6 +361,20 @@ describe("reconnecting", () => {
     expect(state().notice).toEqual({ text: notices.connectionLost, tone: "warning" });
   });
 
+  it("never shows a cleared store as still reconnecting (no half-updated frame)", async () => {
+    await fullyConnected([eventEnv(1)]);
+    snapshot = deferred<Snapshot>();
+    ws().serverClose();
+    await vi.advanceTimersByTimeAsync(BACKOFF.firstMs);
+    ws().open();
+    const seen: string[] = [];
+    store.subscribe(() => seen.push(`${state().connection.status}:${state().timeline.rows.length}`));
+    ws().receive(connectedMessage); // the store is reset here
+    await settle();
+    expect(seen.length).toBeGreaterThan(0);
+    expect(seen.every((entry) => entry.startsWith("live:"))).toBe(true);
+  });
+
   it("backs off 3, 6, 12, then 15 s while the server stays unreachable", async () => {
     socket.start();
     await settle();

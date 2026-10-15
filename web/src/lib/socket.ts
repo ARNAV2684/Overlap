@@ -223,9 +223,10 @@ export function createMatchSocket(store: MatchStore, overrides: Partial<SocketDe
    * kept as live. If the snapshot cannot be read, carry on with live messages only.
    */
   async function catchUp(gen: number) {
-    store.reset();
+    // Status and notice first, then the reset (which publishes at once), so no frame shows an empty store as "reconnecting"
     store.setConnection("live");
     store.setNotice(notices.loadingHistory);
+    store.reset();
     attempt = 0;
     loading = true;
     buffer = [];
