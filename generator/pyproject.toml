@@ -1,0 +1,23 @@
+[project]
+name = "overlap-generator"
+version = "0.1.0"
+description = "Synthetic match generator: world builder first (generator/specs/world.md)."
+requires-python = ">=3.12"
+dependencies = [
+    "pyyaml>=6.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 120
