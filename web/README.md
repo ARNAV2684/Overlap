@@ -4,6 +4,45 @@ Next.js (App Router, TypeScript): the viewer's screen. One message format (the e
 [`CONTRACTS.md` §7](../CONTRACTS.md#7-envelope-everything-sent-to-browsers)) feeds it from snapshots, the live
 socket and replay files alike.
 
+## Run locally
+
+Needs Node 22 or newer (CI uses 22).
+
+```bash
+cd web
+cp .env.example .env.local   # URLs and ids only, never secrets
+npm install
+npm run dev                  # http://localhost:3000
+```
+
+Copy `.env.local` before you start. `src/lib/env.ts` throws a clear message if a value is missing or malformed, but
+nothing imports it yet, so today the app still runs without it; it will be required once the realtime code
+(Phase 5) imports it. `package-lock.json` is gitignored, so installs are not pinned.
+
+| Script | What it does |
+|---|---|
+| `npm run dev` | Dev server on port 3000 |
+| `npm run build` / `npm start` | Production build, then serve it |
+| `npm run lint` | ESLint |
+| `npm run typecheck` | `tsc --noEmit` |
+
+Run `lint`, `typecheck` and `build` before asking for review (the CI web job runs the same three).
+
+### With the mock stream
+
+The app reads from the stream server at `NEXT_PUBLIC_STREAM_BASE_URL` (default `http://localhost:8787`). To get live
+data locally, start the temporary mock first (details in [`../mock/single-match-demo/README.md`](../mock/single-match-demo/README.md)):
+
+```bash
+cd mock
+uv sync
+uv run python -m overlap_mock.cli play --match SYN-9001 --speed 20 --hubs off --web --stdout events --linger-s 600
+```
+
+**Current state:** the pages and API routes are build-safe stubs, so `/` renders an empty page and `/api/*` answer
+`501 not_implemented`. Nothing reads the stream yet. The old viewer on `http://127.0.0.1:8788` is the reference for
+what the Next.js app will rebuild; see [`IMPLEMENTATION_PLAN.md`](IMPLEMENTATION_PLAN.md).
+
 ## Define before you code
 
 | # | Spec | What it decides | Governs |
