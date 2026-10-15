@@ -81,6 +81,32 @@ def test_every_slot_has_cover(clubs):
             assert len(able) >= 2, f"{club.team_id}: only {able} can play {slot}"
 
 
+def test_style_has_all_ten_traits(clubs):
+    for club in clubs.values():
+        assert set(club.style) == set(world.STYLE_KEYS) and len(world.STYLE_KEYS) == 10
+
+
+def test_reference_clubs_contrast_on_new_traits(clubs):
+    # world.md §4: the two clubs differ by 0.3 or more on each pressing, transition and set-piece trait
+    for key in ("counter_press", "press_height", "counter_attack", "set_piece_focus"):
+        assert abs(clubs["SKH"].style[key] - clubs["AMH"].style[key]) >= 0.3, key
+
+
+def test_every_player_has_an_allowed_role(clubs):
+    for club in clubs.values():
+        for p in club.squad:
+            assert p.pos in world.ROLES[p.role], f"{club.team_id} {p.name}: {p.role} for {p.pos}"
+
+
+def test_set_piece_takers_saved_as_player_ids():
+    saved = world.build_world()
+    for club in saved["clubs"]:
+        ids = {p["player_id"] for p in club["squad"]}
+        assert set(club["set_pieces"]) == set(world.SET_PIECE_KINDS)
+        for takers in club["set_pieces"].values():
+            assert len(takers) >= world.MIN_TAKERS and set(takers) <= ids
+
+
 def test_names_unique(clubs):
     everyone = [(c.team_id, p.name) for c in clubs.values() for p in c.squad]
     assert names.duplicate_problems(everyone) == []
@@ -199,6 +225,38 @@ def _bad_foot(d):
     d["clubs"][0]["squad"][0]["preferred_foot"] = "left-ish"
 
 
+def _unknown_role(d):
+    d["clubs"][0]["squad"][0]["role"] = "libero"
+
+
+def _role_wrong_position(d):
+    d["clubs"][0]["squad"][0]["role"] = "poacher"  # a goalkeeper as a poacher
+
+
+def _missing_role(d):
+    del d["clubs"][0]["squad"][0]["role"]
+
+
+def _missing_style_trait(d):
+    del d["clubs"][0]["style"]["counter_press"]
+
+
+def _one_penalty_taker(d):
+    d["clubs"][0]["set_pieces"]["penalties"] = [9]
+
+
+def _taker_not_in_squad(d):
+    d["clubs"][0]["set_pieces"]["free_kicks"] = [10, 99]
+
+
+def _goalkeeper_takes_corners(d):
+    d["clubs"][0]["set_pieces"]["corners"] = [1, 10]
+
+
+def _missing_set_piece_kind(d):
+    del d["clubs"][0]["set_pieces"]["corners"]
+
+
 @pytest.mark.parametrize("change, expected", [
     (_set_rating, "ratings must be whole numbers 1–99"),
     (_duplicate_shirt, "used more than once"),
@@ -211,6 +269,14 @@ def _bad_foot(d):
     (_outfield_goalkeeping, "goalkeeping must be 20 or less"),
     (_no_striker_cover, "can play ST"),
     (_bad_foot, "preferred_foot must be one of"),
+    (_unknown_role, "unknown role"),
+    (_role_wrong_position, "role poacher is not allowed for GK"),
+    (_missing_role, "missing fields"),
+    (_missing_style_trait, "style needs exactly"),
+    (_one_penalty_taker, "penalties needs at least 2 different takers"),
+    (_taker_not_in_squad, "free_kicks taker 99 is not in the squad"),
+    (_goalkeeper_takes_corners, "can't take corners"),
+    (_missing_set_piece_kind, "set_pieces needs exactly"),
 ])
 def test_broken_reference_data_fails(change, expected):
     with pytest.raises(world.WorldError, match=expected):

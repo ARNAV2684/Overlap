@@ -8,12 +8,14 @@
 # Every name, venue and city here is invented. Never write the real team or player a profile is modelled on in this
 # file. Ratings are set by hand (CONTRIBUTING.md, "Reference profiles are allowed").
 #
-# Players: `other` (secondary positions) defaults to none, `preferred_foot` to right, `weak_foot` to 3.
+# Players: `role` is required (allowed roles per position: specs/world.md §3). `other` (secondary positions)
+#          defaults to none, `preferred_foot` to right, `weak_foot` to 3.
 # `attr` order: pace, passing, dribbling, finishing, tackling, stamina,
 #               acceleration, vision, positioning, aerial, composure, goalkeeping
 # `default_xi`: shirt numbers in the formation's slot order, goalkeeper first.
+# `set_pieces`: ordered taker shirt numbers for penalties, corners and direct free kicks.
 
-world_version: 1
+world_version: 2  # bump on every change to this file (specs/world.md §7)
 
 clubs:
   - team_id: SKH
@@ -25,39 +27,41 @@ clubs:
       home: {primary: "#74B4E3", secondary: "#14234B"}
       away: {primary: "#14234B", secondary: "#74B4E3"}
     formation: 4-2-3-1
-    style: {press_intensity: 0.85, directness: 0.20, width: 0.75, tempo: 0.60, line_height: 0.85, build_up_short: 0.90}
+    style: {press_intensity: 0.85, directness: 0.20, width: 0.75, tempo: 0.60, line_height: 0.85, build_up_short: 0.90,
+            counter_press: 0.90, press_height: 0.85, counter_attack: 0.45, set_piece_focus: 0.35}
     default_xi: [1, 27, 3, 6, 33, 5, 17, 7, 10, 42, 9]
+    set_pieces: {penalties: [9, 47], corners: [10, 47], free_kicks: [10, 47]}
     squad:
-      - {shirt: 1, name: Matteo Dalvenuto, pos: GK, attr: [50, 70, 40, 15, 25, 60, 55, 62, 88, 85, 84, 89]}
-      - {shirt: 3, name: Tiago Mourelo, pos: CB, attr: [66, 76, 62, 40, 87, 82, 62, 66, 88, 85, 88, 10]}
-      - {shirt: 6, name: Femi Adebanjo, pos: CB, other: [DM], attr: [74, 72, 64, 42, 85, 82, 72, 62, 84, 82, 82, 10]}
-      - {shirt: 27, name: Vasco Lameira, pos: RB, other: [CM, RM], attr: [82, 78, 80, 62, 74, 88, 82, 72, 72, 62, 76, 10]}
-      - {shirt: 33, name: Rory Halloran, pos: LB, other: [DM, AM], preferred_foot: left,
+      - {shirt: 1, name: Matteo Dalvenuto, pos: GK, role: sweeper_keeper, attr: [50, 70, 40, 15, 25, 60, 55, 62, 88, 85, 84, 89]}
+      - {shirt: 3, name: Tiago Mourelo, pos: CB, role: ball_playing_cb, attr: [66, 76, 62, 40, 87, 82, 62, 66, 88, 85, 88, 10]}
+      - {shirt: 6, name: Femi Adebanjo, pos: CB, role: stopper, other: [DM], attr: [74, 72, 64, 42, 85, 82, 72, 62, 84, 82, 82, 10]}
+      - {shirt: 27, name: Vasco Lameira, pos: RB, role: inverted_fullback, other: [CM, RM], attr: [82, 78, 80, 62, 74, 88, 82, 72, 72, 62, 76, 10]}
+      - {shirt: 33, name: Rory Halloran, pos: LB, role: inverted_fullback, other: [DM, AM], preferred_foot: left,
          attr: [78, 78, 76, 60, 74, 84, 78, 74, 74, 76, 76, 10]}
-      - {shirt: 5, name: Ellis Whitford, pos: DM, other: [CM, LM], attr: [74, 82, 80, 66, 78, 88, 76, 80, 80, 62, 80, 10]}
-      - {shirt: 17, name: Tomás Echagüe, pos: DM, other: [CM], attr: [70, 86, 80, 70, 76, 88, 72, 86, 80, 60, 84, 10]}
-      - {shirt: 7, name: Babacar Ndour, pos: RW, other: [LW, AM], attr: [86, 76, 86, 76, 50, 82, 87, 76, 76, 58, 78, 10]}
-      - {shirt: 10, name: Nassim Belkadi, pos: AM, other: [LW, RW], preferred_foot: both, weak_foot: 5,
+      - {shirt: 5, name: Ellis Whitford, pos: DM, role: box_to_box, other: [CM, LM], attr: [74, 82, 80, 66, 78, 88, 76, 80, 80, 62, 80, 10]}
+      - {shirt: 17, name: Tomás Echagüe, pos: DM, role: deep_playmaker, other: [CM], attr: [70, 86, 80, 70, 76, 88, 72, 86, 80, 60, 84, 10]}
+      - {shirt: 7, name: Babacar Ndour, pos: RW, role: wide_winger, other: [LW, AM], attr: [86, 76, 86, 76, 50, 82, 87, 76, 76, 58, 78, 10]}
+      - {shirt: 10, name: Nassim Belkadi, pos: AM, role: playmaker, other: [LW, RW], preferred_foot: both, weak_foot: 5,
          attr: [76, 87, 91, 80, 40, 74, 84, 90, 78, 50, 86, 10]}
-      - {shirt: 42, name: Kojo Ampofo-Reid, pos: LW, preferred_foot: both, weak_foot: 4, other: [RW, ST],
+      - {shirt: 42, name: Kojo Ampofo-Reid, pos: LW, role: inverted_winger, preferred_foot: both, weak_foot: 4, other: [RW, ST],
          attr: [89, 74, 82, 82, 52, 86, 88, 74, 80, 72, 80, 10]}
-      - {shirt: 9, name: Brann Holt, pos: ST, preferred_foot: left, attr: [90, 66, 76, 95, 40, 82, 86, 66, 95, 88, 90, 10]}
-      - {shirt: 24, name: Dario Šimunić, pos: LB, other: [CB], preferred_foot: left,
+      - {shirt: 9, name: Brann Holt, pos: ST, role: poacher, preferred_foot: left, attr: [90, 66, 76, 95, 40, 82, 86, 66, 95, 88, 90, 10]}
+      - {shirt: 24, name: Dario Šimunić, pos: LB, role: overlapping_fullback, other: [CB], preferred_foot: left,
          attr: [80, 78, 76, 60, 85, 85, 76, 70, 82, 82, 82, 10]}
-      - {shirt: 45, name: Bekzod Rahimov, pos: CB, other: [RB], attr: [86, 68, 64, 35, 80, 82, 82, 58, 74, 78, 70, 10]}
-      - {shirt: 47, name: Alfie Prescott, pos: RW, other: [CM, ST], preferred_foot: left,
+      - {shirt: 45, name: Bekzod Rahimov, pos: CB, role: stopper, other: [RB], attr: [86, 68, 64, 35, 80, 82, 82, 58, 74, 78, 70, 10]}
+      - {shirt: 47, name: Alfie Prescott, pos: RW, role: inverted_winger, other: [CM, ST], preferred_foot: left,
          attr: [80, 86, 89, 84, 52, 82, 86, 88, 82, 50, 85, 10]}
-      - {shirt: 82, name: Kai Denholm, pos: RB, other: [LB, CM], attr: [74, 80, 78, 55, 74, 84, 78, 76, 76, 50, 78, 10]}
-      - {shirt: 8, name: Ante Brkljača, pos: CM, other: [LM], attr: [70, 86, 86, 62, 72, 80, 74, 82, 76, 55, 86, 10]}
-      - {shirt: 11, name: Elias Kabongo, pos: LW, attr: [94, 70, 92, 68, 40, 78, 95, 70, 66, 45, 72, 10]}
-      - {shirt: 21, name: Yanis Haddouche, pos: LB, preferred_foot: left, attr: [82, 76, 82, 60, 74, 82, 84, 72, 72, 55, 74, 10]}
-      - {shirt: 22, name: Caio Nogueira, pos: CB, attr: [72, 70, 60, 30, 76, 76, 70, 58, 74, 76, 70, 10]}
-      - {shirt: 28, name: Facundo Arrieta, pos: GK, attr: [45, 62, 35, 12, 20, 55, 50, 55, 78, 76, 76, 78]}
-      - {shirt: 30, name: Santino Ibarrola, pos: AM, attr: [74, 78, 84, 70, 35, 70, 80, 80, 68, 40, 72, 10]}
-      - {shirt: 32, name: Ilyes Benchikh, pos: DM, other: [CM], attr: [70, 76, 74, 52, 74, 82, 72, 74, 72, 62, 74, 10]}
-      - {shirt: 37, name: Davi Lucena, pos: RW, preferred_foot: left, attr: [84, 66, 78, 64, 38, 74, 85, 64, 64, 45, 64, 10]}
-      - {shirt: 56, name: Tyrese Okwuosa, pos: RW, preferred_foot: left, attr: [82, 62, 74, 60, 35, 72, 84, 60, 60, 45, 60, 10]}
-      - {shirt: 61, name: Remy Ashdown, pos: CB, preferred_foot: left, attr: [70, 62, 55, 30, 68, 72, 68, 52, 64, 68, 60, 10]}
+      - {shirt: 82, name: Kai Denholm, pos: RB, role: inverted_fullback, other: [LB, CM], attr: [74, 80, 78, 55, 74, 84, 78, 76, 76, 50, 78, 10]}
+      - {shirt: 8, name: Ante Brkljača, pos: CM, role: playmaker, other: [LM], attr: [70, 86, 86, 62, 72, 80, 74, 82, 76, 55, 86, 10]}
+      - {shirt: 11, name: Elias Kabongo, pos: LW, role: inverted_winger, attr: [94, 70, 92, 68, 40, 78, 95, 70, 66, 45, 72, 10]}
+      - {shirt: 21, name: Yanis Haddouche, pos: LB, role: overlapping_fullback, preferred_foot: left, attr: [82, 76, 82, 60, 74, 82, 84, 72, 72, 55, 74, 10]}
+      - {shirt: 22, name: Caio Nogueira, pos: CB, role: ball_playing_cb, attr: [72, 70, 60, 30, 76, 76, 70, 58, 74, 76, 70, 10]}
+      - {shirt: 28, name: Facundo Arrieta, pos: GK, role: shot_stopper, attr: [45, 62, 35, 12, 20, 55, 50, 55, 78, 76, 76, 78]}
+      - {shirt: 30, name: Santino Ibarrola, pos: AM, role: playmaker, attr: [74, 78, 84, 70, 35, 70, 80, 80, 68, 40, 72, 10]}
+      - {shirt: 32, name: Ilyes Benchikh, pos: DM, role: anchor, other: [CM], attr: [70, 76, 74, 52, 74, 82, 72, 74, 72, 62, 74, 10]}
+      - {shirt: 37, name: Davi Lucena, pos: RW, role: inverted_winger, preferred_foot: left, attr: [84, 66, 78, 64, 38, 74, 85, 64, 64, 45, 64, 10]}
+      - {shirt: 56, name: Tyrese Okwuosa, pos: RW, role: inverted_winger, preferred_foot: left, attr: [82, 62, 74, 60, 35, 72, 84, 60, 60, 45, 60, 10]}
+      - {shirt: 61, name: Remy Ashdown, pos: CB, role: ball_playing_cb, preferred_foot: left, attr: [70, 62, 55, 30, 68, 72, 68, 52, 64, 68, 60, 10]}
 
   - team_id: AMH
     name: Amberholt Rovers
@@ -68,36 +72,38 @@ clubs:
       home: {primary: "#F2A023", secondary: "#111111"}
       away: {primary: "#F4F4F4", secondary: "#111111"}
     formation: 5-4-1
-    style: {press_intensity: 0.45, directness: 0.60, width: 0.55, tempo: 0.50, line_height: 0.40, build_up_short: 0.45}
+    style: {press_intensity: 0.45, directness: 0.60, width: 0.55, tempo: 0.50, line_height: 0.40, build_up_short: 0.45,
+            counter_press: 0.30, press_height: 0.35, counter_attack: 0.80, set_piece_focus: 0.75}
     default_xi: [19, 2, 6, 15, 32, 3, 11, 27, 25, 7, 9]
+    set_pieces: {penalties: [9, 10], corners: [7, 3], free_kicks: [7, 10]}
     squad:
-      - {shirt: 19, name: Stavros Kalogirou, pos: GK, attr: [50, 62, 35, 12, 20, 58, 55, 55, 74, 74, 70, 75]}
-      - {shirt: 2, name: Dean Hartshorn, pos: RWB, other: [RB, RM], attr: [74, 68, 64, 45, 70, 84, 72, 60, 68, 58, 66, 10]}
-      - {shirt: 6, name: Tunde Ogundipe, pos: CB, other: [DM], attr: [66, 64, 56, 50, 74, 74, 62, 54, 72, 82, 68, 10]}
-      - {shirt: 15, name: Declan Muldoon, pos: CB, attr: [62, 64, 50, 38, 75, 74, 60, 54, 76, 80, 72, 10]}
-      - {shirt: 32, name: Moussa Tendeng, pos: CB, preferred_foot: left, attr: [70, 60, 56, 35, 72, 74, 68, 50, 68, 76, 64, 10]}
-      - {shirt: 3, name: Owen Leadbetter, pos: LWB, other: [LM, RM], preferred_foot: left,
+      - {shirt: 19, name: Stavros Kalogirou, pos: GK, role: shot_stopper, attr: [50, 62, 35, 12, 20, 58, 55, 55, 74, 74, 70, 75]}
+      - {shirt: 2, name: Dean Hartshorn, pos: RWB, role: wing_back, other: [RB, RM], attr: [74, 68, 64, 45, 70, 84, 72, 60, 68, 58, 66, 10]}
+      - {shirt: 6, name: Tunde Ogundipe, pos: CB, role: stopper, other: [DM], attr: [66, 64, 56, 50, 74, 74, 62, 54, 72, 82, 68, 10]}
+      - {shirt: 15, name: Declan Muldoon, pos: CB, role: stopper, attr: [62, 64, 50, 38, 75, 74, 60, 54, 76, 80, 72, 10]}
+      - {shirt: 32, name: Moussa Tendeng, pos: CB, role: stopper, preferred_foot: left, attr: [70, 60, 56, 35, 72, 74, 68, 50, 68, 76, 64, 10]}
+      - {shirt: 3, name: Owen Leadbetter, pos: LWB, role: wing_back, other: [LM, RM], preferred_foot: left,
          attr: [76, 76, 68, 50, 64, 82, 74, 72, 66, 55, 68, 10]}
-      - {shirt: 11, name: Billy Kettering, pos: RM, preferred_foot: left, other: [ST], attr: [76, 66, 74, 70, 38, 72, 78, 64, 68, 50, 66, 10]}
-      - {shirt: 27, name: Jake Pemberton, pos: CM, other: [RB, LM], attr: [70, 70, 66, 55, 72, 86, 70, 64, 68, 58, 66, 10]}
-      - {shirt: 25, name: Ross Haverstock, pos: CM, other: [ST], attr: [64, 66, 62, 66, 66, 78, 62, 60, 70, 80, 66, 10]}
-      - {shirt: 7, name: Kieron Ashby-Lowe, pos: LM, other: [LW], attr: [78, 74, 70, 60, 45, 76, 78, 70, 62, 48, 64, 10]}
-      - {shirt: 9, name: Angus Tarbet, pos: ST, other: [AM, LW], attr: [62, 66, 62, 72, 45, 76, 60, 64, 74, 84, 70, 10]}
-      - {shirt: 10, name: Rayane Bouzid, pos: RW, other: [RM], preferred_foot: left,
+      - {shirt: 11, name: Billy Kettering, pos: RM, role: inverted_winger, preferred_foot: left, other: [ST], attr: [76, 66, 74, 70, 38, 72, 78, 64, 68, 50, 66, 10]}
+      - {shirt: 27, name: Jake Pemberton, pos: CM, role: box_to_box, other: [RB, LM], attr: [70, 70, 66, 55, 72, 86, 70, 64, 68, 58, 66, 10]}
+      - {shirt: 25, name: Ross Haverstock, pos: CM, role: box_to_box, other: [ST], attr: [64, 66, 62, 66, 66, 78, 62, 60, 70, 80, 66, 10]}
+      - {shirt: 7, name: Kieron Ashby-Lowe, pos: LM, role: wide_winger, other: [LW], attr: [78, 74, 70, 60, 45, 76, 78, 70, 62, 48, 64, 10]}
+      - {shirt: 9, name: Angus Tarbet, pos: ST, role: target_man, other: [AM, LW], attr: [62, 66, 62, 72, 45, 76, 60, 64, 74, 84, 70, 10]}
+      - {shirt: 10, name: Rayane Bouzid, pos: RW, role: inverted_winger, other: [RM], preferred_foot: left,
          attr: [80, 72, 80, 72, 38, 74, 82, 72, 70, 45, 70, 10]}
-      - {shirt: 21, name: Harvey Coulton, pos: LM, preferred_foot: left, other: [CM], attr: [72, 66, 66, 55, 58, 80, 72, 62, 62, 50, 62, 10]}
-      - {shirt: 5, name: Kenta Ishiwata, pos: DM, attr: [66, 78, 72, 55, 74, 82, 68, 76, 76, 55, 78, 10]}
-      - {shirt: 22, name: Lachlan Wexford, pos: CB, attr: [66, 62, 52, 30, 68, 72, 64, 50, 64, 70, 60, 10]}
-      - {shirt: 29, name: Mathis Kouadio-Brun, pos: DM, attr: [72, 70, 70, 48, 72, 80, 72, 64, 68, 62, 66, 10]}
-      - {shirt: 12, name: Connor Hadley, pos: GK, attr: [45, 55, 30, 10, 18, 55, 48, 48, 68, 66, 64, 68]}
-      - {shirt: 14, name: Sindre Fjellheim, pos: CM, attr: [66, 68, 64, 52, 62, 76, 66, 64, 62, 55, 62, 10]}
-      - {shirt: 17, name: Ciaran Mullan, pos: CB, other: [RB, CM], attr: [60, 66, 56, 40, 70, 72, 58, 58, 70, 70, 68, 10]}
-      - {shirt: 18, name: Tayo Lindsay-Grant, pos: RB, other: [RWB], attr: [80, 64, 66, 42, 66, 80, 80, 56, 62, 55, 60, 10]}
-      - {shirt: 23, name: Sam Fairclough, pos: LB, other: [LWB, CB], preferred_foot: left,
+      - {shirt: 21, name: Harvey Coulton, pos: LM, role: wide_midfielder, preferred_foot: left, other: [CM], attr: [72, 66, 66, 55, 58, 80, 72, 62, 62, 50, 62, 10]}
+      - {shirt: 5, name: Kenta Ishiwata, pos: DM, role: deep_playmaker, attr: [66, 78, 72, 55, 74, 82, 68, 76, 76, 55, 78, 10]}
+      - {shirt: 22, name: Lachlan Wexford, pos: CB, role: stopper, attr: [66, 62, 52, 30, 68, 72, 64, 50, 64, 70, 60, 10]}
+      - {shirt: 29, name: Mathis Kouadio-Brun, pos: DM, role: ball_winner, attr: [72, 70, 70, 48, 72, 80, 72, 64, 68, 62, 66, 10]}
+      - {shirt: 12, name: Connor Hadley, pos: GK, role: shot_stopper, attr: [45, 55, 30, 10, 18, 55, 48, 48, 68, 66, 64, 68]}
+      - {shirt: 14, name: Sindre Fjellheim, pos: CM, role: box_to_box, attr: [66, 68, 64, 52, 62, 76, 66, 64, 62, 55, 62, 10]}
+      - {shirt: 17, name: Ciaran Mullan, pos: CB, role: stopper, other: [RB, CM], attr: [60, 66, 56, 40, 70, 72, 58, 58, 70, 70, 68, 10]}
+      - {shirt: 18, name: Tayo Lindsay-Grant, pos: RB, role: overlapping_fullback, other: [RWB], attr: [80, 64, 66, 42, 66, 80, 80, 56, 62, 55, 60, 10]}
+      - {shirt: 23, name: Sam Fairclough, pos: LB, role: overlapping_fullback, other: [LWB, CB], preferred_foot: left,
          attr: [66, 72, 60, 45, 68, 74, 64, 66, 66, 60, 66, 10]}
-      - {shirt: 26, name: Conor Ainscough, pos: AM, preferred_foot: left, attr: [62, 72, 70, 64, 40, 68, 64, 72, 64, 45, 64, 10]}
-      - {shirt: 36, name: Nikos Petridis, pos: CM, preferred_foot: left, attr: [64, 68, 64, 48, 60, 74, 64, 66, 60, 50, 60, 10]}
-      - {shirt: 42, name: Chidi Onwuachi, pos: CM, attr: [68, 66, 62, 48, 70, 80, 68, 60, 66, 62, 62, 10]}
-      - {shirt: 47, name: Yoann Mabika, pos: ST, attr: [82, 56, 70, 68, 30, 72, 84, 54, 66, 62, 60, 10]}
-      - {shirt: 50, name: Samir Ouattara-Lenoir, pos: RW, preferred_foot: left, other: [AM, ST],
+      - {shirt: 26, name: Conor Ainscough, pos: AM, role: playmaker, preferred_foot: left, attr: [62, 72, 70, 64, 40, 68, 64, 72, 64, 45, 64, 10]}
+      - {shirt: 36, name: Nikos Petridis, pos: CM, role: playmaker, preferred_foot: left, attr: [64, 68, 64, 48, 60, 74, 64, 66, 60, 50, 60, 10]}
+      - {shirt: 42, name: Chidi Onwuachi, pos: CM, role: ball_winner, attr: [68, 66, 62, 48, 70, 80, 68, 60, 66, 62, 62, 10]}
+      - {shirt: 47, name: Yoann Mabika, pos: ST, role: pressing_forward, attr: [82, 56, 70, 68, 30, 72, 84, 54, 66, 62, 60, 10]}
+      - {shirt: 50, name: Samir Ouattara-Lenoir, pos: RW, role: inverted_winger, preferred_foot: left, other: [AM, ST],
          attr: [80, 64, 76, 64, 35, 72, 82, 62, 62, 50, 62, 10]}

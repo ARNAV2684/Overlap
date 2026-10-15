@@ -26,10 +26,35 @@ WORLD_DIR = Path(__file__).resolve().parents[1] / "data" / "generated" / "world"
 ATTRIBUTES = ("pace", "passing", "dribbling", "finishing", "tackling", "stamina",
               "acceleration", "vision", "positioning", "aerial", "composure", "goalkeeping")
 SETUP_ATTRIBUTES = ATTRIBUTES[:6]  # the six the match setup sends (CONTRACTS.md §2)
-STYLE_KEYS = ("press_intensity", "directness", "width", "tempo", "line_height", "build_up_short")
+STYLE_KEYS = ("press_intensity", "directness", "width", "tempo", "line_height", "build_up_short",
+              "counter_press", "press_height", "counter_attack", "set_piece_focus")
 SETUP_STYLE_KEYS = STYLE_KEYS[:3]
 POSITIONS = ("GK", "CB", "LB", "RB", "LWB", "RWB", "DM", "CM", "AM", "LM", "RM", "LW", "RW", "ST")
 FEET = ("left", "right", "both")
+
+# What each player does, and the primary positions it is allowed for (world.md §3). The engine spec decides effects.
+ROLES: dict[str, tuple[str, ...]] = {
+    "sweeper_keeper": ("GK",),
+    "shot_stopper": ("GK",),
+    "ball_playing_cb": ("CB",),
+    "stopper": ("CB",),
+    "overlapping_fullback": ("LB", "RB"),
+    "inverted_fullback": ("LB", "RB"),
+    "wing_back": ("LWB", "RWB", "LB", "RB"),
+    "anchor": ("DM",),
+    "deep_playmaker": ("DM", "CM"),
+    "ball_winner": ("DM", "CM"),
+    "box_to_box": ("CM", "DM"),
+    "playmaker": ("CM", "AM"),
+    "inverted_winger": ("LW", "RW", "LM", "RM"),
+    "wide_winger": ("LW", "RW", "LM", "RM"),
+    "wide_midfielder": ("LM", "RM"),
+    "poacher": ("ST",),
+    "target_man": ("ST",),
+    "pressing_forward": ("ST",),
+}
+SET_PIECE_KINDS = ("penalties", "corners", "free_kicks")
+MIN_TAKERS = 2
 
 # Slot order per formation, goalkeeper first (world.md §4). Anchor positions belong to movement.md.
 FORMATIONS: dict[str, tuple[str, ...]] = {
@@ -70,9 +95,10 @@ TEAM_ID = re.compile(r"^[A-Z]{3}$")
 MATCH_ID = re.compile(r"^SYN-\d{4}$")
 SEASON_ID = re.compile(r"^S\d+$")
 
-CLUB_FIELDS = {"team_id", "name", "short_name", "city", "venue", "colours", "formation", "style", "default_xi", "squad"}
-PLAYER_FIELDS = {"shirt", "name", "pos", "other", "preferred_foot", "weak_foot", "attr"}
-PLAYER_REQUIRED = {"shirt", "name", "pos", "attr"}
+CLUB_FIELDS = {"team_id", "name", "short_name", "city", "venue", "colours", "formation", "style", "default_xi",
+               "set_pieces", "squad"}
+PLAYER_FIELDS = {"shirt", "name", "pos", "role", "other", "preferred_foot", "weak_foot", "attr"}
+PLAYER_REQUIRED = {"shirt", "name", "pos", "role", "attr"}
 
 
 class WorldError(ValueError):
@@ -84,6 +110,7 @@ class Player:
     shirt: int
     name: str
     pos: str
+    role: str
     other: tuple[str, ...]
     preferred_foot: str
     weak_foot: int
@@ -109,6 +136,7 @@ class Club:
     formation: str
     style: dict
     default_xi: tuple[int, ...]
+    set_pieces: dict[str, tuple[int, ...]]
     squad: tuple[Player, ...]
     reference: bool
 
@@ -142,6 +170,7 @@ def _player(team_id: str, raw: dict, problems: list[str]) -> Player | None:
         shirt=raw["shirt"],
         name=raw["name"],
         pos=raw["pos"],
+        role=raw["role"],
         other=tuple(raw.get("other", ())),
         preferred_foot=raw.get("preferred_foot", "right"),
         weak_foot=raw.get("weak_foot", 3),
@@ -167,6 +196,7 @@ def _club(raw: dict, problems: list[str]) -> Club | None:
         formation=raw["formation"],
         style=dict(raw["style"]),
         default_xi=tuple(raw["default_xi"]),
+        set_pieces={kind: tuple(shirts) for kind, shirts in raw["set_pieces"].items()},
         squad=tuple(squad),
         reference=True,
     )
@@ -183,6 +213,10 @@ def _player_problems(club: Club, p: Player) -> list[str]:
         problems.append(f"{label}: shirt must be 1–99")
     if p.pos not in POSITIONS:
         problems.append(f"{label}: unknown position {p.pos!r}")
+    if p.role not in ROLES:
+        problems.append(f"{label}: unknown role {p.role!r}")
+    elif p.pos not in ROLES[p.role]:
+        problems.append(f"{label}: role {p.role} is not allowed for {p.pos}")
     if len(p.other) > 2 or any(o not in POSITIONS or o == p.pos for o in p.other):
         problems.append(f"{label}: other positions must be up to two valid positions, not the primary")
     if p.preferred_foot not in FEET:
@@ -229,6 +263,8 @@ def _club_problems(club: Club) -> list[str]:
     for p in club.squad:
         problems += _player_problems(club, p)
 
+    problems += _set_piece_problems(club)
+
     slots = FORMATIONS.get(club.formation)
     xi = club.default_xi
     by_shirt = {p.shirt: p for p in club.squad}
@@ -245,6 +281,25 @@ def _club_problems(club: Club) -> list[str]:
             able = sum(p.plays(slot) for p in club.squad)
             if able < MIN_SLOT_COVER:
                 problems.append(f"{tid}: only {able} player(s) can play {slot}; needs {MIN_SLOT_COVER}")
+    return problems
+
+
+def _set_piece_problems(club: Club) -> list[str]:
+    tid = club.team_id
+    if set(club.set_pieces) != set(SET_PIECE_KINDS):
+        return [f"{tid}: set_pieces needs exactly {', '.join(SET_PIECE_KINDS)}"]
+    by_shirt = {p.shirt: p for p in club.squad}
+    problems = []
+    for kind in SET_PIECE_KINDS:
+        takers = club.set_pieces[kind]
+        if len(set(takers)) < MIN_TAKERS or len(set(takers)) != len(takers):
+            problems.append(f"{tid}: {kind} needs at least {MIN_TAKERS} different takers")
+        for shirt in takers:
+            p = by_shirt.get(shirt)
+            if p is None:
+                problems.append(f"{tid}: {kind} taker {shirt} is not in the squad")
+            elif kind == "corners" and p.pos == "GK":
+                problems.append(f"{tid}: goalkeeper {shirt} {p.name} can't take corners")
     return problems
 
 
@@ -293,12 +348,14 @@ def _club_record(club: Club) -> dict:
         "strength": round(club.strength, 1),
         "reference": club.reference,
         "default_xi": [club.player_id(club.player(s)) for s in club.default_xi],
+        "set_pieces": {kind: [f"{club.team_id}-{s:02d}" for s in club.set_pieces[kind]] for kind in SET_PIECE_KINDS},
         "squad": [
             {
                 "player_id": club.player_id(p),
                 "shirt": p.shirt,
                 "name": p.name,
                 "pos": p.pos,
+                "role": p.role,
                 "other": list(p.other),
                 "preferred_foot": p.preferred_foot,
                 "weak_foot": p.weak_foot,
