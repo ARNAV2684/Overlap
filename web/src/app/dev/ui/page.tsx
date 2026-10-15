@@ -6,16 +6,23 @@
 // Spec:    web/IMPLEMENTATION_PLAN.md Phase 3
 
 import { notFound } from "next/navigation";
+import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { CardChip } from "@/components/ui/CardChip";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Eyebrow } from "@/components/ui/Eyebrow";
+import { Kbd } from "@/components/ui/Kbd";
 import { LiveDot } from "@/components/ui/LiveDot";
 import { Logo } from "@/components/ui/Logo";
 import { Panel } from "@/components/ui/Panel";
 import { PanelHeader } from "@/components/ui/PanelHeader";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { StatusBadge, type ConnectionStatus } from "@/components/ui/StatusBadge";
 import { Tag } from "@/components/ui/Tag";
 import { VisuallyHidden } from "@/components/ui/VisuallyHidden";
+import { SegmentedDemo } from "./SegmentedDemo";
+
+const statuses: ConnectionStatus[] = ["connecting", "live", "stale", "reconnecting", "finished"];
 
 // Class names are written out in full so Tailwind can see them.
 const greys = [
@@ -231,6 +238,54 @@ export default function DevUiPage() {
             <p className="mt-2 text-metric numeric text-ink">456</p>
             <p className="text-caption text-ink-muted">Passes, shots, fouls and more</p>
           </Card>
+        </div>
+      </Section>
+
+      <Section title="Button">
+        <p className="text-caption text-ink-muted">
+          Hover and focus are live: hover a button, or press <Kbd>Tab</Kbd> to see the focus ring.
+        </p>
+        {(["primary", "secondary", "ghost"] as const).map((variant) => (
+          <div key={variant} className="flex flex-wrap items-center gap-3">
+            <span className="w-20 text-code text-ink-muted">{variant}</span>
+            <Button variant={variant}>Default</Button>
+            <Button variant={variant} size="sm">
+              Small
+            </Button>
+            <Button variant={variant} disabled>
+              Disabled
+            </Button>
+            <Button variant={variant} loading>
+              Loading
+            </Button>
+          </div>
+        ))}
+      </Section>
+
+      <Section title="SegmentedControl and a toggle button">
+        <p className="text-caption text-ink-muted">
+          Tab into a group, then use <Kbd>←</Kbd> <Kbd>→</Kbd> (or <Kbd>↑</Kbd> <Kbd>↓</Kbd>), <Kbd>Home</Kbd> and{" "}
+          <Kbd>End</Kbd>. Only the selected option is a Tab stop.
+        </p>
+        <SegmentedDemo />
+      </Section>
+
+      <Section title="StatusBadge">
+        <div className="flex flex-wrap items-center gap-3">
+          {statuses.map((status) => (
+            <StatusBadge key={status} status={status} />
+          ))}
+        </div>
+      </Section>
+
+      <Section title="CardChip and Kbd">
+        <div className="flex flex-wrap items-center gap-4">
+          <CardChip card="yellow" />
+          <CardChip card="second_yellow" />
+          <CardChip card="red" />
+        </div>
+        <div className="flex flex-wrap items-center gap-2 text-caption text-ink-muted">
+          <Kbd>Tab</Kbd> <Kbd>Enter</Kbd> <Kbd>Space</Kbd> <Kbd>Esc</Kbd>
         </div>
       </Section>
 

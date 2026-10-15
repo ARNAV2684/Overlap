@@ -38,7 +38,7 @@ _Answer:_
 _Answer:_
 
 **Contrast targets and results (done).** Targets: 4.5 : 1 for text, 3 : 1 for UI parts and graphics (WCAG 2.x AA).
-Dark theme only. Ratios are computed from the token values in `globals.css`, with translucent tints composited over
+Dark theme only. The status-badge rows are approximate (tints are composited in sRGB, the browser mixes in oklab) with a wide margin. Ratios are computed from the token values in `globals.css`, with translucent tints composited over
 the surface they sit on. Rows marked "known failure" are combinations that are **not allowed**; the rule beside them says
 what to use instead. Keyboard navigation and screen-reader text are still to be decided.
 
@@ -83,6 +83,10 @@ what to use instead. Keyboard navigation and screen-reader text are still to be 
 | `secondary-text` | page glow, orange peak (12 %) | 6.82 : 1 | 4.5 : 1 (text) | Pass | Blue text at the brightest point of the orange glow |
 | `accent-text` | page glow, orange peak (12 %) | 8.42 : 1 | 4.5 : 1 (text) | Pass | Orange text at the brightest point of the orange glow |
 | `ink-muted` | page glow, blue peak (12 %) | 6.93 : 1 | 4.5 : 1 (text) | Pass | Secondary text at the brightest point of the blue glow |
+| `accent-text` | `primary` 15 % tint over page | 8.02 : 1 | 4.5 : 1 (text) | Pass | "Live" status badge (6.50 over the brightest glow) |
+| `secondary-text` | `secondary-soft` over page | 6.53 : 1 | 4.5 : 1 (text) | Pass | "Connecting" / "Reconnecting" badge (5.53 over the brightest glow) |
+| `card-yellow` | `card-yellow-soft` over page | 9.87 : 1 | 4.5 : 1 (text) | Pass | "No recent data" badge (7.92 over the brightest glow) |
+| `ink` | `surface-raised` | 14.31 : 1 | 4.5 : 1 (text) | Pass | "Match finished" badge |
 | `orange-500` | `pitch-surface` | 1.62 : 1 | known failure | Fail (as expected) | Orange kit fill alone on pitch: needs outline |
 | `blue-500` | `pitch-surface` | 2.37 : 1 | known failure | Fail (as expected) | Blue kit fill alone on pitch: needs outline |
 
