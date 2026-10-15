@@ -186,6 +186,19 @@ def _style_out_of_range(d):
     d["clubs"][0]["style"]["width"] = 1.4
 
 
+def _outfield_goalkeeping(d):
+    d["clubs"][0]["squad"][1]["attr"][-1] = 30  # a centre-back who can keep goal
+
+
+def _no_striker_cover(d):
+    for p in d["clubs"][0]["squad"]:
+        p["other"] = [o for o in p.get("other", []) if o != "ST"]
+
+
+def _bad_foot(d):
+    d["clubs"][0]["squad"][0]["preferred_foot"] = "left-ish"
+
+
 @pytest.mark.parametrize("change, expected", [
     (_set_rating, "ratings must be whole numbers 1–99"),
     (_duplicate_shirt, "used more than once"),
@@ -195,6 +208,9 @@ def _style_out_of_range(d):
     (_mock_team_id, "reserved for the mock"),
     (_unknown_field, "unknown fields"),
     (_style_out_of_range, "style values must be 0–1"),
+    (_outfield_goalkeeping, "goalkeeping must be 20 or less"),
+    (_no_striker_cover, "can play ST"),
+    (_bad_foot, "preferred_foot must be one of"),
 ])
 def test_broken_reference_data_fails(change, expected):
     with pytest.raises(world.WorldError, match=expected):

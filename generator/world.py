@@ -62,6 +62,8 @@ BENCH_GROUPS = (("GK",), ("CB",), ("RB", "LB", "RWB", "LWB"), ("DM", "CM"), ("CM
 BENCH_SIZE = 9
 REFERENCE_SQUAD_SIZE = (22, 28)
 MIN_GOALKEEPERS = 2
+MIN_SLOT_COVER = 2  # players able to play each slot of the club's formation
+MAX_OUTFIELD_GOALKEEPING = 20
 MOCK_TEAM_IDS = frozenset({"NBR", "HBA", "IVC", "SMW", "LKR", "GWA"})  # reserved while mock/ exists
 
 TEAM_ID = re.compile(r"^[A-Z]{3}$")
@@ -69,7 +71,7 @@ MATCH_ID = re.compile(r"^SYN-\d{4}$")
 SEASON_ID = re.compile(r"^S\d+$")
 
 CLUB_FIELDS = {"team_id", "name", "short_name", "city", "venue", "colours", "formation", "style", "default_xi", "squad"}
-PLAYER_FIELDS = {"shirt", "name", "pos", "other", "foot", "weak_foot", "attr"}
+PLAYER_FIELDS = {"shirt", "name", "pos", "other", "preferred_foot", "weak_foot", "attr"}
 PLAYER_REQUIRED = {"shirt", "name", "pos", "attr"}
 
 
@@ -83,7 +85,7 @@ class Player:
     name: str
     pos: str
     other: tuple[str, ...]
-    foot: str
+    preferred_foot: str
     weak_foot: int
     attr: dict[str, int]
 
@@ -141,7 +143,7 @@ def _player(team_id: str, raw: dict, problems: list[str]) -> Player | None:
         name=raw["name"],
         pos=raw["pos"],
         other=tuple(raw.get("other", ())),
-        foot=raw.get("foot", "right"),
+        preferred_foot=raw.get("preferred_foot", "right"),
         weak_foot=raw.get("weak_foot", 3),
         attr=dict(zip(ATTRIBUTES, attr)),
     )
@@ -183,13 +185,15 @@ def _player_problems(club: Club, p: Player) -> list[str]:
         problems.append(f"{label}: unknown position {p.pos!r}")
     if len(p.other) > 2 or any(o not in POSITIONS or o == p.pos for o in p.other):
         problems.append(f"{label}: other positions must be up to two valid positions, not the primary")
-    if p.foot not in FEET:
-        problems.append(f"{label}: foot must be one of {', '.join(FEET)}")
+    if p.preferred_foot not in FEET:
+        problems.append(f"{label}: preferred_foot must be one of {', '.join(FEET)}")
     if not isinstance(p.weak_foot, int) or not 1 <= p.weak_foot <= 5:
         problems.append(f"{label}: weak_foot must be 1–5")
     bad = [k for k, v in p.attr.items() if not _rating_ok(v)]
     if bad:
         problems.append(f"{label}: ratings must be whole numbers 1–99 ({', '.join(bad)})")
+    elif p.pos != "GK" and p.attr["goalkeeping"] > MAX_OUTFIELD_GOALKEEPING:
+        problems.append(f"{label}: an outfield player's goalkeeping must be {MAX_OUTFIELD_GOALKEEPING} or less")
     return problems
 
 
@@ -237,6 +241,10 @@ def _club_problems(club: Club) -> list[str]:
                 problems.append(f"{tid}: default_xi shirt {shirt} is not in the squad")
             elif not p.plays(slot):
                 problems.append(f"{tid}: default_xi shirt {shirt} {p.name} can't play {slot}")
+        for slot in sorted(set(slots)):
+            able = sum(p.plays(slot) for p in club.squad)
+            if able < MIN_SLOT_COVER:
+                problems.append(f"{tid}: only {able} player(s) can play {slot}; needs {MIN_SLOT_COVER}")
     return problems
 
 
@@ -292,7 +300,7 @@ def _club_record(club: Club) -> dict:
                 "name": p.name,
                 "pos": p.pos,
                 "other": list(p.other),
-                "foot": p.foot,
+                "preferred_foot": p.preferred_foot,
                 "weak_foot": p.weak_foot,
                 "overall": round(p.overall, 1),
                 "attr": p.attr,
