@@ -17,6 +17,8 @@ import { z } from "zod";
 // ---------------------------------------------------------------------------------------------------------------
 
 const matchId = z.string().regex(/^SYN-\d{4}$/, "match id looks like SYN-0042");
+/** True for a well-formed match id (SYN-NNNN), for example a route parameter. */
+export const isMatchId = (value: unknown): value is string => matchId.safeParse(value).success;
 const teamId = z.string().regex(/^[A-Z]{3}$/, "team id is 3 capital letters");
 const playerId = z.string().regex(/^[A-Z]{3}-\d{2}$/, "player id looks like NBR-11");
 const eventId = z.string().regex(/^SYN-\d{4}-\d{5}$/, "event id looks like SYN-0042-01186");

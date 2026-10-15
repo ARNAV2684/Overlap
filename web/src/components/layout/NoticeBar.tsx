@@ -4,7 +4,8 @@
 //
 // Purpose: one line under the intro saying what the stream is doing ("Connected…", "Connection lost…", "Feed paused…")
 // Inputs:  NoticeBar: the notice from the nearest MatchStreamProvider (useNotice())
-//          NoticeBarView: notice { text, tone: "info" | "warning" } (for pages and previews without a store)
+//          NoticeBarView: notice { text, tone: "info" | "warning" }, announce? (default true) (for pages, previews
+//          and loading fallbacks without a store; a fallback passes announce={false} so the text is not read twice)
 // Outputs: a visible line, plus a visually hidden polite live region that is throttled (src/lib/announcer.ts): at most
 //          one announcement every 3 s, and none when only a number changed (the stale countdown ticks every second)
 // Spec:    web/specs/design-system.md §5. web/IMPLEMENTATION_PLAN.md Phase 6 (and 8.3: the warning tone, used while
@@ -19,13 +20,22 @@ import { cn } from "@/lib/cn";
 import type { Notice } from "@/lib/store";
 import { useNotice } from "@/lib/store-hooks";
 
-export function NoticeBarView({ notice, className }: { notice: Notice; className?: string }) {
+type NoticeBarViewProps = {
+  notice: Notice;
+  /** false: show the line but never read it out (a loading fallback the live NoticeBar replaces). */
+  announce?: boolean;
+  className?: string;
+};
+
+export function NoticeBarView({ notice, announce = true, className }: NoticeBarViewProps) {
   const warning = notice.tone === "warning";
   const [spoken, setSpoken] = useState("");
   // Creating it has no side effects, and cancel() leaves it usable, so StrictMode's second effect run is harmless
   const [announcer] = useState(() => createAnnouncer(setSpoken));
 
-  useEffect(() => announcer.push(notice.text), [announcer, notice.text]);
+  useEffect(() => {
+    if (announce) announcer.push(notice.text);
+  }, [announcer, announce, notice.text]);
   useEffect(() => () => announcer.cancel(), [announcer]);
 
   return (
@@ -48,9 +58,11 @@ export function NoticeBarView({ notice, className }: { notice: Notice; className
         ) : null}
         <span>{notice.text}</span>
       </p>
-      <VisuallyHidden role="status" aria-live="polite" aria-atomic="true">
-        {spoken}
-      </VisuallyHidden>
+      {announce ? (
+        <VisuallyHidden role="status" aria-live="polite" aria-atomic="true">
+          {spoken}
+        </VisuallyHidden>
+      ) : null}
     </div>
   );
 }
