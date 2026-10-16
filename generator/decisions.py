@@ -115,6 +115,8 @@ def pass_candidates(m, carrier: Body, action: str) -> list[tuple[Body, tuple[flo
         open_m = min((math.hypot(ox - tx, oy - ty) for ox, oy in opps), default=20.0)
         lane = min((pitch.segment_distance(cx, cy, tx, ty, ox, oy)[0] for ox, oy in opps), default=10.0)
         progress = (tx - cx) / 30
+        if m.in_counter(carrier.side):                  # after a regain, look forward first
+            progress *= 1 + config.COUNTER_PROGRESS * m.style(carrier.side)["counter_attack"]
         score = min(open_m, 10) / 10 + min(lane, 5) / 5 * (0.4 if action in config.LOFTED else 1.0) + progress
         if action == "cross":
             score += r.attr("aerial") / 99 + (0.5 if r.role == "target_man" else 0.0)

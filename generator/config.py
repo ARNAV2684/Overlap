@@ -56,17 +56,20 @@ ACTIONS = ("short_pass", "long_pass", "through_ball", "cross", "cutback", "switc
 # Relative weights within a zone, in ACTIONS order. In the final third and box the shot weight is added from xG.
 #                  short  long  thru  cross  cut  switch  carry  take  shot  clear  hold
 _BASE_ROWS = {
-    "own":           (60,   12,    2,    0,    0,    4,     12,    2,    0,    8,    4),
-    "middle":        (55,    8,    6,    0,    0,    6,     16,    5,    0.3,  1,    4),
-    "final_wide":    (35,    2,    6,   22,    4,    5,     14,   10,    1,    0,    4),
+    "own":           (60,   20,    3,    0,    0,    4,     12,    2,    0,    8,    4),
+    "middle":        (55,   14,   10,    0,    0,    6,     16,    5,    0.3,  1,    4),
+    "final_wide":    (38,    2,    6,   14,    6,    5,     14,   10,    1,    0,    5),
     "final_central": (40,    1,   14,    0,    0,    2,     12,    8,    4,    0,    4),
-    "box":           (22,    0,    6,   18,   14,    0,      6,    8,    0,    0,    3),
+    "box":           (24,    0,    6,   10,   16,    0,      6,    8,    0,    0,    3),
 }
 BASE_WEIGHTS = {zone: dict(zip(ACTIONS, row)) for zone, row in _BASE_ROWS.items()}
 SHOT_APPETITE = 10.0                # S in weight = S × xG / (0.10 + xG); raises or lowers shots per match
 MIN_SHOT_XG = 0.03                   # never shoot below this
 COUNTER_WINDOW_MS = 8_000            # after a regain in own half or middle third
 COUNTER_PRESS_MS = 5_000             # after losing the ball
+COUNTER_RELEASE = 0.6                # decision delay × (1 - this × counter_attack) in the counter window
+COUNTER_PROGRESS = 2.0               # pass-target progress × (1 + this × counter_attack) in the counter window
+COUNTER_RUN_PCT = 12.0               # attackers push up this far (× counter_attack) on a counter
 
 ROLE_WEIGHTS = {                     # role multipliers on the on-ball weights
     "sweeper_keeper": {"short_pass": 1.5, "long_pass": 0.6},
@@ -93,9 +96,9 @@ ROLE_WEIGHTS = {                     # role multipliers on the on-ball weights
 
 PRESS_RADIUS_M = 12.0
 PRESSURE_RADIUS_M = 2.5
-PRESSURE_REPEAT_MS = 1_500
+PRESSURE_REPEAT_MS = 3_000          # a Pressure event at most every 3 s per defender (engine.md §5 allows 1.5)
 TACKLE_RADIUS_M = 1.3
-TACKLE_RATE_PER_STEP = 0.025         # chance a defender in range tries a tackle each step (about 15-20 tackles a team)
+TACKLE_RATE_PER_STEP = 0.018         # chance a defender in range tries a tackle each step (about 15-20 tackles a team)
 MAX_PRESSERS = 2
 MAX_COUNTER_PRESSERS = 3
 PRESS_ROLE = {"ball_winner": 1.4, "pressing_forward": 1.4, "stopper": 1.3, "anchor": 0.7}
@@ -103,17 +106,17 @@ PRESS_ROLE = {"ball_winner": 1.4, "pressing_forward": 1.4, "stopper": 1.3, "anch
 # --- Outcomes (actions.md §3) ------------------------------------------------------------------------------------
 
 BASE_SUCCESS = {
-    "short_pass": 0.93, "long_pass": 0.62, "through_ball": 0.42, "cross": 0.24, "cutback": 0.55, "switch": 0.70,
+    "short_pass": 0.95, "long_pass": 0.66, "through_ball": 0.45, "cross": 0.24, "cutback": 0.55, "switch": 0.70,
     "take_on": 0.48, "tackle": 0.55, "aerial": 0.50, "clearance": 0.35,
 }
 SKILL_LOGIT_PER = 15.0               # (rating - 70) / this, added to the log-odds
 PRESSURE_LOGIT = -0.4
-SHORT_PASS_LENGTH_LOGIT = -0.04      # per metre beyond 12 m
+SHORT_PASS_LENGTH_LOGIT = -0.025     # per metre beyond 12 m
 WEAK_FOOT_PASS_SHARE = 0.15          # passes made with the weaker foot
 WEAK_FOOT_PASS_PENALTY = 0.03        # × (5 - weak_foot), on the success probability
 WEAK_FOOT_SHOT_PENALTY = 0.05
 INTERCEPT_RADIUS_M = 2.0
-INTERCEPT_BASE = 0.45
+INTERCEPT_BASE = 0.30
 LOOSE_OFFSET_M = (4.0, 10.0)         # how far an inaccurate pass lands from its target
 TACKLE_POKE_LOOSE = 0.30             # share of won tackles that only poke the ball loose
 
