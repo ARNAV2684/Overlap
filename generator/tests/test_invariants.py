@@ -83,16 +83,27 @@ def test_score_equals_goal_shots(matches):
         assert goals == m.score
 
 
-def test_passes_go_to_a_teammate_on_the_pitch(matches):
+def test_only_players_on_the_pitch_act(matches):
+    """Passes go to a team-mate on the pitch; nobody acts after a red card or after being substituted off."""
     for m in matches:
         on = {p["player_id"] for s in ("home", "away") for p in m.setup["teams"][s]["lineup"]}
+        bench = {p["player_id"] for s in ("home", "away") for p in m.setup["teams"][s]["bench"]}
         for e in m.events:
+            if "player_id" in e:
+                assert e["player_id"] in on, e
+            for k in ("receiver_id", "target_player_id", "fouled_player_id"):
+                if k in e:
+                    assert e[k] in on, (k, e)
             if e["type"] == "Pass" and e["outcome"] == "success":
                 assert e["receiver_id"] != e["player_id"]
                 assert e["receiver_id"].startswith(e["team_id"] + "-")
-                assert e["receiver_id"] in on
-            if "player_id" in e:
-                assert e["player_id"] in on
+            if e["type"] == "Card" and e["card"] in ("red", "second_yellow"):
+                on.discard(e["player_id"])
+            if e["type"] == "Substitution":
+                assert e["player_on_id"] in bench and e["player_on_id"] not in on
+                bench.discard(e["player_on_id"])
+                on.discard(e["player_id"])
+                on.add(e["player_on_id"])
 
 
 def test_key_pass_links_are_exact(matches):
@@ -114,7 +125,7 @@ def test_tracking_frames(matches):
             assert set(f["ball"]) == {"x", "y", "z", "speed_kmh"}
             assert 0 <= f["ball"]["x"] <= 100 and 0 <= f["ball"]["y"] <= 100
             ids = [p["player_id"] for p in f["players"]]
-            assert len(ids) == len(set(ids)) == 22
+            assert len(ids) == len(set(ids)) and 14 <= len(ids) <= 22
             for p in f["players"]:
                 assert 0 <= p["x"] <= 100 and 0 <= p["y"] <= 100
                 assert 0 <= p["speed_kmh"] <= 37.5
