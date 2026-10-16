@@ -6,7 +6,6 @@
 # Spec:    generator/specs/live-and-batch.md §5
 #
 # Run from generator/:  uv run python cli.py <command> --help
-# `season` and `report` (batch mode, G6) are added with batch.py.
 
 from __future__ import annotations
 
@@ -17,8 +16,10 @@ import json
 import sys
 from pathlib import Path
 
+import batch
 import engine
 import live
+import realism_report
 import recording
 import world
 
@@ -78,6 +79,25 @@ def cmd_live(args) -> int:
     except live.StreamError as err:
         print(err, file=sys.stderr)
         return 1
+    return 0
+
+
+def cmd_season(args) -> int:
+    version, clubs = _clubs()
+    d = batch.play_run(clubs, season_id=args.season, seed=args.seed, repeat=args.repeat, home=args.home,
+                       away=args.away, keep_tracking=args.keep_tracking, world_version=version)
+    print(f"saved {d} (season seed {args.seed})")
+    if args.report:
+        print(f"report {realism_report.write(d)}")
+    return 0
+
+
+def cmd_report(args) -> int:
+    d = Path(args.run) if args.run else batch.SEASONS_DIR / args.season
+    if not (d / "matches").exists():
+        print(f"no run found at {d}", file=sys.stderr)
+        return 1
+    print(f"report {realism_report.write(d)}")
     return 0
 
 
@@ -157,6 +177,21 @@ def main(argv: list[str] | None = None) -> int:
     lv.add_argument("--first-match", type=int, default=1, help="number of the first match id (SYN-NNNN)")
     lv.add_argument("--kickoff", default="2026-10-24T19:00:00Z")
     lv.set_defaults(func=cmd_live)
+
+    se = sub.add_parser("season", help="play a full season, or a repeat run of one fixture")
+    se.add_argument("--season", default="S1")
+    se.add_argument("--seed", type=int, default=1)
+    se.add_argument("--repeat", type=int, help="play --home v --away this many times instead of a season")
+    se.add_argument("--home", default="SKH")
+    se.add_argument("--away", default="AMH")
+    se.add_argument("--keep-tracking", action="store_true", help="also save tracking (about 13 MB a match)")
+    se.add_argument("--report", action="store_true", help="write the realism report afterwards")
+    se.set_defaults(func=cmd_season)
+
+    rp = sub.add_parser("report", help="write the realism report for a season or run")
+    rp.add_argument("--season", default="S1")
+    rp.add_argument("--run", help="a run folder (default data/seasons/<season>)")
+    rp.set_defaults(func=cmd_report)
 
     v = sub.add_parser("validate", help="play matches twice and check invariants and reproducibility")
     v.add_argument("--matches", type=int, default=3)
