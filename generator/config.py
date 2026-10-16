@@ -15,8 +15,10 @@ STEP_MS = 200                       # one simulation step = one 5 Hz tracking fr
 PERIOD_MS = 45 * 60 * 1000          # regulation length of a period
 END_WINDOW_MS = 60_000              # a period ends at most this long after added time runs out
 DECISION_DELAY_S = (0.4, 2.4)       # time on the ball before the next action
-DEAD_TIME_S = {                     # dead-ball time before each restart
+DEAD_TIME_S = {                     # dead-ball time before each restart (set-pieces-and-discipline.md, engine.md §4)
     "throw_in": (8, 18), "goal_kick": (15, 30), "corner": (25, 45), "kickoff_after_goal": (45, 75),
+    "free_kick": (15, 30), "free_kick_near": (30, 45), "penalty": (60, 100), "card": (20, 40),
+    "substitution": (25, 40),
 }
 ADDED_EXTRA_S = (30, 90)            # other stoppages folded into added time
 ADDED_MIN_MINUTES = {1: 1, 2: 3}    # added time is never less than this
@@ -175,3 +177,23 @@ STAMINA_DRAIN_RUN = 4.0e-5           # per step, × (speed / 7 m/s)³
 HALF_TIME_RECOVERY = 0.15
 TIRED = 0.7                          # below this, pace and accuracy start to drop
 TIRED_MAX_LOSS = 0.08
+
+# --- Discipline and set pieces (set-pieces-and-discipline.md) ----------------------------------------------------
+
+FOUL_FROM_BEHIND = 1.8
+FOUL_TACTICAL = 1.6                  # stopping a counter attack
+HOME_FOUL_LENIENCY = 0.10            # home fouls given this much less often at a full house
+ADVANTAGE_SHARE = 0.35               # fouls in the attacking 40 % where the referee plays on
+FOUL_IN_OWN_BOX = 0.1                # defenders are careful in their own box (a foul there is a penalty)
+CARD_ORDINARY_YELLOW = 0.09
+CARD_ORDINARY_RED = 0.002
+CARD_TACTICAL_YELLOW = 0.40
+CARD_BEHIND_YELLOW = 0.30
+CARD_BEHIND_RED = 0.02
+CARD_DOGSO_RED = 0.6                 # denying an obvious goal-scoring opportunity
+MAX_SUBS = 5
+OFFSIDE_BASE = 0.03                  # a runner played in behind mistimes his run this often...
+OFFSIDE_LINE_HEIGHT = 0.15           # ...plus this × the defending side's line_height
+FREE_KICK_DIRECT_M = 30.0            # a central free kick this close may be shot at goal
+FREE_KICK_DIRECT_SHARE = 0.6         # × (0.5 + set_piece_focus)
+FREE_KICK_WALL = 2                   # wall players counted as defenders in the way
