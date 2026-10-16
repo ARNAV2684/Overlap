@@ -4,6 +4,8 @@ version = "0.1.0"
 description = "Synthetic match generator: world builder first (generator/specs/world.md)."
 requires-python = ">=3.12"
 dependencies = [
+    "azure-eventhub>=5.11",
+    "azure-identity>=1.15",
     "pyyaml>=6.0",
 ]
 
