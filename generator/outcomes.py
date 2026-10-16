@@ -53,9 +53,12 @@ def weak_penalty(b: Body, per_point: float) -> float:
 
 
 def pass_success(action: str, passer: Body, receiver: Body, length_m: float, pressured: bool, weak: bool,
-                 wet: float, windy: bool) -> float:
-    """Probability that a pass reaches its target, before interceptions (actions.md §3)."""
+                 wet: float, windy: bool, marked_m: float = 99.0) -> float:
+    """Probability that a pass reaches its target, before interceptions (actions.md §3). `marked_m` is how close the
+    nearest opponent is to where the ball is played."""
     z = logit(config.BASE_SUCCESS[action])
+    if marked_m < config.MARKED_RADIUS_M:
+        z += config.MARKED_LOGIT * (1 - marked_m / config.MARKED_RADIUS_M)
     z += skill(passer.attr("passing"))
     if action in ("through_ball", "switch", "long_pass"):
         z += 0.5 * skill(passer.attr("vision"))

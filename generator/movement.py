@@ -39,6 +39,35 @@ def _clip(v: float, lo: float, hi: float) -> float:
     return min(max(v, lo), hi)
 
 
+def _support(slot: str, x: float, y: float, bx: float, by: float, wing: int) -> tuple[float, float]:
+    """Support runs with the ball in the final third (movement.md §1), team frame 0-100: forwards and wide players
+    get into the box ahead of the ball, central midfielders arrive behind it."""
+    offset = config.SUPPORT_OFFSET_PCT.get(slot)
+    if offset is None or bx < config.ZONE_X[1]:
+        return x, y
+    x = max(x, bx + offset)
+    if offset > 0 and abs(by - 50) > 25 and (by - 50) * wing <= 0:   # ball wide on the other side: far post
+        x, y = max(x, config.SUPPORT_BOX_X), 50 + config.SUPPORT_FAR_POST_Y * wing
+    return x, y
+
+
+def _mark(m, side: str, x: float, y: float) -> tuple[float, float]:
+    """Near his own goal a defender or midfielder picks up the nearest attacker around his spot and stands goal-side
+    of him (movement.md §1), team frame 0-100."""
+    east = m.east(side)
+    near = None
+    for o in m.on_pitch(m.other(side)):
+        ox, oy = pitch.team_pct(o.x, o.y, east)
+        d = math.hypot(ox - x, oy - y)
+        if d <= config.MARK_RADIUS_PCT and (near is None or d < near[0]):
+            near = (d, ox, oy)
+    if near is None:
+        return x, y
+    _, ox, oy = near
+    k = config.MARK_TIGHT
+    return x + k * (ox - config.MARK_GOAL_SIDE_PCT - x), y + k * (oy + (50 - oy) * 0.1 - y)
+
+
 def shape_target(m, b: Body) -> tuple[float, float]:
     """Where a player not involved with the ball wants to be, in pitch-frame metres (movement.md §1)."""
     side = b.side
@@ -66,14 +95,23 @@ def shape_target(m, b: Body) -> tuple[float, float]:
             x, y = m.offside_line[side] - 1.5, 50 + 6 * (1 if by > 50 else -1)
         elif role == "target_man":
             y = 50 + 0.15 * (by - 50)
+        x, y = _support(b.slot, x, y, bx, by, wing)
         if m.in_counter(side) and ax >= 40:             # break on a counter (movement.md §2)
             x += config.COUNTER_RUN_PCT * st["counter_attack"]
+            if config.SUPPORT_OFFSET_PCT.get(b.slot, 0) > 0:
+                x = max(x, m.offside_line[side] - 1)    # on the shoulder of the last defender, ready to go in behind
         if b.slot != "GK":
             x = min(x, max(m.offside_line[side], bx) - 0.5)     # don't stand offside
     else:
         line = max(18 + 22 * st["line_height"] + 0.25 * (bx - 50), 8)
-        x = line + (ax - 25) * 0.85
+        x = line + (ax - 25) * (config.BLOCK_DEPTH_BASE + config.BLOCK_DEPTH_LINE * st["line_height"])
         y = 50 + (ay - 50) * 0.75 + 0.30 * (by - 50)
+        if ax < 40:                     # the back line stays goal-side of the ball and narrows to guard the goal
+            x = min(x, max(bx - config.GOAL_SIDE_PCT, 3))
+            if bx < config.DEEP_DEFENCE_X:
+                y = 50 + (y - 50) * config.DEEP_DEFENCE_NARROW
+        if bx < config.MARK_ZONE_X and ax < 50 and b.slot != "GK":
+            x, y = _mark(m, side, x, y)
     if b.slot == "GK":
         if m.poss_side == side and m.ball_live and bx > 50:
             x = 15 / 1.05 if b.role == "sweeper_keeper" else 5 / 1.05

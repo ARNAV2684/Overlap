@@ -177,7 +177,7 @@ class Match:
 
     def in_counter(self, side: str) -> bool:
         t, x = self.last_regain[side]
-        return self.poss_side == side and self.match_ms - t <= config.COUNTER_WINDOW_MS and x <= config.ZONE_X[1]
+        return self.poss_side == side and self.match_ms - t <= config.COUNTER_WINDOW_MS and x <= config.COUNTER_FROM_X
 
     def minute(self) -> float:
         return self.match_ms / 60000
@@ -354,8 +354,10 @@ class Match:
         if weak:
             quals.append("weak_foot")
         base_action = action if action in config.BASE_SUCCESS else "short_pass"
+        marked = 99.0 if lofted else min((math.hypot(o.x - ex, o.y - ey) for o in self.on_pitch(self.other(side))),
+                                         default=99.0)
         p_ok = 0.97 if forced else outcomes.pass_success(base_action, passer, receiver, length, pressured, weak,
-                                                         self.wet, self.windy)
+                                                         self.wet, self.windy, marked)
         result, target, data = "receive", receiver, {}
         if not lofted and not forced:
             opps = sorted(self.on_pitch(self.other(side)), key=lambda o: (math.hypot(o.x - sx, o.y - sy), o.slot_index))
@@ -370,7 +372,10 @@ class Match:
             off = r.uniform(*config.LOOSE_OFFSET_M) * (1.5 if lofted else 1.0)
             ex, ey = ex + off * math.cos(ang), ey + off * math.sin(ang)
             result, target = "loose", None
-            if not (0 <= ex <= pitch.LENGTH and 0 <= ey <= pitch.WIDTH):
+            if action == "cross" and r.random() < config.CROSS_CUT_OUT_CORNER:
+                result = "behind"                   # a defender cuts the cross out behind his goal line
+                ex, ey = pitch.clamp(ex, ey)
+            elif not (0 <= ex <= pitch.LENGTH and 0 <= ey <= pitch.WIDTH):
                 ex, ey = self._crossing(sx, sy, ex, ey)
                 result = "out"
         elif result == "receive" and lofted and not forced:
@@ -598,6 +603,8 @@ class Match:
         res = f.result
         side = f.actor.side
         if res == "receive":
+            if self.in_counter(side) and self.tp(side, f.ex, f.ey)[0] < self.tp(side, f.sx, f.sy)[0] - config.COUNTER_BACK_PCT:
+                self.last_regain[side] = (-10**9, 100.0)    # a pass backwards slows the attack: no longer a counter
             self.gain(side, "pass")
             if f.kind in PASS_ACTIONS or f.kind in ("throw_in", "kickoff", "goal_kick"):
                 self.last_pass[side] = (f.data["event"], f.target.pid)
@@ -627,6 +634,8 @@ class Match:
                     self.do_shot(att, header=True)
                 else:
                     self.give_ball(att)
+            elif f.kind == "cross" and r.random() < config.CROSS_HEADED_CORNER:
+                self._behind_for_corner(side, f.ey)
             else:
                 self.gain(dfd.side, "regain", (dfd.x, dfd.y))
                 self.carrier = dfd
@@ -639,6 +648,8 @@ class Match:
                 self.ball_x, self.ball_y = pitch.clamp(*pitch.to_team(tx, ty, self.east(side)))
         elif res == "out":
             self._out(f.ex, f.ey, self.last_touch)
+        elif res == "behind":
+            self._behind_for_corner(side, f.ey)
         elif res == "goal":
             self.score[side] += 1
             dead = self.rng["restarts"].uniform(*config.DEAD_TIME_S["kickoff_after_goal"])
@@ -653,21 +664,28 @@ class Match:
                 self.gain(keeper.side, "regain", (keeper.x, keeper.y))
                 self.give_ball(keeper)
             elif kind == "corner":
-                self.last_touch = keeper.side
-                cy = 0.0 if f.ey < pitch.GOAL_Y else pitch.WIDTH
-                gx = pitch.LENGTH if f.ex > pitch.LENGTH / 2 else 0.0
-                self.schedule_restart("corner", side, gx, cy, r.uniform(*config.DEAD_TIME_S["corner"]))
+                self._behind_for_corner(side, f.ey)
             else:
                 tx = pitch.LENGTH - r.uniform(5, 10)
                 ty = pitch.GOAL_Y + r.uniform(-8, 8)
                 self.mode, self.flight, self.last_touch = "loose", None, keeper.side
                 self.ball_x, self.ball_y = pitch.clamp(*pitch.to_team(tx, ty, self.east(side)))
         elif res == "block":
+            if r.random() < config.BLOCK_CORNER:
+                self._behind_for_corner(side, f.ey)
+                return
             ang = r.uniform(0, 2 * math.pi)
             self.mode, self.flight, self.last_touch = "loose", None, f.target.side
             self.ball_x, self.ball_y = pitch.clamp(f.ex + 4 * math.cos(ang), f.ey + 4 * math.sin(ang))
         elif res == "miss":
             self._out(f.ex, f.ey, side)
+
+    def _behind_for_corner(self, side: str, near_y: float) -> None:
+        """A defender (or the keeper) has put the ball behind his own goal line: corner to `side` (actions.md §3)."""
+        self.last_touch = self.other(side)
+        cy = 0.0 if near_y < pitch.GOAL_Y else pitch.WIDTH
+        gx = pitch.LENGTH if self.east(side) else 0.0
+        self.schedule_restart("corner", side, gx, cy, self.rng["outcomes"].uniform(*config.DEAD_TIME_S["corner"]))
 
     def _pick_chasers(self) -> None:
         """Loose ball: the nearest two of each side chase it (engine.md §3)."""
