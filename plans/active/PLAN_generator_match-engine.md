@@ -10,7 +10,7 @@
 | Review coordinator | Arnav |
 | Affected component owners | Consumers of events and tracking: stats engine, screen relay, archiver (all unassigned, Arnav decides); web app (Vedant). Arnav and Pranav (Event Hubs) |
 | Proposal version and date | v0.2 · 2026-10-16 |
-| Status | In progress (M1: go from Azeem, 16 Oct) |
+| Status | In progress (M1 done: specs merged in PR #15; M2 on `generator/match-engine`, go from Azeem 17 Oct) |
 | Plan tier and file | Full · `plans/active/PLAN_generator_match-engine.md` |
 | Repository | [ARNAV2684/Overlap](https://github.com/ARNAV2684/Overlap) |
 | Reviewed branch and commit | main · 75b7cba (PR #14, world traits, open and green) |
@@ -143,14 +143,15 @@ match runs in well under a minute in plain Python (mock: about 11 s per match, p
 | File or small related group | Add / modify / use unchanged | Responsibility | Governing spec and unanswered questions | Owner / shared reviewer |
 |---|---|---|---|---|
 | `generator/specs/engine.md` | Modify (M1) | State, loop, possession, clock, pressure, fatigue, seeds, events out | Itself · all open | Azeem / Arnav |
-| `generator/specs/actions.md` | Modify (M1) | Action set, decision weights, outcomes, shots, speeds, calibration knobs | Itself · all open | Azeem / Arnav |
+| `generator/specs/actions.md` | Modify (M1; M2: press-line wording fixed to name the carrier's frame) | Action set, decision weights, outcomes, shots, speeds, calibration knobs | Itself · agreed in PR #15 | Azeem / Arnav |
 | `generator/specs/set-pieces-and-discipline.md` | Modify (M1) | Restarts with takers, fouls, cards, substitutions, offside | Itself · all open | Azeem / Arnav |
 | `generator/specs/movement.md` | Modify (M1, if D2) | Shape targets, acceleration and top speed, ball flight, sprints, distance | Itself · all open | Azeem / Arnav |
 | `generator/engine.py`, `generator/state.py` | Modify (M2) | Loop, clock, possession, event emission | `engine.md` | Azeem |
 | `generator/movement.py` | Modify (M2, if D2) | Player and ball motion each step; tracking frames | `movement.md` | Azeem |
 | `generator/pitch.py` | Add (M2) | Pitch size and frame conversion (D4) | `CONTRACTS.md` §1.1 | Azeem |
-| `generator/decisions.py`, `generator/outcomes.py` | Modify (M3) | On-ball choices and their results | `actions.md` | Azeem |
-| `generator/set_pieces.py`, `generator/discipline.py` | Modify (M4) | Restarts, fouls, cards, substitutions | `set-pieces-and-discipline.md` | Azeem |
+| `generator/decisions.py`, `generator/outcomes.py` | Modify (M2 first version, M3 tuned) | On-ball choices and their results, including the xG model | `actions.md` | Azeem |
+| `generator/set_pieces.py` | Modify (M2: kickoffs, throw-ins, goal kicks, corners; M4: free kicks, penalties) | Restarts | `set-pieces-and-discipline.md` §1 | Azeem |
+| `generator/discipline.py` | Modify (M4) | Fouls, cards, substitutions, offside | `set-pieces-and-discipline.md` §2–§5 | Azeem |
 | `generator/config.py` | Modify (M2–M4) | Every tunable number | `actions.md` §6 | Azeem |
 | `generator/tests/test_invariants.py`, `generator/tests/test_seed.py` | Modify (M2) | §3 invariants; same seed, same match | `engine.md` | Azeem |
 | `generator/tests/test_engine.py` | Add (M2–M5) | Contract shapes, style effects, smoke check | specs above | Azeem |
@@ -278,4 +279,27 @@ stats engine's metrics; the real connection is proven only when G5 streams into 
 
 ### Handover after implementation
 
-Pending implementation.
+**M2 — a match runs** (branch `generator/match-engine`). M3–M5 not started.
+
+- Acceptance results:
+  - **AC-02:** passed. Full Skyhaven vs Amberholt matches produce a setup, about 2,400 events and about 30,000 frames
+    (5 Hz), and pass the mock's `validate_match` (setup, every event, every frame, the invariants) for seeds 1–20,
+    run by hand with `conditions` removed from the setup copy because the mock predates it.
+  - **AC-03:** passed for the seeds run (3 in CI via `OVERLAP_SEEDS`, 20 by hand); 100 seeds waits for batch mode.
+  - **AC-04:** passed. `test_seed.py`: the same seed gives byte-identical setup, events and frames.
+  - Also: `pytest` 57 passed (38 world, 19 engine); `ruff 0.17.0` clean on every changed file; events match the
+    tracked position of their actor (`test_events_and_tracking_agree`); a match plays in about 12–15 s.
+- Measured over seeds 1–20 (uncalibrated): goals 3.0 per match (target 2.7–3.3), shots 28.4 (25–28), passes about
+  1,070 (820–950, high), pass completion 72–77 % (79–84 %, low), added time 3–5 minutes in the second half, top
+  speed 33.7 km/h (33–36), median distance 10.6–11.6 km (9–14). Skyhaven won 18, drew 2 (both 0–0); Amberholt
+  scored 2 goals in 20 matches.
+- **Known gap for M3:** the match is lopsided. Skyhaven's pressing produces about 400 pressure events and Amberholt
+  completes about 11 passes into the final third against Skyhaven's 99, so Amberholt takes about 1 shot a match.
+  M3 tunes pressing, counter-press and counter-attacks against the expected A-vs-B signature (AC-05).
+- Differences from the agreed proposal: `decisions.py`, `outcomes.py` and `set_pieces.py` (kickoffs, throw-ins,
+  goal kicks, corners) got first versions in M2, because a valid match needs them; M3 tunes them and M4 adds fouls,
+  cards, substitutions, offside, free kicks and penalties. The press line in `actions.md` named the wrong frame and
+  is reworded; the behaviour is what the spec meant. The penalty-spot xG anchor (about 0.30, unsourced) can't be met
+  by a smooth model that meets the sourced anchors; the model gives about 0.18 there.
+- Setup and integration: `cd generator && uv run python engine.py` plays one match and prints a summary;
+  `engine.play(clubs, "SKH", "AMH", match_id=..., seed=...)` returns the `MatchResult` live mode (G5) streams.
