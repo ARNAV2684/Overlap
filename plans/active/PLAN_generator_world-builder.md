@@ -10,7 +10,7 @@
 | Review coordinator | Arnav |
 | Affected component owners | Arnav (review, hot files); Vedant (web app reads club names, colours, lineups from the match setup); stats engine, agents and archiver owners: unassigned (Arnav decides) |
 | Proposal version and date | v0.1 · 2026-10-15 |
-| Status | In progress (M1 done: spec merged in PR #8; M2 on `generator/world-builder`) |
+| Status | In progress (M1 done in PR #8; M2 done in PR #11; M3, the invented clubs, not started) |
 | Plan tier and file | Full · `plans/active/PLAN_generator_world-builder.md` |
 | Repository | [ARNAV2684/Overlap](https://github.com/ARNAV2684/Overlap) |
 | Reviewed branch and commit | main · 71ad1ef (M2); main · 38a8038 (M1) |

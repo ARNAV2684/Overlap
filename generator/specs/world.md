@@ -29,8 +29,8 @@ season aggregates, while keeping batch runs quick. The fixture list belongs to
 
 | Club | Style it resembles | Formation | Status |
 |---|---|---|---|
-| A | Elite possession side: patient short build-up, very high press and defensive line, wide in possession, dominates the ball | 4-3-3 | Proposed |
-| B | Mid-table second-tier-level side: compact mid-to-low block, more direct, quick to counter, presses in bursts rather than all match | 4-2-3-1 | Proposed (style confirmed by Azeem, 2026-10-15) |
+| A | Elite possession side: patient short build-up, very high press and defensive line, wide in possession, dominates the ball | 4-2-3-1 | Proposed |
+| B | Newly promoted side: compact low block with five at the back, more direct, quick to counter, presses in bursts rather than all match | 5-4-1 | Proposed (style confirmed by Azeem, 2026-10-15) |
 
 The two must differ on at least three style parameters by 0.3 or more, so the contrast shows up in possession, PPDA,
 press height and pass length.
@@ -45,11 +45,12 @@ press height and pass length.
 | `venue` | `{ name, city }` | Invented |
 | `colours` | `{ home: {primary, secondary}, away: {primary, secondary} }` | See §6; the setup sends the pair being worn |
 | `formation` | one of §4's list | |
-| `style` | §4 parameters | Contract three plus internal three |
+| `style` | §4 parameters | Contract three plus internal seven |
 | `strength` | number | Derived, never hand-set (§4) |
 | `reference` | bool | True for reference profiles; never says which real team |
 | `squad` | list of players | §2 |
 | `default_xi` | 11 players, goalkeeper first, in formation slot order (shirt numbers in the YAML, player ids in the saved world) | §2 |
+| `set_pieces` | `{ penalties, corners, free_kicks }`, each an ordered list of takers | §2 |
 
 **Ids.** Hand-chosen for reference clubs, derived from the name for generated clubs (first letters of each word, then
 consonants of the main word). Every id must be unique in the world, must not be one of the mock's ids (`NBR`, `HBA`,
@@ -85,6 +86,11 @@ GK, CB, full-back, DM/CM, CM/AM, winger, ST (by primary position), then filled t
 outfield players. A group with nobody left is skipped. "Best" means highest `overall`, then lowest shirt number. A
 setup lineup is 11 players, goalkeeper first, in the formation's slot order.
 
+**Set-piece takers.** Each club lists ordered takers for `penalties`, `corners` and `free_kicks` (direct free kicks),
+as shirt numbers in the YAML and player ids in the saved world. The first listed player on the pitch takes it; if
+none is on the pitch, the engine picks the best available player by the attribute that matters (engine spec). Each
+list has at least 2 different squad players, and a goalkeeper never takes corners. The build fails otherwise.
+
 ## 3. Player attributes
 
 - What is the full attribute list (e.g. pace, acceleration, passing, vision, dribbling, finishing, tackling, positioning, aerial, stamina, composure, goalkeeping)?
@@ -117,6 +123,32 @@ same names; the other six stay inside the generator, so no contract change is ne
 
 **Hidden traits.** `preferred_foot` (`left`, `right`, `both`; default `right`) and `weak_foot` (1–5; default 3).
 Injury proneness and big-game temperament are left out for now; `composure` covers pressure.
+
+**Roles.** Every player has one `role`, which says what they do with and without the ball; ratings say how well.
+The role must be allowed for the player's primary position, or the build fails. Roles are hand-set for reference
+players and picked from the position's allowed roles for generated players (M3). The engine spec decides each
+role's exact effect; until it has a rule for a role, the engine ignores it.
+
+| Role | Allowed primary positions | Meaning |
+|---|---|---|
+| `sweeper_keeper` | GK | Plays high, sweeps behind the line, joins build-up |
+| `shot_stopper` | GK | Stays on the line, kicks long more often |
+| `ball_playing_cb` | CB | Carries and passes forward from the back |
+| `stopper` | CB | Steps out to win the ball, clears rather than plays |
+| `overlapping_fullback` | LB, RB | Runs outside the winger and crosses |
+| `inverted_fullback` | LB, RB | Steps into midfield in possession |
+| `wing_back` | LWB, RWB, LB, RB | Provides all the width on his side, crosses |
+| `anchor` | DM | Holds position in front of the defence |
+| `deep_playmaker` | DM, CM | Sets the tempo from deep, long and progressive passes |
+| `ball_winner` | DM, CM | Presses and tackles, gives simple passes |
+| `box_to_box` | CM, DM | Covers ground, arrives late in the box |
+| `playmaker` | CM, AM | Creates chances: through balls, key passes |
+| `inverted_winger` | LW, RW, LM, RM | Cuts inside onto his stronger foot to shoot or combine |
+| `wide_winger` | LW, RW, LM, RM | Stays wide, beats his man on the outside, crosses |
+| `wide_midfielder` | LM, RM | Works up and down the flank, tracks back |
+| `poacher` | ST | Lives in the box, few touches, many shots |
+| `target_man` | ST | Wins headers and holds the ball up for others |
+| `pressing_forward` | ST | Leads the press, runs in behind |
 
 **Which attributes matter where.** A player's `overall` is the plain mean of the four main attributes for their primary
 position, used for strength, replacements and bench picking. The engine spec decides how each attribute changes actions.
@@ -162,18 +194,25 @@ the best-to-worst gap is therefore about 16 points of XI average.
 | `tempo` | | Slow recycling | Quick passing | Time per action, passes per minute |
 | `line_height` | | Deep block | High line | Defensive anchors, offsides, balls in behind, high regains |
 | `build_up_short` | | Goalkeeper goes long | Plays out from the back | Goal kicks and first pass out from defence |
+| `counter_press` | | Drops back after losing the ball | Swarms the ball straight away | Pressure and tackle attempts in the seconds after a turnover; regains within 5 s of a loss |
+| `press_height` | | Low block: presses only in its own third | High press: presses the goalkeeper and centre-backs | Where pressing starts out of possession (separate from `line_height`, where the back line sits); press height, pressing zones |
+| `counter_attack` | | Recycles after a regain | Goes forward fast and direct after a regain | Pass choice and speed in the first actions after a regain; shots with `situation: counter` |
+| `set_piece_focus` | | Plays corners and free kicks short and safe | Targets them: crosses to the best headers, rehearsed routines | Delivery choice and target at corners and wide free kicks; share of xG from set pieces |
 
 Reference club A (proposed): `press_intensity` 0.85, `directness` 0.20, `width` 0.75, `tempo` 0.60, `line_height`
-0.85, `build_up_short` 0.90.
+0.85, `build_up_short` 0.90, `counter_press` 0.90, `press_height` 0.85, `counter_attack` 0.45, `set_piece_focus`
+0.35.
 
 Reference club B (proposed): `press_intensity` 0.45, `directness` 0.60, `width` 0.55, `tempo` 0.50, `line_height`
-0.40, `build_up_short` 0.45, with a squad strength of about 72. It differs from A by 0.3 or more on press intensity,
-directness, line height and build-up, and is clearly weaker, so A vs B should show A dominating the ball and
+0.40, `build_up_short` 0.45, `counter_press` 0.30, `press_height` 0.35, `counter_attack` 0.80, `set_piece_focus`
+0.75, with a squad strength of about 72. It differs from A by 0.3 or more on press intensity,
+directness, line height, build-up, counter-press, press height, counter-attack and set-piece focus, and is clearly weaker, so A vs B should show A dominating the ball and
 territory while B's chances come from counters and set pieces.
 
-**Formations.** `4-3-3`, `4-2-3-1`, `4-4-2`, `4-1-4-1`, `3-4-3`, `5-3-2` (the six the mock already uses, so screens
-built against the mock keep working). Each formation's slot order (goalkeeper first) and position labels live in
-`world.py`. Anchor positions on the pitch, and how they shift, belong to [`movement.md`](movement.md) §1.
+**Formations.** `4-3-3`, `4-2-3-1`, `4-4-2`, `4-1-4-1`, `3-4-3`, `5-3-2` (the six the mock already uses) plus
+`5-4-1`, which reference club B plays. Each formation's slot order (goalkeeper first) and position labels live in
+`world.py`; `5-4-1` is GK, RWB, CB, CB, CB, LWB, RM, CM, CM, LM, ST. Anchor positions on the pitch, and how they
+shift, belong to [`movement.md`](movement.md) §1.
 
 ## 5. Names
 
@@ -215,7 +254,8 @@ secondary.
 
 **Readable on dark and light backgrounds.** Within each pair, primary and secondary differ by a WCAG contrast ratio of
 at least **3:1**, so one of the two always stands out on any background. The web app draws a player dot as the
-primary with a secondary outline.
+primary with a secondary outline. A light primary therefore needs a dark secondary: light blue on white is only
+about 2.3:1 and fails, light blue on navy passes.
 
 **Distinguishable in a match.** The home club wears home colours. If the two primaries are closer than **ΔE2000 = 20**,
 the away club wears its away pair. The build fails if a club's home and away pairs both clash with any other club's
@@ -235,7 +275,7 @@ _Answer:_
 come from code and the season seed.
 
 **The saved world.** `data/generated/world/<season_id>.json` (for example `S1.json`), holding `world_version`,
-`season_id`, `seed` and every club with its full squad and all twelve attributes. It is gitignored and rebuilt from
+`season_id`, `seed` and every club with its full squad, all twelve attributes, roles and set-piece takers. It is gitignored and rebuilt from
 the YAML and seed; the same inputs always give a byte-identical file. Every match in a season reads the same file.
 Each club also records its derived `strength` and each player their `overall`. `python world.py` (from `generator/`)
 builds and saves it; the command line comes with `cli.py`.
