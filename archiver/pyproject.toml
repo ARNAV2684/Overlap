@@ -1,0 +1,22 @@
+[project]
+name = "overlap-archiver"
+version = "0.1.0"
+description = "Overlap archiver: keeps every match in Cosmos and Blob Storage for replays."
+requires-python = ">=3.12"
+dependencies = [
+    "azure-cosmos>=4.7",
+    "azure-storage-blob>=12.20",
+    "azure-identity>=1.17",
+    "azure-eventhub>=5.12",
+    "azure-eventhub-checkpointstoreblob>=1.2",
+]
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+
+[tool.uv]
+package = false
