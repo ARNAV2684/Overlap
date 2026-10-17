@@ -6,7 +6,8 @@
 | Parent plan | [AI insights and MCP](PLAN_agents_ai-insights-mcp.md), roadmap v1.1 merged in [PR #41](https://github.com/ARNAV2684/Overlap/pull/41); v1.2 records progress |
 | Milestone | M1; parent acceptance F1 |
 | Author / owner | Pranav; Arnav coordinates shared review |
-| Status | Draft prepared — awaiting team review; M1 agreement is not complete |
+| Status | In review — M1 agreement is not complete |
+| Review PR | [#44 — Specify the first insight and MCP handoffs](https://github.com/ARNAV2684/Overlap/pull/44) |
 | Reviewed baseline | `main` · `ba75f51412a9b019fdb689d9c604d03ab82533d2` · 17 October 2026 |
 | Branch | `agents/insights-specs` |
 
@@ -86,6 +87,8 @@ to `stats/`, `web/`, `fixtures/`, `.github/`, infrastructure or `plans/REGISTRY.
 Scanned at `ba75f51` on 17 October 2026. Sources checked: active plans, open PRs (none returned), all origin
 branches and hot files. Only `generator/world-spec` and `mock/live-viewer` had changes outside main; neither
 intersects this file map. Vedant's merged fork work is included through #42; unpublished laptop work is unknown.
+The pre-publication recheck found [PR #43](https://github.com/ARNAV2684/Overlap/pull/43), a snapshot-key correction
+in `web/specs/realtime.md` and `plans/active/PLAN_web_live-match-viewer.md`; neither file overlaps this sprint.
 Shared-interface agreements remain merge/adoption blockers; they do not prevent preparing this review draft.
 
 ## 7. Acceptance criteria
@@ -117,7 +120,8 @@ languages and cloud hosting first; keep factual checks and one actual stats-to-c
 
 ## 9. Handover
 
-**Draft prepared, 17 October 2026.** M1 agreement / parent F1 is still pending. All seven governing component specs
+**Published for review in [PR #44](https://github.com/ARNAV2684/Overlap/pull/44), 17 October 2026.** M1 agreement /
+parent F1 is still pending. All seven governing component specs
 are marked draft, with unsupported roles explicitly deferred. Source examples come from Azeem's generated KES–ORR
 recording; future MCP/model/browser results are not claimed.
 
@@ -126,6 +130,10 @@ existing contracts §§1–9 byte-for-byte unchanged; recorded source hashes and
 `git diff --check` passed. The repository scope checker was run against working-copy files via a read-only adapter
 (the normal checker reads commits); it identified the hot/shared files and ownership discrepancy recorded in §6.
 Open PRs were rechecked (none), main remained `ba75f51`, and branch overlap remained unchanged.
+That was the initial scan; the subsequent #43 recheck is recorded in §6. The committed-file policy and scope
+checks passed locally before publication. On initial published head `dbb6ea0`, GitHub reported success for the
+PR checks, Python, Web and Infra workflows; documentation-only dispatch does not establish runtime coverage.
+The automatic review service could not review the PR because its quota was exhausted; no review approval is implied.
 
 No runtime/unit/model/integration tests were run: there is no runtime change. Structural validation does not satisfy
 F1. Publication checks and their current results are recorded in the PR description and checks tab; private
