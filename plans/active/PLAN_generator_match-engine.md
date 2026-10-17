@@ -10,7 +10,7 @@
 | Review coordinator | Arnav |
 | Affected component owners | Consumers of events and tracking: stats engine, screen relay, archiver (all unassigned, Arnav decides); web app (Vedant). Arnav and Pranav (Event Hubs) |
 | Proposal version and date | v0.2 · 2026-10-16 |
-| Status | Done (M1 in PR #15; M2 in PR #20; M4 in PR #22; M3 in PRs #23 and #35; M5 in review, see [`PLAN_generator_match-engine_S5.md`](PLAN_generator_match-engine_S5.md)) |
+| Status | Done, in review (M1 in PR #15; M2 in PR #20; M4 in PR #22; M3 in PRs #23 and #35; M5 in review, see [`PLAN_generator_match-engine_S5.md`](PLAN_generator_match-engine_S5.md)) |
 | Plan tier and file | Full · `plans/active/PLAN_generator_match-engine.md` |
 | Repository | [ARNAV2684/Overlap](https://github.com/ARNAV2684/Overlap) |
 | Reviewed branch and commit | main · 75b7cba (PR #14, world traits, open and green) |
@@ -285,7 +285,7 @@ AC-05 is met over 100 Calverholme v Dunmarrow seeds. AC-06 is met on two full le
 measured rows), with that fixture judged on a band, as agreed with Azeem. The shot spread is a known limit.
 
 **M3 part 2 — the reference clubs look real** (branch `generator/reference-realism`; sprint plan
-[`PLAN_generator_match-engine_S3.md`](PLAN_generator_match-engine_S3.md), which has the details).
+[`PLAN_generator_match-engine_S3.md`](../done/PLAN_generator_match-engine_S3.md), which has the details).
 
 - **AC-05:** met in the 12-match report: Skyhaven has more possession (0.56 against 0.44), a lower PPDA (13.5 against
   33.3) and more high regains (51.5 against 23.1); Amberholt has the larger counter-shot share (0.17 against 0.10)
