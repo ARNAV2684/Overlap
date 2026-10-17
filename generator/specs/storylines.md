@@ -1,7 +1,7 @@
 # Storylines spec
 
 > **Status: agreed.** Agreed in the spec PR for
-> [`PLAN_generator_storylines`](../../plans/active/PLAN_generator_storylines.md). Kept in step with
+> [`PLAN_generator_storylines`](../../plans/done/PLAN_generator_storylines.md). Kept in step with
 > [`engine.md`](engine.md) §6, whose score-and-time hook storylines use.
 
 Decides the scripted drama that tilts the odds without forcing events, and how we know what to expect from each.
