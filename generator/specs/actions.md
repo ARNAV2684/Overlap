@@ -107,8 +107,9 @@ are therefore almost always shot; hopeful ones rarely.
 
 **Off the ball,** the defending side decides each step who presses:
 
-- **Where pressing starts:** the ball must be beyond the press line, `x ≥ 100 − (35 + 45 × press_height)` in the
-  defenders' own frame. A high press (0.85) hunts the ball in the opponent's third; a low block (0.35) waits.
+- **Where pressing starts:** the ball must be inside the press zone, `x ≥ 100 − (35 + 45 × press_height)` in the
+  **carrier's** frame (the same as `x ≤ 35 + 45 × press_height` in the defenders' own frame). A high press (0.85)
+  hunts the ball almost up to the carrier's goal; a low block (0.35) waits until the ball reaches about halfway.
 - **How often:** each nearby defender (within 12 m, nearest first, at most two at once) presses with probability
   `press_intensity` per decision of the carrier.
 - **Counter-press window:** for 5 s after losing the ball, the nearest three players press regardless of the press
