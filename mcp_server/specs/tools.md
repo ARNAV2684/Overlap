@@ -1,6 +1,6 @@
 # MCP tools spec
 
-> **Status: agreed for local M2 implementation.** #44 merged; on 18 October 2026 Pranav confirmed
+> **Status: agreed.** Scope: local M2 implementation only. #44 merged; on 18 October 2026 Pranav confirmed
 > Azeem's source/trigger agreement, Arnav's storage agreement and authorised the local milestone. These are
 > user-reported decisions, not newly obtained review comments. Owner: Pranav; registry update remains Arnav's task.
 > Governs the files mapped in [S2](../../plans/active/PLAN_agents_ai-insights-mcp_S2.md).

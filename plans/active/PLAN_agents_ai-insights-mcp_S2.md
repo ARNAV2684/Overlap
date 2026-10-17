@@ -5,7 +5,7 @@
 | Sprint | S2 — read a stored moment through a real local MCP client |
 | Parent | [AI insights/MCP roadmap](PLAN_agents_ai-insights-mcp.md), M2 / F2 |
 | Owner | Pranav |
-| Status | In progress; implementation explicitly authorised on 18 October 2026 |
+| Status | Implemented and verified locally; not pushed or submitted for implementation review |
 | Baseline | `main` at `cb3b3492abaf5acadb084b20cb30faba8b2d2828`, including merged #44 |
 | Branch | `mcp_server/local-moments-s2` |
 
@@ -23,7 +23,7 @@ This proves local sample ingestion and MCP readback, not the stats-to-card path.
 | Merged tools/source specification | #44; tools spec and CONTRACTS §10.2 | Yes for this local consumer scope |
 | Producer and shared interface agreement | Pranav's explicit answers, 18 October: Azeem owns stats and agrees evidence/frozen context and shot rule; Arnav agrees storage/delivery; Vedant agrees first card format | User-reported agreements; not independent review comments. Registry remains Arnav's file |
 | Sample | #44's generated KES–ORR, seed 1017; Pranav authorised preparing it | Source hashes, shots and score verified; constructed document, not producer output |
-| Cosmos emulator | Existing local container on loopback 8081 | Running container observed; SDK round trip pending |
+| Cosmos emulator | Existing local container on loopback 8081 | Sample created, read through MCP, and repeat-load verified |
 | Foundry | User: no access yet, finish local milestone first | Deferred; no model SDK or cloud requests |
 
 ## 3. Files
@@ -72,12 +72,12 @@ Local unpublished teammate work is unknown. Scanned at `cb3b349` on 18 October 2
 
 | ID | Observable result | Check | Evidence |
 |---|---|---|---|
-| S2-01 | Sample matches #44 and has traceable generator provenance | JSON, hash/source check | Pending |
-| S2-02 | Seed is local-only, repeat-safe, never replaces conflicting content or unrelated data | Loader tests and emulator repeat | Pending |
-| F2 / S2-03 | A real MCP subprocess completes initialise/list/call and returns the exact stored projection | Protocol test and Cosmos smoke | Pending |
-| S2-04 | Wrong scope causes no read; bad IDs, versions, shapes, missing data, timeout and oversized data fail visibly | Negative tests | Pending |
-| S2-05 | At most two attempts, bounded deadlines; failed tool result never becomes a successful handoff | Retry/client tests | Pending |
-| S2-06 | Output bundle preserves evidence authority and sample provenance; no model/live-output claim | Smoke artifact inspection | Pending |
+| S2-01 | Sample matches #44 and has traceable generator provenance | JSON, hash/source check | Passed: example equality test; both recorded source hashes matched; contiguous prefix 1–1592, three exact same-period shots/player IDs, warmup, names, clock and score 3–0 independently checked |
+| S2-02 | Seed is local-only, repeat-safe, never replaces conflicting content or unrelated data | Loader tests and emulator repeat | Passed: local CLI returned created then already_present; conflict/no-replacement, invalid-document/no-write and nonlocal endpoint tests passed |
+| F2 / S2-03 | A real MCP subprocess completes initialise/list/call and returns the exact stored projection | Protocol test and Cosmos smoke | Passed: fixture and Cosmos smoke CLIs; Cosmos result source=cosmos, document MO-1017-0001, cursor 1592/2/4174400, exact context and text parity |
+| S2-04 | Wrong scope causes no read; bad IDs, versions, shapes, missing data, timeout and oversized data fail visibly | Negative tests | Passed: protocol, schema and reader suites; real missing Cosmos item returns not_found without fallback |
+| S2-05 | At most two attempts, bounded deadlines; failed tool result never becomes a successful handoff | Retry/client tests | Passed: transient retry, cancellation, concurrent-call budget, client status/schema/cursor/provenance/text rejection and failed CLI/no-success-report checks |
+| S2-06 | Output bundle preserves evidence authority and sample provenance; no model/live-output claim | Smoke artifact inspection | Passed: bundle evidence equals stored source; sample label and model_called=false/live_delivery=false inspected |
 
 ## 8. Risks and decisions
 
@@ -88,4 +88,46 @@ stats publication remain pending. Historical fixtures do not have a valid live p
 
 ## 9. Handover
 
-Pending implementation. Record the tested commit, pinned versions, commands, emulator checks and remaining limits.
+Validated on 18 October 2026. Runtime/test files are committed at `b406072855309275ff55b949aaf9c50d4096dbc9`;
+later handoff changes are documentation only. Branch: `mcp_server/local-moments-s2`. No push, PR or teammate
+notification was requested/performed. Leave this plan active until its implementation is reviewed and merged.
+
+### Reproduce and inspect
+
+Follow [the MCP README](../../mcp_server/README.md). Commands run from `mcp_server/`:
+
+```sh
+uv sync --frozen --python 3.12 --managed-python --no-editable
+uv run --frozen --no-editable overlap-mcp-check --source fixture --output ../data/generated/insights/mcp-fixture-check.json
+uv run --frozen --no-editable --env-file ../infra/local/env.example overlap-mcp-seed
+uv run --frozen --no-editable --env-file ../infra/local/env.example overlap-mcp-check --source cosmos --output ../data/generated/insights/mcp-cosmos-check.json
+OVERLAP_TEST_COSMOS=1 uv run --frozen --no-editable --env-file ../infra/local/env.example pytest -q
+```
+
+- Default tests: **62 passed, 2 Cosmos tests skipped**. With Cosmos enabled: **64 passed** (4.71 seconds in this run,
+  not a performance benchmark). Both smoke commands exited successfully; repeat seed returned `already_present`.
+- Existing emulator `overlap-azeem-viewer-cosmos-1` was reused on loopback 8081. Only the explicit local seed command
+  created `live/moments` if needed and added the selected source document; no other container was reset or stopped.
+- Canonical readback document SHA-256: `6c67da292dbac4493ace9b6feb1d85bc6ed1e21c51405d490ec1108e9365b1fa`.
+  Canonical means sorted keys/compact JSON without Cosmos metadata, as encoded by `schema.encoded`.
+- Runtime: uv-managed Python **3.12.15**, uv **0.13.1**. Dependencies: MCP **1.30.0**, Azure Cosmos **4.17.1**,
+  aiohttp **3.14.5**, Pydantic **2.14.1**, jsonschema **4.26.0**; pytest **8.4.2**, Ruff **0.17.0**. The lock pins
+  transitive versions. Anaconda was left unchanged. Normal package installation avoids this workspace's macOS
+  hidden `.pth` import issue; rebuild the installed package after source edits, as documented.
+- Ruff and `git diff --check` passed. All **24 changed files** matched the S2 file map; **43 relative link targets**
+  resolved. The existing project detector selects `mcp_server`; no CI edits were needed. Local policy checks passed.
+- Fresh fetch left main at `cb3b349`; it is already an ancestor of this branch. No open PRs were returned by the
+  final GitHub search. Scope analysis lists the registry's still-unassigned MCP ownership, Pranav's predecessor S1
+  and the housekeeping plan's broad plans-directory reference; these are disclosed, not claimed to be new owner
+  approvals. Arnav owns the registry update. No hot shared file or shared message shape changed.
+- Hosted CI, the private blocklist and repository secret scan were **not checked** because this branch has not
+  been published. A future PR must run those repository checks; local success does not replace them.
+
+### Remaining connections
+
+Azeem must produce the real agreed moments/evidence; this sample is a constructed document from his recording.
+Arnav coordinates the later storage identity, durable job/outbox and delivery integration; production RBAC is
+untested. Vedant's card rendering and audience reconnect path are unchanged. Pranav's next milestone is the
+workflow/model adapter, claim checker and evaluation after its remaining specification gates, Foundry access and
+spend approval. This milestone does not implement that workflow or generate explanations. No paid resources,
+Foundry calls or live overlays were used.
