@@ -14,7 +14,7 @@ from __future__ import annotations
 STEP_MS = 200                       # one simulation step = one 5 Hz tracking frame
 PERIOD_MS = 45 * 60 * 1000          # regulation length of a period
 END_WINDOW_MS = 60_000              # a period ends at most this long after added time runs out
-DECISION_DELAY_S = (0.4, 2.4)       # time on the ball before the next action
+DECISION_DELAY_S = (0.6, 3.0)       # time on the ball before the next action
 DEAD_TIME_S = {                     # dead-ball time before each restart (set-pieces-and-discipline.md, engine.md §4)
     "throw_in": (8, 18), "goal_kick": (15, 30), "corner": (25, 45), "kickoff_after_goal": (45, 75),
     "free_kick": (15, 30), "free_kick_near": (30, 45), "penalty": (60, 100), "card": (20, 40),
@@ -56,19 +56,20 @@ ACTIONS = ("short_pass", "long_pass", "through_ball", "cross", "cutback", "switc
 # Relative weights within a zone, in ACTIONS order. In the final third and box the shot weight is added from xG.
 #                  short  long  thru  cross  cut  switch  carry  take  shot  clear  hold
 _BASE_ROWS = {
-    "own":           (60,   20,    3,    0,    0,    4,     12,    2,    0,    8,    4),
-    "middle":        (55,   14,   10,    0,    0,    6,     16,    5,    0.3,  1,    4),
-    "final_wide":    (38,    2,    6,   10,    3,    5,     14,   10,    1,    0,    5),
-    "final_central": (40,    1,   14,    0,    0,    2,     12,    8,    4,    0,    4),
-    "box":           (24,    0,    6,    6,    6,    0,      6,    8,    0,    0,    3),
+    "own":           (60,   14,    3,    0,    0,    4,     12,    2,    0,    8,    4),
+    "middle":        (55,   10,    8,    0,    0,    6,     16,    5,    0.3,  1,    4),
+    "final_wide":    (38,    2,    6,    5,    3,    5,     14,   10,    1,    0,    5),
+    "final_central": (40,    1,   11,    0,    0,    2,     12,    8,   10,    0,    4),
+    "box":           (24,    0,    6,    4,    6,    0,      6,    8,    0,    0,    3),
 }
 BASE_WEIGHTS = {zone: dict(zip(ACTIONS, row)) for zone, row in _BASE_ROWS.items()}
-SHOT_APPETITE = 7.0                # S in weight = S × xG / (0.10 + xG); raises or lowers shots per match
-SHOT_DIRECTNESS_BASE = 0.6          # shot weight × (this + directness): direct sides shoot sooner
-MIN_SHOT_XG = 0.03                   # never shoot below this
+SHOT_APPETITE = 19.0               # S in weight = S × xG / (SHOT_XG_HALF + xG); raises or lowers shots per match
+SHOT_XG_HALF = 0.25                 # larger: the decision to shoot follows chance quality more closely
+SHOT_DIRECTNESS_BASE = 0.2          # shot weight × (this + directness): direct sides shoot sooner
+MIN_SHOT_XG = 0.02                   # never shoot below this
 COUNTER_WINDOW_MS = 12_000           # after a regain in own half...
-COUNTER_BACK_PCT = 5.0               # a completed pass this far backwards ends the counter window
 COUNTER_FROM_X = 50.0                # ...(team-frame percent): a high regain is a high turnover, not a counter
+COUNTER_MIN_GAIN_PCT = 5.0           # a completed pass gaining less than this (team-frame percent) ends the counter
 COUNTER_PRESS_MS = 5_000             # after losing the ball
 COUNTER_RELEASE = 0.6                # decision delay × (1 - this × counter_attack) in the counter window
 COUNTER_SHORT_CUT = 0.5             # short_pass × (1 - this × counter_attack) in the counter window
@@ -102,7 +103,7 @@ PRESS_RADIUS_M = 12.0
 PRESSURE_RADIUS_M = 2.5
 PRESSURE_REPEAT_MS = 3_000          # a Pressure event at most every 3 s per defender (engine.md §5 allows 1.5)
 TACKLE_RADIUS_M = 1.3
-TACKLE_RATE_PER_STEP = 0.018         # chance a defender in range tries a tackle each step (about 15-20 tackles a team)
+TACKLE_RATE_PER_STEP = 0.021         # chance a defender in range tries a tackle each step (about 15-20 tackles a team)
 MAX_PRESSERS = 2
 MAX_COUNTER_PRESSERS = 3
 PRESS_ROLE = {"ball_winner": 1.4, "pressing_forward": 1.4, "stopper": 1.3, "anchor": 0.7}
@@ -110,13 +111,13 @@ PRESS_ROLE = {"ball_winner": 1.4, "pressing_forward": 1.4, "stopper": 1.3, "anch
 # --- Outcomes (actions.md §3) ------------------------------------------------------------------------------------
 
 BASE_SUCCESS = {
-    "short_pass": 0.95, "long_pass": 0.66, "through_ball": 0.45, "cross": 0.24, "cutback": 0.55, "switch": 0.70,
+    "short_pass": 0.96, "long_pass": 0.75, "through_ball": 0.50, "cross": 0.24, "cutback": 0.55, "switch": 0.70,
     "take_on": 0.48, "tackle": 0.55, "aerial": 0.50, "clearance": 0.35,
 }
 SKILL_LOGIT_PER = 15.0               # (rating - 70) / this, added to the log-odds
 PRESSURE_LOGIT = -0.4
 MARKED_RADIUS_M = 3.0                # a ground pass played to within this of an opponent...
-MARKED_LOGIT = -1.2                  # ...loses up to this much log-odds (all of it with the opponent on the spot)
+MARKED_LOGIT = -0.8                  # ...loses up to this much log-odds (all of it with the opponent on the spot)
 SHORT_PASS_LENGTH_LOGIT = -0.025     # per metre beyond 12 m
 WEAK_FOOT_PASS_SHARE = 0.15          # passes made with the weaker foot
 WEAK_FOOT_PASS_PENALTY = 0.03        # × (5 - weak_foot), on the success probability
@@ -213,7 +214,7 @@ FOUL_FROM_BEHIND = 1.8
 FOUL_TACTICAL = 1.6                  # stopping a counter attack
 HOME_FOUL_LENIENCY = 0.10            # home fouls given this much less often at a full house
 ADVANTAGE_SHARE = 0.35               # fouls in the attacking 40 % where the referee plays on
-FOUL_IN_OWN_BOX = 0.1                # defenders are careful in their own box (a foul there is a penalty)
+FOUL_IN_OWN_BOX = 0.03               # defenders are careful in their own box (a foul there is a penalty)
 CARD_ORDINARY_YELLOW = 0.09
 CARD_ORDINARY_RED = 0.002
 CARD_TACTICAL_YELLOW = 0.40
@@ -225,4 +226,8 @@ OFFSIDE_BASE = 0.03                  # a runner played in behind mistimes his ru
 OFFSIDE_LINE_HEIGHT = 0.15           # ...plus this × the defending side's line_height
 FREE_KICK_DIRECT_M = 30.0            # a central free kick this close may be shot at goal
 FREE_KICK_DIRECT_SHARE = 0.6         # × (0.5 + set_piece_focus)
+SHORT_CORNER = 0.35                  # corners played short: this × (1 - set_piece_focus)
+LONG_THROW_SHARE = 0.5               # final-third throw-ins thrown long: set_piece_focus × this
+LONG_THROW_DEPTH_M = 9.0             # aimed this far out from the goal line
+SET_PIECE_FOCUS_LOGIT = 2.5          # set-piece deliveries: + this × (set_piece_focus - 0.5) on the log-odds
 FREE_KICK_WALL = 2                   # wall players counted as defenders in the way

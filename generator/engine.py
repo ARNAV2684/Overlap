@@ -345,7 +345,8 @@ class Match:
             speed *= config.WET_ROLL_SPEED
         peak = r.uniform(*config.PEAK_M.get(action, (3, 6))) if lofted else 0.0
         quals = list(qualifiers or [])
-        if action in ("through_ball", "cross", "cutback"):
+        long_throw = "long_throw" in quals
+        if action in ("through_ball", "cross", "cutback") and not long_throw:
             quals.append(action)
         if length > config.LONG_PASS_M and action != "cross":
             quals.append("long_ball")
@@ -358,6 +359,9 @@ class Match:
                                          default=99.0)
         p_ok = 0.97 if forced else outcomes.pass_success(base_action, passer, receiver, length, pressured, weak,
                                                          self.wet, self.windy, marked)
+        if action == "cross" and {"corner", "free_kick", "throw_in"} & set(quals):  # rehearsed deliveries find a head
+            focus = self.style(side)["set_piece_focus"]
+            p_ok = outcomes.logistic(outcomes.logit(p_ok) + config.SET_PIECE_FOCUS_LOGIT * (focus - 0.5))
         result, target, data = "receive", receiver, {}
         if not lofted and not forced:
             opps = sorted(self.on_pitch(self.other(side)), key=lambda o: (math.hypot(o.x - sx, o.y - sy), o.slot_index))
@@ -603,8 +607,8 @@ class Match:
         res = f.result
         side = f.actor.side
         if res == "receive":
-            if self.in_counter(side) and self.tp(side, f.ex, f.ey)[0] < self.tp(side, f.sx, f.sy)[0] - config.COUNTER_BACK_PCT:
-                self.last_regain[side] = (-10**9, 100.0)    # a pass backwards slows the attack: no longer a counter
+            if self.in_counter(side) and                     self.tp(side, f.ex, f.ey)[0] - self.tp(side, f.sx, f.sy)[0] < config.COUNTER_MIN_GAIN_PCT:
+                self.last_regain[side] = (-10**9, 100.0)    # a pass that doesn't go forward ends the counter
             self.gain(side, "pass")
             if f.kind in PASS_ACTIONS or f.kind in ("throw_in", "kickoff", "goal_kick"):
                 self.last_pass[side] = (f.data["event"], f.target.pid)
@@ -745,6 +749,8 @@ class Match:
             return
         self.set_piece = (rs.kind, rs.side, self.match_ms)
         if rs.kind == "throw_in":
+            if self._long_throw(rs, taker, team):
+                return
             near = [b for b in team if math.hypot(b.x - rs.x, b.y - rs.y) <= 20 and not b.is_gk] or team
             rcv = min(near, key=lambda b: (-self.nearest_opponent_dist(b), b.slot_index))
             self.do_pass(taker, "short_pass", rcv, pitch.to_team(rcv.x, rcv.y, east), qualifiers=["throw_in"],
@@ -773,10 +779,31 @@ class Match:
             self.do_pass(taker, "short_pass", rcv, pitch.to_team(rcv.x, rcv.y, east))
         elif rs.kind == "corner":
             self.emit("Corner", taker)
-            targets = self.corner_box or team
-            rcv = targets[0]
-            self.do_pass(taker, "cross", rcv, pitch.to_team(rcv.x, rcv.y, east), qualifiers=["corner"])
+            focus = self.style(rs.side)["set_piece_focus"]
+            near = [b for b in team if not b.is_gk and b not in self.corner_box]
+            if near and self.rng["restarts"].random() < config.SHORT_CORNER * (1 - focus):
+                rcv = min(near, key=lambda b: (math.hypot(b.x - rs.x, b.y - rs.y), b.slot_index))
+                self.do_pass(taker, "short_pass", rcv, pitch.to_team(rcv.x, rcv.y, east), qualifiers=["corner"])
+            else:
+                targets = self.corner_box or team
+                rcv = targets[0]
+                self.do_pass(taker, "cross", rcv, pitch.to_team(rcv.x, rcv.y, east), qualifiers=["corner"])
         self.last_touch = rs.side
+
+    def _long_throw(self, rs: Restart, taker: Body, team: list[Body]) -> bool:
+        """In the final third, a side with a target man or a strong header may throw long into the box
+        (set-pieces-and-discipline.md §1)."""
+        east = self.east(rs.side)
+        tx, _ = pitch.to_team(rs.x, rs.y, east)
+        focus = self.style(rs.side)["set_piece_focus"]
+        headers = [b for b in team if not b.is_gk and (b.role == "target_man" or b.attr("aerial") >= 80)]
+        if tx < pitch.LENGTH * config.ZONE_X[1] / 100 or not headers or                 self.rng["restarts"].random() >= focus * config.LONG_THROW_SHARE:
+            return False
+        rcv = max(headers, key=lambda b: (b.attr("aerial") + (15 if b.role == "target_man" else 0), -b.slot_index))
+        point = (pitch.LENGTH - config.LONG_THROW_DEPTH_M, pitch.GOAL_Y)
+        self.do_pass(taker, "cross", rcv, point, qualifiers=["throw_in", "long_throw"], body="other")
+        self.last_touch = rs.side
+        return True
 
     def _take_free_kick(self, rs: Restart, taker: Body, team: list[Body]) -> None:
         """Direct shot, cross into the box, or a short pass (set-pieces-and-discipline.md §1)."""

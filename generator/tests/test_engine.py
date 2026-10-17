@@ -13,6 +13,7 @@ import pytest
 
 import config
 import engine
+import movement
 import outcomes
 import pitch
 import world
@@ -105,3 +106,56 @@ def test_a_match_has_both_teams_playing(clubs):
         assert 0.3 < s[side]["possession"] < 0.8
     assert math.isclose(s["home"]["possession"] + s["away"]["possession"], 1.0, abs_tol=0.01)
     assert r.events[0]["type"] == "PeriodStart" and r.events[-1]["type"] == "PeriodEnd"
+
+
+# --- shape (movement.md §1) and the counter window (actions.md §2) -----------------------------------------------
+
+
+def _frozen(clubs, poss: str, ball_pct: tuple[float, float]):
+    """SKH v AMH at kickoff time, `poss` on the ball at `ball_pct` in that side's team frame, everyone on his anchor."""
+    m = engine.Match(clubs["SKH"], clubs["AMH"], match_id="SYN-0060", seed=60, kickoff_utc="2026-10-24T19:00:00Z")
+    m._update_style()
+    for side in ("home", "away"):
+        for b in m.on_pitch(side):
+            ax, ay = movement.ANCHORS[m.formation[side]][b.slot_index]
+            b.x, b.y = pitch.to_team(*pitch.from_pct(ax, ay), m.east(side))
+    m._update_lines()
+    m.poss_side, m.mode = poss, "held"
+    m.ball_x, m.ball_y = pitch.to_team(*pitch.from_pct(*ball_pct), m.east(poss))
+    return m
+
+
+def _target_pct(m, b):
+    return pitch.team_pct(*m.shape_of(b), m.east(b.side))
+
+
+def test_a_five_four_one_supports_its_carrier_in_the_final_third(clubs):
+    m = _frozen(clubs, "away", (75, 50))
+    m.offside_line["away"] = 88.0
+    ahead = [b.slot for b in m.on_pitch("away") if not b.is_gk and _target_pct(m, b)[0] >= config.ZONE_X[1]]
+    assert len(ahead) >= 3 and "ST" in ahead and {"RM", "LM"} <= set(ahead)
+
+
+def test_a_low_block_is_more_compact_than_a_high_line(clubs):
+    def depth(m, side):
+        xs = [_target_pct(m, b)[0] for b in m.on_pitch(side) if not b.is_gk]
+        return max(xs) - min(xs)
+
+    amh_defending = depth(_frozen(clubs, "home", (50, 50)), "away")
+    skh_defending = depth(_frozen(clubs, "away", (50, 50)), "home")
+    assert amh_defending < skh_defending
+
+
+def test_the_back_line_stays_goal_side_of_the_ball(clubs):
+    m = _frozen(clubs, "home", (60, 50))           # SKH on the ball 40 % from AMH's goal
+    for b in m.on_pitch("away"):
+        if not b.is_gk and movement.ANCHORS[m.formation["away"]][b.slot_index][0] < 40:
+            assert _target_pct(m, b)[0] <= 40 - config.GOAL_SIDE_PCT + 1e-6
+
+
+def test_a_counter_starts_only_from_a_regain_in_the_own_half(clubs):
+    m = _frozen(clubs, "away", (40, 50))
+    m.last_regain["away"] = (m.match_ms, 30.0)
+    assert m.in_counter("away")
+    m.last_regain["away"] = (m.match_ms, 60.0)       # a high regain is a high turnover, not a counter
+    assert not m.in_counter("away")
