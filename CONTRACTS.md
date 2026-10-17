@@ -188,10 +188,30 @@ the same match.
 In period 2 the home team attacks west, so Okafor's team-frame position `(76, 10)` on the left wing is pitch-frame
 `(24, 90)`.
 
-- The screen relay bundles frames into **about one message per second**; the browser tweens between them.
-- The archiver stores tracking as compressed **per-minute chunks** in Blob Storage, not one document per frame.
+- The screen relay bundles up to five frames per `positions` envelope: about one message per **match** second (§7.2),
+  so about 20 per wall-clock second at 20×. The browser tweens between them.
+- The archiver stores tracking as compressed **per-minute chunks** in Blob Storage, not one document per frame (§4.1).
 - Speeds must come from smooth motion (acceleration and top-speed limits), not noise, or sprint tags and distance
   covered become meaningless.
+
+### 4.1 Archived match (archiver → replay, recap, judges' link)
+
+Every match is kept permanently by the archiver ([`archiver/specs/storage.md`](archiver/specs/storage.md)), so replays
+never depend on Event Hubs. All Cosmos containers are in database `live` with partition key `/match_id`.
+
+| Where | Holds | Document / file |
+|---|---|---|
+| Cosmos `matches` | The setup and, at full time, the result | `{ "id": <match_id>, "match_id", "status": "live" \| "finished", "setup": <§2>, "result": { "score": { "home", "away" }, "events", "tracking_minutes" } }` (`result` only when finished) |
+| Cosmos `events` | Every event | The §3 event unchanged, plus `"id": <event_id>` |
+| Cosmos `stats` | Every stat panel | The panel unchanged, plus `"id": "stats-<match_ms, 9 digits>"` |
+| Blob container `tracking` | Every tracking frame | `<match_id>/p<period>/m<minute of the period, 3 digits>.ndjson.gz`: gzip, one §4 frame per line, ascending `match_ms` |
+
+- **Reading a match:** the `matches` document first (setup, status); events ordered by `seq`; frames from the tracking
+  files ordered by period then minute; stat panels ordered by `match_ms`.
+- A tracking file can contain the same frame twice after a redelivery: readers keep the first frame for each
+  `match_ms` and drop repeats. A file may be several gzip members joined together; standard gzip readers handle this.
+- The minute in a file name is `period_ms ÷ 60000` (minute 0 of period 2 is the first minute after kick-off).
+- Replays sent to browsers use the §7 envelope, built from this format by the replay route.
 
 ## 5. Evidence pack (stats engine → agents)
 
@@ -379,7 +399,7 @@ Numbers come from code. These definitions are shared so the agents, charts and t
 
 - [ ] Agree the momentum-swing and press-change thresholds.
 - [ ] Agree the stat panel (`kind: stats`) payload shape (it reaches browsers through the relay, §7.1).
-- [ ] Agree the per-minute tracking chunk format for replays.
+- [x] Agree the per-minute tracking chunk format for replays (§4.1).
 - [ ] Decide whether the translator is a full agent (football phrasing plus a numeric check) or a service call.
 - [ ] Confirm the hero moment's chart for the demo video (currently `shot_map` for every mode).
 - [ ] Decide which language the shared models are written in, and where they live.
