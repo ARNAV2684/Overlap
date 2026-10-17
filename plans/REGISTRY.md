@@ -18,6 +18,8 @@ This file is maintained by Arnav. AI assistants read it but never add or change 
 | 7 · Web app | `web/` | Vedant |
 | Other infrastructure | `infra/` (other modules), `azure.yaml` | Unassigned (Arnav decides) |
 | Docs and scripts | `docs/`, `scripts/` | Unassigned (Arnav decides) |
+| Mock live feed (temporary, replaced by the generator) | `mock/` | Arnav |
+| Plans (shared) | `plans/` | Each author owns their own plan file; only Arnav edits `plans/REGISTRY.md` |
 
 A change to a folder you do not own needs that folder's owner to agree first, and goes in its own small commit.
 "Unassigned" folders need Arnav's agreement.
