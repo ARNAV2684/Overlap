@@ -81,10 +81,12 @@ the referee plays **advantage**: the foul is still recorded and play goes on.
 
 _Answer:_
 
+Tuned to the yellow cards per match in [`CALIBRATION.md`](../../CALIBRATION.md) (M5):
+
 | Foul | Yellow | Straight red |
 |---|---|---|
-| Ordinary | 0.12 | 0.002 |
-| Stopping a counter attack (tactical) | 0.55 | — |
+| Ordinary | 0.085 | 0.002 |
+| Stopping a counter attack (tactical) | 0.38 | — |
 | From behind or late | 0.30 | 0.02 |
 | Denying an obvious goal-scoring opportunity (last defender, central, near goal) | — | 0.6 (otherwise yellow) |
 

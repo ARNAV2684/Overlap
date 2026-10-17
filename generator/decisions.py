@@ -185,9 +185,8 @@ def choose(m, carrier: Body, rng: random.Random) -> Choice:
             if value < config.MIN_SHOT_XG:
                 continue
             w = config.SHOT_APPETITE * value / (config.SHOT_XG_HALF + value) + base.get("shot", 0.0)
-            w *= carrier.attr("finishing") / 70
-            if pitch.goal_distance(cx, cy) > 20:
-                w *= carrier.attr("finishing") / 70
+            skill = (carrier.attr("finishing") / 70) ** config.SHOT_FINISHING_POWER
+            w *= skill * skill if pitch.goal_distance(cx, cy) > 20 else skill
             w *= m.shot_appetite(side)
         if w <= 0:
             continue

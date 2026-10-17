@@ -234,8 +234,8 @@ Not one of the template's questions, but the engine reads them, so they are spec
 | Wind above 8 m/s | Long passes, crosses and shots from over 20 m lose accuracy, more so into the wind (judgement call) |
 
 - **Attendance** is the home venue's capacity × a seeded fill rate (85–100 %). **Home advantage** is a small boost to
-  the home side's `composure` (+2) and a slightly lower chance that the home side's fouls are given, both scaled by
-  attendance; it is tuned so the home win, draw and away win shares match the public target in
+  the home side's `passing`, `finishing`, `tackling` and `composure` (+6 each at a full house, substitutes
+  included) and a slightly lower chance that the home side's fouls are given, both scaled by attendance; it is tuned so the home win, draw and away win shares match the public target in
   [`CALIBRATION.md`](../../CALIBRATION.md). Studies of matches played without crowds found the home advantage
   shrinks without them, which is why it scales with attendance.
 - **Conditions in the output:** recorded in the engine's result. Sending them to other layers needs an optional
