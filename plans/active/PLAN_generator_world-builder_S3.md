@@ -6,7 +6,7 @@
 | Parent plan | [`PLAN_generator_world-builder.md`](PLAN_generator_world-builder.md) · v0.1 |
 | Milestone in parent plan | M3 — rest of the league ("Sprint plan ACs"); also answers risk R-03 again, after Arnav's review flag |
 | Author / owner | Azeem |
-| Status | In progress (Part A in PR #37; Part B on `generator/world-builder-s3`; go from Azeem on 2026-10-17) |
+| Status | In progress (Part A merged in PR #37; Part B in review in PR #38; go from Azeem on 2026-10-17) |
 | Reviewed branch and commit | main · 8fa24d4 |
 | Planned branch | Part A `generator/reference-rotation`; Part B `generator/world-builder-s3` |
 
@@ -33,7 +33,7 @@
 | Needed before starting | Source | Ready? |
 |---|---|---|
 | `world.md` agreed | PR #8, #11, #14 | Yes |
-| Engine and storyline PRs merged; they touch the same tests, `cli.py`, `batch.py` and `realism_report.py` that the rename touches | PR #35, PR #36 (Azeem), reviewer Arnav | No. Part A can stack on #36 and merge after it. Part B branches from `main` after Part A |
+| Engine and storyline PRs merged; they touch the same tests, `cli.py`, `batch.py` and `realism_report.py` that the rename touches | PR #35, PR #36 (Azeem), reviewer Arnav | Yes. #35, #36 and #37 merged on 2026-10-17; Part B (#38) builds on main |
 | Decisions D-01 to D-03 | Azeem, Arnav | No. They block steps A1 and B1 |
 | A public source for the share of left-footed and two-footed professional players | `CALIBRATION.md` | No. To find in step A2; until then, the feet split is an Assumption |
 
