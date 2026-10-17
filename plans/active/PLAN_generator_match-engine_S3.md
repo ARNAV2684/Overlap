@@ -6,8 +6,8 @@
 | Parent plan | [`PLAN_generator_match-engine.md`](PLAN_generator_match-engine.md) · v0.2 |
 | Milestone in parent plan | M3 (part 2) and the match-total half of M5 · AC-05, AC-06 |
 | Author / owner | Azeem |
-| Status | In progress (go from Azeem, 2026-10-17) |
-| Reviewed branch and commit | `generator/batch-mode` · 60badf2 (PR #24, stacked on #20–#23); `main` · 62678ce |
+| Status | Done, in review (go from Azeem, 2026-10-17) |
+| Reviewed branch and commit | `generator/batch-mode` · 60badf2; `main` · 8fa24d4 merged in on 2026-10-17 after PRs #20–#34 merged |
 | Planned branch | `generator/reference-realism`, from `generator/batch-mode` |
 
 ## 1. Outcome
@@ -36,7 +36,7 @@ completion 75.2 % (79–84 %), fouls 8.9 a team (9–14), match length 103.1 min
 | Needed before starting | Source | Ready? |
 |---|---|---|
 | Agreed `movement.md`, `actions.md`, `engine.md` | PR #15 (merged) | Yes |
-| Batch mode and the realism report | PR #24 (open, stacked on #20–#23) | Yes — this branch stacks on it; the PR into `main` shows #20–#24's commits until they merge |
+| Batch mode and the realism report | PR #24 (merged) | Yes |
 | Targets with sources | `CALIBRATION.md` (PR #16, merged) | Yes |
 
 ## 3. Files
@@ -46,11 +46,12 @@ completion 75.2 % (79–84 %), fouls 8.9 a team (9–14), match length 103.1 min
 | `generator/movement.py` | Modify | **Support runs:** with the ball in the final third, attack-line and wide players push to the box and stay near the ball, one central midfielder supports; **counter runs:** breakers run toward the space behind the opponent's line; **compact block:** out of possession the gap between lines shrinks as `line_height` falls | `movement.md` §1 |
 | `generator/decisions.py` | Modify | Counter-window pass targets favour runners in behind; any shot or cross weights that need retuning once runners arrive | `actions.md` §2 |
 | `generator/config.py` | Modify | New knobs for the rules above; retuned values for shot appetite, pass success and interceptions, decision delay, added time | `actions.md` §6 |
-| `generator/engine.py` | Modify only if needed | Support runners sprint like breakers (`_targets`) | `engine.md` §2 |
-| `generator/discipline.py` | Modify only if fouls stay below 9 | Foul base rate | `set-pieces-and-discipline.md` §2 |
+| `generator/engine.py` | Modify | Counter window only from own-half regains, ended by a pass that doesn't go forward; corners from blocked shots and headed or cut-out crosses; the agreed short corners and long throws (missing until now); `set_piece_focus` on deliveries; marking passed to pass success | `actions.md` §2–§3, `set-pieces-and-discipline.md` §1 |
+| `generator/outcomes.py` | Modify | A ground pass to a marked spot is harder | `actions.md` §3 |
 | `generator/specs/movement.md` | Modify | §1: support runs, counter runs, compact block | Itself |
 | `generator/specs/actions.md` | Modify | §2 base-weight table and counter window, §6 knobs, kept in step with `config.py` | Itself |
-| `generator/specs/engine.md`, `set-pieces-and-discipline.md` | Modify only if their code changes | The matching rule | Itself |
+| `generator/specs/set-pieces-and-discipline.md` | Modify | §1 delivery bonus from `set_piece_focus`, counter window wording; §2 foul factor in own box | Itself |
+| `generator/tests/test_discipline.py` | Modify | The offside test allows the half to end before the free kick is taken (an edge case the new seeds hit; the engine is right) | `set-pieces-and-discipline.md` §5 |
 | `generator/tests/test_engine.py` | Modify | Shape tests: a 5-4-1 side has at least three players in the final third when it has the ball there; a low block is more compact than a high line | `movement.md` §1 |
 | `plans/active/PLAN_generator_match-engine.md` | Modify | M3 part 2 handover | — |
 | `plans/active/PLAN_generator_match-engine_S3.md` | Add | This sprint plan | — |
@@ -105,26 +106,40 @@ are merged work. Hot files: none.
 
 ## 9. Handover
 
-**In progress — work-in-progress commit, not validated.** Specs not yet updated; tests and ruff not yet run.
+**Done.** Branch `generator/reference-realism`; PR into `main` (reviewer Arnav).
 
-Done in code (`movement.py`, `decisions.py`, `engine.py`, `outcomes.py`, `config.py`):
-- Support runs in the final third (`SUPPORT_OFFSET_PCT` per slot, far-post runs); counter runners on the last
-  defender's shoulder.
-- Compact block out of possession (`BLOCK_DEPTH_*`); back line goal-side of the ball and narrow near goal
-  (`GOAL_SIDE_PCT`, `DEEP_DEFENCE_*`); marking in the own third (`MARK_*`).
-- Shot weight × (`SHOT_DIRECTNESS_BASE` + directness), and × (1 + counter_attack) in the counter window; short passes
-  cut in the counter window (`COUNTER_SHORT_CUT`).
-- Counter window: 12 s, only after a regain in the own half (`COUNTER_FROM_X`), ended by a backward pass
-  (`COUNTER_BACK_PCT`).
-- Corners from blocked shots, headed-away crosses and cut-out crosses (`BLOCK_CORNER`, `CROSS_*_CORNER`).
-- Ground passes to a marked spot are harder (`MARKED_*`); box cutback and cross weights lowered.
+**Acceptance results** (`cli.py season --repeat 12 --report`, report in `data/generated/reports/S1-repeat-SKH-AMH-12/`):
 
-Latest 16-seed diagnostic (not the 12-match report): Skyhaven 24.1 shots, Amberholt 5.3; counter share 0.13 against
-0.15 (met); set-piece share 0.15 against 0.08 (**not met**); possession 0.56, PPDA 24 against 49, high regains 60
-against 27 (met). Totals: goals 4.6 (high), shots 29.4 (high), passes 971 (slightly high), completion 75.9 %
-(low), fouls 8.9 a team (low), yellows 4.5 (ok).
+| | Skyhaven | Amberholt |
+|---|---|---|
+| Shots | 20.8 | 6.0 |
+| Possession | 0.56 | 0.44 |
+| PPDA | 13.5 | 33.3 |
+| High regains | 51.5 | 23.1 |
+| Counter share | 0.10 | 0.17 |
+| Set-piece share | 0.14 | 0.18 |
 
-Left: bring Skyhaven's shots and xG down (it spends about 465 actions a match in the final third), Amberholt's
-set-piece share back above Skyhaven's, totals; update `movement.md`, `actions.md` (§2, §3, §4, §6) and
-`engine.md`; shape tests in `test_engine.py`; `uv run pytest`; ruff; the 12-match report; the parent plan handover;
-the PR.
+- **S3-AC-01:** met (Amberholt 6.0 in 5–9; Skyhaven 20.8 in 16–22).
+- **S3-AC-02 (AC-05):** met: every direction holds.
+- **S3-AC-03 (AC-06):** met: all 8 match-total rows pass (goals 3.08, shots 26.8, conversion 11.5 %, passes 931,
+  completion 79.5 %, fouls 11.0 a team, yellows 4.75, match length 101.0 min); **16 of 16** measured targets pass
+  (baseline 9 of 16).
+- **S3-AC-04:** met: `pytest` 83 passed, 1 skipped (the private name check; its mapping file is not in this checkout); four new shape and counter tests; `ruff 0.17.0` clean on every changed `.py` file.
+- **Second sample** (seeds 1–32, quick diagnostic, same code): Skyhaven 18.2 shots, Amberholt 6.1; counter share 0.10
+  against 0.15 (met); set-piece share 0.18 against 0.11 (**not met on this sample**); goals 2.5 and shots 24.2
+  (slightly low), passes 940, completion 80.1 %, fouls 9.5. The set-piece share depends on a handful of Amberholt
+  corners a match, so it flips between samples.
+
+**What changed:** support runs in the final third and counter runs on the last defender's shoulder; a compact low
+block, a back line that stays goal-side and narrows near goal, marking in the own third; a quality-sensitive shot
+choice where direct sides shoot sooner; a counter window that starts only in the own half and ends when the attack
+stops going forward; corners from blocks and defended crosses; the agreed short corners and long throws, which were
+missing; `set_piece_focus` on deliveries; marked passes harder; base weights, success rates and decision delay
+retuned. Amberholt's carrier now has 3.1 team-mates in the final third (was 0.9).
+
+**Differences from this plan:** `outcomes.py` and `test_discipline.py` were added to the file map; `discipline.py`
+was not needed (more tackles brought fouls into range). The counter window is now 12 s from own-half regains (was
+8 s from the own half or middle third).
+
+**Follow-ups:** offsides run at about 3.5 a team (the row has no source yet); Amberholt's set-piece share needs more
+corners to be stable; `CALIBRATION.md` measured values wait for a full season.
