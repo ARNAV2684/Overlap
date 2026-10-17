@@ -338,8 +338,8 @@ adds the step. Performance targets are unmeasured until AC-11.
 
 **Progress on 17 Oct:** **R-02 is resolved**: PR 1 merged as #19 on 16 Oct. **R-01 is partly resolved**: #28 put the
 `status`, `positions` and `stats` payloads and the snapshot shape into `CONTRACTS.md` §7, and the snapshot key is now
-`match_id`. `api.ts` already reads `match_id`, but `web/specs/realtime.md` §3 still says `matchId`, and the match-list
-shape is still defined only by the mock. **R-07 has moved**: the screen relay and a local Web PubSub stand-in now exist
+`match_id`. `api.ts` reads `match_id` and `web/specs/realtime.md` §3 now says `match_id` too; the match-list shape is
+still defined only by the mock. **R-07 has moved**: the screen relay and a local Web PubSub stand-in now exist
 (#30, #32) and run end to end locally; real Azure is still untested. R-03, R-04, R-05 and R-06 are unchanged.
 
 **Decisions requested from Arnav or affected owners:**
