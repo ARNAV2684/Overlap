@@ -9,13 +9,13 @@
 | Collaborators and responsibilities | None yet |
 | Review coordinator | Arnav |
 | Affected component owners | Arnav and Pranav (mock stream the screen reads; `.github/` hot files); Azeem (generator that will replace the mock; match setup producer); stats, agents and archiver owners: unassigned (Arnav decides), they only matter once stats panels and overlays are planned |
-| Proposal version and date | v0.1 · 2026-10-15 |
-| Status | Draft |
+| Proposal version and date | v0.1 · 2026-10-15 · progress recorded 2026-10-17 |
+| Status | In progress · M1 done; M2 and M3 built on the PR branch (merge pending); M4 partly built; M5 not started (see §12) |
 | Plan tier and file | Full · `plans/active/PLAN_web_live-match-viewer.md` |
 | Repository | [ARNAV2684/Overlap](https://github.com/ARNAV2684/Overlap) |
-| Reviewed branch and commit | main · 71ad1ef |
+| Reviewed branch and commit | Proposal reviewed against main · 71ad1ef. Progress recorded on `vedant/web-live-screen` (fork `vedantnarang/Overlap`), based on main · 103a526 |
 | Architecture box / work area | Layer 7 · web app (live match screen only) |
-| Relevant issue, spec PR, or discussion | Specs not agreed yet; the spec PR is M1 of this plan. Reference implementation exists on `origin/vedant/demo-UI` (see §2) |
+| Relevant issue, spec PR, or discussion | Plan merged in #10 (15 Oct); specs merged in #19 (16 Oct, `62678ce`). The code from `vedant/demo-UI` is on `vedant/web-live-screen`, PR not opened yet |
 
 ## 1. Purpose and intended outcome
 
@@ -72,11 +72,11 @@
 
 | Dependency or shared area | Owner to coordinate with | What is needed / supplied | Status and needed-by milestone | How work can continue meanwhile |
 |---|---|---|---|---|
-| Web specs agreed | Arnav (reviewer) | Review and merge of the spec PR | Pending · **blocks M2–M5 code** | Spec text can be drafted from `demo-UI` |
-| Mock stream and Web PubSub stand-in on port 8787 | Arnav, Pranav | Running mock (`mock/README.md`) | Available · needed from M3 | None needed |
+| Web specs agreed | Arnav (reviewer) | Review and merge of the spec PR | Done · merged in #19 on 16 Oct (`62678ce`); the four specs still read "draft for review", so their `Status` lines are not yet set to agreed | Not applicable |
+| Mock stream and Web PubSub stand-in on port 8787 | Arnav, Pranav | Running mock (`mock/README.md`) | Available · needed from M3. Since 17 Oct the same port is also served by the stand-in in `infra/local/` fed by the screen relay (#30, #32) | None needed |
 | `status` / `positions` / snapshot / match-list shapes | Arnav, Pranav (mock); Azeem (generator, later) | Agreement that the web app may validate them strictly | Pending · M3 | Mark them PROVISIONAL in code and spec |
 | Match setup (§2) | Producer: Azeem; consumer: Vedant | Supplied unchanged | Agreed v0 · M3 | Not applicable |
-| `.github/workflows/web.yml` (hot, Arnav) | Arnav, told Pranav | Job-level env for the two public variables; optionally an `npm test` step | Pending · M2 | Run `npm test` locally and say so in the PR |
+| `.github/workflows/web.yml` (hot, Arnav) | Arnav, told Pranav | Job-level env for the two public variables; optionally an `npm test` step | Env variables added on the PR branch (not yet merged; Arnav not yet told, and not in its own commit); `npm test` step not added | Run `npm test` locally and say so in the PR |
 | `web/src/lib/contracts.ts` (hot, once it exists) | Vedant and the owner of each contract mirrored | Notice before merge | Pending · M3 | Not applicable |
 | Real Azure Web PubSub and screen relay | Unassigned (Arnav decides) | Real endpoint and negotiate route | Not started · after M5 | Mock stand-in; it does not prove the real integration |
 
@@ -264,13 +264,13 @@ adds the step. Performance targets are unmeasured until AC-11.
 
 ## 12. Delivery milestones or short sprints
 
-| Milestone | Demonstrable outcome | Owner | Depends on | Completion criteria / AC IDs | Estimated effort or date |
-|---|---|---|---|---|---|
-| M1 — Web specs agreed | Spec-only PR merged with the four specs answered for the live screen | Vedant | Review by Arnav | AC-02 | ½ day · by 16 Oct (estimate) |
-| M2 — Foundation | `web/` builds in CI: project setup, tokens, primitives, `/dev/ui` | Vedant | M1 (design-system) | AC-01, AC-12 (primitives) | 1 day · 17 Oct (estimate) |
-| M3 — Contracts and realtime | Strict contracts, API client, store, socket, provider; a debug view shows live counters from the mock | Vedant | M1 (realtime); mock running | AC-03, AC-04, AC-05 | 1½ days · 18 Oct (estimate) |
-| M4 — Live screen | `/match/SYN-9001` shows shell, scoreboard, counters and the timeline end to end | Vedant | M3, M1 (screens) | AC-06, AC-07, AC-08, AC-10 | 1½ days · 19 Oct (estimate) |
-| M5 — Pitch, inspector, polish | Live pitch and inspector, responsive and accessible, README updated | Vedant | M4, M1 (charts) | AC-09, AC-11, AC-12 | 1 day · 20 Oct (estimate) |
+| Milestone | Demonstrable outcome | Owner | Depends on | Completion criteria / AC IDs | Estimated effort or date | Progress (17 Oct) |
+|---|---|---|---|---|---|---|
+| M1 — Web specs agreed | Spec-only PR merged with the four specs answered for the live screen | Vedant | Review by Arnav | AC-02 | ½ day · by 16 Oct (estimate) | **Done.** #19 merged 16 Oct. The `Status` lines still read "draft for review" |
+| M2 — Foundation | `web/` builds in CI: project setup, tokens, primitives, `/dev/ui` | Vedant | M1 (design-system) | AC-01, AC-12 (primitives) | 1 day · 17 Oct (estimate) | **Done on the PR branch; merge pending.** Setup, tokens, 15 UI files and `/dev/ui` pushed. Lint, typecheck, build and tests pass locally (AC-01). Not yet run in CI. AC-12 for primitives: contrast table is in `design-system.md` §5, the 375/768/1440 px check is not recorded |
+| M3 — Contracts and realtime | Strict contracts, API client, store, socket, provider; a debug view shows live counters from the mock | Vedant | M1 (realtime); mock running | AC-03, AC-04, AC-05 | 1½ days · 18 Oct (estimate) | **Done on the PR branch for the code; merge pending.** `env`, `contracts`, `api`, `store`, `store-hooks`, `socket`, `ring-buffer`, `announcer` and `MatchStreamProvider` pushed with unit tests (AC-04 met; AC-03 and AC-05 partly, see §15). Not done: the debug view with live counters, and any run against the mock or the stand-in |
+| M4 — Live screen | `/match/SYN-9001` shows shell, scoreboard, counters and the timeline end to end | Vedant | M3, M1 (screens) | AC-06, AC-07, AC-08, AC-10 | 1½ days · 19 Oct (estimate) | **Partly built.** Shell, header with connection badge, intro and source card, notice bar, footer, the `/` redirect and the `/match/[id]` route are pushed. Scoreboard, four counters and the timeline are not built (`Scoreboard.tsx` is still a placeholder; no `timeline/` or `metrics/` folder) |
+| M5 — Pitch, inspector, polish | Live pitch and inspector, responsive and accessible, README updated | Vedant | M4, M1 (charts) | AC-09, AC-11, AC-12 | 1 day · 20 Oct (estimate) | **Not started.** `LivePitch.tsx` is still a placeholder and there is no inspector. `coordinates.ts` and its tests are done (AC-09). README is updated for running the app |
 
 - **Project calendar check:** the five milestones end on 20 Oct, which meets "one full match end to end in English by
   20 Oct" only with no slip. Everything beyond the live screen (overlays, moment cards, stats panels, replay, recap,
@@ -336,6 +336,12 @@ adds the step. Performance targets are unmeasured until AC-11.
 | R-06 | CI does not run `npm test` | Test failures are not caught automatically | Arnav | Add one `npm test` step to `web.yml`, or run locally and state it in each PR | None |
 | R-07 | Real Azure Web PubSub and the screen relay are not available to test | Real connection unproven | Unassigned (Arnav decides) | Keep `negotiate()` as the single switch point; plan the route handler with the relay | After M5 |
 
+**Progress on 17 Oct:** **R-02 is resolved**: PR 1 merged as #19 on 16 Oct. **R-01 is partly resolved**: #28 put the
+`status`, `positions` and `stats` payloads and the snapshot shape into `CONTRACTS.md` §7, and the snapshot key is now
+`match_id`. `api.ts` already reads `match_id`, but `web/specs/realtime.md` §3 still says `matchId`, and the match-list
+shape is still defined only by the mock. **R-07 has moved**: the screen relay and a local Web PubSub stand-in now exist
+(#30, #32) and run end to end locally; real Azure is still untested. R-03, R-04, R-05 and R-06 are unchanged.
+
 **Decisions requested from Arnav or affected owners:**
 
 1. Whether the spec PR (M1) may be reviewed first, with code PRs held until it merges. Recommendation: yes; it is the
@@ -364,12 +370,39 @@ adds the step. Performance targets are unmeasured until AC-11.
 
 | Reviewer | Proposal version | Finding / required change | Outcome | Date and reference |
 |---|---|---|---|---|
-| Arnav | v0.1 | Not reviewed yet | Pending | — |
+| Arnav | v0.1 | No written findings. Merged the plan (#10) and the specs (#19) | Merged 15 Oct (`7e4c147`) and 16 Oct (`62678ce`); no review comments on either PR | #10, #19 |
+| Arnav | Code on `vedant/web-live-screen` | Not reviewed yet; PR not opened | Pending | — |
 
-**Implementation readiness:** blocked until the web specs are agreed (M1) and the author says **go**.  
-**Relevant specification agreement:** pending (PR 1).  
-**Next action and owner:** open PR 1 (specs only) and ask Arnav to review · Vedant.
+**Implementation readiness:** the spec gate is met (#19 merged). Implementation is in progress: M2 and M3 are built on the PR branch, M4 is partly built, M5 has not started.  
+**Relevant specification agreement:** #19 merged on 16 Oct. The four specs' `Status` lines still read "draft for review" and are not yet set to agreed.  
+**Next action and owner:** open the PR for the pushed code, then build the scoreboard, counters and timeline (M4) · Vedant.
 
 ### Handover after implementation
 
-**Pending implementation.**
+**In progress. Final handover waits for the last milestone and the merged PRs.** Recorded on 17 Oct for what is pushed so far:
+
+- **Implementation PR and commit:** not opened yet. Branch `vedant/web-live-screen` on `vedantnarang/Overlap`, commits `9751376` (brings in `vedant/demo-UI` e8ad181, 20 commits) and `72f2590` (gives `web/.env.example` its public defaults).
+- **Acceptance results** (all local, on Windows, Node with `npm install` because no lockfile is committed; every stream-related result is against fakes in unit tests, not the running mock):
+
+| AC | Result | Evidence |
+|---|---|---|
+| AC-01 | Passed locally; CI not run | `npm run lint` clean; `tsc --noEmit` clean; `npm test` 16 files, 330 tests passed; `npm run build` succeeded; `env.test.ts` covers the all-problems-at-once message |
+| AC-02 | Met | #19 merged; `Status` lines not yet set to agreed |
+| AC-03 | Partly | `contracts.test.ts` (20 tests) rejects broken messages with a reason; the one-off run over recorded `SYN-9001` to `SYN-9003` is **not done** |
+| AC-04 | Passed | `store.test.ts`: duplicate `seq`, non-contiguous snapshot, history excluded from counters |
+| AC-05 | Partly | `socket.test.ts`: reconnect after a drop, no reconnect at full time, snapshot failure carries on live, late snapshot ignored. The manual stop-and-restart run is **not done** |
+| AC-06 | Not checked | Scoreboard and counters are not built |
+| AC-07 | Not checked | Timeline rows and goal flash are not built |
+| AC-08 | Not checked | Timeline listbox is not built |
+| AC-09 | Passed | `coordinates.test.ts` reproduces the `CONTRACTS.md` §4 worked example; a search of `web/src` finds flip logic only in `coordinates.ts` |
+| AC-10 | Partly | Store tests cover pause, resume and follow-latest; the manual check needs the timeline |
+| AC-11 | Not checked | Needs the full screen |
+| AC-12 | Not checked | Contrast table is in `design-system.md` §5; no 375/768/1440 px check recorded |
+
+- **Setup and integration instructions:** `web/README.md`. Copy `web/.env.example` to `web/.env.local`, then `npm install`, `npm test`, `npm run dev`. It now runs against the mock's stand-in or `infra/local/webpubsub_standin/` fed by the screen relay, both on port 8787.
+- **Differences from the agreed plan** (none has a recorded agreement from Arnav yet):
+  - The existing code is going in as one PR, not the four small PRs of §13.
+  - `.github/workflows/web.yml` was changed inside the merge commit, not in its own small commit, and Arnav has not been told.
+  - `web/IMPLEMENTATION_PLAN.md` is on the branch, although §8 says it is superseded and not added to `main`.
+  - `web/.env.example` was fixed: it had been committed with empty values.
+- **Known limitations and follow-up owner:** scoreboard, counters, timeline, live pitch and inspector are not built (M4 and M5, Vedant). No run against the mock, the stand-in or real Azure. CI does not run `npm test` (Arnav). Real negotiate route is still a `501` stub.
