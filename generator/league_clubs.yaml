@@ -1,0 +1,195 @@
+# league_clubs.yaml — League club templates
+#
+# Purpose: the 8 league clubs: invented identities, with formation, style, target strength and squad shape hand-set
+#          to resemble real clubs; their players are generated from the season seed (world.py)
+# Inputs:  -
+# Outputs: read by world.py
+# Spec:    generator/specs/world.md §1-§6
+#
+# Every name, id, city, venue and colour here is invented and points at nobody. Never write the real club a template
+# is modelled on in this file; that lives only in the private file (CONTRIBUTING.md, "Reference profiles are allowed").
+# A change here changes the world: bump world_version in reference_clubs.yaml.
+#
+# `level`: the target strength (mean overall of the default XI, world.md §4).
+# `shape`: players per primary position, 25 in total with 3 goalkeepers; every formation slot needs 2 or more.
+# `roles`: the roles drawn for a position, in turn; a position not listed draws from every allowed role.
+
+clubs:
+  - team_id: KES
+    name: Kestlebury United
+    short_name: Kestlebury
+    city: Kestlebury
+    venue: {name: Hollin Lane, city: Kestlebury}
+    colours:
+      home: {primary: "#1F6B3A", secondary: "#F4F4F4"}
+      away: {primary: "#F4F4F4", secondary: "#1F6B3A"}
+    formation: 4-3-3
+    level: 80
+    style: {press_intensity: 0.85, directness: 0.45, width: 0.70, tempo: 0.75, line_height: 0.80, build_up_short: 0.70,
+            counter_press: 0.90, press_height: 0.80, counter_attack: 0.70, set_piece_focus: 0.45}
+    shape: {GK: 3, CB: 4, RB: 2, LB: 2, DM: 2, CM: 4, AM: 1, RW: 2, LW: 2, ST: 3}
+    roles:
+      GK: [sweeper_keeper, shot_stopper]
+      CB: [ball_playing_cb, stopper]
+      RB: [overlapping_fullback]
+      LB: [overlapping_fullback]
+      DM: [anchor, ball_winner]
+      CM: [box_to_box, playmaker]
+      RW: [inverted_winger]
+      LW: [inverted_winger, wide_winger]
+      ST: [pressing_forward, poacher]
+
+  - team_id: ORR
+    name: Orrinford Albion
+    short_name: Orrinford
+    city: Orrinford
+    venue: {name: The Weir Ground, city: Orrinford}
+    colours:
+      home: {primary: "#1B2A4A", secondary: "#F28C28"}
+      away: {primary: "#F28C28", secondary: "#1B2A4A"}
+    formation: 4-1-4-1
+    level: 78
+    style: {press_intensity: 0.80, directness: 0.30, width: 0.70, tempo: 0.60, line_height: 0.80, build_up_short: 0.85,
+            counter_press: 0.85, press_height: 0.80, counter_attack: 0.45, set_piece_focus: 0.85}
+    shape: {GK: 3, CB: 4, RB: 2, LB: 2, DM: 2, CM: 4, AM: 1, RM: 2, LM: 2, ST: 3}
+    roles:
+      GK: [sweeper_keeper]
+      CB: [ball_playing_cb, stopper]
+      RB: [inverted_fullback, overlapping_fullback]
+      LB: [inverted_fullback, overlapping_fullback]
+      DM: [anchor, deep_playmaker]
+      CM: [playmaker, box_to_box]
+      RM: [inverted_winger]
+      LM: [inverted_winger, wide_winger]
+      ST: [pressing_forward, target_man]
+
+  - team_id: THW
+    name: Thurlwick FC
+    short_name: Thurlwick
+    city: Thurlwick
+    venue: {name: Coldharbour Park, city: Thurlwick}
+    colours:
+      home: {primary: "#7B1E3A", secondary: "#F3E9D2"}
+      away: {primary: "#F3E9D2", secondary: "#7B1E3A"}
+    formation: 4-2-3-1
+    level: 77
+    style: {press_intensity: 0.65, directness: 0.30, width: 0.65, tempo: 0.55, line_height: 0.70, build_up_short: 0.85,
+            counter_press: 0.65, press_height: 0.65, counter_attack: 0.55, set_piece_focus: 0.45}
+    shape: {GK: 3, CB: 4, RB: 2, LB: 2, DM: 3, CM: 2, AM: 2, RW: 2, LW: 2, ST: 3}
+    roles:
+      GK: [sweeper_keeper, shot_stopper]
+      CB: [ball_playing_cb, stopper]
+      RB: [inverted_fullback, overlapping_fullback]
+      LB: [overlapping_fullback]
+      DM: [deep_playmaker, ball_winner, box_to_box]
+      AM: [playmaker]
+      RW: [inverted_winger]
+      LW: [inverted_winger]
+      ST: [poacher, pressing_forward]
+
+  - team_id: BRM
+    name: Brackenmoor Rovers
+    short_name: Brackenmoor
+    city: Brackenmoor
+    venue: {name: Fellside, city: Brackenmoor}
+    colours:
+      home: {primary: "#F2D024", secondary: "#1B2A4A"}
+      away: {primary: "#1B2A4A", secondary: "#F2D024"}
+    formation: 4-3-3
+    level: 75
+    style: {press_intensity: 0.80, directness: 0.55, width: 0.60, tempo: 0.70, line_height: 0.70, build_up_short: 0.55,
+            counter_press: 0.75, press_height: 0.75, counter_attack: 0.65, set_piece_focus: 0.60}
+    shape: {GK: 3, CB: 4, RB: 2, LB: 2, DM: 2, CM: 4, AM: 1, RW: 2, LW: 2, ST: 3}
+    roles:
+      CB: [stopper, ball_playing_cb]
+      RB: [overlapping_fullback]
+      LB: [overlapping_fullback]
+      DM: [ball_winner, anchor]
+      CM: [box_to_box]
+      RW: [inverted_winger, wide_winger]
+      LW: [wide_winger, inverted_winger]
+      ST: [target_man, pressing_forward]
+
+  - team_id: ASH
+    name: Ashleat Town
+    short_name: Ashleat
+    city: Ashleat
+    venue: {name: Mill Pond Road, city: Ashleat}
+    colours:
+      home: {primary: "#1A1A1A", secondary: "#A4D65E"}
+      away: {primary: "#A4D65E", secondary: "#1A1A1A"}
+    formation: 4-4-2
+    level: 74
+    style: {press_intensity: 0.65, directness: 0.45, width: 0.55, tempo: 0.60, line_height: 0.85, build_up_short: 0.65,
+            counter_press: 0.60, press_height: 0.65, counter_attack: 0.60, set_piece_focus: 0.50}
+    shape: {GK: 3, CB: 4, RB: 2, LB: 2, DM: 1, CM: 4, AM: 1, RM: 2, LM: 2, ST: 4}
+    roles:
+      CB: [stopper, ball_playing_cb]
+      CM: [deep_playmaker, box_to_box, ball_winner]
+      RM: [inverted_winger, wide_midfielder]
+      LM: [wide_midfielder, inverted_winger]
+      ST: [poacher, target_man, pressing_forward]
+
+  - team_id: ELV
+    name: Elverstone Athletic
+    short_name: Elverstone
+    city: Elverstone
+    venue: {name: Quarry Fields, city: Elverstone}
+    colours:
+      home: {primary: "#E05A8A", secondary: "#2A2A2A"}
+      away: {primary: "#2A2A2A", secondary: "#E05A8A"}
+    formation: 4-2-3-1
+    level: 72
+    style: {press_intensity: 0.60, directness: 0.25, width: 0.70, tempo: 0.55, line_height: 0.70, build_up_short: 0.95,
+            counter_press: 0.60, press_height: 0.60, counter_attack: 0.45, set_piece_focus: 0.40}
+    shape: {GK: 3, CB: 4, RB: 2, LB: 2, DM: 3, CM: 2, AM: 2, RW: 2, LW: 2, ST: 3}
+    roles:
+      GK: [sweeper_keeper]
+      CB: [ball_playing_cb]
+      RB: [inverted_fullback]
+      LB: [overlapping_fullback, inverted_fullback]
+      DM: [deep_playmaker, box_to_box]
+      AM: [playmaker]
+      RW: [wide_winger, inverted_winger]
+      LW: [wide_winger]
+      ST: [pressing_forward, poacher]
+
+  - team_id: HLW
+    name: Hollowford Town
+    short_name: Hollowford
+    city: Hollowford
+    venue: {name: Tannery Lane, city: Hollowford}
+    colours:
+      home: {primary: "#5C3A21", secondary: "#E8B84A"}
+      away: {primary: "#E8B84A", secondary: "#5C3A21"}
+    formation: 5-3-2
+    level: 70
+    style: {press_intensity: 0.60, directness: 0.75, width: 0.50, tempo: 0.60, line_height: 0.55, build_up_short: 0.35,
+            counter_press: 0.50, press_height: 0.60, counter_attack: 0.65, set_piece_focus: 0.85}
+    shape: {GK: 3, CB: 5, RWB: 2, LWB: 2, RB: 1, LB: 1, DM: 1, CM: 4, AM: 1, RW: 1, ST: 4}
+    roles:
+      GK: [shot_stopper]
+      CB: [stopper, ball_playing_cb]
+      CM: [box_to_box, ball_winner, deep_playmaker]
+      ST: [target_man, pressing_forward, poacher]
+
+  - team_id: WEX
+    name: Wexmoor United
+    short_name: Wexmoor
+    city: Wexmoor
+    venue: {name: Gorse Hill, city: Wexmoor}
+    colours:
+      home: {primary: "#2BB3C0", secondary: "#1A1A1A"}
+      away: {primary: "#1A1A1A", secondary: "#2BB3C0"}
+    formation: 3-4-3
+    level: 68
+    style: {press_intensity: 0.55, directness: 0.60, width: 0.60, tempo: 0.60, line_height: 0.50, build_up_short: 0.50,
+            counter_press: 0.45, press_height: 0.50, counter_attack: 0.80, set_piece_focus: 0.55}
+    shape: {GK: 3, CB: 5, RWB: 2, LWB: 2, DM: 1, CM: 4, AM: 1, RW: 2, LW: 2, ST: 3}
+    roles:
+      GK: [shot_stopper]
+      CB: [stopper]
+      CM: [box_to_box, ball_winner]
+      RW: [inverted_winger]
+      LW: [inverted_winger, wide_winger]
+      ST: [pressing_forward, poacher]

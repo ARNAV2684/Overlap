@@ -27,7 +27,7 @@ STORYLINE_HELP = "a storyline from generator/storylines/ (repeat for two)"
 
 
 def _clubs() -> tuple[int, dict]:
-    version, loaded = world.load_reference_clubs()
+    version, loaded = world.load_league()
     return version, {c.team_id: c for c in loaded}
 
 

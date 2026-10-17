@@ -21,8 +21,8 @@ the rest of the league.
 _Answer:_
 
 **Size.** Season 1 starts with **2 reference clubs** (A and B). The full league is **10 clubs**: the 2 reference
-clubs plus 8 invented clubs generated from the season seed. Ten gives an 18-matchweek double round robin, enough for
-season aggregates, while keeping batch runs quick. The fixture list belongs to
+clubs plus 8 **league clubs**. Ten gives an 18-matchweek double round robin, enough for season aggregates, while
+keeping batch runs quick. The fixture list belongs to
 [`live-and-batch.md`](live-and-batch.md) §3.
 
 **Reference clubs.**
@@ -57,8 +57,15 @@ number, his name's origin or his foot. Reference club A is Calverholme Athletic 
 | `default_xi` | 11 players, goalkeeper first, in formation slot order (shirt numbers in the YAML, player ids in the saved world) | §2 |
 | `set_pieces` | `{ penalties, corners, free_kicks }`, each an ordered list of takers | §2 |
 
-**Ids.** Hand-chosen for reference clubs, derived from the name for generated clubs (first letters of each word, then
-consonants of the main word). Every id must be unique in the world, must not be one of the mock's ids (`NBR`, `HBA`,
+**League clubs.** Each is modelled on a real club at club level only. A hand-authored template in
+`generator/league_clubs.yaml` sets its invented identity (name, id, city, venue, colours) and, resembling the real
+club, its formation, style, target strength and squad shape: how many players it has per primary position, and which
+roles they play. Its players are generated from the season seed inside that shape (§2, §3, §5), so no player
+resembles anyone. As with the reference clubs, nothing about a league club's identity points at the real club; which
+real club a template resembles is recorded only in the private file (§5). The demo and the video feature league
+clubs, while the reference clubs remain the engine's answer key.
+
+**Ids.** Hand-chosen for every club. Every id must be unique in the world, must not be one of the mock's ids (`NBR`, `HBA`,
 `IVC`, `SMW`, `LKR`, `GWA`) while `mock/` exists, and must not be a well-known real club's abbreviation (checked in
 review). The build fails on a clash.
 
@@ -70,8 +77,9 @@ review). The build fails on a clash.
 
 _Answer:_
 
-**Size and shape.** 25 players: 3 GK, 9 defenders, 8 midfielders, 5 forwards. Reference clubs may follow their real
-team's shape between 22 and 28 players, with at least 2 goalkeepers. Every slot in the club's formation must be
+**Size and shape.** 25 players: 3 GK, 9 defenders, 8 midfielders, 5 forwards as a guide. Reference clubs may follow
+their real team's shape between 22 and 28 players, with at least 2 goalkeepers. A league club's template sets its
+count per primary position (25 in total, 3 goalkeepers). Every slot in the club's formation must be
 playable (primary or secondary position) by at least 2 squad players, so losing one starter never leaves a slot
 empty; the build fails otherwise.
 
@@ -101,12 +109,15 @@ later injured); the replacement is the best-rated available player whose primary
 slot. The bench is **9** players, including exactly one goalkeeper, picked as the best remaining player for each of
 GK, CB, full-back, DM/CM, CM/AM, winger, ST (by primary position), then filled to nine with the best remaining
 outfield players. A group with nobody left is skipped. "Best" means highest `overall`, then lowest shirt number. A
-setup lineup is 11 players, goalkeeper first, in the formation's slot order.
+setup lineup is 11 players, goalkeeper first, in the formation's slot order. A league club's `default_xi` is the best
+player for each slot in slot order, from players with that primary position, else that secondary position.
 
 **Set-piece takers.** Each club lists ordered takers for `penalties`, `corners` and `free_kicks` (direct free kicks),
 as shirt numbers in the YAML and player ids in the saved world. The first listed player on the pitch takes it; if
 none is on the pitch, the engine picks the best available player by the attribute that matters (engine spec). Each
-list has at least 2 different squad players, and a goalkeeper never takes corners. The build fails otherwise.
+list has at least 2 different squad players, and a goalkeeper never takes corners. The build fails otherwise. A
+league club's takers are the two default-XI outfield players with the highest finishing + composure (penalties),
+passing + vision (corners) and passing + finishing (free kicks).
 
 ## 3. Player attributes
 
@@ -190,9 +201,14 @@ position, used for strength, replacements and bench picking. The engine spec dec
 **How they are set.**
 - **Reference players:** hand-set by judgement from public knowledge of the player each one resembles. Never copied
   from a game's ratings database.
-- **Generated players:** each attribute is drawn from a normal distribution around a per-position archetype mean,
-  shifted by the club's target level, with standard deviation 6, rounded and clipped to 1–99. Archetype means live in
-  `world.py`, next to the code that uses them.
+- **Generated players:** each attribute is drawn from a normal distribution around a per-position archetype mean
+  (set for a club of level 70), plus a small bonus for the player's role, shifted by the club's target level, with
+  standard deviation 6, rounded and clipped to 1–99. An outfield player's goalkeeping is 5–15. A club's first-choice
+  players are drawn 4 points above its squad players. Then every rating in the squad (except goalkeeping) is moved
+  by the same amount, so the default XI's strength lands on the template's target. Archetype means and role bonuses
+  live in `world.py`, next to the code that uses them. The role comes from the template's list for the position
+  (else any allowed role). A player gets up to two secondary positions next to his primary (for example DM for a CB,
+  RM for a RB).
 
 ## 4. Club strength and style
 
@@ -203,8 +219,8 @@ position, used for strength, replacements and bench picking. The engine spec dec
 
 _Answer:_
 
-**Strength.** `strength` = the mean `overall` of the club's default XI, derived and never hand-set. Generated clubs
-get a target level spread evenly between about 68 and 80. Reference club A should come out near the top (about 84);
+**Strength.** `strength` = the mean `overall` of the club's default XI, derived and never hand-set. League clubs'
+templates set target levels spread between 68 and 80, and the generated XI lands within 1 point of it. Reference club A should come out near the top (about 84);
 the best-to-worst gap is therefore about 16 points of XI average.
 
 **Style parameters** (all 0–1):
@@ -249,16 +265,19 @@ _Answer:_
 a region other than the origin of the player each one resembles, and checked by hand. A name must not be recognisable
 as the player it is modelled on: it shares no surname with them and is at least 4 edits away from their full name. The mapping from each
 reference player to the real player lives only in `generator/reference_map.private.yaml`, which is gitignored and
-never committed. A test reads it when it is present and checks the edit distance; without it, that test is skipped.
+never committed. It also records the real club behind each league club's template. A test reads it when it is
+present and checks the edit distance, and that no club's name or id is close to the real club it resembles; without
+the file, that test is skipped.
 
-**Generated players** (with the invented clubs, milestone M3)**.** First and last names come from separate regional pools: British and Irish, Iberian and Latin
+**Generated players.** First and last names come from separate regional pools: British and Irish, Iberian and Latin
 American, French, West African, Central and Eastern European, Nordic, Italian, Dutch and German, and Middle Eastern
 and South Asian. Mix per club: about 50% from one or two home regions and 50% from the rest, picked with the season
 seed.
 
 **Avoiding real names.** First and last names are drawn separately, so most pairs are new. From milestone M3, a
-local denylist (`generator/name_denylist.private.txt`, gitignored) of well-known real full names is checked at build
-time when it is present. Club names are an invented city plus a common suffix (FC, Athletic, Rovers, United, Albion, Town) and are
+local denylist (`generator/name_denylist.private.txt`, gitignored, one full name per line) of well-known real full
+names is checked at build time when it is present; a match fails the build, and the fix is a change to the pools, so
+the world stays the same on every machine. Club names are an invented city plus a common suffix (FC, Athletic, Rovers, United, Albion, Town) and are
 reviewed by hand in the PR that adds them.
 
 **No duplicates.** Full names are unique across the whole world; surnames are unique within a club. The build fails
@@ -273,8 +292,7 @@ _Answer:_
 
 **Colours.** Every club has a home and an away pair, each a `primary` and `secondary` 6-digit hex. Reference clubs'
 colours are hand-picked and never echo the real team's colours; kit designs and crests
-stay invented. Generated clubs get primaries spread around the colour wheel from the season seed, with a light or dark
-secondary.
+stay invented. League clubs' colours are hand-picked in their templates under the same rule.
 
 **Readable on dark and light backgrounds.** Within each pair, primary and secondary differ by a WCAG contrast ratio of
 at least **3:1**, so one of the two always stands out on any background. The web app draws a player dot as the
@@ -295,8 +313,9 @@ The web app's own contrast rules for club theming belong to Vedant's [`design-sy
 
 _Answer:_
 
-**Sources in the repo.** `generator/reference_clubs.yaml` holds the hand-authored reference clubs. Generated clubs
-come from code and the season seed.
+**Sources in the repo.** `generator/reference_clubs.yaml` holds the hand-authored reference clubs and
+`generator/league_clubs.yaml` the league clubs' templates. League clubs' players come from code and the season
+seed.
 
 **The saved world.** `data/generated/world/<season_id>.json` (for example `S1.json`), holding `world_version`,
 `season_id`, `seed` and every club with its full squad, all twelve attributes, roles and set-piece takers. It is gitignored and rebuilt from
