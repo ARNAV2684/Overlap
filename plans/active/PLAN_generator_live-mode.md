@@ -10,7 +10,7 @@
 | Review coordinator | Arnav |
 | Affected component owners | Arnav and Pranav (Event Hubs, infra); consumers of the hubs: stats engine, screen relay, archiver (unassigned, Arnav decides); Vedant (web, via the relay) |
 | Proposal version and date | v0.1 · 2026-10-16 |
-| Status | In progress (M1: go from Azeem, 16 Oct) |
+| Status | In progress (M1 done: spec merged in PR #18; M2 on `generator/live-mode`, go from Azeem 17 Oct) |
 | Plan tier and file | Full · `plans/active/PLAN_generator_live-mode.md` |
 | Repository | [ARNAV2684/Overlap](https://github.com/ARNAV2684/Overlap) |
 | Reviewed branch and commit | main · 75b7cba |
@@ -152,7 +152,7 @@ cli.py live ──▶ world.build_setup ──▶ engine.play (whole match in me
 | ID | Acceptance criterion | Verification method | Required fixture / dependency | Evidence to attach after implementation |
 |---|---|---|---|---|
 | AC-01 | `live-and-batch.md` answers every question and merges as agreed | Review | — | PR link |
-| AC-02 | With a fake hub at 20×, messages leave in `seq` order at `match_ms ÷ speed` (within 100 ms), setup first | `test_live.py` | Small hand-built match | Test output |
+| AC-02 | With a fake hub at 20×, messages leave in `seq` order at `match_ms ÷ speed`, never early and at most one 200 ms batch late, setup first | `test_live.py` | Small hand-built match | Test output |
 | AC-03 | A failing fake hub is retried, then the match stops with the last `seq` | `test_live.py` | — | Test output |
 | AC-04 | A full Skyhaven vs Amberholt match streams to the emulator, and reading it back gives the same setup, events and frames, in order | Run plus readback | Engine M2; emulator | Command output |
 | AC-05 | Recorded files match the mock's layout and load in the existing replay path | Test plus a manual load | — | Test output |
@@ -232,4 +232,23 @@ cli.py live ──▶ world.build_setup ──▶ engine.play (whole match in me
 
 ### Handover after implementation
 
-Pending implementation.
+**M2 — live mode code** and **M3 — emulator run** (branch `generator/live-mode`, stacked on the engine PR #20).
+
+- Acceptance results:
+  - **AC-02:** passed (`test_live.py`, virtual clock): setup first, events in `seq` order, every message at
+    `match_ms ÷ speed` after the lead-in (plus half-time), never early, at most one 200 ms batch late. "Within 100 ms"
+    was changed to this because the spec batches per 200 ms.
+  - **AC-03:** passed: a hub that fails twice is retried; one that stays down stops the match with the last `seq` sent.
+  - **AC-05:** passed: recorded files round-trip (`setup.json`, `events.ndjson`, `tracking.ndjson.gz`, `summary.json`).
+  - **AC-04 (emulator):** passed on 17 Oct (licence accepted by Azeem). `cli.py live --speed 100 --hubs emulator` streamed
+    SYN-0301 (Skyhaven v Amberholt): 32,694 messages, no send failures. Reading `match-events` back gave the setup
+    first, then all 2,391 events in `seq` order with no duplicates. The emulator's partition properties show all
+    30,302 tracking frames stored on one partition (sequence 0–30301), as the `match_id` partition key intends; a
+    full read-back of tracking stalled part-way in the local reader (frames read were in time order), so tracking
+    was confirmed by the emulator's own counts. Emulator, containers and images removed afterwards.
+  - Also: a real Skyhaven vs Amberholt match streamed to stdout at 5000× gave 2,706 messages, setup first, all 2,705
+    events in order, with `conditions` in the setup. Output is written as UTF-8 whatever the console's code page.
+    `pytest` 64 passed; `ruff 0.17.0` clean.
+- Setup and integration: `uv run python cli.py live --home SKH --away AMH --speed 5 --hubs emulator` (emulator from
+  `mock/emulator/`), or `--hubs azure` with `OVERLAP_EVENTHUBS_NAMESPACE` set; `--stdout events` prints NDJSON.
+- Differences from the agreed proposal: none beyond the AC-02 wording.
