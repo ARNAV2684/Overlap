@@ -10,7 +10,7 @@
 | Review coordinator | Arnav |
 | Affected component owners | Arnav (review, hot files); Vedant (web app reads club names, colours, lineups from the match setup); stats engine, agents and archiver owners: unassigned (Arnav decides) |
 | Proposal version and date | v0.1 · 2026-10-15 |
-| Status | In progress (M1 done in PR #8; M2 done in PR #11; M3, the invented clubs, not started) |
+| Status | In progress (M1 done in PR #8; M2 done in PR #11; M3 in progress, see [`PLAN_generator_world-builder_S3.md`](PLAN_generator_world-builder_S3.md)) |
 | Plan tier and file | Full · `plans/active/PLAN_generator_world-builder.md` |
 | Repository | [ARNAV2684/Overlap](https://github.com/ARNAV2684/Overlap) |
 | Reviewed branch and commit | main · 71ad1ef (M2); main · 38a8038 (M1) |
@@ -95,7 +95,7 @@ private mapping (local, gitignored) ──┘ (only read by an optional name-dis
 
 | Decision | Proposed choice | Reason | Credible alternative and tradeoff | Status / person needed |
 |---|---|---|---|---|
-| Reference clubs | Two clubs with clearly different styles: A = possession and high press (light blue kit); B = contrasting style (mid-to-low block, direct, counters), chosen by Azeem | The contrast is what tests whether stats and agents notice style | One club only: cheaper, but nothing to contrast against | Proposed · B and its style confirmed by Azeem, 2026-10-15 |
+| Reference clubs | Two clubs with clearly different styles: A = possession and high press; B = contrasting style (mid-to-low block, direct, counters), chosen by Azeem | The contrast is what tests whether stats and agents notice style | One club only: cheaper, but nothing to contrast against | Proposed · B and its style confirmed by Azeem, 2026-10-15 |
 | Where reference data lives | Hand-authored `generator/reference_clubs.yaml` (invented names, attributes, style) | Readable, reviewable in a PR, no code change to tweak a rating | Python constants: harder to review | Proposed |
 | Real-to-invented mapping | Local `generator/reference_map.private.yaml`, gitignored, never committed | Keeps real names out of the public repo (PR #7 rule) | Shared doc outside the repo: fine too | Proposed |
 | Attribute set | World holds a richer internal set (pace, acceleration, passing, vision, dribbling, finishing, tackling, positioning, aerial, stamina, composure, goalkeeping) plus preferred foot and weak-foot quality; the match setup keeps sending only the six contract attributes | Engine needs more detail; no contract change needed now | Extend `CONTRACTS.md` §2: needs every consumer to agree, not worth it yet | Proposed |
