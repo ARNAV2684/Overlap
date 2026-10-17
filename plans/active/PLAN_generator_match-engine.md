@@ -279,6 +279,19 @@ stats engine's metrics; the real connection is proven only when G5 streams into 
 
 ### Handover after implementation
 
+**M3 part 1 — style shows** (branch `generator/engine-balance`, stacked on M4 #22). Part 2 continues with the
+realism report from batch mode.
+
+- `counter_attack` now does what `actions.md` §2 and `movement.md` §2 say: a fast first release after a regain,
+  forward pass targets in the counter window, and attackers breaking forward. Pass accuracy and base weights tuned
+  toward `CALIBRATION.md`: fewer misplaced passes, more long balls from deep, fewer crosses.
+- AC-05 over seeds 1–6, four of five directions met: Skyhaven has more possession (0.55 against 0.45), presses harder
+  (PPDA 17.8 against 37.9), wins more high regains (71.5 against 19.3), and Amberholt has the larger share of shots
+  from set pieces (0.17 against 0.05). **Not met:** Amberholt's counter-shot share (0.00 against 0.04).
+- **Remaining gap:** Amberholt takes about 2 shots a match (expected 5–9) because its carrier in the final third has
+  on average 0.9 team-mates there; support runs into attack need work. Skyhaven's shots (about 29) run high.
+  Pass completion is now 79 % for Skyhaven and 73 % for Amberholt (target 79–84 % overall).
+
 **M4 — set pieces and discipline** (branch `generator/engine-discipline`, stacked on live mode #21; done before
 M3 so tuning works on complete matches).
 

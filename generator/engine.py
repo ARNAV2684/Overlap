@@ -250,6 +250,8 @@ class Match:
             delay *= 0.7
         if b.is_gk or b.role == "deep_playmaker":
             delay *= 1.3
+        if self.in_counter(b.side):             # actions.md §2: a counter-attacking side releases the ball fast
+            delay *= 1 - config.COUNTER_RELEASE * st["counter_attack"]
         self.decide_at = self.match_ms + int(delay * 1000)
         self._choose_pressers(b)
 
@@ -810,7 +812,8 @@ class Match:
                     t, sprint = (self.ball_x, self.ball_y), True
                 if t is None:
                     t = self.shape_of(b)
-                    sprint = math.hypot(t[0] - b.x, t[1] - b.y) > 15
+                    breaking = self.in_counter(side) and movement.ANCHORS[self.formation[side]][b.slot_index][0] >= 40
+                    sprint = breaking or math.hypot(t[0] - b.x, t[1] - b.y) > 15
                 out.append((b, t, sprint))
         return out
 

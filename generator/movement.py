@@ -66,6 +66,8 @@ def shape_target(m, b: Body) -> tuple[float, float]:
             x, y = m.offside_line[side] - 1.5, 50 + 6 * (1 if by > 50 else -1)
         elif role == "target_man":
             y = 50 + 0.15 * (by - 50)
+        if m.in_counter(side) and ax >= 40:             # break on a counter (movement.md §2)
+            x += config.COUNTER_RUN_PCT * st["counter_attack"]
         if b.slot != "GK":
             x = min(x, max(m.offside_line[side], bx) - 0.5)     # don't stand offside
     else:
