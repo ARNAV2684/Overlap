@@ -201,7 +201,7 @@ never depend on Event Hubs. All Cosmos containers are in database `live` with pa
 
 | Where | Holds | Document / file |
 |---|---|---|
-| Cosmos `matches` | The setup and, at full time, the result | `{ "id": <match_id>, "match_id", "status": "live" \| "finished", "setup": <§2>, "result": { "score": { "home", "away" }, "events", "tracking_minutes" } }` (`result` only when finished) |
+| Cosmos `matches` | The setup and, at full time, the result | `{ "id": <match_id>, "match_id", "status": "live" \| "finished", "setup": <§2>, "result": { "score": { "home", "away" }, "events" } }` (`result` only when finished) |
 | Cosmos `events` | Every event | The §3 event unchanged, plus `"id": <event_id>` |
 | Cosmos `stats` | Every stat panel | The panel unchanged, plus `"id": "stats-<match_ms, 9 digits>"` |
 | Blob container `tracking` | Every tracking frame | `<match_id>/p<period>/m<minute of the period, 3 digits>.ndjson.gz`: gzip, one §4 frame per line, ascending `match_ms` |

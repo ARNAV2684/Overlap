@@ -15,7 +15,8 @@ Decides how every event and tracking frame is kept for replays. The archiver rea
 | `match-events` | `archiver` | `stats` (stat panels) | Cosmos `stats` |
 | `match-tracking` | `archiver` | `tracking` | Blob `tracking` |
 
-Messages are checked against `CONTRACTS.md` like the relay does; an invalid message is logged, counted and skipped.
+Each message's identifying fields are checked (`match_id`, and `event_id`/`seq`, `period`/`match_ms` as relevant);
+the screen relay does the full contract check. An invalid message is logged, counted and skipped.
 
 ## 1. Events
 
@@ -29,8 +30,9 @@ _Answer:_
   overwrites itself and nothing is duplicated.
 - **`matches`:** one document per match, `id` = `match_id`: `status` (`live`, then `finished`) and the full `setup`.
   Written with upsert when the setup arrives. At the `PeriodEnd` of period 2 the archiver adds `result`: the score
-  (counted from the stored `Shot` events with `shot_outcome: "goal"`, so it is correct even after redelivery), the
-  number of stored events, and the list of tracking minutes per period.
+  (counted from the stored `Shot` events with `shot_outcome: "goal"`, so it is correct even after redelivery) and the
+  number of stored events. Tracking minutes are not listed: the tracking hub can still be catching up at full time, so
+  readers list the files instead.
 - **`stats`:** each stat panel unchanged, plus `id` = `stats-<match_ms, 9 digits>`, upserted.
 - **Events before their setup:** stored anyway (they don't need the setup); a `matches` document without a setup means
   the setup hasn't arrived yet.
@@ -46,11 +48,10 @@ _Answer:_
 - **Content:** UTF-8, one §4 frame per line in ascending `match_ms`, gzip-compressed.
 - **Written without losing frames on a crash:** each batch's frames for a minute are compressed into their own gzip
   member and **staged as a block** of that minute's blob (block id from the first and last `match_ms`, so restaging the
-  same batch replaces it). The minute's blob is **committed** (its blocks joined in `match_ms` order) when a frame from
-  a later minute or period arrives, at `PeriodEnd`, or after 2 minutes without frames. Staged blocks survive a crash,
-  and the Event Hubs checkpoint moves only after staging, so nothing is lost. Joined gzip members are a valid gzip file.
-- **Late frames for a committed minute** (redelivery) are staged and the blob is committed again with the existing
-  blocks plus the new one.
+  same batch replaces it). Then the blob is **committed** with all its blocks, committed and staged, in `match_ms`
+  order. This happens after every batch, so there is no open state to lose: a crash between staging and committing
+  is repaired by the next commit of that minute, and the Event Hubs checkpoint moves only after the commit. Joined
+  gzip members are a valid gzip file.
 - **Repeats:** a redelivered batch can overlap a staged block, so a file may contain a frame twice; readers keep the
   first frame per `match_ms`.
 
@@ -79,7 +80,7 @@ Cosmos account and the Storage account. Locally, `docker compose down` clears ev
 ## 5. Running it
 
 - **Azure:** two Event Hubs triggers in the relay's Functions app (`archive_events`, `archive_tracking`), consumer group
-  `archiver`, plus the relay's timer also commits idle minutes. Managed identity: Cosmos data contributor on `matches`,
+  `archiver`. No timer is needed: every batch commits its minutes. Managed identity: Cosmos data contributor on `matches`,
   `events`, `stats`; Storage Blob Data Contributor on `tracking`.
 - **Locally:** `archiver/main.py` reads both hubs with the Event Hubs SDK, checkpoints in Azurite after each stored batch.
 - **Load:** at 20× about 100 frames/s and 8 events/s per match. Must keep up without a growing backlog (measured in A2).
