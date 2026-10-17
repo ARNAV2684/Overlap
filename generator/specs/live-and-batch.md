@@ -1,7 +1,7 @@
 # Live mode, batch mode and realism report spec
 
 > **Status: agreed.** Agreed in the spec PR for
-> [`PLAN_generator_live-mode`](../../plans/active/PLAN_generator_live-mode.md). Builds on
+> [`PLAN_generator_live-mode`](../../plans/done/PLAN_generator_live-mode.md). Builds on
 > [`engine.md`](engine.md), whose output (setup, events, tracking frames) this spec sends, records and summarises.
 
 Decides how matches are played out: streamed live, or generated as a full season with a realism report. Where the
@@ -32,7 +32,7 @@ speeds); half-time is replayed at the same speed-up (15 minutes ÷ speed, capped
 - The partition key keeps one match on one partition, so its messages stay in order.
 - Sending the setup on `match-events` with `kind=setup` is the mock's choice; `CONTRACTS.md` doesn't say where the
   setup travels yet. This spec keeps it, and asks for it to be written into `CONTRACTS.md`
-  ([`PLAN_generator_live-mode`](../../plans/active/PLAN_generator_live-mode.md), decision L1).
+  ([`PLAN_generator_live-mode`](../../plans/done/PLAN_generator_live-mode.md), decision L1).
 - **Batching:** messages due within the same 200 ms are sent together in one batch per hub, so a 5 Hz stream is
   about five sends a second per hub.
 - **Sign-in:** the Azure identity of whoever runs it (`DefaultAzureCredential`), or the local emulator's fixed
