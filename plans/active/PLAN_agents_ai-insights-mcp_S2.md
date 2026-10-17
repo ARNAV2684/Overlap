@@ -5,7 +5,7 @@
 | Sprint | S2 — read a stored moment through a real local MCP client |
 | Parent | [AI insights/MCP roadmap](PLAN_agents_ai-insights-mcp.md), M2 / F2 |
 | Owner | Pranav |
-| Status | Implemented and verified locally; not pushed or submitted for implementation review |
+| Status | Implemented and verified locally; publication authorised, preparing implementation review |
 | Baseline | `main` at `cb3b3492abaf5acadb084b20cb30faba8b2d2828`, including merged #44 |
 | Branch | `mcp_server/local-moments-s2` |
 
@@ -51,7 +51,7 @@ This proves local sample ingestion and MCP readback, not the stats-to-card path.
 2. Implement strict source validation, explicit readers and a match/moment/version-bound MCP server.
 3. Add separate seed and smoke-client commands. The reader never creates databases or writes documents.
 4. Run negative and real stdio tests, then the emulator round trip and seed idempotency check.
-5. Record results and commands. No push, PR creation or team messages requested in this step.
+5. Record results and commands. Pranav subsequently authorised pushing the branch and opening an implementation PR with a team handoff. No separate teammate messages are requested.
 
 ## 5. Contracts and shared files
 
@@ -89,8 +89,9 @@ stats publication remain pending. Historical fixtures do not have a valid live p
 ## 9. Handover
 
 Validated on 18 October 2026. Runtime/test files are committed at `b406072855309275ff55b949aaf9c50d4096dbc9`;
-later handoff changes are documentation only. Branch: `mcp_server/local-moments-s2`. No push, PR or teammate
-notification was requested/performed. Leave this plan active until its implementation is reviewed and merged.
+later handoff changes are documentation only. Branch: `mcp_server/local-moments-s2`. Pranav subsequently authorised
+pushing this branch and opening its implementation PR. Publication details will be recorded below; no separate
+teammate notification is requested. Leave this plan active until its implementation is reviewed and merged.
 
 ### Reproduce and inspect
 
@@ -131,3 +132,10 @@ untested. Vedant's card rendering and audience reconnect path are unchanged. Pra
 workflow/model adapter, claim checker and evaluation after its remaining specification gates, Foundry access and
 spend approval. This milestone does not implement that workflow or generate explanations. No paid resources,
 Foundry calls or live overlays were used.
+
+### Publication preparation
+
+Fresh main remains `cb3b349` and no open PRs were found on 18 October. Runtime files have not changed since the
+64-test Cosmos-enabled run. The README now explains per-laptop installation and seeding, how to review the branch
+before merge, and the producer/storage/frontend/workflow boundaries. The PR must distinguish the implemented
+local MCP capability from the later model and live-card milestones. Publication CI results are reported separately.

@@ -117,3 +117,22 @@ Next, M3 needs the agreed workflow implementation plus an accessible Foundry pro
 approved test budget. The local workflow can call the model and execute MCP locally; Foundry does not need inbound
 access to this laptop. Production identity/RBAC, Azure deployment and live stats-to-card delivery remain untested.
 Treat names and labels as untrusted data when the model adapter is added.
+
+## Team handoff and future integration
+
+Before this PR merges, fetch and check out `mcp_server/local-moments-s2` to review it. After merge, update your
+normal checkout from main. Pulling code does not transfer the running emulator, Python environment or stored
+sample: run the install, seed and check commands above on each laptop. Generated reports remain machine-local.
+
+| Connection | What this milestone supplies | Future integration boundary |
+|---|---|---|
+| Azeem: stats producer | Strict validator and a source-derived example matching CONTRACTS §10.2 | Publish one immutable moment containing evidence, source cursor and frozen context to `live/moments`, partitioned by `match_id`. Use the agreed shot rule; do not copy the sample's IDs or score into live output. |
+| Arnav: storage and delivery | Read-only point reader plus a separate create-only development loader | Keep source moments separate from job/outbox state. Production identity/RBAC and delivery remain later work; the seed command is not a production publisher. |
+| Vedant: frontend | No new screen message or endpoint | The offline evidence/context bundle is not an overlay. Continue against the agreed overlay/delivery contract; a later integration must prove an actual displayed card. |
+| Pranav: workflow | Real stdio MCP client, one scoped tool and a validated evidence/context bundle | Add the model adapter, prompts, claim checking and evaluation; secure Foundry access and a test budget before model calls. |
+
+The current reader intentionally accepts only the first agreed shot-cluster slice. New triggers, metrics, schema
+versions or source fields need coordinated spec/contract changes and updated tests; do not silently widen the reader
+or calculate missing stats inside MCP. Context numbers are not extra narration evidence. For each later workflow
+job, bind a new MCP session to the exact match, moment and evidence version. Coordinate MCP changes with Pranav;
+Arnav maintains the ownership registry. These connections reflect the user-reported team agreements in the S2 plan.
