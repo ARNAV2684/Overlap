@@ -37,8 +37,13 @@ right, both 0–100), in the slot order of [`world.md`](world.md) §4:
 - **In possession:** the team pushes up by `12 × line_height` and spreads: each `y` moves away from the centre by a
   factor `0.8 + 0.4 × width`.
 - **Out of possession:** the team narrows (`y` toward the ball side, factor 0.75) and the back line sits at
-  `x = 18 + 22 × line_height`; the rest of the block stays within 35 m of it. Players chosen to press
+  `x = 18 + 22 × line_height`. The lines sit `(anchor gap) × (0.55 + 0.35 × line_height)` apart, so a low block is
+  compact (about 12–15 m between defence and midfield) and a high line keeps more depth. Players chosen to press
   ([`actions.md`](actions.md) §2) leave the shape and run at the carrier.
+- **Guarding the goal:** defenders (anchor `x` below 40) stay at least 8 (team-frame percent) goal-side of the ball.
+  With the ball inside 25 of their goal they also close in toward the posts (`y` toward the centre, factor 0.6).
+  With the ball inside their own third, defenders and midfielders (anchor `x` below 50) pick up the nearest attacker
+  within 15 of their spot and stand most of the way to him (85 %), 2 goal-side.
 - **Roles** move players away from their anchor in possession:
 
 | Role | In possession |
@@ -53,6 +58,23 @@ right, both 0–100), in the slot order of [`world.md`](world.md) §4:
 | `poacher` | Stays on the shoulder of the last defender, between the centre-backs |
 | `target_man` | Stays central, ahead of the midfield, facing his own goal to receive |
 | `pressing_forward` | Runs in behind the defensive line when a teammate on the ball faces forward |
+
+**Support runs.** With the ball in the final third (`x` ≥ 66), each attacking slot stays at least a set distance
+ahead of the ball (team-frame percent; negative is behind it), so the carrier has options whatever the formation:
+
+| Slot | Distance from the ball |
+|---|---|
+| `ST`, `RW`, `LW` | 6 ahead |
+| `AM` | 4 ahead |
+| `RM`, `LM` | 3 ahead |
+| `CM` | 10 behind |
+
+Slots running ahead of the ball attack the far post (`x` 88, 10 off the centre) when the ball is wide on the other
+side. Nobody runs offside: every outfield target stays behind the second-last defender or the ball.
+
+**Counter runs.** In the counter window ([`actions.md`](actions.md) §2), players whose anchor is at `x` ≥ 40 push up
+by `12 × counter_attack`, and the slots that run ahead of the ball above wait on the shoulder of the last defender,
+ready to go in behind.
 
 **Runs for passes:** when a teammate is about to play a `through_ball` or `cross` ([`actions.md`](actions.md) §2), the
 intended receiver runs to the target point; that run is what can be caught offside

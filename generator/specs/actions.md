@@ -46,19 +46,21 @@ stream):
 **Zones** split the pitch by `x` (own third 0–33, middle 33–66, final third 66–83, box-depth 83–100) and by `y`
 (wide 0–18 and 82–100, half-space 18–35 and 65–82, central 35–65).
 
-**Base weights** (relative within a zone; an action that is impossible from where the player stands gets 0):
+**Base weights** (relative within a zone; an action that is impossible from where the player stands gets 0; the
+values tuned against [`CALIBRATION.md`](../../CALIBRATION.md) in M3):
 
 | Zone | short_pass | long_pass | through_ball | cross | cutback | switch | carry | take_on | shot | clearance | hold |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| Own third | 60 | 12 | 2 | 0 | 0 | 4 | 12 | 2 | 0 | 8 | 4 |
-| Middle third | 55 | 8 | 6 | 0 | 0 | 6 | 16 | 5 | 0.3 | 1 | 4 |
-| Final third, wide | 35 | 2 | 6 | 22 | 4 | 5 | 14 | 10 | 1 | 0 | 4 |
-| Final third, central | 40 | 1 | 14 | 0 | 0 | 2 | 12 | 8 | 4 | 0 | 4 |
-| Box-depth | 22 | 0 | 6 | 18 | 14 | 0 | 6 | 8 | shot weight | 0 | 3 |
+| Own third | 60 | 14 | 3 | 0 | 0 | 4 | 12 | 2 | 0 | 8 | 4 |
+| Middle third | 55 | 10 | 8 | 0 | 0 | 6 | 16 | 5 | 0.3 | 1 | 4 |
+| Final third, wide | 38 | 2 | 6 | 5 | 3 | 5 | 14 | 10 | 1 | 0 | 5 |
+| Final third, central | 40 | 1 | 11 | 0 | 0 | 2 | 12 | 8 | 10 | 0 | 4 |
+| Box-depth | 24 | 0 | 6 | 4 | 6 | 0 | 6 | 8 | 0 | 0 | 3 |
 
-**Shot weight.** In the final third and box-depth, `shot` gets weight `S × xG / (0.10 + xG)`, where xG is the
-shot's value from §4 if he shoots from here and `S` is the shot appetite (starting value 60). Close, central chances
-are therefore almost always shot; hopeful ones rarely.
+**Shot weight.** In the final third and box-depth, `shot` gets weight `S × xG / (K + xG)` plus the zone's base weight
+above, where xG is the shot's value from §4 if he shoots from here, `S` is the shot appetite (19) and `K` (0.25) sets
+how closely the choice follows chance quality. No shot below xG 0.02. The weight is then multiplied by
+`0.2 + directness`, so direct sides shoot sooner and patient sides work the ball closer.
 
 **Attributes** (each factor is 1.0 for a rating of 70):
 
@@ -101,7 +103,7 @@ are therefore almost always shot; hopeful ones rarely.
 | `width` | `cross` and `switch` × (0.5 + width) |
 | `tempo` | decision delay ([`engine.md`](engine.md) §4) × (1.3 − 0.6 × tempo) |
 | `build_up_short` | the goalkeeper's `short_pass` × (0.3 + build_up_short × 1.4), `long_pass` the reverse |
-| `counter_attack` | in the **counter window** (8 s after winning the ball in own half or middle third): `through_ball`, forward `long_pass` and forward `carry` × (1 + counter_attack); `hold` × (1 − counter_attack) |
+| `counter_attack` | in the **counter window** (12 s after winning the ball in the own half; it ends early when a completed pass gains less than 5 % of the pitch, so recycling the ball ends a counter): `through_ball`, forward `long_pass`, forward `carry` and `shot` × (1 + counter_attack); `short_pass` × (1 − 0.5 × counter_attack); `hold` × (1 − counter_attack) |
 | `press_intensity`, `press_height`, `counter_press`, `line_height` | off the ball, below |
 | `set_piece_focus` | restarts, [`set-pieces-and-discipline.md`](set-pieces-and-discipline.md) |
 
@@ -155,9 +157,9 @@ weaker foot; a shooting study found weak-foot shots underperform xG. Both are ci
 
 | Action | Base | Main modifiers |
 |---|---|---|
-| `short_pass` | 0.93 | `passing`, pressure, distance, weak foot |
-| `long_pass` | 0.62 | `passing`, `vision`, distance, wind |
-| `through_ball` | 0.42 | `vision`, `passing`, how tight the defensive line is |
+| `short_pass` | 0.96 | `passing`, pressure, distance, weak foot |
+| `long_pass` | 0.75 | `passing`, `vision`, distance, wind |
+| `through_ball` | 0.50 | `vision`, `passing`, how tight the defensive line is |
 | `cross` | 0.24 (reaches a teammate) | `passing`, delivery foot, the target's `aerial` vs the defenders' |
 | `cutback` | 0.55 | `passing`, defenders near the six-yard box |
 | `switch` | 0.70 | `passing`, wind |
@@ -167,7 +169,9 @@ weaker foot; a shooting study found weak-foot shots underperform xG. Both are ci
 | `aerial` | 0.50 | `aerial` against `aerial`, plus height of run-up (position) |
 
 Each modifier moves the probability on the log-odds scale: skill by `(rating − 70) / 15`, pressure by −0.4 (halved
-for `composure` ≥ 80), fatigue as in [`engine.md`](engine.md) §6, wet pitch −0.1, weak foot as above. Every pass in
+for `composure` ≥ 80), fatigue as in [`engine.md`](engine.md) §6, wet pitch −0.1, weak foot as above. A ground pass
+played to within 3 m of an opponent loses up to 0.8 (all of it with the opponent on the spot), so passes into a
+crowded box fail more than passes into space. Every pass in
 flight can also be **intercepted** by a defender near its path: each defender within 2 m of the line gets a chance
 that rises with his `positioning` and `pace` and falls with the ball's speed.
 
@@ -176,7 +180,10 @@ that rises with his `positioning` and `pace` and falls with the ball's speed.
   ball where it lands, won by whoever gets there first ([`engine.md`](engine.md) §3); out of play gives a restart.
 - A failed take-on or a lost carry is a `Tackle` won by the defender, who has the ball, or a loose ball if the
   tackle only pokes it away (30 %).
-- A lost aerial duel: the winner heads it on, clears it or controls it.
+- A lost aerial duel: the winner heads it on, clears it or controls it. A defender heading a cross away puts it
+  behind for a corner 25 % of the time.
+- An inaccurate cross is cut out behind for a corner 15 % of the time; a blocked shot goes behind for a corner 35 %
+  of the time.
 - A clearance goes 25–55 m upfield, usually out of play or to a loose ball.
 
 ## 4. Shots
@@ -266,8 +273,8 @@ Each target has a public source in [`CALIBRATION.md`](../../CALIBRATION.md); a t
 
 | Total per match | Target (to be sourced) | Main knobs |
 |---|---|---|
-| Goals | about 2.7–3.3 | shot appetite `S`, finishing and goalkeeping factors |
-| Shots (both teams) | about 25–28 | shot appetite `S`, box-depth base weights |
+| Goals | about 2.7–3.3 | shot appetite `S` and `K` (chance quality), finishing and goalkeeping factors |
+| Shots (both teams) | about 25–28 | shot appetite `S`, the final-third shot base weight, the minimum xG |
 | Shot conversion | about 10–12 % | xG coefficients, on-target model |
 | Penalty conversion | about 0.78 | penalty xG, finishing vs goalkeeping |
 | Passes per team | 350–600 | base weights, decision delay, `tempo` |

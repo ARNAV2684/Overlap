@@ -59,11 +59,15 @@ def _style_factor(action: str, st: dict, in_counter: bool) -> float:
         f *= 1.5 - st["directness"]
     if action in ("cross", "switch"):
         f *= 0.5 + st["width"]
+    if action == "shot":                # direct sides shoot sooner instead of working the ball closer
+        f *= config.SHOT_DIRECTNESS_BASE + st["directness"]
     if in_counter:
-        if action in ("through_ball", "long_pass", "carry"):
+        if action in ("through_ball", "long_pass", "carry", "shot"):
             f *= 1 + st["counter_attack"]
         if action == "hold":
             f *= 1 - st["counter_attack"]
+        if action == "short_pass":
+            f *= 1 - config.COUNTER_SHORT_CUT * st["counter_attack"]
     return f
 
 
@@ -180,7 +184,7 @@ def choose(m, carrier: Body, rng: random.Random) -> Choice:
             value = m.shot_xg(carrier, open_play=True)
             if value < config.MIN_SHOT_XG:
                 continue
-            w = config.SHOT_APPETITE * value / (0.10 + value) + base.get("shot", 0.0)
+            w = config.SHOT_APPETITE * value / (config.SHOT_XG_HALF + value) + base.get("shot", 0.0)
             w *= carrier.attr("finishing") / 70
             if pitch.goal_distance(cx, cy) > 20:
                 w *= carrier.attr("finishing") / 70

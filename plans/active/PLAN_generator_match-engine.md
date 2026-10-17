@@ -10,7 +10,7 @@
 | Review coordinator | Arnav |
 | Affected component owners | Consumers of events and tracking: stats engine, screen relay, archiver (all unassigned, Arnav decides); web app (Vedant). Arnav and Pranav (Event Hubs) |
 | Proposal version and date | v0.2 · 2026-10-16 |
-| Status | In progress (M1 merged in PR #15; M2 in PR #20; M4 in PR #22; M3 part 1 in PR #23; M3 part 2 and M5 next) |
+| Status | In progress (M1 merged in PR #15; M2 in PR #20; M4 in PR #22; M3 part 1 in PR #23; M3 part 2 in review; M5 next) |
 | Plan tier and file | Full · `plans/active/PLAN_generator_match-engine.md` |
 | Repository | [ARNAV2684/Overlap](https://github.com/ARNAV2684/Overlap) |
 | Reviewed branch and commit | main · 75b7cba (PR #14, world traits, open and green) |
@@ -278,6 +278,18 @@ stats engine's metrics; the real connection is proven only when G5 streams into 
 **Next action and owner:** spec PR reviewed by Arnav · Azeem.
 
 ### Handover after implementation
+
+**M3 part 2 — the reference clubs look real** (branch `generator/reference-realism`; sprint plan
+[`PLAN_generator_match-engine_S3.md`](PLAN_generator_match-engine_S3.md), which has the details).
+
+- **AC-05:** met in the 12-match report: Skyhaven has more possession (0.56 against 0.44), a lower PPDA (13.5 against
+  33.3) and more high regains (51.5 against 23.1); Amberholt has the larger counter-shot share (0.17 against 0.10)
+  and set-piece-shot share (0.18 against 0.14). Shots 20.8 against 6.0 (was 29.2 against 1.7). On a second sample
+  of 32 seeds every direction holds except the set-piece share.
+- **AC-06:** met for the match totals: all 8 rows pass, and 16 of 16 measured targets pass (was 9 of 16).
+- How: support runs and a compact, goal-side low block (`movement.md` §1); quality-sensitive shooting and a
+  stricter counter window (`actions.md` §2); corners from blocks and defended crosses, plus the agreed short corners
+  and long throws, which were missing (`set-pieces-and-discipline.md` §1).
 
 **M3 part 1 — style shows** (branch `generator/engine-balance`, stacked on M4 #22). Part 2 continues with the
 realism report from batch mode.

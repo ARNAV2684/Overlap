@@ -75,8 +75,9 @@ def test_offside_gives_the_other_side_a_free_kick(matches):
             if e["type"] == "Offside":
                 prev = m.events[i - 1]
                 assert prev["type"] == "Pass" and prev["outcome"] == "fail" and prev["team_id"] == e["team_id"]
-                nxt = next(x for x in m.events[i + 1:] if x["type"] == "Pass")
-                assert nxt["team_id"] != e["team_id"]
+                nxt = next(x for x in m.events[i + 1:] if x["type"] in ("Pass", "PeriodEnd"))
+                if nxt["type"] == "Pass":       # the half can end before the free kick is taken
+                    assert nxt["team_id"] != e["team_id"]
 
 
 def test_penalty_shots_use_the_penalty_xg_situation(matches):

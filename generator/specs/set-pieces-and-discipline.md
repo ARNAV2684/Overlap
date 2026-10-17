@@ -32,7 +32,9 @@ box: an **in-swinger** if the taker's stronger foot is on the side away from the
 not. The delivery aims at the best header (a `target_man` first, then the highest `aerial`) and becomes an aerial
 duel against the defender marking him. A won header by an attacker is a headed shot (situation `corner`); a won
 header by a defender is a clearance. With high `set_piece_focus`, the attackers send more players into the box,
-which raises the chance that the delivery finds a header but leaves fewer back to stop a counter.
+which raises the chance that the delivery finds a header but leaves fewer back to stop a counter: every set-piece
+delivery (corner, wide free kick, long throw) gains `2.5 × (set_piece_focus − 0.5)` on the log-odds of reaching its
+target.
 
 **Free kicks.**
 - **Direct shot** when the kick is within about 30 m of goal and central: taken with probability
@@ -43,7 +45,7 @@ which raises the chance that the delivery finds a header but leaves fewer back t
 - **In own half:** taken quickly as a short pass (a long ball if `directness` is high).
 
 **Counter risk.** After a cleared set piece the defending side often breaks with fewer attackers back; any shot
-within 8 s of that regain counts as `counter` ([`actions.md`](actions.md) §2).
+within the counter window after that regain counts as `counter` ([`actions.md`](actions.md) §2).
 
 ## 2. Fouls
 
@@ -66,7 +68,7 @@ Each tackle, aerial duel and attempt to stop a take-on can be a foul by the defe
 | Role | `stopper` and `ball_winner` × 1.3 |
 | Wet pitch | × 1.1 |
 | Home advantage | the home side's fouls are given slightly less often, scaled by attendance ([`engine.md`](engine.md) §9) |
-| Inside his own box | × 0.5 (defenders are more careful), but a foul there is a penalty |
+| Inside his own box | × 0.03 (defenders are much more careful), but a foul there is a penalty; tuned so penalties stay near the real rate of about 0.3 a match |
 
 **Consequences:** one `Foul` event by the offender with `fouled_player_id`. Inside the offender's own box → penalty.
 Elsewhere → a free kick at the spot, unless the fouled team keeps the ball in a promising position, in which case
