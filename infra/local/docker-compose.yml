@@ -30,6 +30,8 @@ services:
   azurite:
     image: mcr.microsoft.com/azure-storage/azurite:latest
     container_name: overlap-local-azurite
+    # Newer Azure Storage SDKs send API versions an older Azurite image doesn't know yet.
+    command: azurite --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0 --skipApiVersionCheck
     ports:
       - "127.0.0.1:10000:10000"   # Blob: Functions checkpoints (AzureWebJobsStorage), later tracking chunks
       - "127.0.0.1:10001:10001"   # Queue

@@ -10,7 +10,7 @@
 | Review coordinator | Arnav |
 | Affected component owners | Azeem (producer: `generator/live.py`); Vedant (consumer: web app, `web/specs/realtime.md`); stats engine owner (unassigned, Arnav decides): sends stat panels through the relay (D-02) |
 | Proposal version and date | v1.1 · 17 Oct 2026 (D-01 to D-08 decided) |
-| Status | In progress: S1 (go from Arnav, 17 Oct). Contract PR #28 open; specs and registry in `functions/screen-relay-spec` |
+| Status | In progress: S1 and S2 merged (#27–#31); S3 on `functions/screen-relay` |
 | Plan tier and file | Full · `plans/active/PLAN_functions_screen-relay.md` |
 | Repository | [ARNAV2684/Overlap](https://github.com/ARNAV2684/Overlap) |
 | Reviewed branch and commit | main · 6f2f459 |
@@ -161,6 +161,9 @@ Consumption supports an always-ready instance in the chosen region (checked in S
 | `functions/relay_store.py`, `functions/relay_runner.py` | Add | Cosmos store; local runner | `screen-relay.md` | Arnav |
 | `functions/function_app.py`, `functions/host.json`, `functions/requirements.txt` | Modify / add | Event Hubs trigger on Flex Consumption | `screen-relay.md` | Arnav |
 | `functions/tests/` | Add | Core, store and end-to-end tests | `screen-relay.md` | Arnav |
+| `functions/pyproject.toml`, `functions/.gitignore` | Add | Local project for tests and the runner (S3) | — | Arnav |
+| `.gitleaks.toml` | Modify | Allow the public Azurite key too (S3) | — | Arnav |
+| `infra/local/docker-compose.yml`, `infra/local/env.example` | Modify | Azurite API-version flag; quoted connection strings (S3) | `local-development.md` | Arnav |
 | `infra/modules/event-hubs.bicep`, `web-pubsub.bicep`, `functions.bicep`, `cosmos.bicep`, `identity.bicep`, `storage.bicep`, `main.bicep`, `azure.yaml` | Modify (hot: `main.bicep`, `azure.yaml`) | Azure resources for the screen path | `resources.md`, `security.md` | Arnav · Pranav |
 | `functions/README.md` | Modify | How to run locally and on Azure | — | Arnav |
 | `mock/single-match-demo/app.js` | Modify | Connect via negotiate + protocol, read the new snapshot | `CONTRACTS.md` §7 | Pranav |
@@ -294,4 +297,14 @@ Scanned at `6f2f459` on 2026-10-17. Sources checked: plans ✓ · PRs ✓ (#26, 
 
 ### Handover after implementation
 
-Pending implementation.
+**S1–S2:** merged (#27–#31). **S3 (local), 17 Oct:**
+- AC-05 passed on `SYN-0504` (seed 504, 20×): generator → Event Hubs emulator → `relay_runner.py` → stand-in → client:
+  all 2,504 events and 28,853 frames identical to the recording, envelope `seq` 1…8,286 in order with no gaps, phases
+  pre-match → live → half time → live → full time, final score 1–0 = recorded, snapshot correct, `rejected` 0.
+- Earlier runs `SYN-0502`/`SYN-0503` delivered everything correctly but out of order in 15 / 2 places: sends from
+  parallel readers overlapped (fixed with a per-match lock, test added) and a leftover second relay process was sharing
+  the consumer group. Run one relay at a time; on Azure the app is limited to one instance (S4).
+- AC-06/AC-07 by unit tests (17): duplicates, conflicts, invalid, holding, restart numbering, send retries, parallel order.
+- Not checked yet: the Azure Function host itself (Core Tools not installed; first run on Azure in S4); the Function's
+  Event Hubs message properties format.
+- Pending: AC-08 in a browser through the relay (the viewer's protocol change is merged, #31); S4.

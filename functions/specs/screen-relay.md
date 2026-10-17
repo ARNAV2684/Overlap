@@ -1,8 +1,8 @@
 # Screen relay spec
 
-> **Status: draft for review.** Plan: [`PLAN_functions_screen-relay`](../../plans/active/PLAN_functions_screen-relay.md).
-> Message shapes: [`CONTRACTS.md`](../../CONTRACTS.md) §1.4 (hubs, PR #27) and §7 (envelopes, PR #28). Set this line to
-> `> **Status: agreed.**` in the PR that approves it.
+> **Status: agreed.** Approved by Arnav (PR #29, 17 Oct); details settled while building the relay are marked
+> *(S3)*. Plan: [`PLAN_functions_screen-relay`](../../plans/active/PLAN_functions_screen-relay.md).
+> Message shapes: [`CONTRACTS.md`](../../CONTRACTS.md) §1.4 (hubs) and §7 (envelopes).
 
 The screen relay is the fast lane: it reads raw messages from Event Hubs and sends `event`, `positions`, `status` and
 `stats` envelopes to Web PubSub group `match-<id>`, saving each one so browsers can catch up. The same code runs
@@ -28,16 +28,20 @@ _Answer:_
 - **Validation (strict, per `CONTRACTS.md`):** the body must be valid JSON matching §2, §3 or §4 exactly (unknown fields
   rejected); `kind` and `match_id` properties must agree with the body. An invalid message is **logged** (hub,
   partition, offset, reason), **counted**, and **skipped**; the match keeps going.
-- **Setup first:** frames or events for a match whose setup hasn't arrived are held (up to 2,000 messages or 10 s,
-  whichever first). If the setup still hasn't arrived, the held messages are logged as invalid and dropped.
+- **Setup first:** frames or events for a match whose setup hasn't arrived are held (up to 2,000 messages, 1.2 MB or
+  10 s, whichever first; the held messages live in the state document, which Cosmos limits to 2 MB *(S3)*). If the
+  setup still hasn't arrived, the held messages are logged as invalid and dropped.
 - **Duplicates** (Event Hubs delivers at least once):
 
   | Message | Identity | Same content again | Different content, same identity |
   |---|---|---|---|
   | Setup | `match_id` | Ignored | Logged as a conflict, first one kept |
-  | Event | `match_id` + `seq` | Ignored | Logged as a conflict, first one kept |
-  | Frame | `match_id` + `period` + `match_ms` | Ignored | Logged as a conflict, first one kept |
-  | Stat panel | `match_id` + panel time (defined with the stats payload) | Ignored | Logged as a conflict |
+  | Event | `match_id` + `seq` | Ignored | Logged as a conflict, first one kept (detected for the last 300 events) |
+  | Frame | `match_id` + `match_ms` | Ignored | Not detectable: a frame at or before the newest applied `match_ms` is dropped |
+  | Stat panel | `match_id` + `match_ms` | Ignored | Not detectable (same rule as frames) |
+
+  *(S3)* Within one hub a match's messages arrive in order, so frames and stat panels use a "newest `match_ms` so far"
+  mark instead of a list of every key; this keeps the state small. A gap in event `seq` is logged and counted.
 
 ## 2. Trimming
 
@@ -87,13 +91,16 @@ _Answer:_
 - **Save first, then send:** each envelope is written to the store before it is sent. If sending fails it is retried
   (3 attempts, 0.5 s → 1 s → 2 s); if it still fails, it is logged and the browser gets it from the snapshot on its next
   reconnect.
+- **Saving** *(S3)*: the envelopes and the state of one batch are written in one Cosmos transactional batch, with an
+  ETag condition on the state, so they are saved together or not at all. Batches are split into chunks of 40 messages
+  to stay under Cosmos's 100 operations per transactional batch.
 - **Store** (Cosmos container `screen`, partition key `match_id`):
 
   | Document | `id` | Holds |
   |---|---|---|
-  | Envelope | `env-<seq>` (zero-padded) | One `event`, `status` or `stats` envelope |
-  | Latest positions | `positions-latest` | The newest `positions` envelope (overwritten) |
-  | State | `state` | `seq` counter, phase, period, score, setup, open frame bundle, recent duplicate keys, invalid count |
+  | Envelope | `env-<seq>` (8 digits) | `{ "type": "envelope", "envelope": <one event, status or stats envelope> }` |
+  | Latest positions | `positions-latest` | `{ "type": "positions", "envelope": <newest positions envelope> }` (overwritten) |
+  | State | `state` | `seq` counter, phase, period, score, setup, open frame bundle, held messages, duplicate marks, counts, `open_work` |
 
 - **Snapshot:** built from the store exactly as `CONTRACTS.md` §7.3 says (all envelope documents in `seq` order, plus
   `positions-latest`). Locally the stand-in serves `GET /api/match/<id>/snapshot`; on Azure the web app's route
@@ -110,7 +117,10 @@ _Answer:_
 - **Hosting:** Azure Functions, **Flex Consumption**, Python, one **always-ready** instance so the fast lane never
   waits for a cold start. Event Hubs trigger on both hubs, consumer group `relay`. Locally: `func start` if the
   Functions host can use the Event Hubs emulator; otherwise `relay_runner.py`, which feeds the same core with the Event
-  Hubs SDK.
+  Hubs SDK. *(S3)* Functions Core Tools isn't installed on the development laptop, so the local run uses
+  `relay_runner.py`; the Function itself is first run on Azure (S4).
+- **Timer:** a timer trigger every second (every 250 ms in the local runner) flushes a frame bundle idle for 250 ms and
+  drops messages held too long for a setup, for every match whose state has `open_work`.
 - **Ordering per match:** one partition carries one match, and the Functions host processes one partition's batches one
   at a time, so a match is never processed in parallel. The two hubs can be handled by different calls; their state
   updates for the same match are serialised through the store (read state → apply → write with an ETag check; retry on

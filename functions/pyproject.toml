@@ -1,0 +1,26 @@
+[project]
+name = "overlap-functions"
+version = "0.1.0"
+description = "Overlap Azure Functions: the screen relay (and later the moment trigger)."
+requires-python = ">=3.12"
+# Keep in step with requirements.txt, which the Azure Functions host installs.
+dependencies = [
+    "azure-functions>=1.21",
+    "azure-cosmos>=4.7",
+    "azure-messaging-webpubsubservice>=1.2",
+    "azure-identity>=1.17",
+    "azure-eventhub>=5.12",
+    "azure-eventhub-checkpointstoreblob>=1.2",
+    "azure-storage-blob>=12.20",
+    "aiohttp>=3.9",
+]
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+
+[tool.uv]
+package = false
