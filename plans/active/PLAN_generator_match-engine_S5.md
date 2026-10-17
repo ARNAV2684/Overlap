@@ -101,6 +101,7 @@
 | Overlapping file or contract | Other plan / PR / branch | Its owner | Resolution | Status |
 |---|---|---|---|---|
 | `generator/specs/live-and-batch.md` §1 | `PLAN_contracts_setup-transport.md` (Ready for review; its §1.4 merged) | Arnav | The plan leaves this note's update to Azeem after §1.4 merges, which it has | Agreed (in that plan) |
+| `live-and-batch.md`, the match-engine and world-builder plans | `PLAN_plans_housekeeping.md` (Arnav), from #40's scope report | Arnav | Its edits merged in PR #26 (a link in `live-and-batch.md` and status lines). This PR changes other lines, and moves the world-builder plans to `plans/done/` as that plan's lifecycle asks | Agreed (no shared edit) |
 | `generator/specs/world.md` | Branch `generator/world-spec` (stale, 15 Oct) | Azeem | Not touched here; the branch can be deleted | Agreed |
 
 No open PRs (all of #35–#39 merged).
