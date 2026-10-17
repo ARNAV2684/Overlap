@@ -1,0 +1,68 @@
+{
+  "id": "MO-1017-0001",
+  "moment_id": "MO-1017-0001",
+  "match_id": "SYN-1017",
+  "kind": "moment",
+  "schema_version": 1,
+  "evidence_version": 1,
+  "evidence": {
+    "moment_id": "MO-1017-0001",
+    "match_id": "SYN-1017",
+    "trigger": "shot_cluster",
+    "period": 2,
+    "match_ms": 4174400,
+    "clock": "65:34",
+    "team_id": "KES",
+    "player_ids": [
+      "KES-11",
+      "KES-10",
+      "KES-07"
+    ],
+    "event_ids": [
+      "SYN-1017-01477",
+      "SYN-1017-01542",
+      "SYN-1017-01592"
+    ],
+    "window": {
+      "from_ms": 3874400,
+      "to_ms": 4174400
+    },
+    "facts": [
+      {
+        "key": "shots_last_5min",
+        "value": 3,
+        "decimals": 0,
+        "label": "Kestlebury United shots in this five-minute window"
+      },
+      {
+        "key": "window_duration_min",
+        "value": 5,
+        "unit": "min",
+        "decimals": 0,
+        "label": "Duration of the evidence window in minutes"
+      }
+    ]
+  },
+  "source": {
+    "event_seq": 1592,
+    "period": 2,
+    "match_ms": 4174400
+  },
+  "context": {
+    "phase": "live",
+    "score": {
+      "home": 3,
+      "away": 0
+    },
+    "teams": {
+      "home": {
+        "team_id": "KES",
+        "name": "Kestlebury United"
+      },
+      "away": {
+        "team_id": "ORR",
+        "name": "Orrinford Albion"
+      }
+    }
+  }
+}
