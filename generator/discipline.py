@@ -50,6 +50,7 @@ def foul_chance(m, defender: Body, carrier: Body, kind: str) -> float:
         p *= 1 - config.HOME_FOUL_LENIENCY * m.crowd_fill
     if pitch.in_own_box(*m.tpos(defender)):
         p *= config.FOUL_IN_OWN_BOX
+    p *= m.director.multiplier(m, defender.side, "foul_rate")      # storylines.md §2
     return min(p, 0.6)
 
 
@@ -65,21 +66,22 @@ def clear_chance(m, defender: Body, carrier: Body) -> bool:
 
 
 def card_for(m, defender: Body, carrier: Body, rng) -> str | None:
-    """Yellow, straight red or none for a foul (§3)."""
+    """Yellow, straight red or none for a foul (§3). A storyline's card_rate scales every card chance."""
+    rate = m.director.multiplier(m, defender.side, "card_rate")
     if clear_chance(m, defender, carrier):
-        return "red" if rng.random() < config.CARD_DOGSO_RED else "yellow"
+        return "red" if rng.random() < min(config.CARD_DOGSO_RED * rate, 0.95) else "yellow"
     behind = from_behind(defender, carrier)
-    if behind and rng.random() < config.CARD_BEHIND_RED:
+    if behind and rng.random() < config.CARD_BEHIND_RED * rate:
         return "red"
     if m.in_counter(carrier.side):
         p = config.CARD_TACTICAL_YELLOW
     elif behind:
         p = config.CARD_BEHIND_YELLOW
     else:
-        if rng.random() < config.CARD_ORDINARY_RED:
+        if rng.random() < config.CARD_ORDINARY_RED * rate:
             return "red"
         p = config.CARD_ORDINARY_YELLOW
-    return "yellow" if rng.random() < p else None
+    return "yellow" if rng.random() < min(p * rate, 0.95) else None
 
 
 def commit_foul(m, offender: Body, victim: Body) -> None:

@@ -1,0 +1,18 @@
+# low_block_resistance.yaml — Storyline
+#
+# Purpose: the away side sits deeper all match and looks to break
+# Inputs:  -
+# Outputs: read by storylines.py
+# Spec:    generator/specs/storylines.md
+
+name: low_block_resistance
+summary: The away side sits deeper all match, presses less high and breaks quickly when it wins the ball.
+team: away
+starts: {minute: 0}
+ends: {minute: full_time}
+ramp_min: 0
+effects:
+  style: {line_height: -0.10, press_height: -0.10, counter_attack: 0.10}
+answer_key:
+  signals: [counter_share, shots_per_5min_up]
+  detect_within_min: 30

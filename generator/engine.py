@@ -21,6 +21,7 @@ import movement
 import outcomes
 import pitch
 import set_pieces
+import storylines as storyline_rules
 import world
 from state import Body, Flight, MatchResult, Restart
 
@@ -71,6 +72,7 @@ class Match:
         self.sub_windows = {s: discipline.plan_windows(self.rng["discipline"]) for s in ("home", "away")}
         self.yellows: set[str] = set()
         self.reds = {"home": 0, "away": 0}
+        self.director = storyline_rules.Director(self, storylines, self.rng["storylines"])
         self.wet = {"none": 0, "light": 1, "heavy": 2}[self.conditions["precipitation"]]
         self.windy = self.conditions["wind_ms"] > config.WINDY_MS
         self.heat = config.HEAT_DRAIN if self.conditions["temperature_c"] > config.HEAT_C else 1.0
@@ -201,15 +203,18 @@ class Match:
                 st["press_height"] -= 0.15
                 st["line_height"] -= 0.10
                 st["directness"] += 0.10
+            for trait, delta in self.director.style_deltas(self, side).items():   # storylines.md §2
+                st[trait] += delta
             self._style[side] = {k: min(max(v, 0.0), 1.0) for k, v in st.items()}
 
     def shot_appetite(self, side: str) -> float:
         diff = self.score[side] - self.score[self.other(side)]
+        base = 1.0
         if diff < 0 and self.minute() >= 60:
-            return 1.15
-        if diff > 0 and self.minute() >= 75:
-            return 0.9
-        return 1.0
+            base = 1.15
+        elif diff > 0 and self.minute() >= 75:
+            base = 0.9
+        return base * self.director.multiplier(self, side, "shot_appetite")
 
     # --- events -----------------------------------------------------------------------------------------------
 
@@ -876,6 +881,7 @@ class Match:
             self.offside_line[side] = max(xs[1] if len(xs) > 1 else 50.0, 50.0)
 
     def tick(self) -> None:
+        self.director.update(self)
         self._update_style()
         self._update_lines()
         if self.mode == "dead" and self.restart is not None and self.period_ms >= self.restart.at_period_ms:
@@ -884,7 +890,8 @@ class Match:
             self._pick_chasers()
         targets = self._targets()
         for b, (tx, ty), sprint in targets:
-            movement.step_body(b, tx, ty, sprint, self.rng["movement"], self.heat)
+            drain = self.heat * self.director.multiplier(self, b.side, "stamina_drain")
+            movement.step_body(b, tx, ty, sprint, self.rng["movement"], drain)
         px, py, pz = self.ball_x, self.ball_y, self.ball_z
         if self.mode == "held":
             self.ball_x, self.ball_y = movement.held_ball(self.carrier, self.east(self.carrier.side))
@@ -983,6 +990,7 @@ class Match:
                 "possession": round(self.live_steps[s] / live, 3),
             }
         out["scorers"] = [e["player_id"] for e in ev if e["type"] == "Shot" and e["shot_outcome"] == "goal"]
+        out["storylines"] = self.director.answer_keys(self)
         out["players"] = {b.pid: {"top_kmh": round(b.top_seen * 3.6, 1), "dist_m": round(b.dist),
                                   "started": b.pid in self.starters, "finished": b.on}
                           for s in ("home", "away") for b in self.bodies[s]}
