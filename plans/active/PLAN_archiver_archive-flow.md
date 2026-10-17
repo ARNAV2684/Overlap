@@ -9,8 +9,8 @@
 | Collaborators and responsibilities | Pranav helps Arnav (registry: "Arnav (Pranav helping)") |
 | Review coordinator | Arnav |
 | Affected component owners | Azeem (producer: `generator/live.py`, recorded-match format); Vedant (consumer: replay page/route reads the stored match); stats engine (unassigned, Arnav decides): its panels are archived too |
-| Proposal version and date | v1.1 · 17 Oct 2026 (D-01 to D-03 and Cosmos billing decided) |
-| Status | In progress: A1 (go from Arnav, 17 Oct) |
+| Proposal version and date | v1.2 · 17 Oct 2026 (A2 results recorded) |
+| Status | A1 merged (#33); A2 done locally, in review; A3 next with the screen flow's Azure pass |
 | Plan tier and file | Full · `plans/active/PLAN_archiver_archive-flow.md` |
 | Repository | [ARNAV2684/Overlap](https://github.com/ARNAV2684/Overlap) |
 | Reviewed branch and commit | main · d0cf75d (screen relay PR #32 open) |
@@ -130,15 +130,15 @@ generator live ─▶ match-events  (setup, event, stats) ──┐
 |---|---|---|---|---|
 | `archiver/specs/storage.md` | Modify | Full storage spec | This plan | Arnav · Pranav |
 | `CONTRACTS.md` | Modify (hot) | §4.1 stored match; §9 tick | — | Arnav · Vedant, Azeem |
-| `archiver/consumer.py` | Modify | Archiver core: route, dedupe, per-match state (no I/O) | `storage.md` | Arnav |
-| `archiver/event_store.py` | Modify | Cosmos `matches` and `events` | `storage.md` | Arnav |
-| `archiver/tracking_chunks.py` | Modify | Blob per-minute files (staged blocks) | `storage.md` | Arnav |
+| `archiver/consumer.py` | Modify | Archiver core: check, group by match, route to the stores (no I/O) | `storage.md` | Arnav |
+| `archiver/event_store.py` | Modify | Cosmos `matches`, `events`, `stats` (write and read back) | `storage.md` | Arnav |
+| `archiver/tracking_chunks.py` | Modify | Blob per-minute files (staged blocks, committed after every batch) | `storage.md` | Arnav |
 | `archiver/reader.py` | Add | Rebuild a stored match in contract shapes | `storage.md` | Arnav |
 | `archiver/main.py` | Modify | Local runner (SDK, consumer group `archiver`, checkpoints in Azurite) | `storage.md` | Arnav |
-| `archiver/pyproject.toml`, `archiver/.gitignore`, `archiver/tests/` | Add | Project, unit tests, full-match round trip | `storage.md` | Arnav |
+| `archiver/pyproject.toml`, `archiver/.gitignore`, `archiver/tests/` | Add | Project, unit tests, round-trip check `tests/check_archive.py` | `storage.md` | Arnav |
 | `archiver/README.md` | Modify | How to run and read back | — | Arnav |
 | `functions/function_app.py`, `functions/requirements.txt` | Modify | `archive_events`, `archive_tracking` triggers using the archiver core | `storage.md` | Arnav |
-| `infra/specs/local-development.md` | Modify | Archiver in the run order; Blob container | — | Arnav |
+| `infra/specs/local-development.md`, `infra/local/env.example` | Modify | Archiver in the run order and settings; Blob container | — | Arnav |
 | `plans/active/PLAN_archiver_archive-flow.md` | Add | This plan | — | Arnav |
 | A3 (with screen S4): `infra/modules/cosmos.bicep`, `storage.bicep`, `identity.bicep` | Modify | Containers `matches`, `events`, `stats`; Blob `tracking`; roles | `infra/specs/resources.md` | Arnav · Pranav |
 
@@ -212,6 +212,8 @@ Scanned at `d0cf75d` on 2026-10-17. Sources checked: plans ✓ · PRs ✓ (#32 o
 | R-01 | Azurite or Azure Blob handles staged blocks differently | Lost or invalid minute files | Arnav | Unit + round-trip tests on both | A2/A3 |
 | R-02 | Vedant needs a different stored shape for replay | Rework | Arnav, Vedant | Agree in A1 before code | A2 |
 | R-03 | Relay and archiver compete for the emulator's throughput | Throttling at 20× | Arnav | Measure in AC-04 | A2 |
+| R-04 | The Function app imports the archiver from `../archiver`; a deployed bundle only contains `functions/` | Archive triggers fail to load on Azure | Arnav | Copy `archiver/*.py` into the bundle at build time (A3 deploy step) | A3 |
+| R-05 | The Functions host itself (Event Hubs trigger metadata, retry) is untested locally: Core Tools not installed | Trigger differences found only on Azure | Arnav | Same core is tested through `main.py`; first host run in A3/S4 | A3 |
 
 **Decisions (Arnav, 17 Oct):** D-01 stat panels in a separate `stats` container; D-02 retention until 10 Nov + 7 days;
 D-03 events stored unchanged with `id` = `event_id`; Cosmos on the free tier with shared database throughput.
@@ -236,9 +238,22 @@ D-03 events stored unchanged with `id` = `event_id`; Cosmos on the free tier wit
 |---|---|---|---|---|
 | Arnav | v1 | — | Pending | — |
 
-**Implementation readiness:** ready for go on A1; A2 after A1 is agreed and #32 merged.
-**Next action and owner:** D-01 to D-03 and go · Arnav.
+**Implementation readiness:** A1 merged (#33); A2 built and verified locally (this PR).
+**Next action and owner:** review and merge the A2 PR; then A3 with the screen flow's Azure pass · Arnav.
 
 ### Handover after implementation
 
-Pending implementation.
+**A2 (17 Oct), branch `archiver/archive-flow`.** Built: core (`consumer.py`), Cosmos stores (`event_store.py`), Blob
+minute files (`tracking_chunks.py`), reader (`reader.py`), local runner (`main.py`), Function triggers
+`archive_events` / `archive_tracking`, unit tests and the round-trip check.
+
+| AC | Result | Evidence |
+|---|---|---|
+| AC-01 | Spec and §4.1 merged in #33 at `078e1b1`; its last amendment (`92c3e8f`: commit after every batch, no `tracking_minutes`) missed that merge and comes in with this PR | #33, this PR |
+| AC-02 | Passed. SYN-0505 (seed 505, 20×): setup, 2,301 events, 30,302 frames read back identical; status finished; score 3–0 | `archiver/tests/check_archive.py SYN-0505` |
+| AC-03 | Passed. Archiver stopped hard mid-match and restarted; it resumed from its checkpoints and the read-back had nothing missing or repeated. After a hard stop the new process waits about 2–2.5 min for the old partition ownership to expire before reading `match-events`, then catches up | Same run as AC-02 |
+| AC-04 | Passed. Relay and archiver ran together: relay check got 8,377 envelopes, every event and frame, score 3–0 | `functions/tests/e2e_local.py --seed 505 --match 505` |
+| AC-05 | Passed. 7 archiver tests (2 against Azurite and the Cosmos emulator); relay's 17 tests still pass; ruff clean | `uv run pytest` |
+| AC-06 | Pending (A3) | — |
+
+Open for A3: R-04 (copy `archiver/*.py` into the Functions bundle) and R-05 (first Functions host run).
