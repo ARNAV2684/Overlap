@@ -16,6 +16,7 @@ import random
 
 import config
 import decisions
+import discipline
 import movement
 import outcomes
 import pitch
@@ -58,6 +59,14 @@ class Match:
         fill = self.conditions["attendance"] / self.club["home"].venue.get("capacity", config.DEFAULT_CAPACITY)
         for b in self.bodies["home"]:
             b.bonus["composure"] = config.HOME_COMPOSURE * min(fill, 1.0)
+        self.crowd_fill = min(fill, 1.0)
+        self.bench = {s: [self.club[s].player(p["shirt"]) for p in setup["teams"][s]["bench"]]
+                      for s in ("home", "away")}
+        self.used_bench: dict[str, set[int]] = {"home": set(), "away": set()}
+        self.subs_used = {"home": 0, "away": 0}
+        self.sub_windows = {s: discipline.plan_windows(self.rng["discipline"]) for s in ("home", "away")}
+        self.yellows: set[str] = set()
+        self.reds = {"home": 0, "away": 0}
         self.wet = {"none": 0, "light": 1, "heavy": 2}[self.conditions["precipitation"]]
         self.windy = self.conditions["wind_ms"] > config.WINDY_MS
         self.heat = config.HEAT_DRAIN if self.conditions["temperature_c"] > config.HEAT_C else 1.0
@@ -182,6 +191,11 @@ class Match:
             elif diff > 0 and minute >= 75:
                 for key in ("tempo", "line_height", "press_height"):
                     st[key] -= 0.10
+            for _ in range(self.reds[side]):          # set-pieces-and-discipline.md §3
+                st["press_intensity"] -= 0.15
+                st["press_height"] -= 0.15
+                st["line_height"] -= 0.10
+                st["directness"] += 0.10
             self._style[side] = {k: min(max(v, 0.0), 1.0) for k, v in st.items()}
 
     def shot_appetite(self, side: str) -> float:
@@ -359,6 +373,17 @@ class Match:
                 won = r.random() < outcomes.aerial_win(receiver, rival)
                 result, data = "aerial", {"attacker": receiver, "defender": rival, "attacker_won": won}
                 target = receiver if won else rival
+        if result in ("receive", "aerial") and not forced and \
+                discipline.offside(self, passer, receiver, action, self.rng["discipline"]):
+            endx, endy = self.tp(side, ex, ey)
+            self.emit("Pass", passer, outcome="fail", end_x=endx, end_y=endy,
+                      body_part=body or outcomes.body_part(passer, weak), under_pressure=pressured,
+                      qualifiers=quals, ball_speed_kmh=round(speed, 1))
+            self.emit("Offside", receiver)
+            ox, oy = receiver.x, receiver.y
+            self.schedule_restart("free_kick_indirect", self.other(side), ox, oy,
+                                  self.rng["restarts"].uniform(*config.DEAD_TIME_S["free_kick"]))
+            return
         success = result == "receive" or (result == "aerial" and data["attacker_won"])
         endx, endy = self.tp(side, ex, ey)
         ev = self.emit("Pass", passer, outcome="success" if success else "fail",
@@ -403,10 +428,11 @@ class Match:
                            situation=self.situation(b.side) if open_play else "open_play",
                            assist=self._assist_type(b.side, b), defenders_in_way=defenders, keeper_off_line_m=off)
 
-    def do_shot(self, b: Body, header: bool = False) -> None:
+    def do_shot(self, b: Body, header: bool = False, wall: int = 0) -> None:
         r = self.rng["outcomes"]
         side, east = b.side, self.east(b.side)
         tx, ty, defenders, off = self._shot_inputs(b)
+        defenders += wall
         situation = self.situation(side)
         weak = not header and outcomes.uses_weak_foot(b, r, 0.20)
         assist = self._assist_type(side, b)
@@ -478,6 +504,10 @@ class Match:
     def do_take_on(self, b: Body) -> None:
         r = self.rng["outcomes"]
         opp = min(self.on_pitch(self.other(b.side)), key=lambda o: (math.hypot(o.x - b.x, o.y - b.y), o.slot_index))
+        if self.rng["discipline"].random() < discipline.foul_chance(self, opp, b, "take_on"):
+            self.emit("TakeOn", b, outcome="success", under_pressure=True)
+            discipline.commit_foul(self, opp, b)
+            return
         if r.random() < outcomes.take_on_success(b, opp):
             self.emit("TakeOn", b, outcome="success", under_pressure=True)
             opp.stunned_until = self.match_ms + 1500
@@ -526,6 +556,7 @@ class Match:
         b = self.carrier
         now = self.match_ms
         r = self.rng["outcomes"]
+        self.pressers = [d for d in self.pressers if d.on]
         for d in self.pressers:
             dist = math.hypot(d.x - b.x, d.y - b.y)
             if dist <= config.PRESSURE_RADIUS_M and now - d.last_pressure_ms >= config.PRESSURE_REPEAT_MS:
@@ -540,6 +571,9 @@ class Match:
             rate = config.TACKLE_RATE_PER_STEP * d.attr("tackling") / 70 * config.PRESS_ROLE.get(d.role, 1.0)
             if r.random() >= rate:
                 continue
+            if self.rng["discipline"].random() < discipline.foul_chance(self, d, b, "tackle"):
+                discipline.commit_foul(self, d, b)
+                return
             if r.random() < outcomes.tackle_success(d, b):
                 self._won_tackle(d, b)
             else:
@@ -565,6 +599,14 @@ class Match:
             self.give_ball(f.target)
         elif res == "aerial":
             att, dfd, won = f.data["attacker"], f.data["defender"], f.data["attacker_won"]
+            if not (att.on and dfd.on):
+                self.mode, self.flight = "loose", None
+                return
+            if self.rng["discipline"].random() < discipline.foul_chance(self, dfd, att, "aerial"):
+                self.emit("Aerial", att, outcome="success")
+                self.emit("Aerial", dfd, outcome="fail")
+                discipline.commit_foul(self, dfd, att)
+                return
             self.emit("Aerial", att if won else dfd, outcome="success")
             self.emit("Aerial", dfd if won else att, outcome="fail")
             if won:
@@ -629,6 +671,7 @@ class Match:
 
     def chase(self) -> None:
         """After this step's movement, the first chaser to reach the loose ball wins it."""
+        self.chasers = [b for b in self.chasers if b.on]
         if not self.chasers:
             self._pick_chasers()
         winner = min(self.chasers, key=lambda b: (math.hypot(b.x - self.ball_x, b.y - self.ball_y),
@@ -643,11 +686,23 @@ class Match:
     def schedule_restart(self, kind: str, side: str, x: float, y: float, dead_s: float) -> None:
         self.mode, self.carrier, self.flight, self.carrying, self.pressers = "dead", None, None, False, []
         self.ball_x, self.ball_y, self.ball_z = x, y, 0.0
+        discipline.maybe_substitute(self)
         self.restart = Restart(kind, side, x, y, self.period_ms + int(dead_s * 1000))
         self.restart_taker = set_pieces.taker(self, self.restart)
         self.corner_box = set_pieces.corner_attackers(self, side) if kind == "corner" else []
         if self.restart_taker in self.corner_box:
             self.corner_box.remove(self.restart_taker)
+
+    def substitute(self, off: Body, on_player) -> Body:
+        side = off.side
+        pid = f"{self.team_id[side]}-{on_player.shirt:02d}"
+        self.emit("Substitution", off, player_on_id=pid)
+        off.on = False
+        new = Body(pid, side, off.slot, off.slot_index, on_player, off.x, off.y)
+        self.bodies[side].append(new)
+        self.used_bench[side].add(on_player.shirt)
+        self.subs_used[side] += 1
+        return new
 
     def take_restart(self) -> None:
         rs, taker = self.restart, self.restart_taker
@@ -678,12 +733,53 @@ class Match:
                 rcv = max(aerial, key=lambda b: (b.attr("aerial") + (15 if b.role == "target_man" else 0),
                                                  -b.slot_index))
                 self.do_pass(taker, "long_pass", rcv, pitch.to_team(rcv.x, rcv.y, east), qualifiers=["goal_kick"])
+        elif rs.kind == "penalty":
+            self.carrier = taker
+            taker.x, taker.y = rs.x, rs.y
+            self.do_shot(taker)
+            self.set_piece = None                # a rebound is open play
+        elif rs.kind == "free_kick":
+            self._take_free_kick(rs, taker, team)
+        elif rs.kind == "free_kick_indirect":
+            near = [b for b in team if not b.is_gk] or team
+            rcv = min(near, key=lambda b: (math.hypot(b.x - rs.x, b.y - rs.y), b.slot_index))
+            self.do_pass(taker, "short_pass", rcv, pitch.to_team(rcv.x, rcv.y, east))
         elif rs.kind == "corner":
             self.emit("Corner", taker)
             targets = self.corner_box or team
             rcv = targets[0]
             self.do_pass(taker, "cross", rcv, pitch.to_team(rcv.x, rcv.y, east), qualifiers=["corner"])
         self.last_touch = rs.side
+
+    def _take_free_kick(self, rs: Restart, taker: Body, team: list[Body]) -> None:
+        """Direct shot, cross into the box, or a short pass (set-pieces-and-discipline.md §1)."""
+        r = self.rng["restarts"]
+        east = self.east(rs.side)
+        tx, ty = pitch.to_team(rs.x, rs.y, east)
+        focus = self.style(rs.side)["set_piece_focus"]
+        dist = pitch.goal_distance(tx, ty)
+        if dist <= config.FREE_KICK_DIRECT_M and abs(ty - pitch.GOAL_Y) < 15 and \
+                r.random() < config.FREE_KICK_DIRECT_SHARE * (0.5 + focus):
+            self.carrier = taker
+            taker.x, taker.y = rs.x, rs.y
+            self.do_shot(taker, wall=config.FREE_KICK_WALL)
+            return
+        if tx > pitch.LENGTH * 0.66 and r.random() < focus:
+            box = set_pieces.corner_attackers(self, rs.side)
+            rcv = next((b for b in box if b is not taker), None)
+            if rcv is not None:
+                self.do_pass(taker, "cross", rcv, pitch.to_team(rcv.x, rcv.y, east), qualifiers=["free_kick"])
+                return
+        long_ball = tx < pitch.LENGTH / 2 and r.random() < self.style(rs.side)["directness"] * 0.6
+        cands = decisions.pass_candidates(self, taker, "long_pass" if long_ball else "short_pass")
+        if not cands:
+            cands = decisions.pass_candidates(self, taker, "short_pass")
+        if cands:
+            rcv, point = decisions.pick_target(r, taker, cands)
+            self.do_pass(taker, "long_pass" if long_ball and cands else "short_pass", rcv, point,
+                         qualifiers=["free_kick"])
+        else:
+            self.give_ball(taker)
 
     # --- the loop (engine.md §2) ------------------------------------------------------------------------------
 

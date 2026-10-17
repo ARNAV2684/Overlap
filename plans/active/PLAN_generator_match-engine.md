@@ -10,7 +10,7 @@
 | Review coordinator | Arnav |
 | Affected component owners | Consumers of events and tracking: stats engine, screen relay, archiver (all unassigned, Arnav decides); web app (Vedant). Arnav and Pranav (Event Hubs) |
 | Proposal version and date | v0.2 · 2026-10-16 |
-| Status | In progress (M1 done: specs merged in PR #15; M2 on `generator/match-engine`, go from Azeem 17 Oct) |
+| Status | In progress (M1 merged in PR #15; M2 in PR #20; M4 on `generator/engine-discipline`; M3, M5 next) |
 | Plan tier and file | Full · `plans/active/PLAN_generator_match-engine.md` |
 | Repository | [ARNAV2684/Overlap](https://github.com/ARNAV2684/Overlap) |
 | Reviewed branch and commit | main · 75b7cba (PR #14, world traits, open and green) |
@@ -279,7 +279,20 @@ stats engine's metrics; the real connection is proven only when G5 streams into 
 
 ### Handover after implementation
 
-**M2 — a match runs** (branch `generator/match-engine`). M3–M5 not started.
+**M4 — set pieces and discipline** (branch `generator/engine-discipline`, stacked on live mode #21; done before
+M3 so tuning works on complete matches).
+
+- **AC-07:** passed. Penalties use `set_pieces.penalties` (test with a hand-placed foul in the box); corners and
+  free kicks use their lists.
+- Fouls (with advantage), yellow cards, second yellows, straight reds (denying a clear chance: the attacker within
+  20 m, central, no other outfield defender goal-side), five substitutes in three windows, offside on through balls and
+  long passes, direct and crossed free kicks with a wall, penalties. A sent-off keeper is replaced by a substitute
+  keeper (if a substitution is left) or by an outfield player. Matches now include all 18 event types.
+- Measured over seeds 1–10: fouls 16.8 per match (target 18–28, low), yellows 4.2 (3–5), reds 0.2, penalties 0.6
+  (high: Skyhaven spends long spells in Amberholt's box, the M3 gap), offsides 6.1 (2–6), substitutions 10,
+  shots 27.3, goals 3.1. Contract check passed for seeds 1–5 with tracking; `pytest` 75 passed.
+
+**M2 — a match runs** (branch `generator/match-engine`, PR #20). M3 and M5 not started.
 
 - Acceptance results:
   - **AC-02:** passed. Full Skyhaven vs Amberholt matches produce a setup, about 2,400 events and about 30,000 frames
