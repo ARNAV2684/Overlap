@@ -5,7 +5,7 @@
 | Change | Restore and package the original single-match browser demo at 20× |
 | Why | Make the existing local event timeline and pitch reproducible |
 | Author / owner | Pranav |
-| Status | In progress; local validation passed, PR #6 open for review |
+| Status | Done (merged in PR #6) |
 | Reviewed commit | main · b8d449d1bbd6c3f432e98ea0c9e895087e632bd0 |
 | Branch | `mock/single-match-demo` |
 | Governing spec | Merged `CONTRACTS.md` §2–§4 and §7; existing provisional mock web behavior documented in `mock/README.md`. This packages an existing temporary preview, not the production web app or screen relay. |

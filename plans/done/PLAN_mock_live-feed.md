@@ -5,7 +5,7 @@
 | Change | Add `mock/`: a temporary, seeded mock that streams `CONTRACTS.md` v0 setup, events and 5 Hz tracking to Event Hubs (emulator or Azure), a local Web PubSub stand-in, stdout and recorded files |
 | Why | The Event Hubs layer and the web app need live data before the generator is ready |
 | Author / owner | Arnav |
-| Status | In progress (PR open) |
+| Status | Done (merged in PR #4) |
 | Reviewed commit | main · f49c20b |
 | Branch | `mock/live-feed` |
 | Governing spec | `CONTRACTS.md` v0 §1–§4 and §7 (merged). `generator/specs/live-and-batch.md` is not agreed yet, so the mock's choices for things it doesn't settle are marked provisional in `mock/README.md`. |

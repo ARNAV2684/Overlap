@@ -5,7 +5,7 @@
 | Change | Set every reference player's `preferred_foot` from public player profiles instead of estimates; 10 players change |
 | Why | About half the feet in `reference_clubs.yaml` were guesses. Foot drives which side a player cuts in from and which foot he shoots with, so wrong feet weaken the reference clubs as an answer key |
 | Author / owner | Azeem |
-| Status | In progress |
+| Status | Done (merged in PR #12) |
 | Reviewed commit | main · 3463497 |
 | Branch | `generator/reference-feet` |
 | Governing spec | `generator/specs/world.md` §3 (hidden traits) and §5, agreed in PR #8. No spec change: feet stay hand-set from public knowledge of each player |

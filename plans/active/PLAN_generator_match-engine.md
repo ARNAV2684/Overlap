@@ -10,7 +10,7 @@
 | Review coordinator | Arnav |
 | Affected component owners | Consumers of events and tracking: stats engine, screen relay, archiver (all unassigned, Arnav decides); web app (Vedant). Arnav and Pranav (Event Hubs) |
 | Proposal version and date | v0.2 · 2026-10-16 |
-| Status | In progress (M1 merged in PR #15; M2 in PR #20; M4 on `generator/engine-discipline`; M3, M5 next) |
+| Status | In progress (M1 merged in PR #15; M2 in PR #20; M4 in PR #22; M3 part 1 in PR #23; M3 part 2 and M5 next) |
 | Plan tier and file | Full · `plans/active/PLAN_generator_match-engine.md` |
 | Repository | [ARNAV2684/Overlap](https://github.com/ARNAV2684/Overlap) |
 | Reviewed branch and commit | main · 75b7cba (PR #14, world traits, open and green) |
