@@ -1,7 +1,7 @@
 # World spec
 
 > **Status: agreed.** Agreed in PR #8 (2026-10-14). Plan:
-> [`PLAN_generator_world-builder`](../../plans/active/PLAN_generator_world-builder.md). Reference profiles rule:
+> [`PLAN_generator_world-builder`](../../plans/done/PLAN_generator_world-builder.md). Reference profiles rule:
 > [`CONTRIBUTING.md`](../../CONTRIBUTING.md) (PR #7). Kept in step with `world.py`, `names.py` and `kits.py`.
 
 Decides every club, player and team trait the simulation uses. Every name, crest and venue is invented. A few clubs
@@ -106,7 +106,8 @@ primary position, otherwise the next free number from 12 up:
 
 **Starting XI and bench.** Each club has a `default_xi`. A match uses it unless a player is unavailable (suspended,
 later injured); the replacement is the best-rated available player whose primary or secondary position matches the
-slot. The bench is **9** players, including exactly one goalkeeper, picked as the best remaining player for each of
+slot. If nobody available plays the slot, the best available outfield player from the same line (defence, midfield,
+attack) plays there out of position, then any outfield player; a season never stops for want of a player. The bench is **9** players, including exactly one goalkeeper, picked as the best remaining player for each of
 GK, CB, full-back, DM/CM, CM/AM, winger, ST (by primary position), then filled to nine with the best remaining
 outfield players. A group with nobody left is skipped. "Best" means highest `overall`, then lowest shirt number. A
 setup lineup is 11 players, goalkeeper first, in the formation's slot order. A league club's `default_xi` is the best
