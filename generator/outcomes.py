@@ -150,17 +150,16 @@ def resolve_shot(rng: random.Random, value: float, shooter: Body, keeper: Body |
     """Blocked, off target (missed or woodwork), saved or a goal; plus speed and goal-mouth spot."""
     blocked = defenders_in_way and rng.random() < 1 - (1 - config.BLOCK_PER_DEFENDER) ** defenders_in_way
     p_block = 1 - (1 - config.BLOCK_PER_DEFENDER) ** defenders_in_way if defenders_in_way else 0.0
-    p_on_avg = min(max(config.ON_TARGET_BASE + config.ON_TARGET_XG_SLOPE * value, config.ON_TARGET_RANGE[0]),
-                   config.ON_TARGET_RANGE[1])
-    p_on = config.ON_TARGET_BASE + config.ON_TARGET_XG_SLOPE * value
-    p_on += config.ON_TARGET_PER_FINISHING * (shooter.attr("finishing") - 70)
-    if pressured:
-        p_on -= 0.05
+    p_ref = config.ON_TARGET_BASE + config.ON_TARGET_XG_SLOPE * value       # the same shot, struck in the same
+    if pressured:                                                             # conditions, by an average finisher
+        p_ref -= 0.05
     if weak:
-        p_on -= weak_penalty(shooter, config.WEAK_FOOT_SHOT_PENALTY)
+        p_ref -= weak_penalty(shooter, config.WEAK_FOOT_SHOT_PENALTY)
     if windy and distance_m > 20:
-        p_on -= 0.05
-    p_on *= shooter.fatigue()
+        p_ref -= 0.05
+    p_ref *= shooter.fatigue()
+    p_on = p_ref + config.ON_TARGET_PER_FINISHING * (shooter.attr("finishing") - config.FINISH_REF)
+    p_ref = min(max(p_ref, config.ON_TARGET_RANGE[0]), config.ON_TARGET_RANGE[1])
     p_on = min(max(p_on, config.ON_TARGET_RANGE[0]), config.ON_TARGET_RANGE[1])
     lo, hi = config.SHOT_SPEED_KMH["head" if header else "foot"]
     speed = rng.uniform(lo, hi) * (0.85 + 0.15 * shooter.attr("finishing") / 99)
@@ -176,11 +175,13 @@ def resolve_shot(rng: random.Random, value: float, shooter: Body, keeper: Body |
         else:
             y, z = rng.uniform(-20, 120), rng.uniform(2.5, 6.0)
         return {"outcome": "missed", "speed": round(speed, 1), "mouth_y": round(y, 1), "mouth_z": round(z, 2)}
-    # On target: goal or save. Divide by an average shooter's chance of hitting the target, so goals track xG for an
-    # average finisher against an average keeper, and finishing skill counts once on each step.
-    p_goal = min(config.GOAL_GIVEN_ON_TARGET_MAX, value / max(p_on_avg * (1 - p_block), 1e-3))
+    # On target: goal or save. Divide by an average finisher's chance of hitting the target with this shot in these
+    # conditions, so goals track xG for an average finisher against the league's typical keeper; finishing then counts
+    # once on each step, and the keeper once.
+    p_goal = min(config.GOAL_GIVEN_ON_TARGET_MAX, value / max(p_ref * (1 - p_block), 1e-3))
     gk = keeper.attr("goalkeeping") if keeper else 50
-    p_goal = logistic(logit(p_goal) + config.FINISH_LOGIT_PER_10 * (shooter.attr("finishing") - gk) / 10)
+    edge = (shooter.attr("finishing") - config.FINISH_REF) - (gk - config.KEEPER_REF)
+    p_goal = logistic(logit(p_goal) + config.FINISH_LOGIT_PER_10 * edge / 10)
     corner_bias = 0.5 + 0.4 * (shooter.attr("finishing") / 99)
     y = 50 + rng.choice([-1, 1]) * rng.uniform(0, 48) ** corner_bias * (48 ** (1 - corner_bias))
     z = rng.uniform(0.0, 2.3)

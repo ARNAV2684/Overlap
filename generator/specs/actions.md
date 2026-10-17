@@ -47,19 +47,21 @@ stream):
 (wide 0–18 and 82–100, half-space 18–35 and 65–82, central 35–65).
 
 **Base weights** (relative within a zone; an action that is impossible from where the player stands gets 0; the
-values tuned against [`CALIBRATION.md`](../../CALIBRATION.md) in M3):
+values tuned against [`CALIBRATION.md`](../../CALIBRATION.md) in M3 and M5):
 
 | Zone | short_pass | long_pass | through_ball | cross | cutback | switch | carry | take_on | shot | clearance | hold |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | Own third | 60 | 14 | 3 | 0 | 0 | 4 | 12 | 2 | 0 | 8 | 4 |
 | Middle third | 55 | 10 | 8 | 0 | 0 | 6 | 16 | 5 | 0.3 | 1 | 4 |
-| Final third, wide | 38 | 2 | 6 | 5 | 3 | 5 | 14 | 10 | 1 | 0 | 5 |
-| Final third, central | 40 | 1 | 11 | 0 | 0 | 2 | 12 | 8 | 10 | 0 | 4 |
+| Final third, wide | 38 | 2 | 6 | 5 | 3 | 5 | 14 | 10 | 0.5 | 0 | 5 |
+| Final third, central | 40 | 1 | 11 | 0 | 0 | 2 | 12 | 8 | 2 | 0 | 4 |
 | Box-depth | 24 | 0 | 6 | 4 | 6 | 0 | 6 | 8 | 0 | 0 | 3 |
 
 **Shot weight.** In the final third and box-depth, `shot` gets weight `S × xG / (K + xG)` plus the zone's base weight
-above, where xG is the shot's value from §4 if he shoots from here, `S` is the shot appetite (19) and `K` (0.25) sets
-how closely the choice follows chance quality. No shot below xG 0.02. The weight is then multiplied by
+above, where xG is the shot's value from §4 if he shoots from here, `S` is the shot appetite (33) and `K` (0.30) sets
+how closely the choice follows chance quality. The base weight outside the box is small, so most shots come from
+chances good enough to earn their weight: about a third of shots come from outside the box, as in the Premier
+League ([`CALIBRATION.md`](../../CALIBRATION.md)). No shot below xG 0.02. The weight is then multiplied by
 `0.2 + directness`, so direct sides shoot sooner and patient sides work the ball closer.
 
 **Attributes** (each factor is 1.0 for a rating of 70):
@@ -70,7 +72,7 @@ how closely the choice follows chance quality. No shot below xG 0.02. The weight
 | `through_ball`, `switch` | `(vision / 70)²` |
 | `long_pass` | `passing / 70` |
 | `carry` | `(dribbling + acceleration) / 140` |
-| `shot` | `finishing / 70`; from over 20 m also `× (finishing / 70)` |
+| `shot` | `(finishing / 70) ^ 0.25`, squared from over 20 m, so good finishers shoot a little more without taking every chance: a club's top shooter takes about a quarter to under a third of its shots |
 | `clearance` | `1.5 − composure / 140` |
 
 **Roles** ([`world.md`](world.md) §3) multiply the weights of the actions that define them:
@@ -157,8 +159,8 @@ weaker foot; a shooting study found weak-foot shots underperform xG. Both are ci
 
 | Action | Base | Main modifiers |
 |---|---|---|
-| `short_pass` | 0.96 | `passing`, pressure, distance, weak foot |
-| `long_pass` | 0.75 | `passing`, `vision`, distance, wind |
+| `short_pass` | 0.97 | `passing`, pressure, distance, weak foot |
+| `long_pass` | 0.78 | `passing`, `vision`, distance, wind |
 | `through_ball` | 0.50 | `vision`, `passing`, how tight the defensive line is |
 | `cross` | 0.24 (reaches a teammate) | `passing`, delivery foot, the target's `aerial` vs the defenders' |
 | `cutback` | 0.55 | `passing`, defenders near the six-yard box |
@@ -233,11 +235,15 @@ is shooting and who is in goal:
 
 1. **Blocked:** each defender in the way may block it (higher with more defenders and a slower shot).
 2. **On target or not:** probability from the shot's xG and difficulty, raised by `finishing` and lowered by
-   pressure, the weak foot, fatigue and wind. About a third of all shots are on target. Of off-target shots, a small
+   pressure, the weak foot, fatigue and wind. About 45–50 % of unblocked shots are on target, as in the Premier
+   League ([`CALIBRATION.md`](../../CALIBRATION.md)). Of off-target shots, a small
    share hit the **woodwork**.
-3. **Goal or save:** for a shot on target, `P(goal) = min(0.97, xG / P(on target))`, moved by the shooter's `finishing` against
-   the keeper's `goalkeeping` on the log-odds scale (each 10 points ≈ 0.15), so an elite finisher beats xG by
-   roughly 10–20 % over a season and a weak one falls short. A save emits a `Save` and may give a rebound (a loose
+3. **Goal or save:** for a shot on target, `P(goal) = min(0.97, xG / (P(on target) × P(not blocked)))`, where
+   P(on target) is an average finisher's chance with this shot in the same conditions (pressure, foot, wind,
+   fatigue). Then goals track xG for an average finisher (finishing 73) against the league's typical starting keeper
+   (goalkeeping 79), and a season's goals ÷ xG stays near 1. The shooter's `finishing` above or below 73, less the
+   keeper's `goalkeeping` above or below 79, moves P(goal) on the log-odds scale (each 10 points ≈ 0.06), so an
+   elite finisher beats xG by roughly 10–20 % over a season and a weak one falls short. A save emits a `Save` and may give a rebound (a loose
    ball), a corner or the keeper's possession.
 
 **Shot speed:** feet 70–120 km/h (more for power from distance, scaled by `finishing`), headers 40–75 km/h.

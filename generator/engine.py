@@ -62,9 +62,9 @@ class Match:
                 for i, p in enumerate(setup["teams"][side]["lineup"])
             ]
         fill = self.conditions["attendance"] / self.club["home"].venue.get("capacity", config.DEFAULT_CAPACITY)
-        for b in self.bodies["home"]:
-            b.bonus["composure"] = config.HOME_COMPOSURE * min(fill, 1.0)
         self.crowd_fill = min(fill, 1.0)
+        for b in self.bodies["home"]:
+            self._home_edge(b)
         self.bench = {s: [self.club[s].player(p["shirt"]) for p in setup["teams"][s]["bench"]]
                       for s in ("home", "away")}
         self.used_bench: dict[str, set[int]] = {"home": set(), "away": set()}
@@ -729,12 +729,19 @@ class Match:
         if self.restart_taker in self.corner_box:
             self.corner_box.remove(self.restart_taker)
 
+    def _home_edge(self, b: Body) -> None:
+        """Home advantage (engine.md §9): a small boost to a few ratings, scaled by how full the ground is."""
+        for key in config.HOME_EDGE_ATTRIBUTES:
+            b.bonus[key] = b.bonus.get(key, 0) + config.HOME_EDGE * self.crowd_fill
+
     def substitute(self, off: Body, on_player) -> Body:
         side = off.side
         pid = f"{self.team_id[side]}-{on_player.shirt:02d}"
         self.emit("Substitution", off, player_on_id=pid)
         off.on = False
         new = Body(pid, side, off.slot, off.slot_index, on_player, off.x, off.y)
+        if side == "home":
+            self._home_edge(new)
         self.bodies[side].append(new)
         self.used_bench[side].add(on_player.shirt)
         self.subs_used[side] += 1

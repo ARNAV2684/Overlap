@@ -286,6 +286,14 @@ def test_unavailable_player_is_replaced(clubs):
     assert lineup[-1]["pos"] == "ST"
 
 
+def test_a_missing_line_is_filled_out_of_position(league):
+    club = league["HLW"]                                     # 5-3-2: three central midfield slots
+    cms = frozenset(p.shirt for p in club.squad if p.plays("CM"))
+    lineup = world.pick_lineup(club, unavailable=cms)
+    assert len(lineup) == 11 and all(p.shirt not in cms for _, p in lineup)
+    assert [slot for slot, _ in lineup] == list(world.FORMATIONS[club.formation])
+
+
 def test_away_club_changes_kit_on_a_clash(clubs):
     lookalike = copy.deepcopy(DATA["clubs"][1])
     lookalike["colours"]["home"] = {"primary": "#127F7D", "secondary": "#F4F4F4"}  # close to CAL's teal
