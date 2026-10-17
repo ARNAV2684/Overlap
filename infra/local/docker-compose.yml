@@ -1,0 +1,45 @@
+# Local stand-ins for the Azure services Overlap uses. Development only.
+# Spec: infra/specs/local-development.md
+#
+# Microsoft's emulators only start once you have read and accepted their licence terms yourself:
+#   Event Hubs emulator: https://github.com/Azure/azure-event-hubs-emulator-installer
+#   Cosmos DB emulator:  https://learn.microsoft.com/azure/cosmos-db/emulator-linux
+# Then, from this folder (PowerShell: $env:ACCEPT_EULA = "Y"):
+#   ACCEPT_EULA=Y docker compose up -d
+# The Web PubSub stand-in runs on the host: see webpubsub_standin/README.md.
+#
+# Every port is bound to 127.0.0.1 only. Data is not persisted: `docker compose down` starts the next run clean.
+name: overlap-local
+
+services:
+  eventhubs:
+    image: mcr.microsoft.com/azure-messaging/eventhubs-emulator:latest
+    container_name: overlap-local-eventhubs
+    volumes:
+      - ./eventhubs-config.json:/Eventhubs_Emulator/ConfigFiles/Config.json:ro
+    ports:
+      - "127.0.0.1:5672:5672"   # AMQP: what the SDKs use
+      - "127.0.0.1:5300:5300"   # health check
+    environment:
+      BLOB_SERVER: azurite
+      METADATA_SERVER: azurite
+      ACCEPT_EULA: ${ACCEPT_EULA:-N}
+    depends_on:
+      - azurite
+
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite:latest
+    container_name: overlap-local-azurite
+    ports:
+      - "127.0.0.1:10000:10000"   # Blob: Functions checkpoints (AzureWebJobsStorage), later tracking chunks
+      - "127.0.0.1:10001:10001"   # Queue
+      - "127.0.0.1:10002:10002"   # Table
+
+  cosmos:
+    image: mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:vnext-preview
+    container_name: overlap-local-cosmos
+    ports:
+      - "127.0.0.1:8081:8081"   # NoSQL API (http://localhost:8081)
+      - "127.0.0.1:1234:1234"   # Data Explorer in the browser
+    environment:
+      ACCEPT_EULA: ${ACCEPT_EULA:-N}

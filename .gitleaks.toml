@@ -1,0 +1,9 @@
+# Secrets scan configuration (used by the "Secrets scan" check in .github/workflows/pr-checks.yml).
+# Keeps all of gitleaks' default rules. The only allowed value is Microsoft's public, documented Cosmos DB emulator
+# key, which works solely against the local emulator (infra/local/env.example). Never add a real key here.
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Cosmos DB emulator well-known key (public, local only)"
+regexes = ['''C2y6yDjf5/R\+ob0N8A7Cgv30VRDJIWEHLM\+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==''']
