@@ -109,7 +109,7 @@ _Answer:_
   the store (a new session), join the match group, then read the snapshot while holding back live messages in a buffer.
   Joining first means anything published after the join is buffered and anything before it is in the snapshot.
 - **Snapshot:** `GET /api/match/<id>/snapshot` with a 7 s timeout. The response is
-  `{ matchId, setup, status, envelopes, rejected: { count, samples } }`. Each envelope is validated; one bad envelope is
+  `{ match_id, setup, status, envelopes, rejected: { count, samples } }`. Each envelope is validated; one bad envelope is
   counted and skipped instead of discarding the whole catch-up.
 - **Merge:** snapshot entries (`received = null`) and buffered live entries are merged by `seq`; where a `seq` is in both,
   the live copy wins. They are then ingested in ascending `seq`. After the merge the buffer is released and later
