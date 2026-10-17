@@ -29,6 +29,14 @@
   answer keys stay in the generator's output files.
 - **Conflict scan:** No overlaps on 2026-10-17. Sources checked: plans ✓ (only this stack's plans touch `generator/`;
   `agents/specs/evaluation.md` is read, not changed) · PRs ✓ (#20–#24 are this stack) · branches ✓ · hot files ✓.
+  Re-checked for M2 at `main` 8fa24d4; the PR's scope report lists two overlaps, neither a conflict:
+
+  | Overlap | Resolution |
+  |---|---|
+  | PR #35 (Azeem) changes `config.py`, `engine.py` and other engine files | M2 stacks on #35's branch and merges after it |
+  | `PLAN_plans_housekeeping.md` (Arnav) lists this plan | Its status-line edit merged and is already in this branch; M2 updates that line |
+
+  Hot files: none.
 - **Done when (M1):** the spec answers every question and merges as agreed. **(M2):** a match with
   `late_pressure_surge` shows more home pressures and shots per 5 minutes after onset than before, over 20 seeds; every
   storyline file loads within its limits; answer keys are in `summary.json`; tests pass.
