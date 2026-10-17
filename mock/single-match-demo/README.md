@@ -8,6 +8,10 @@ Existing synthetic mock at 20× → local WebSocket :8787 → browser viewer :87
 
 This is a direct preview of the temporary mock. It does not read Event Hubs or implement the screen relay. The page labels its source explicitly.
 
+The viewer connects the way the real screen does (`CONTRACTS.md` §7): it calls `/negotiate`, opens the socket with the Web PubSub
+subprotocol `json.webpubsub.azure.v1` and joins `match-SYN-9001`. So it works against the mock's `--web` stand-in today
+and against `infra/local/webpubsub_standin/` fed by the screen relay later. It is retired once the web app's live screen works.
+
 ## Run locally
 
 Prerequisites: Python 3.12+, uv and a current browser. Initial dependency installation needs internet. The basic demo needs no Docker, Azure subscription or API key.
