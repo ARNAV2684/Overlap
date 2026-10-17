@@ -90,7 +90,7 @@ def cmd_season(args) -> int:
     version, clubs = _clubs()
     d = batch.play_run(clubs, season_id=args.season, seed=args.seed, repeat=args.repeat, home=args.home,
                        away=args.away, keep_tracking=args.keep_tracking, world_version=version,
-                       storylines=tuple(args.storyline or ()))
+                       storylines=tuple(args.storyline or ()), jobs=args.jobs)
     print(f"saved {d} (season seed {args.seed})")
     if args.report:
         print(f"report {realism_report.write(d)}")
@@ -192,6 +192,7 @@ def main(argv: list[str] | None = None) -> int:
     se.add_argument("--home", default="CAL")
     se.add_argument("--away", default="DTN")
     se.add_argument("--keep-tracking", action="store_true", help="also save tracking (about 13 MB a match)")
+    se.add_argument("--jobs", type=int, default=1, help="play in this many processes (same files as one)")
     se.add_argument("--report", action="store_true", help="write the realism report afterwards")
     se.add_argument("--storyline", action="append", help=STORYLINE_HELP)
     se.set_defaults(func=cmd_season)

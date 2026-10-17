@@ -133,11 +133,12 @@ def test_storylines_never_write_events_of_their_own(clubs):
 def test_star_night_lifts_one_players_form_only(clubs):
     m = engine.Match(clubs["CAL"], clubs["DTN"], match_id="SYN-0070", seed=70, kickoff_utc="2026-10-24T19:00:00Z",
                      storylines=("star_night",))
+    before = {b.pid: b.bonus.get("finishing", 0) for b in m.on_pitch("home")}    # the home edge is already there
     m.director.update(m)
     nine = next(b for b in m.on_pitch("home") if b.player.shirt == 9)
     others = [b for b in m.on_pitch("home") if b is not nine]
-    assert nine.bonus.get("finishing") == 5
-    assert all(b.bonus.get("finishing", 0) == 0 for b in others)
+    assert nine.bonus.get("finishing") == pytest.approx(before[nine.pid] + 5)
+    assert all(b.bonus.get("finishing", 0) == before[b.pid] for b in others)
 
 
 def test_comeback_waits_for_a_side_to_trail(clubs):

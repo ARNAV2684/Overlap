@@ -30,9 +30,8 @@ speeds); half-time is replayed at the same speed-up (15 minutes ÷ speed, capped
 
 - Bodies are the JSON objects of [`CONTRACTS.md`](../../CONTRACTS.md) §2–§4, `content_type: application/json`.
 - The partition key keeps one match on one partition, so its messages stay in order.
-- Sending the setup on `match-events` with `kind=setup` is the mock's choice; `CONTRACTS.md` doesn't say where the
-  setup travels yet. This spec keeps it, and asks for it to be written into `CONTRACTS.md`
-  ([`PLAN_generator_live-mode`](../../plans/done/PLAN_generator_live-mode.md), decision L1).
+- The setup travels first on `match-events` with `kind=setup`, as [`CONTRACTS.md`](../../CONTRACTS.md) §1.4 now
+  records (decision L1 in [`PLAN_generator_live-mode`](../../plans/done/PLAN_generator_live-mode.md)).
 - **Batching:** messages due within the same 200 ms are sent together in one batch per hub, so a 5 Hz stream is
   about five sends a second per hub.
 - **Sign-in:** the Azure identity of whoever runs it (`DefaultAzureCredential`), or the local emulator's fixed
@@ -81,6 +80,9 @@ _Answer:_
   Fatigue, form and injuries do not carry over in v0.
 - **Storage:** `data/seasons/<season_id>/` (gitignored): the fixture list, one `summary.json` per match, all events,
   and the league table. Tracking is kept only when asked for (about 13 MB per match).
+- **Parallel runs:** `--jobs N` plays matches in N processes. A season plays one matchweek at a time, because
+  suspensions carry over between matchweeks; a repeat run plays all its matches at once. Every match has its own
+  seed, so the files are the same however many processes play them.
 - **Season history for Cosmos DB** (the expanded DFD's `season` container) is read from these files by a separate
   loader; who writes to Cosmos is decided outside this spec.
 
@@ -111,7 +113,7 @@ Run from `generator/` (`uv run python cli.py …`):
 | `world` | Builds and saves the world | `--season S1`, `--seed` |
 | `play` | Plays one match and records it | `--home CAL --away DTN`, `--match-id`, `--seed`, `--out` |
 | `live` | Plays and streams one or more matches | `--home`, `--away` (repeatable), `--speed 1|5|20`, `--hubs emulator|azure|off`, `--namespace` (from configuration), `--stdout`, `--record` |
-| `season` | Plays a full season, or a repeat run with `--repeat N` | `--season`, `--seed`, `--repeat`, `--keep-tracking` |
+| `season` | Plays a full season, or a repeat run with `--repeat N` | `--season`, `--seed`, `--repeat`, `--keep-tracking`, `--jobs`, `--report` |
 | `report` | Writes the realism report for a season or run | `--season` or `--run` |
 | `validate` | Plays matches and checks contracts, invariants and same-seed reproducibility | `--matches N`, `--seed` |
 

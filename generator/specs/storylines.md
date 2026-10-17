@@ -74,7 +74,7 @@ _Answer:_
 
 | Storyline | Team | When | Main effects | Good demo with |
 |---|---|---|---|---|
-| `late_pressure_surge` | home | 55' to full time | press +0.20, press height +0.15, counter-press +0.10, shots × 1.3 | Calverholme at home |
+| `late_pressure_surge` | home | 55' to full time | press +0.20, press height +0.15, counter-press +0.10, shots × 1.3 | A home side with room to press more, such as Wexmoor (press 0.55) or Hollowford (0.60); Calverholme already presses near the 1.0 ceiling |
 | `red_card` | away | 28'–42' window | fouls × 2.5, cards × 2.0 (a red becomes likely, never certain) | Dunmarrow away |
 | `comeback` | trailing | from 60' if trailing | directness +0.15, press +0.20, shots × 1.4 | Either |
 | `star_night` | a club id + player | whole match | `player_form` +5 for one player; shots × 1.2 for his team | Calverholme's striker |

@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 import collections
+import gzip
 import json
 
 import pytest
@@ -57,6 +58,19 @@ def test_repeat_run_files(run_dir):
     table = json.loads((run_dir / "table.json").read_text(encoding="utf-8"))
     assert sum(r["played"] for r in table) == 4
     assert table[0]["points"] >= table[1]["points"]
+
+
+def test_parallel_runs_write_the_same_files(run_dir, tmp_path):
+    _, loaded = world.load_reference_clubs()
+    clubs = {c.team_id: c for c in loaded}
+    parallel = batch.play_run(clubs, repeat=2, out_dir=tmp_path, world_version=2, jobs=2, log=lambda *_: None)
+    files = sorted(p.relative_to(run_dir) for p in run_dir.rglob("*") if p.is_file())
+    assert files == sorted(p.relative_to(parallel) for p in parallel.rglob("*") if p.is_file())
+    for f in files:
+        a, b = (run_dir / f).read_bytes(), (parallel / f).read_bytes()
+        if f.suffix == ".gz":                   # the gzip header carries the time it was written
+            a, b = gzip.decompress(a), gzip.decompress(b)
+        assert a == b, f
 
 
 def test_report_measures_sourced_rows_and_prints_the_answer_key(run_dir, tmp_path):

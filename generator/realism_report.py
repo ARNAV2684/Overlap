@@ -62,7 +62,8 @@ def _count(ev, typ, **kw) -> int:
 def per_match(matches: list[dict]) -> dict[str, list[float]]:
     """Each metric, one value per match."""
     m: dict[str, list[float]] = {k: [] for k in ("goals", "shots", "passes", "fouls_per_team", "yellows", "length_min",
-                                                 "top_kmh", "dist_km", "weak_pass_share")}
+                                                 "top_kmh", "dist_km", "weak_pass_share", "on_target", "blocked",
+                                                 "outside_box", "open_shots", "xg")}
     for x in matches:
         ev, sm = x["events"], x["summary"]
         passes = [e for e in ev if e["type"] == "Pass"]
@@ -77,7 +78,20 @@ def per_match(matches: list[dict]) -> dict[str, list[float]]:
         full = [p["dist_m"] / 1000 for p in players.values() if p["started"] and p["finished"]]
         m["dist_km"].append(st.median(full) if full else 0.0)
         m["weak_pass_share"].append(sum("weak_foot" in e.get("qualifiers", []) for e in passes) / max(len(passes), 1))
+        shots = [e for e in ev if e["type"] == "Shot"]
+        m["on_target"].append(sum(e["shot_outcome"] in ("goal", "saved") for e in shots))
+        m["blocked"].append(sum(e["shot_outcome"] == "blocked" for e in shots))
+        open_shots = [e for e in shots if e["situation"] != "penalty"]
+        m["open_shots"].append(len(open_shots))
+        m["outside_box"].append(sum(not _in_box(e) for e in open_shots))
+        m["xg"].append(sm["home"]["xg"] + sm["away"]["xg"])
     return m
+
+
+def _in_box(e: dict) -> bool:
+    """The shot's spot is inside the penalty area (event coordinates are in the shooting team's frame)."""
+    x, y = pitch.from_pct(e["x"], e["y"])
+    return x >= pitch.LENGTH - 16.5 and abs(y - pitch.GOAL_Y) <= 20.16
 
 
 def _shot(d: float, **kw) -> float:
@@ -104,6 +118,12 @@ def measure(rows: list[dict], matches: list[dict]) -> list[dict]:
             values = pm["shots"]
         elif name.startswith("Shot conversion"):
             measured = 100 * agg_goals / max(agg_shots, 1)
+        elif name.startswith("Shots on target"):
+            measured = 100 * sum(pm["on_target"]) / max(agg_shots - sum(pm["blocked"]), 1)
+        elif name.startswith("Shots from outside the box"):
+            measured = 100 * sum(pm["outside_box"]) / max(sum(pm["open_shots"]), 1)
+        elif name.startswith("Goals ÷ xG"):
+            measured = agg_goals / max(sum(pm["xg"]), 1e-9)
         elif name.startswith("Passes per match"):
             values = pm["passes"]
         elif name.startswith("Pass completion"):

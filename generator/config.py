@@ -42,7 +42,8 @@ WET_ACCURACY_LOGIT = -0.10          # pass and touch accuracy on a wet pitch (ju
 WET_ROLL_SPEED = 1.05               # ground passes travel faster on a wet pitch
 WINDY_MS = 8.0
 WIND_LONG_WEIGHT = 0.8              # long passes, switches, crosses less often in wind
-HOME_COMPOSURE = 2                  # home side's composure boost at a full house
+HOME_EDGE = 6                       # home side's boost to these ratings at a full house (scaled by attendance)
+HOME_EDGE_ATTRIBUTES = ("passing", "finishing", "tackling", "composure")
 
 # --- Pitch zones (actions.md §2), team-frame 0-100 ---------------------------------------------------------------
 
@@ -58,13 +59,15 @@ ACTIONS = ("short_pass", "long_pass", "through_ball", "cross", "cutback", "switc
 _BASE_ROWS = {
     "own":           (60,   14,    3,    0,    0,    4,     12,    2,    0,    8,    4),
     "middle":        (55,   10,    8,    0,    0,    6,     16,    5,    0.3,  1,    4),
-    "final_wide":    (38,    2,    6,    5,    3,    5,     14,   10,    1,    0,    5),
-    "final_central": (40,    1,   11,    0,    0,    2,     12,    8,   10,    0,    4),
+    "final_wide":    (38,    2,    6,    5,    3,    5,     14,   10,  0.5,    0,    5),
+    "final_central": (40,    1,   11,    0,    0,    2,     12,    8,    2,    0,    4),
     "box":           (24,    0,    6,    4,    6,    0,      6,    8,    0,    0,    3),
 }
 BASE_WEIGHTS = {zone: dict(zip(ACTIONS, row)) for zone, row in _BASE_ROWS.items()}
-SHOT_APPETITE = 19.0               # S in weight = S × xG / (SHOT_XG_HALF + xG); raises or lowers shots per match
-SHOT_XG_HALF = 0.25                 # larger: the decision to shoot follows chance quality more closely
+SHOT_APPETITE = 33.0               # S in weight = S × xG / (SHOT_XG_HALF + xG); raises or lowers shots per match
+SHOT_XG_HALF = 0.30                 # larger: the decision to shoot follows chance quality more closely
+SHOT_FINISHING_POWER = 0.25          # shot weight × (finishing / 70) ** this (squared from over 20 m), so good finishers
+                                     # shoot more without taking every chance
 SHOT_DIRECTNESS_BASE = 0.2          # shot weight × (this + directness): direct sides shoot sooner
 MIN_SHOT_XG = 0.02                   # never shoot below this
 COUNTER_WINDOW_MS = 12_000           # after a regain in own half...
@@ -111,7 +114,7 @@ PRESS_ROLE = {"ball_winner": 1.4, "pressing_forward": 1.4, "stopper": 1.3, "anch
 # --- Outcomes (actions.md §3) ------------------------------------------------------------------------------------
 
 BASE_SUCCESS = {
-    "short_pass": 0.96, "long_pass": 0.75, "through_ball": 0.50, "cross": 0.24, "cutback": 0.55, "switch": 0.70,
+    "short_pass": 0.97, "long_pass": 0.78, "through_ball": 0.50, "cross": 0.24, "cutback": 0.55, "switch": 0.70,
     "take_on": 0.48, "tackle": 0.55, "aerial": 0.50, "clearance": 0.35,
 }
 SKILL_LOGIT_PER = 15.0               # (rating - 70) / this, added to the log-odds
@@ -160,13 +163,15 @@ PENALTY_XG = 0.78                    # Opta
 BIG_SHOT_XG_MAX = 0.95
 HEADER_SHOT_SHARE = 0.55            # a won header in the box is a shot this often; otherwise it's controlled
 
-ON_TARGET_BASE = 0.28                # P(on target) = base + slope × xG, then skill, pressure, foot, fatigue
-ON_TARGET_XG_SLOPE = 0.9
+ON_TARGET_BASE = 0.43                # P(on target) = base + slope × xG, then skill, pressure, foot, fatigue;
+ON_TARGET_XG_SLOPE = 0.9             # about 45-50 % of unblocked shots are on target (CALIBRATION.md)
 ON_TARGET_RANGE = (0.12, 0.92)
-ON_TARGET_PER_FINISHING = 0.002     # per finishing point above 70
+ON_TARGET_PER_FINISHING = 0.001     # per finishing point above FINISH_REF
 BLOCK_PER_DEFENDER = 0.18
 WOODWORK_SHARE = 0.06                # of off-target shots
-FINISH_LOGIT_PER_10 = 0.08           # finishing vs goalkeeping, per 10 points (elite finisher beats xG by 10-20 %)
+FINISH_LOGIT_PER_10 = 0.06           # finishing vs goalkeeping, per 10 points (elite finisher beats xG by 10-20 %)
+FINISH_REF = 73                      # the average shooter's finishing...
+KEEPER_REF = 79                      # ...and the league's typical starting keeper: together they score at xG
 GOAL_GIVEN_ON_TARGET_MAX = 0.97
 SHOT_SPEED_KMH = {"foot": (70, 120), "head": (40, 75)}
 BLOCK_CORNER = 0.35                 # a blocked shot goes behind for a corner this often
@@ -215,9 +220,9 @@ FOUL_TACTICAL = 1.6                  # stopping a counter attack
 HOME_FOUL_LENIENCY = 0.10            # home fouls given this much less often at a full house
 ADVANTAGE_SHARE = 0.35               # fouls in the attacking 40 % where the referee plays on
 FOUL_IN_OWN_BOX = 0.03               # defenders are careful in their own box (a foul there is a penalty)
-CARD_ORDINARY_YELLOW = 0.09
+CARD_ORDINARY_YELLOW = 0.085
 CARD_ORDINARY_RED = 0.002
-CARD_TACTICAL_YELLOW = 0.40
+CARD_TACTICAL_YELLOW = 0.38
 CARD_BEHIND_YELLOW = 0.30
 CARD_BEHIND_RED = 0.02
 CARD_DOGSO_RED = 0.6                 # denying an obvious goal-scoring opportunity

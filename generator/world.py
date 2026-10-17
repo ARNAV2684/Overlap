@@ -661,14 +661,18 @@ def _best(candidates: list[Player]) -> Player | None:
 
 def pick_lineup(club: Club, unavailable: frozenset[int] = frozenset()) -> list[tuple[str, Player]]:
     """(slot, player) × 11 in slot order, goalkeeper first. Unavailable players are replaced by the best available
-    player who plays the slot (world.md §2)."""
+    player who plays the slot; failing that, by the best available outfield player from the same line, then any
+    outfield player, out of position (world.md §2)."""
     used: set[int] = set()
     lineup = []
     for slot, shirt in zip(FORMATIONS[club.formation], club.default_xi):
         if shirt not in unavailable and shirt not in used:
             p = club.player(shirt)
         else:
-            p = _best([q for q in club.squad if q.plays(slot) and q.shirt not in used | unavailable])
+            free = [q for q in club.squad if q.shirt not in used | unavailable]
+            p = (_best([q for q in free if q.plays(slot)])
+                 or _best([q for q in free if q.pos != "GK" and POSITION_GROUP[q.pos] == POSITION_GROUP[slot]])
+                 or (_best([q for q in free if q.pos != "GK"]) if slot != "GK" else None))
             if p is None:
                 raise WorldError(f"{club.team_id}: no available player for {slot}")
         used.add(p.shirt)
