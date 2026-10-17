@@ -6,7 +6,7 @@
 | Parent plan | [`PLAN_generator_world-builder.md`](PLAN_generator_world-builder.md) · v0.1 |
 | Milestone in parent plan | M3 — rest of the league ("Sprint plan ACs"); also answers risk R-03 again, after Arnav's review flag |
 | Author / owner | Azeem |
-| Status | In progress (Part A merged in PR #37; Part B in review in PR #38; go from Azeem on 2026-10-17) |
+| Status | Done (Part A merged in PR #37, Part B in PR #38, 2026-10-17) |
 | Reviewed branch and commit | main · 8fa24d4 |
 | Planned branch | Part A `generator/reference-rotation`; Part B `generator/world-builder-s3` |
 

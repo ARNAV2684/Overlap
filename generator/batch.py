@@ -1,12 +1,15 @@
 # batch.py — Batch mode
 #
 # Purpose: generate a full synthetic season (or a repeat run of one fixture) and save it
-# Inputs:  the world's clubs, a season id, a seed; optionally how many repeats and whether to keep tracking
+# Inputs:  the world's clubs, a season id, a seed; optionally how many repeats, whether to keep tracking and how many
+#          processes to play in
 # Outputs: data/seasons/<run>/: run.json, fixtures.json, table.json and one folder per match
 # Spec:    generator/specs/live-and-batch.md §3
 #
 # A season is a double round robin; a repeat run plays the same fixture again and again with different seeds (the
-# two-club check before the other clubs exist). Suspensions carry over between season matches only.
+# two-club check before the other clubs exist). Suspensions carry over between season matches only, so a season plays
+# one matchweek at a time; the matches inside a matchweek (or every match of a repeat run) can play in parallel.
+# Every match has its own seed, so the files are the same however many processes play them.
 
 from __future__ import annotations
 
@@ -14,6 +17,8 @@ import datetime as dt
 import hashlib
 import json
 import random
+from concurrent.futures import ProcessPoolExecutor
+from itertools import groupby
 from pathlib import Path
 
 import engine
@@ -78,10 +83,21 @@ def _table(clubs: dict, results: list[dict]) -> list[dict]:
     return sorted(rows.values(), key=lambda r: (-r["points"], -r["goal_difference"], -r["goals_for"], r["team_id"]))
 
 
+def _play_one(job: dict) -> dict:
+    """Play and save one match; return what the run needs afterwards (runs in a worker process)."""
+    r = engine.play(job["clubs"], job["home"], job["away"], match_id=job["match_id"], seed=job["seed"],
+                    kickoff_utc=kickoff(job["matchweek"]), season_id=job["season_id"], matchweek=job["matchweek"],
+                    keep_frames=job["keep_tracking"], unavailable=job["unavailable"], storylines=job["storylines"])
+    recording.save(r, job["out"], world_version=job["world_version"])
+    cards = [(e["player_id"], e["card"]) for e in r.events if e["type"] == "Card"]
+    return {"score": r.score, "cards": cards}
+
+
 def play_run(clubs: dict[str, world.Club], *, season_id: str = "S1", seed: int = 1, repeat: int | None = None,
              home: str = "CAL", away: str = "DTN", keep_tracking: bool = False, out_dir: Path = SEASONS_DIR,
-             world_version: int | None = None, storylines: tuple[str, ...] = (), log=print) -> Path:
-    """Play a season (or a repeat run) and save it. Returns the run's folder."""
+             world_version: int | None = None, storylines: tuple[str, ...] = (), jobs: int = 1, log=print) -> Path:
+    """Play a season (or a repeat run) and save it. Returns the run's folder. `jobs` > 1 plays in that many
+    processes; the saved files don't change."""
     if repeat:
         run = f"{season_id}-repeat-{home}-{away}-{repeat}" + "".join(f"-{s}" for s in storylines)
         plan = [(i + 1, home, away) for i in range(repeat)]
@@ -93,33 +109,47 @@ def play_run(clubs: dict[str, world.Club], *, season_id: str = "S1", seed: int =
     bans: dict[str, int] = {}
     yellows: dict[str, int] = {}
     results = []
-    for n, (mw, h, a) in enumerate(plan, start=1):
-        match_id = f"SYN-{n:04d}"
-        s = match_seed(seed, match_id)
-        unavailable = None
-        if not repeat:
-            unavailable = {}
-            for side, tid in (("home", h), ("away", a)):
-                shirts = frozenset(int(pid[4:]) for pid, left in bans.items() if left > 0 and pid.startswith(tid))
-                if shirts:
-                    unavailable[tid] = shirts
-        r = engine.play(clubs, h, a, match_id=match_id, seed=s, kickoff_utc=kickoff(mw), season_id=season_id,
-                        matchweek=mw, keep_frames=keep_tracking, unavailable=unavailable, storylines=storylines)
-        recording.save(r, d / "matches", world_version=world_version)
-        if not repeat:
-            for pid in [p for p, left in bans.items() if left > 0 and p.startswith((h, a))]:
-                bans[pid] -= 1
-            for e in r.events:
-                if e["type"] == "Card":
-                    if e["card"] in ("red", "second_yellow"):
-                        bans[e["player_id"]] = bans.get(e["player_id"], 0) + 1
-                    if e["card"] in ("yellow", "second_yellow"):
-                        yellows[e["player_id"]] = yellows.get(e["player_id"], 0) + 1
-                        if yellows[e["player_id"]] % YELLOW_BAN_AT == 0:
-                            bans[e["player_id"]] = bans.get(e["player_id"], 0) + 1
-        results.append({"match_id": match_id, "matchweek": mw, "home": h, "away": a, "seed": s,
-                        "score": r.score})
-        log(f"{match_id} MW{mw} {h} {r.score['home']}-{r.score['away']} {a} (seed {s})")
+    numbered = [(n, mw, h, a) for n, (mw, h, a) in enumerate(plan, start=1)]
+    # A repeat run has no suspensions, so all its matches are one batch; a season goes a matchweek at a time.
+    batches = [numbered] if repeat else [list(g) for _, g in groupby(numbered, key=lambda x: x[1])]
+    pool = ProcessPoolExecutor(max_workers=jobs) if jobs > 1 else None
+    try:
+        for batch in batches:
+            work = []
+            for n, mw, h, a in batch:
+                match_id = f"SYN-{n:04d}"
+                unavailable = None
+                if not repeat:
+                    unavailable = {}
+                    for tid in (h, a):
+                        shirts = frozenset(int(pid[4:]) for pid, left in bans.items()
+                                           if left > 0 and pid.startswith(tid))
+                        if shirts:
+                            unavailable[tid] = shirts
+                work.append({"clubs": clubs, "home": h, "away": a, "match_id": match_id,
+                             "seed": match_seed(seed, match_id), "matchweek": mw, "season_id": season_id,
+                             "keep_tracking": keep_tracking, "unavailable": unavailable, "storylines": storylines,
+                             "out": d / "matches", "world_version": world_version})
+            done = list(pool.map(_play_one, work)) if pool else [_play_one(job) for job in work]
+            for job, out in zip(work, done):
+                h, a = job["home"], job["away"]
+                if not repeat:
+                    for pid in [p for p, left in bans.items() if left > 0 and p.startswith((h, a))]:
+                        bans[pid] -= 1
+                    for pid, card in out["cards"]:
+                        if card in ("red", "second_yellow"):
+                            bans[pid] = bans.get(pid, 0) + 1
+                        if card in ("yellow", "second_yellow"):
+                            yellows[pid] = yellows.get(pid, 0) + 1
+                            if yellows[pid] % YELLOW_BAN_AT == 0:
+                                bans[pid] = bans.get(pid, 0) + 1
+                results.append({"match_id": job["match_id"], "matchweek": job["matchweek"], "home": h, "away": a,
+                                "seed": job["seed"], "score": out["score"]})
+                log(f"{job['match_id']} MW{job['matchweek']} {h} {out['score']['home']}-{out['score']['away']} {a} "
+                    f"(seed {job['seed']})")
+    finally:
+        if pool:
+            pool.shutdown()
     (d / "fixtures.json").write_text(json.dumps(results, indent=2) + "\n", encoding="utf-8")
     (d / "table.json").write_text(json.dumps(_table({t: clubs[t] for t in {x for _, h2, a2 in plan for x in (h2, a2)}},
                                                     results), indent=2) + "\n", encoding="utf-8")
