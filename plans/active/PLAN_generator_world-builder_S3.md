@@ -110,6 +110,7 @@ edit-distance test) and `generator/name_denylist.private.txt`. Both are already 
 | Tests, `cli.py`, `batch.py`, `engine.py`, `realism_report.py`, `storylines/` | PR #35, PR #36 | Azeem | Order: Part A stacks on #36 and merges after both | Agreed (same owner) |
 | `generator/specs/world.md` | Branch `generator/world-spec` (1 commit, 15 Oct) | Azeem | Stale: its formation change was restored on `main` in PR #14. No action; the branch can be deleted | Agreed (same owner) |
 | `world.md` spec gate | `PLAN_ci_pr-checks.md` row "told before M3" | Arnav | `world.md` stays `agreed` and is edited in the same PR as the code, which is what the gate expects | Pending (tell Arnav) |
+| `generator/specs/live-and-batch.md` | `PLAN_contracts_setup-transport.md` (Arnav) and `PLAN_plans_housekeeping.md` (Arnav), from #37's scope report | Arnav | Neither edits the line this PR changes (the `play` example's ids). Housekeeping's link edit merged in PR #26. Setup-transport leaves Azeem a follow-up: update the §1 note now that `CONTRACTS.md` §1.4 has merged. That edit is not in this PR | Agreed (no shared edit) |
 | `PLAN_web_live-match-viewer.md` | Reads club names and colours from the setup | Vedant | Values change, the shape doesn't. Tell Vedant that the demo clubs change | Pending (tell Vedant) |
 
 **Scanned at `8fa24d4` on 2026-10-17.** Sources checked: plans ✓ · PRs ✓ (#35, #36 open) · branches ✓ · hot files ✓.
