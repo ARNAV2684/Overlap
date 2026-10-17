@@ -225,7 +225,7 @@ Scanned at `103a5267e2846b7b1f5d0872816518b0a110d33f` on 17 October 2026. Source
 | Storage, Functions and publication; future overlap | [Archive plan](PLAN_archiver_archive-flow.md), [screen relay plan](PLAN_functions_screen-relay.md) | Arnav, Pranav | M1 agrees interfaces; future shared edits isolated and ordered |
 | Overlay consumption; dependency gap | [Frontend plan](PLAN_web_live-match-viewer.md) | Vedant | Existing scope ignores overlays; agree a separate renderer milestone before M4 |
 | Shared messages/examples | CONTRACTS §§5–7 and `fixtures/` | Producer and consumer owners | Unchanged now; dedicated coordinated changes if M1 needs them |
-| Ownership and plan lifecycle | [Registry](../REGISTRY.md), [housekeeping plan](PLAN_plans_housekeeping.md) | Arnav | Only Arnav edits registry; keep this roadmap active until its stated work is complete |
+| Ownership and plan lifecycle; automated directory-level overlap | [Registry](../REGISTRY.md), [housekeeping plan](PLAN_plans_housekeeping.md) | Arnav | The scope checker matches the housekeeping plan's broad `plans/active/` directory entry. Its enumerated moves do not include this new file, so no same-file edit is required. Keep this roadmap active; Arnav reviews lifecycle coordination. Registry unchanged |
 
 **PR boundaries:** one documentation-only PR from `agents/insights-plan`; later specification PR(s); then separately scoped implementation PRs. Refresh main/conflicts at each boundary. Do not merge, rebase or resolve another person's branch as part of this work.
 
