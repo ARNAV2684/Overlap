@@ -17,6 +17,10 @@ jobs:
     name: Web (lint, typecheck, build)
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    # Public settings read by web/src/lib/env.ts. URLs and ids only, never secrets. Same values as web/.env.example.
+    env:
+      NEXT_PUBLIC_STREAM_BASE_URL: http://localhost:8787
+      NEXT_PUBLIC_DEFAULT_MATCH_ID: SYN-9001
     defaults:
       run:
         working-directory: web
