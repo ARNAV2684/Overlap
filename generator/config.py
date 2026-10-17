@@ -20,7 +20,7 @@ DEAD_TIME_S = {                     # dead-ball time before each restart (set-pi
     "free_kick": (15, 30), "free_kick_near": (30, 45), "penalty": (60, 100), "card": (20, 40),
     "substitution": (25, 40),
 }
-ADDED_EXTRA_S = (30, 90)            # other stoppages folded into added time
+ADDED_EXTRA_S = (0, 45)             # other stoppages folded into added time
 ADDED_MIN_MINUTES = {1: 1, 2: 3}    # added time is never less than this
 ADDED_MAX_MINUTES = 10
 
@@ -63,7 +63,7 @@ _BASE_ROWS = {
     "box":           (24,    0,    6,   10,   16,    0,      6,    8,    0,    0,    3),
 }
 BASE_WEIGHTS = {zone: dict(zip(ACTIONS, row)) for zone, row in _BASE_ROWS.items()}
-SHOT_APPETITE = 10.0                # S in weight = S × xG / (0.10 + xG); raises or lowers shots per match
+SHOT_APPETITE = 7.0                # S in weight = S × xG / (0.10 + xG); raises or lowers shots per match
 MIN_SHOT_XG = 0.03                   # never shoot below this
 COUNTER_WINDOW_MS = 8_000            # after a regain in own half or middle third
 COUNTER_PRESS_MS = 5_000             # after losing the ball
@@ -156,9 +156,10 @@ HEADER_SHOT_SHARE = 0.55            # a won header in the box is a shot this oft
 ON_TARGET_BASE = 0.28                # P(on target) = base + slope × xG, then skill, pressure, foot, fatigue
 ON_TARGET_XG_SLOPE = 0.9
 ON_TARGET_RANGE = (0.12, 0.92)
+ON_TARGET_PER_FINISHING = 0.002     # per finishing point above 70
 BLOCK_PER_DEFENDER = 0.18
 WOODWORK_SHARE = 0.06                # of off-target shots
-FINISH_LOGIT_PER_10 = 0.15           # finishing vs goalkeeping, per 10 points
+FINISH_LOGIT_PER_10 = 0.08           # finishing vs goalkeeping, per 10 points (elite finisher beats xG by 10-20 %)
 GOAL_GIVEN_ON_TARGET_MAX = 0.97
 SHOT_SPEED_KMH = {"foot": (70, 120), "head": (40, 75)}
 SAVE_RESULT = {"held": 0.45, "parried": 0.35, "corner": 0.20}

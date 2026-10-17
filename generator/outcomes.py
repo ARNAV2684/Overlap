@@ -147,8 +147,10 @@ def resolve_shot(rng: random.Random, value: float, shooter: Body, keeper: Body |
     """Blocked, off target (missed or woodwork), saved or a goal; plus speed and goal-mouth spot."""
     blocked = defenders_in_way and rng.random() < 1 - (1 - config.BLOCK_PER_DEFENDER) ** defenders_in_way
     p_block = 1 - (1 - config.BLOCK_PER_DEFENDER) ** defenders_in_way if defenders_in_way else 0.0
+    p_on_avg = min(max(config.ON_TARGET_BASE + config.ON_TARGET_XG_SLOPE * value, config.ON_TARGET_RANGE[0]),
+                   config.ON_TARGET_RANGE[1])
     p_on = config.ON_TARGET_BASE + config.ON_TARGET_XG_SLOPE * value
-    p_on += 0.004 * (shooter.attr("finishing") - 70)
+    p_on += config.ON_TARGET_PER_FINISHING * (shooter.attr("finishing") - 70)
     if pressured:
         p_on -= 0.05
     if weak:
@@ -171,8 +173,9 @@ def resolve_shot(rng: random.Random, value: float, shooter: Body, keeper: Body |
         else:
             y, z = rng.uniform(-20, 120), rng.uniform(2.5, 6.0)
         return {"outcome": "missed", "speed": round(speed, 1), "mouth_y": round(y, 1), "mouth_z": round(z, 2)}
-    # On target: goal or save. Overall goals track xG for an average finisher against an average keeper.
-    p_goal = min(config.GOAL_GIVEN_ON_TARGET_MAX, value / max(p_on * (1 - p_block), 1e-3))
+    # On target: goal or save. Divide by an average shooter's chance of hitting the target, so goals track xG for an
+    # average finisher against an average keeper, and finishing skill counts once on each step.
+    p_goal = min(config.GOAL_GIVEN_ON_TARGET_MAX, value / max(p_on_avg * (1 - p_block), 1e-3))
     gk = keeper.attr("goalkeeping") if keeper else 50
     p_goal = logistic(logit(p_goal) + config.FINISH_LOGIT_PER_10 * (shooter.attr("finishing") - gk) / 10)
     corner_bias = 0.5 + 0.4 * (shooter.attr("finishing") / 99)

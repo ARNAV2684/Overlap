@@ -13,7 +13,7 @@ import config
 import pitch
 from state import Body
 
-FOUL_BASE = {"tackle": 0.14, "aerial": 0.06, "take_on": 0.14}
+FOUL_BASE = {"tackle": 0.20, "aerial": 0.08, "take_on": 0.18}
 
 
 class MatchAbandoned(RuntimeError):

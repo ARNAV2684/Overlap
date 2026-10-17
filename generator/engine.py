@@ -25,6 +25,9 @@ import world
 from state import Body, Flight, MatchResult, Restart
 
 PASS_ACTIONS = ("short_pass", "long_pass", "through_ball", "cross", "cutback", "switch")
+# Restart kinds that make a shot a set-piece shot, mapped to CONTRACTS.md §3 situations (a goal kick doesn't).
+SET_PIECE_SITUATION = {"corner": "corner", "throw_in": "throw_in", "free_kick": "free_kick",
+                       "free_kick_indirect": "free_kick", "penalty": "penalty"}
 
 
 def stream(seed: int, name: str) -> random.Random:
@@ -35,13 +38,14 @@ def stream(seed: int, name: str) -> random.Random:
 class Match:
     def __init__(self, home: world.Club, away: world.Club, *, match_id: str, seed: int, kickoff_utc: str,
                  season_id: str = "S1", matchweek: int = 1, storylines: tuple[str, ...] = (),
-                 keep_frames: bool = True):
+                 keep_frames: bool = True, unavailable: dict[str, frozenset[int]] | None = None):
         self.club = {"home": home, "away": away}
         self.match_id, self.seed, self.keep_frames = match_id, seed, keep_frames
         self.rng = {name: stream(seed, name) for name in config.STREAMS}
         self.conditions = self._draw_conditions(kickoff_utc, home)
         setup = world.build_setup(home, away, match_id=match_id, seed=seed, kickoff_utc=kickoff_utc,
-                                  season_id=season_id, matchweek=matchweek, storylines=storylines)
+                                  season_id=season_id, matchweek=matchweek, storylines=storylines,
+                                  unavailable=unavailable)
         order = ("match_id", "seed", "competition", "season_id", "venue", "kickoff_utc")
         self.setup = {k: setup[k] for k in order}
         self.setup["conditions"] = dict(self.conditions)
@@ -71,6 +75,7 @@ class Match:
         self.windy = self.conditions["wind_ms"] > config.WINDY_MS
         self.heat = config.HEAT_DRAIN if self.conditions["temperature_c"] > config.HEAT_C else 1.0
 
+        self.starters = {b.pid for s in ("home", "away") for b in self.bodies[s]}
         self.events: list[dict] = []
         self.frames: list[dict] = []
         self.seq = 0
@@ -399,7 +404,9 @@ class Match:
 
     def situation(self, side: str) -> str:
         if self.set_piece and self.set_piece[1] == side and self.match_ms - self.set_piece[2] <= 10_000:
-            return self.set_piece[0]
+            kind = SET_PIECE_SITUATION.get(self.set_piece[0])
+            if kind:
+                return kind
         return "counter" if self.in_counter(side) else "open_play"
 
     def _shot_inputs(self, b: Body) -> tuple[float, float, int, float]:
@@ -931,6 +938,9 @@ class Match:
                 "possession": round(self.live_steps[s] / live, 3),
             }
         out["scorers"] = [e["player_id"] for e in ev if e["type"] == "Shot" and e["shot_outcome"] == "goal"]
+        out["players"] = {b.pid: {"top_kmh": round(b.top_seen * 3.6, 1), "dist_m": round(b.dist),
+                                  "started": b.pid in self.starters, "finished": b.on}
+                          for s in ("home", "away") for b in self.bodies[s]}
         out["teams"] = side_of
         return out
 
