@@ -35,6 +35,11 @@ season aggregates, while keeping batch runs quick. The fixture list belongs to
 The two must differ on at least three style parameters by 0.3 or more, so the contrast shows up in possession, PPDA,
 press height and pass length.
 
+**Identity.** Only the football resembles the real team: style, formation, ratings and roles. Nothing else may point
+at it. The club's name, city, venue and colours have no link to the real team or its nickname. Shirt numbers, player
+names and feet follow the same rules as generated clubs (§2, §3, §5), so no single player can be traced through his
+number, his name's origin or his foot. Reference club A is Calverholme Athletic (`CAL`); B is Dunmarrow Town (`DTN`).
+
 **Club fields** (world file; the match setup carries the subset in [`CONTRACTS.md`](../../CONTRACTS.md) §2):
 
 | Field | Type | Notes |
@@ -75,9 +80,21 @@ empty; the build fails otherwise.
 again). A player in a secondary position plays with a small penalty set in the engine spec. In the match setup,
 `pos` is the slot a starter plays in this match, and a substitute's primary position.
 
-**Shirt numbers.** 1–99, unique within a club (player ids are `TEAM-NN`, so a shirt is also the id). Reference clubs
-use hand-set numbers. Generated clubs try the usual numbers for the position (1 for a goalkeeper, 9 for a striker),
-then the next free number.
+**Shirt numbers.** 1–99, unique within a club (player ids are `TEAM-NN`, so a shirt is also the id). Every club,
+reference or generated, numbers its default XI first, in slot order, then the rest of the squad (goalkeepers,
+defenders, midfielders, forwards; best `overall` first). Each player takes the first free usual number for their
+primary position, otherwise the next free number from 12 up:
+
+| Position | Usual numbers, in order |
+|---|---|
+| GK | 1 |
+| RB, RWB / LB, LWB | 2 / 3 |
+| CB | 4, 5, 6 |
+| DM | 6, 4, 8 |
+| CM | 8, 6, 10 |
+| AM | 10, 8 |
+| RM, RW / LM, LW | 7 / 11 |
+| ST | 9, 10 |
 
 **Starting XI and bench.** Each club has a `default_xi`. A match uses it unless a player is unavailable (suspended,
 later injured); the replacement is the best-rated available player whose primary or secondary position matches the
@@ -122,6 +139,12 @@ same names; the other six stay inside the generator, so no contract change is ne
 | `goalkeeping` | | Shot stopping, handling and claiming (outfield players 20 or less; the build fails otherwise) |
 
 **Hidden traits.** `preferred_foot` (`left`, `right`, `both`; default `right`) and `weak_foot` (1–5; default 3).
+Both are drawn with the seed, for reference and generated players alike, never copied from a real player. About 3 %
+are two-footed (weak foot 5). Otherwise the chance of a left foot follows the side a player plays on: 0.70 on the
+left (LB, LWB, LM, LW), 0.05 on the right, 0.25 for a centre-back and 0.15 elsewhere. An inverted winger is the other
+way round (0.85 on the right, 0.10 on the left), because he cuts inside onto his stronger foot. A typical squad comes
+out about a quarter left-footed, in line with [`CALIBRATION.md`](../../CALIBRATION.md) ("Players"). The weak foot is 1,
+2, 3, 4 or 5 with chances 5, 25, 45, 20 and 5 % (a judgement call).
 Injury proneness and big-game temperament are left out for now; `composure` covers pressure.
 
 **Roles.** Every player has one `role`, which says what they do with and without the ball; ratings say how well.
@@ -222,8 +245,9 @@ shift, belong to [`movement.md`](movement.md) §1.
 
 _Answer:_
 
-**Reference players.** Names are written by hand and invented. A name must not be recognisable as the player it is
-modelled on: it shares no surname with them and is at least 4 edits away from their full name. The mapping from each
+**Reference players.** Names are drawn from the same regional pools and club mix as generated players (below), from
+a region other than the origin of the player each one resembles, and checked by hand. A name must not be recognisable
+as the player it is modelled on: it shares no surname with them and is at least 4 edits away from their full name. The mapping from each
 reference player to the real player lives only in `generator/reference_map.private.yaml`, which is gitignored and
 never committed. A test reads it when it is present and checks the edit distance; without it, that test is skipped.
 
@@ -248,7 +272,7 @@ on a duplicate, never silently renames.
 _Answer:_
 
 **Colours.** Every club has a home and an away pair, each a `primary` and `secondary` 6-digit hex. Reference clubs'
-colours are hand-picked and may echo the real team's colours (for example a light blue), but kit designs and crests
+colours are hand-picked and never echo the real team's colours; kit designs and crests
 stay invented. Generated clubs get primaries spread around the colour wheel from the season seed, with a light or dark
 secondary.
 

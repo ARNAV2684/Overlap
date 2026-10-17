@@ -26,7 +26,7 @@ def clubs():
 _MATCHES: dict = {}
 
 
-def play(clubs, seed, names=(), home="SKH", away="AMH"):
+def play(clubs, seed, names=(), home="CAL", away="DTN"):
     """One seeded match without tracking; each one is played once and shared between tests."""
     key = (seed, tuple(names), home, away)
     if key not in _MATCHES:
@@ -79,14 +79,14 @@ def _press_rate(r, tid, opp, onset):
 
 
 def test_late_pressure_surge_tilts_the_home_style_within_limits(clubs):
-    m = engine.Match(clubs["SKH"], clubs["AMH"], match_id="SYN-0072", seed=72, kickoff_utc="2026-10-24T19:00:00Z",
+    m = engine.Match(clubs["CAL"], clubs["DTN"], match_id="SYN-0072", seed=72, kickoff_utc="2026-10-24T19:00:00Z",
                      storylines=("late_pressure_surge",))
     m.period, m.period_ms, m.offset_ms = 2, 15 * 60_000, 46 * 60_000      # about 61': past the latest onset
     m.director.update(m)
     m.period_ms += 10 * 60_000                                            # and past the five-minute ramp
     m.director.update(m)
     m._update_style()
-    base, now = clubs["SKH"].style, m.style("home")
+    base, now = clubs["CAL"].style, m.style("home")
     assert now["press_intensity"] == pytest.approx(min(base["press_intensity"] + 0.20, 1.0))
     assert now["press_height"] == pytest.approx(min(base["press_height"] + 0.15, 1.0))
     assert m.style("away") == pytest.approx(m.club["away"].style)       # never the other side's traits
@@ -95,16 +95,16 @@ def test_late_pressure_surge_tilts_the_home_style_within_limits(clubs):
 
 
 def test_late_pressure_surge_raises_the_home_press_after_onset(clubs):
-    # Amberholt at home: Skyhaven already presses near the 1.0 ceiling, so its surge is too small to see in three
-    # matches; Amberholt's 0.45 press has room for the full +0.20
+    # Dunmarrow at home: Calverholme already presses near the 1.0 ceiling, so its surge is too small to see in three
+    # matches; Dunmarrow's 0.45 press has room for the full +0.20
     with_, without = 0.0, 0.0
     for s in SEEDS:
-        r = play(clubs, s, ("late_pressure_surge",), home="AMH", away="SKH")
+        r = play(clubs, s, ("late_pressure_surge",), home="DTN", away="CAL")
         key = r.summary["storylines"][0]
-        assert key["triggered"] and key["team_id"] == "AMH"
+        assert key["triggered"] and key["team_id"] == "DTN"
         assert 52 * 60_000 <= key["onset_ms"] <= 58 * 60_000 + 60_000      # 55' with up to 3' of jitter
-        with_ += _press_rate(r, "AMH", "SKH", key["onset_ms"])
-        without += _press_rate(play(clubs, s, home="AMH", away="SKH"), "AMH", "SKH", key["onset_ms"])
+        with_ += _press_rate(r, "DTN", "CAL", key["onset_ms"])
+        without += _press_rate(play(clubs, s, home="DTN", away="CAL"), "DTN", "CAL", key["onset_ms"])
     assert with_ > without
 
 
@@ -113,7 +113,7 @@ def test_red_card_storyline_raises_away_fouls_in_its_window(clubs):
     for s in SEEDS:
         for names, bucket in ((("red_card",), "with"), ((), "without")):
             r = play(clubs, s, names)
-            n = sum(1 for e in r.events if e["type"] == "Foul" and e["team_id"] == "AMH"
+            n = sum(1 for e in r.events if e["type"] == "Foul" and e["team_id"] == "DTN"
                     and 28 * 60_000 <= e["match_ms"] < 42 * 60_000)
             if bucket == "with":
                 with_ += n
@@ -131,7 +131,7 @@ def test_storylines_never_write_events_of_their_own(clubs):
 
 
 def test_star_night_lifts_one_players_form_only(clubs):
-    m = engine.Match(clubs["SKH"], clubs["AMH"], match_id="SYN-0070", seed=70, kickoff_utc="2026-10-24T19:00:00Z",
+    m = engine.Match(clubs["CAL"], clubs["DTN"], match_id="SYN-0070", seed=70, kickoff_utc="2026-10-24T19:00:00Z",
                      storylines=("star_night",))
     m.director.update(m)
     nine = next(b for b in m.on_pitch("home") if b.player.shirt == 9)
@@ -141,7 +141,7 @@ def test_star_night_lifts_one_players_form_only(clubs):
 
 
 def test_comeback_waits_for_a_side_to_trail(clubs):
-    m = engine.Match(clubs["SKH"], clubs["AMH"], match_id="SYN-0071", seed=71, kickoff_utc="2026-10-24T19:00:00Z",
+    m = engine.Match(clubs["CAL"], clubs["DTN"], match_id="SYN-0071", seed=71, kickoff_utc="2026-10-24T19:00:00Z",
                      storylines=("comeback",))
     m.period, m.period_ms, m.offset_ms = 2, 20 * 60_000, 46 * 60_000      # about 66'
     m.director.update(m)

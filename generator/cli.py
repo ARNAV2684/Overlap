@@ -162,8 +162,8 @@ def main(argv: list[str] | None = None) -> int:
     w.set_defaults(func=cmd_world)
 
     pl = sub.add_parser("play", help="play one match and record it")
-    pl.add_argument("--home", default="SKH")
-    pl.add_argument("--away", default="AMH")
+    pl.add_argument("--home", default="CAL")
+    pl.add_argument("--away", default="DTN")
     pl.add_argument("--match-id", default="SYN-0001")
     pl.add_argument("--seed", type=int, default=1)
     pl.add_argument("--kickoff", default="2026-10-24T19:00:00Z")
@@ -189,8 +189,8 @@ def main(argv: list[str] | None = None) -> int:
     se.add_argument("--season", default="S1")
     se.add_argument("--seed", type=int, default=1)
     se.add_argument("--repeat", type=int, help="play --home v --away this many times instead of a season")
-    se.add_argument("--home", default="SKH")
-    se.add_argument("--away", default="AMH")
+    se.add_argument("--home", default="CAL")
+    se.add_argument("--away", default="DTN")
     se.add_argument("--keep-tracking", action="store_true", help="also save tracking (about 13 MB a match)")
     se.add_argument("--report", action="store_true", help="write the realism report afterwards")
     se.add_argument("--storyline", action="append", help=STORYLINE_HELP)
@@ -204,14 +204,14 @@ def main(argv: list[str] | None = None) -> int:
     v = sub.add_parser("validate", help="play matches twice and check invariants and reproducibility")
     v.add_argument("--matches", type=int, default=3)
     v.add_argument("--seed", type=int, default=1)
-    v.add_argument("--home", default="SKH")
-    v.add_argument("--away", default="AMH")
+    v.add_argument("--home", default="CAL")
+    v.add_argument("--away", default="DTN")
     v.set_defaults(func=cmd_validate)
 
     args = p.parse_args(argv)
     if args.command == "live":
-        args.home = args.home or ["SKH"]
-        args.away = args.away or ["AMH"]
+        args.home = args.home or ["CAL"]
+        args.away = args.away or ["DTN"]
     try:
         return args.func(args)
     except (world.WorldError, RuntimeError, ValueError) as err:

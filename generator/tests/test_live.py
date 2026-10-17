@@ -17,7 +17,7 @@ from state import MatchResult
 
 
 def tiny_match() -> MatchResult:
-    setup = {"match_id": "SYN-0099", "teams": {"home": {"team_id": "SKH"}, "away": {"team_id": "AMH"}}}
+    setup = {"match_id": "SYN-0099", "teams": {"home": {"team_id": "CAL"}, "away": {"team_id": "DTN"}}}
     events, frames = [], []
     seq = 0
     offset = 0

@@ -82,7 +82,7 @@ def test_headers_weak_foot_and_defenders_lower_xg():
 
 
 def test_setup_carries_conditions(clubs):
-    m = engine.Match(clubs["SKH"], clubs["AMH"], match_id="SYN-0011", seed=11, kickoff_utc="2026-10-24T19:00:00Z")
+    m = engine.Match(clubs["CAL"], clubs["DTN"], match_id="SYN-0011", seed=11, kickoff_utc="2026-10-24T19:00:00Z")
     c = m.setup["conditions"]
     assert set(c) == {"temperature_c", "precipitation", "wind_ms", "attendance"}
     assert c["precipitation"] in ("none", "light", "heavy")
@@ -99,7 +99,7 @@ def test_random_streams_are_independent():
 
 
 def test_a_match_has_both_teams_playing(clubs):
-    r = engine.play(clubs, "SKH", "AMH", match_id="SYN-0012", seed=12, keep_frames=False)
+    r = engine.play(clubs, "CAL", "DTN", match_id="SYN-0012", seed=12, keep_frames=False)
     s = r.summary
     for side in ("home", "away"):
         assert s[side]["passes"] > 200
@@ -112,8 +112,8 @@ def test_a_match_has_both_teams_playing(clubs):
 
 
 def _frozen(clubs, poss: str, ball_pct: tuple[float, float]):
-    """SKH v AMH at kickoff time, `poss` on the ball at `ball_pct` in that side's team frame, everyone on his anchor."""
-    m = engine.Match(clubs["SKH"], clubs["AMH"], match_id="SYN-0060", seed=60, kickoff_utc="2026-10-24T19:00:00Z")
+    """CAL v DTN at kickoff time, `poss` on the ball at `ball_pct` in that side's team frame, everyone on his anchor."""
+    m = engine.Match(clubs["CAL"], clubs["DTN"], match_id="SYN-0060", seed=60, kickoff_utc="2026-10-24T19:00:00Z")
     m._update_style()
     for side in ("home", "away"):
         for b in m.on_pitch(side):
@@ -147,7 +147,7 @@ def test_a_low_block_is_more_compact_than_a_high_line(clubs):
 
 
 def test_the_back_line_stays_goal_side_of_the_ball(clubs):
-    m = _frozen(clubs, "home", (60, 50))           # SKH on the ball 40 % from AMH's goal
+    m = _frozen(clubs, "home", (60, 50))           # CAL on the ball 40 % from DTN's goal
     for b in m.on_pitch("away"):
         if not b.is_gk and movement.ANCHORS[m.formation["away"]][b.slot_index][0] < 40:
             assert _target_pct(m, b)[0] <= 40 - config.GOAL_SIDE_PCT + 1e-6

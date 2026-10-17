@@ -109,7 +109,7 @@ Run from `generator/` (`uv run python cli.py …`):
 | Command | Does | Main options |
 |---|---|---|
 | `world` | Builds and saves the world | `--season S1`, `--seed` |
-| `play` | Plays one match and records it | `--home SKH --away AMH`, `--match-id`, `--seed`, `--out` |
+| `play` | Plays one match and records it | `--home CAL --away DTN`, `--match-id`, `--seed`, `--out` |
 | `live` | Plays and streams one or more matches | `--home`, `--away` (repeatable), `--speed 1|5|20`, `--hubs emulator|azure|off`, `--namespace` (from configuration), `--stdout`, `--record` |
 | `season` | Plays a full season, or a repeat run with `--repeat N` | `--season`, `--seed`, `--repeat`, `--keep-tracking` |
 | `report` | Writes the realism report for a season or run | `--season` or `--run` |

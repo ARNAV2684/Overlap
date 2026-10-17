@@ -50,6 +50,12 @@ value inside the range).
 | Top sprint speed | 33–36 km/h | Same study: peak match speed 32.9 ± 1.4 km/h ([Biology of Sport, 2024](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11167479/)); Premier League players among Europe's fastest ([Training Ground Guru](https://trainingground.guru/articles/premier-league-pushes-european-speed-limits-again)) | — | sourced |
 | Distance covered, outfield player | 9–14 km (central midfielders about 10–12) | Players usually cover 9–14 km per match, 2–3 % of it above 25 km/h ([Biology of Sport, 2024](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11167479/)) | — | sourced |
 
+## Players
+
+| Metric | Target range | Public source | Measured | Status |
+|---|---|---|---|---|
+| Left-footed share of a squad | 20–27 %; two-footed players rare | France 1998: about 79 % of 236 World Cup players right-footed, nearly all the rest left-footed, very few using both feet equally (Carey et al. 2001, *Journal of Sports Sciences* 19(11), [University of Kent repository](https://kar.kent.ac.uk/4164/)); left-footers 26.5 % of 7,507 senior players picked by five European national teams (Tufo et al., [University of Turin repository](https://iris.unito.it/handle/2318/2126030)) | — | sourced |
+
 ## Conditions (small effects; judgement calls are labelled)
 
 | Effect | Size | Public source | Status |

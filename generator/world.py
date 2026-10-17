@@ -7,10 +7,12 @@
 # Spec:    generator/specs/world.md
 #
 # The two reference clubs come first. Invented clubs generated from the seed come in a later milestone.
+# Shirt numbers and feet follow the same rules for every club (world.md §2, §3).
 
 from __future__ import annotations
 
 import json
+import random
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -31,6 +33,20 @@ STYLE_KEYS = ("press_intensity", "directness", "width", "tempo", "line_height", 
 SETUP_STYLE_KEYS = STYLE_KEYS[:3]
 POSITIONS = ("GK", "CB", "LB", "RB", "LWB", "RWB", "DM", "CM", "AM", "LM", "RM", "LW", "RW", "ST")
 FEET = ("left", "right", "both")
+# Preferred foot and weak-foot quality (world.md §3). Across a squad about a quarter are left-footed and very few are
+# truly two-footed (CALIBRATION.md, "Players"). The chance of a left foot follows the side a player plays on; the
+# per-position chances and the weak-foot spread are judgement calls. Two-footed players get weak foot 5.
+BOTH_FEET = 0.03
+LEFT_SIDE = frozenset({"LB", "LWB", "LM", "LW"})
+RIGHT_SIDE = frozenset({"RB", "RWB", "RM", "RW"})
+WEAK_FOOT_SHARE = ((1, 0.05), (2, 0.25), (3, 0.45), (4, 0.20), (5, 0.05))
+
+# Usual shirt numbers per position, tried in order (world.md §2); after them, the next free number from 12 up.
+USUAL_SHIRTS: dict[str, tuple[int, ...]] = {
+    "GK": (1,), "RB": (2,), "RWB": (2,), "LB": (3,), "LWB": (3,), "CB": (4, 5, 6), "DM": (6, 4, 8),
+    "CM": (8, 6, 10), "AM": (10, 8), "RM": (7,), "RW": (7,), "LM": (11,), "LW": (11,), "ST": (9, 10),
+}
+FIRST_SPARE_SHIRT = 12
 
 # What each player does, and the primary positions it is allowed for (world.md §3). The engine spec decides effects.
 ROLES: dict[str, tuple[str, ...]] = {
@@ -80,6 +96,50 @@ MAIN_ATTRIBUTES: dict[str, tuple[str, ...]] = {
     "LM": _WIDE, "RM": _WIDE, "LW": _WIDE, "RW": _WIDE,
     "ST": ("finishing", "positioning", "composure", "pace"),
 }
+
+def _weighted(rng: random.Random, share: tuple) -> object:
+    x, total = rng.random(), 0.0
+    for value, p in share:
+        total += p
+        if x < total:
+            return value
+    return share[-1][0]
+
+
+def left_foot_chance(pos: str, role: str) -> float:
+    """An inverted winger plays on the side of his weaker foot; other wide players on the side of their stronger."""
+    if role == "inverted_winger":
+        return 0.85 if pos in RIGHT_SIDE else 0.10
+    if pos in LEFT_SIDE:
+        return 0.70
+    if pos in RIGHT_SIDE:
+        return 0.05
+    return 0.25 if pos == "CB" else 0.15
+
+
+def draw_feet(rng: random.Random, pos: str, role: str) -> tuple[str, int]:
+    """(preferred_foot, weak_foot) for a player in this position and role (world.md §3)."""
+    if rng.random() < BOTH_FEET:
+        return "both", 5
+    foot = "left" if rng.random() < left_foot_chance(pos, role) else "right"
+    return foot, _weighted(rng, WEAK_FOOT_SHARE)
+
+
+def assign_shirts(positions: list[str]) -> list[int]:
+    """Shirt numbers for players in priority order (the default XI in slot order first, then the rest of the squad),
+    given each player's primary position: the first free usual number, else the next free number from 12 up."""
+    taken: set[int] = set()
+    out = []
+    for pos in positions:
+        shirt = next((n for n in USUAL_SHIRTS[pos] if n not in taken), None)
+        if shirt is None:
+            shirt = FIRST_SPARE_SHIRT
+            while shirt in taken:
+                shirt += 1
+        taken.add(shirt)
+        out.append(shirt)
+    return out
+
 
 # Bench picks, in order: the best remaining player whose primary position is in each group (world.md §2).
 BENCH_GROUPS = (("GK",), ("CB",), ("RB", "LB", "RWB", "LWB"), ("DM", "CM"), ("CM", "AM"),

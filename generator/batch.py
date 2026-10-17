@@ -79,7 +79,7 @@ def _table(clubs: dict, results: list[dict]) -> list[dict]:
 
 
 def play_run(clubs: dict[str, world.Club], *, season_id: str = "S1", seed: int = 1, repeat: int | None = None,
-             home: str = "SKH", away: str = "AMH", keep_tracking: bool = False, out_dir: Path = SEASONS_DIR,
+             home: str = "CAL", away: str = "DTN", keep_tracking: bool = False, out_dir: Path = SEASONS_DIR,
              world_version: int | None = None, storylines: tuple[str, ...] = (), log=print) -> Path:
     """Play a season (or a repeat run) and save it. Returns the run's folder."""
     if repeat:

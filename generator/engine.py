@@ -1011,7 +1011,7 @@ if __name__ == "__main__":
     _, loaded = world.load_reference_clubs()
     clubs = {c.team_id: c for c in loaded}
     t0 = time.perf_counter()
-    result = play(clubs, "SKH", "AMH", match_id="SYN-0001", seed=1)
+    result = play(clubs, "CAL", "DTN", match_id="SYN-0001", seed=1)
     s = result.summary
     print(f"{s['home']['team_id']} {s['score']['home']}-{s['score']['away']} {s['away']['team_id']} · "
           f"{s['events']} events · {s['frames']} frames · {time.perf_counter() - t0:.1f}s")

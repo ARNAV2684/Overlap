@@ -170,13 +170,13 @@ def _regain(e: dict) -> bool:
 def answer_key(matches: list[dict]) -> dict[str, dict] | None:
     """Possession, pressing, high regains, counter and set-piece shares, top scorer per club."""
     teams = {x["setup"]["teams"][s]["team_id"] for x in matches for s in ("home", "away")}
-    if teams != {"SKH", "AMH"}:
+    if teams != {"CAL", "DTN"}:
         return None
     names = {p["player_id"]: p["name"] for x in matches for s in ("home", "away")
              for p in x["setup"]["teams"][s]["lineup"] + x["setup"]["teams"][s]["bench"]}
     key = {}
-    for tid in ("SKH", "AMH"):
-        opp = "AMH" if tid == "SKH" else "SKH"
+    for tid in ("CAL", "DTN"):
+        opp = "DTN" if tid == "CAL" else "CAL"
         poss, ppda, high, shots, counter, setp, scorers = [], [], [], 0, 0, 0, {}
         for x in matches:
             ev = x["events"]
@@ -226,9 +226,9 @@ def write(run_dir: Path, out_root: Path = REPORTS_DIR) -> Path:
     lines += ["", f"**{passed} of {sum(r['ok'] is not None for r in rows)} measured targets pass.**"]
     key = answer_key(matches)
     if key:
-        lines += ["", "## Answer key: Skyhaven vs Amberholt", "", "| | Skyhaven | Amberholt |", "|---|---|---|"]
+        lines += ["", "## Answer key: Calverholme vs Dunmarrow", "", "| | Calverholme | Dunmarrow |", "|---|---|---|"]
         for k in ("possession", "ppda", "high_regains", "shots", "counter_share", "set_piece_share", "top_scorer"):
-            lines.append(f"| {k.replace('_', ' ')} | {_fmt(key['SKH'][k])} | {_fmt(key['AMH'][k])} |")
+            lines.append(f"| {k.replace('_', ' ')} | {_fmt(key['CAL'][k])} | {_fmt(key['DTN'][k])} |")
     (out / "report.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
     return out / "report.md"
 
