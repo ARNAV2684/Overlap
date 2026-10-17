@@ -5,7 +5,7 @@
 | Change | Add four team style traits (`counter_press`, `press_height`, `counter_attack`, `set_piece_focus`), a role for every player, and set-piece takers per club to the world spec, the reference clubs, the builder and its tests. Also restore the spec rows lost when PR #8 merged before its last commit |
 | Why | Before the engine (G2) is specced, the world has to hold what the engine will read. These traits give the two reference clubs clearly different, measurable behaviour (pressing, transitions, set pieces, who does what), which is what makes them an answer key for the stats engine and the agents |
 | Author / owner | Azeem |
-| Status | In progress |
+| Status | Done (merged in PR #14) |
 | Reviewed commit | main · 75b7cba |
 | Branch | `generator/world-traits` |
 | Governing spec | `generator/specs/world.md` (agreed in PR #8). This plan changes the spec and the code together, so they stay in step |

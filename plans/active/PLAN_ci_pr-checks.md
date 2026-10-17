@@ -10,7 +10,7 @@
 | Review coordinator | Arnav |
 | Affected component owners | Everyone who opens PRs: Azeem (generator), Vedant (web), Arnav and Pranav (Event Hubs), unassigned layers (Arnav decides). `.github/` and `CONTRIBUTING.md` are hot files owned by Arnav |
 | Proposal version and date | v1.1 · 15 Oct 2026 (spec gate is a warning, per Arnav) |
-| Status | In progress (go from Arnav, 15 Oct; M1 + M2) |
+| Status | In progress (M1 and M2 merged in PR #9; M3, turning the ruleset on for `main`, not confirmed yet) |
 | Plan tier and file | Full · `plans/active/PLAN_ci_pr-checks.md` |
 | Repository | [ARNAV2684/Overlap](https://github.com/ARNAV2684/Overlap) |
 | Reviewed branch and commit | main · 2d2d646 |

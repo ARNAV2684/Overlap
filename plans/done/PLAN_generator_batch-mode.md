@@ -5,7 +5,7 @@
 | Change | Add batch mode (full seasons and two-club repeat runs), the realism report (every sourced `CALIBRATION.md` row plus the Skyhaven vs Amberholt answer key), and the `season` and `report` commands |
 | Why | Registry deliverable G6. The engine's tuning (M3 part 2) and AC-06 need many matches measured against `CALIBRATION.md` in one command |
 | Author / owner | Azeem |
-| Status | In progress (implemented on `generator/batch-mode`; PR to follow) |
+| Status | Done (merged in PR #24) |
 | Reviewed commit | `generator/engine-balance` (PR #23, stacked on #20–#22) |
 | Branch | `generator/batch-mode` |
 | Governing spec | `generator/specs/live-and-batch.md` §3–§5, agreed in PR #18 |

@@ -5,7 +5,7 @@
 | Change | M1: write `generator/specs/storylines.md` (format, allowed effects and limits, catalogue, answer keys). M2, after it merges: `storylines.py`, the storyline files, the engine hook and tests |
 | Why | Registry deliverable G4. The demo needs scripted drama, and the agents' recall evaluation needs to know when each storyline started |
 | Author / owner | Azeem |
-| Status | In progress (M1, go from Azeem, 17 Oct) |
+| Status | In progress (M1, the spec, merged in PR #25; the code is not started) |
 | Reviewed commit | `generator/batch-mode` (PR #24, stacked on #20–#23) |
 | Branch | `generator/storylines-spec` (M1); `generator/storylines` (M2) |
 | Governing spec | `generator/specs/storylines.md` — not started; this plan writes it (spec gate) |

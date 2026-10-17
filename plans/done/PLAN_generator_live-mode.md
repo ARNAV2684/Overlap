@@ -10,7 +10,7 @@
 | Review coordinator | Arnav |
 | Affected component owners | Arnav and Pranav (Event Hubs, infra); consumers of the hubs: stats engine, screen relay, archiver (unassigned, Arnav decides); Vedant (web, via the relay) |
 | Proposal version and date | v0.1 · 2026-10-16 |
-| Status | In progress (M1 done: spec merged in PR #18; M2 on `generator/live-mode`, go from Azeem 17 Oct) |
+| Status | Done (M1 merged in PR #18; M2 and the M3 emulator run merged in PR #21) |
 | Plan tier and file | Full · `plans/active/PLAN_generator_live-mode.md` |
 | Repository | [ARNAV2684/Overlap](https://github.com/ARNAV2684/Overlap) |
 | Reviewed branch and commit | main · 75b7cba |
