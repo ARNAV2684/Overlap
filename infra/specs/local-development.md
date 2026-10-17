@@ -15,7 +15,7 @@ and tests stay the same.
 | Storage (Functions checkpoints, later Blob) | Azurite (Docker) | 10000–10002 | Also used by the Event Hubs emulator |
 | Cosmos DB | Microsoft Cosmos DB emulator, Linux (Docker) | 8081 | Check before relying on it: create, upsert, query by partition key, ETag conditions |
 | Azure Functions | Functions Core Tools (`func start`) | 7071 | If its Event Hubs trigger can't use the emulator, `functions/relay_runner.py` runs the same core |
-| Web PubSub | `infra/local/webpubsub_standin/` (ours; Microsoft has no emulator) | 8787 | Same service send API, `/negotiate` and browser protocol `json.webpubsub.azure.v1` |
+| Web PubSub | `infra/local/webpubsub_standin/` (ours; Microsoft has no emulator), run on the host with `uv run standin` | 8787 | Same service send API, `/negotiate` and browser protocol `json.webpubsub.azure.v1` |
 | Microsoft Foundry | No local replacement | — | The insight flow uses real Azure models from the start |
 
 Microsoft's emulators each need their licence accepted once per developer (`ACCEPT_EULA=Y`), and Docker Desktop.
@@ -38,7 +38,7 @@ The same names are used on Azure. `$Default` is for ad-hoc reading and tests; ea
 | `ws://localhost:8787/client/hubs/live` | Browser connection with `json.webpubsub.azure.v1`: `connected`, `joinGroup`/`ack`, group messages |
 | `GET /api/match/<id>/snapshot` | `CONTRACTS.md` §7.3, read from the same Cosmos store the relay writes |
 
-It accepts any token locally and binds to `127.0.0.1` only. No plain-socket mode.
+It runs on the host (not in Docker), accepts any token locally and binds to `127.0.0.1` only. No plain-socket mode.
 
 ## 4. Settings: local vs Azure
 
@@ -56,11 +56,12 @@ local keys are Microsoft's public, documented values, not secrets; Azure never u
 
 ## 5. Run order
 
-1. `docker compose up -d` in `infra/local/` (all emulators and the stand-in); wait for the health checks.
-2. Start the relay: `func start` in `functions/` (or `relay_runner.py`).
-3. Open the screen: Vedant's app or, until it exists, `mock/single-match-demo/` on 8788 (moved to the protocol).
-4. Send a match: `uv run python cli.py live --hubs emulator --speed 20` in `generator/`.
-5. Stop: `docker compose down` (data is cleared; every run starts clean).
+1. `ACCEPT_EULA=Y docker compose up -d` in `infra/local/` (the three emulators); wait for the health checks.
+2. Start the Web PubSub stand-in on the host: `uv run standin` in `infra/local/webpubsub_standin/`.
+3. Start the relay: `func start` in `functions/` (or `relay_runner.py`).
+4. Open the screen: Vedant's app or, until it exists, `mock/single-match-demo/` on 8788 (moved to the protocol).
+5. Send a match: `uv run python cli.py live --hubs emulator --speed 20` in `generator/`.
+6. Stop: `docker compose down` and Ctrl+C the stand-in and relay (data is cleared; every run starts clean).
 
 ## 6. What local testing does not prove
 
