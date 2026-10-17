@@ -10,7 +10,7 @@
 | Review coordinator | Arnav |
 | Affected component owners | Azeem (producer: `generator/live.py`); Vedant (consumer: web app, `web/specs/realtime.md`); stats engine owner (unassigned, Arnav decides): sends stat panels through the relay (D-02) |
 | Proposal version and date | v1.1 · 17 Oct 2026 (D-01 to D-08 decided) |
-| Status | In progress: S1 (go from Arnav, 17 Oct). Contract PR #28 open; specs and registry in `functions/screen-relay-spec` |
+| Status | In progress: S1 and S2 merged (#27–#31); S3 on `functions/screen-relay` |
 | Plan tier and file | Full · `plans/active/PLAN_functions_screen-relay.md` |
 | Repository | [ARNAV2684/Overlap](https://github.com/ARNAV2684/Overlap) |
 | Reviewed branch and commit | main · 6f2f459 |
@@ -161,6 +161,9 @@ Consumption supports an always-ready instance in the chosen region (checked in S
 | `functions/relay_store.py`, `functions/relay_runner.py` | Add | Cosmos store; local runner | `screen-relay.md` | Arnav |
 | `functions/function_app.py`, `functions/host.json`, `functions/requirements.txt` | Modify / add | Event Hubs trigger on Flex Consumption | `screen-relay.md` | Arnav |
 | `functions/tests/` | Add | Core, store and end-to-end tests | `screen-relay.md` | Arnav |
+| `functions/pyproject.toml`, `functions/.gitignore` | Add | Local project for tests and the runner (S3) | — | Arnav |
+| `.gitleaks.toml` | Modify | Allow the public Azurite key too (S3) | — | Arnav |
+| `infra/local/docker-compose.yml`, `infra/local/env.example` | Modify | Azurite API-version flag; quoted connection strings (S3) | `local-development.md` | Arnav |
 | `infra/modules/event-hubs.bicep`, `web-pubsub.bicep`, `functions.bicep`, `cosmos.bicep`, `identity.bicep`, `storage.bicep`, `main.bicep`, `azure.yaml` | Modify (hot: `main.bicep`, `azure.yaml`) | Azure resources for the screen path | `resources.md`, `security.md` | Arnav · Pranav |
 | `functions/README.md` | Modify | How to run locally and on Azure | — | Arnav |
 | `mock/single-match-demo/app.js` | Modify | Connect via negotiate + protocol, read the new snapshot | `CONTRACTS.md` §7 | Pranav |
