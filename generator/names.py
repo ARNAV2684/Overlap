@@ -1,14 +1,14 @@
 # names.py — Name pools
 #
-# Purpose: keep player names invented and unique; check reference names are not recognisable
-# Inputs:  every club's players; optionally the private reference mapping (never committed)
-# Outputs: problems found
+# Purpose: regional name pools and a seeded draw; keep player names invented and unique; check reference names
+#          are not recognisable
+# Inputs:  a random stream; every club's players; optionally the private reference mapping (never committed)
+# Outputs: drawn names; problems found
 # Spec:    generator/specs/world.md §5
-#
-# Generated name pools for the rest of the league come in a later milestone.
 
 from __future__ import annotations
 
+import random
 import unicodedata
 from collections import Counter
 from pathlib import Path
@@ -17,6 +17,102 @@ import yaml
 
 MIN_EDIT_DISTANCE = 4  # between a reference name and the real name it is modelled on
 PRIVATE_MAP = Path(__file__).with_name("reference_map.private.yaml")
+HOME_SHARE = 0.5         # about half a squad comes from the club's one or two home regions (world.md §5)
+
+# First names and surnames per region (world.md §5). Common names only; a first name and a surname are drawn
+# separately, so most pairs are new.
+REGIONS: dict[str, tuple[tuple[str, ...], tuple[str, ...]]] = {
+    "british_irish": (
+        ("Aaron", "Adam", "Ben", "Callum", "Cian", "Conor", "Dan", "Declan", "Ewan", "Finn", "Fraser", "George",
+         "Harry", "Jack", "Jamie", "Joe", "Josh", "Kieran", "Lewis", "Liam", "Luke", "Matt", "Niall", "Oisin",
+         "Owen", "Rhys", "Rory", "Ryan", "Sam", "Tom"),
+        ("Ashworth", "Bramley", "Calder", "Cardwell", "Coyle", "Dunleavy", "Ellery", "Fenwick", "Garside", "Gilmour",
+         "Hackett", "Haworth", "Holloway", "Kearney", "Kinsella", "Lockhart", "Maddox", "McAlister", "McGowan",
+         "Moorcroft", "Nolan", "Ormsby", "Pennock", "Quinlan", "Radcliffe", "Rowntree", "Sheridan", "Tolan",
+         "Thursby", "Wainwright", "Whitlock", "Yardley")),
+    "iberian_latin": (
+        ("Alejandro", "Álvaro", "Andrés", "Bruno", "Diego", "Emiliano", "Facundo", "Gonzalo", "Hugo", "Iker",
+         "Joaquín", "Matías", "Leandro", "Mateo", "Miguel", "Nicolás", "Pablo", "Rafael", "Rodrigo", "Santiago",
+         "Sergio", "Thiago", "Tomás", "Vicente", "João", "Gustavo", "Renan", "Caio", "Diogo", "Rúben"),
+        ("Aranda", "Barrios", "Cabral", "Cardozo", "Castaño", "Cuevas", "Duarte", "Echeverri", "Ferreyra", "Galindo",
+         "Ibáñez", "Lezcano", "Lozada", "Medina", "Montero", "Navarrete", "Ocampo", "Pereyra", "Quintana", "Rebelo",
+         "Salgado", "Sarmiento", "Tavares", "Valdés", "Villalba", "Zamora", "Bastos", "Fontes", "Gouveia", "Mourão")),
+    "french": (
+        ("Adrien", "Alexis", "Antoine", "Baptiste", "Bastien", "Clément", "Corentin", "Dorian", "Enzo", "Florian",
+         "Hugo", "Jordan", "Julien", "Arthur", "Loïc", "Lucas", "Mathis", "Maxime", "Nathan", "Quentin", "Rayan",
+         "Romain", "Théo", "Tristan", "Valentin", "Yanis", "Bilal", "Mehdi", "Noah", "Gaëtan"),
+        ("Arnaud", "Barbier", "Besson", "Bonnard", "Carpentier", "Chevalier", "Delorme", "Duval", "Fabre", "Gauthier",
+         "Guérin", "Hamon", "Joubert", "Labbé", "Lacroix", "Lemaire", "Marchand", "Masson", "Morel", "Perrin",
+         "Poirier", "Renaud", "Roussel", "Tessier", "Vasseur", "Vidal", "Brunet", "Collin", "Leclerc", "Mallet")),
+    "west_african": (
+        ("Abdou", "Ade", "Amadou", "Babajide", "Cheikh", "Chinedu", "Daouda", "Emeka", "Ibrahima", "Kossi",
+         "Ebrima", "Kelechi", "Kofi", "Kwame", "Abdoulaye", "Mamadou", "Moussa", "Nnamdi", "Obinna", "Ousmane",
+         "Samba", "Seydou", "Sekou", "Tunde", "Yaw", "Yusuf", "Kwabena", "Femi", "Bakary", "Idrissa"),
+        ("Adeyemi", "Agyemang", "Akinola", "Asante", "Badji", "Bamba", "Camara", "Coulibaly", "Dossou", "Diatta",
+         "Danjuma", "Eze", "Fofana", "Gbadamosi", "Kanouté", "Kouassi", "Kone", "Mensah", "Ndiaye", "Nwosu", "Obi",
+         "Okafor", "Okonkwo", "Owusu", "Sarr", "Sanogo", "Touré", "Traoré", "Yeboah", "Sangaré")),
+    "central_eastern": (
+        ("Adrian", "Aleksandar", "Bartosz", "Damian", "Dominik", "Filip", "Igor", "Ivan", "Jakub", "Kamil", "Karol",
+         "Luka", "Marek", "Marko", "Matej", "Mateusz", "Milan", "Nikola", "Ondřej", "Patrik", "Petr", "Stefan",
+         "Tomáš", "Vlad", "Vuk", "Andrei", "Bogdan", "Lukas", "Mihai", "Denis"),
+        ("Bartos", "Bielski", "Dvořák", "Horvat", "Jankowski", "Kovač", "Krejčí", "Kowalczyk", "Lukić", "Marić",
+         "Mazur", "Nemeth", "Novak", "Pavlović", "Petrović", "Popescu", "Radu", "Sobczak", "Stanković", "Szabó",
+         "Tomić", "Vasić", "Wójcik", "Zieliński", "Kral", "Babić", "Ionescu", "Varga", "Šimek", "Jurić")),
+    "nordic": (
+        ("Anders", "Axel", "Bjørn", "Elias", "Emil", "Erik", "Filip", "Gustav", "Henrik", "Isak", "Jesper", "Jonas",
+         "Kasper", "Lars", "Magnus", "Mikkel", "Nils", "Oskar", "Rasmus", "Sander", "Sindre", "Tobias", "Viktor",
+         "Aksel", "Eirik", "Joel", "Linus", "Mads", "Oliver", "Teemu"),
+        ("Aasen", "Berglund", "Brekke", "Dahl", "Ekström", "Engström", "Fjeld", "Halvorsen", "Hedlund", "Holmberg",
+         "Isaksen", "Jensen", "Karlsson", "Kristiansen", "Lindqvist", "Lund", "Mikkelsen", "Nyberg", "Olsen",
+         "Rasmussen", "Sandvik", "Solberg", "Strand", "Sundqvist", "Thorsen", "Vik", "Virtanen", "Wikström",
+         "Lehtonen", "Haugen")),
+    "italian": (
+        ("Alessandro", "Andrea", "Antonio", "Davide", "Edoardo", "Emanuele", "Fabio", "Federico", "Filippo",
+         "Francesco", "Gabriele", "Giacomo", "Giorgio", "Lorenzo", "Luca", "Manuel", "Marco", "Matteo", "Mattia",
+         "Nicolò", "Pietro", "Riccardo", "Roberto", "Salvatore", "Simone", "Stefano", "Tommaso", "Valerio",
+         "Vincenzo", "Daniele"),
+        ("Amato", "Barone", "Bellini", "Bianchi", "Caruso", "Colombo", "Cattaneo", "De Luca", "Esposito", "Fabbri",
+         "Ferraro", "Gallo", "Gentile", "Greco", "Lombardi", "Longo", "Mancuso", "Marino", "Moretti", "Orlando",
+         "Palumbo", "Rinaldi", "Rizzo", "Santoro", "Serra", "Testa", "Valentini", "Vitale", "Ruggiero", "Sartori")),
+    "dutch_german": (
+        ("Bas", "Daan", "Dennis", "Florian", "Jannik", "Jasper", "Jonas", "Julian", "Kai", "Lars", "Lennart",
+         "Levi", "Luuk", "Malte", "Marvin", "Max", "Moritz", "Niklas", "Pascal", "Rick", "Ruben", "Sem", "Stijn",
+         "Thijs", "Timo", "Tobias", "Wout", "Yannick", "Jens", "Fabian"),
+        ("Bakker", "Becker", "Bergmann", "de Graaf", "de Wit", "Dekker", "Fischer", "Hartmann", "Hellmann", "Jansen",
+         "Kaiser", "Keller", "Koch", "Krüger", "Lange", "Molenaar", "Mulder", "Peters", "Schmitz", "Schröder",
+         "Smit", "van Dam", "van Leeuwen", "Visser", "Vogel", "Wagner", "Weber", "Winter", "Zimmermann", "Bosman")),
+    "middle_east_south_asia": (
+        ("Adil", "Amir", "Arjun", "Ayaan", "Bilal", "Danish", "Farid", "Hamza", "Hassan", "Imran", "Ismail",
+         "Kabir", "Karim", "Khalid", "Mehmet", "Nabil", "Omar", "Rahim", "Rami", "Rohan", "Sami", "Tariq", "Yasin",
+         "Zaid", "Zayan", "Emre", "Kerem", "Arda", "Navid", "Reza"),
+        ("Aziz", "Bashir", "Chaudhari", "Durmaz", "Farouk", "Haddad", "Habibi", "Hussain", "Iqbal", "Jaber",
+         "Kapoor", "Karimi", "Khalil", "Malik", "Mansour", "Mirza", "Nasser", "Qureshi", "Rahman", "Saleh",
+         "Sayed", "Sharif", "Siddiqui", "Tahir", "Yilmaz", "Zaman", "Aydın", "Kaya", "Rostami", "Sabri")),
+}
+
+
+def club_regions(rng: random.Random) -> tuple[str, ...]:
+    """One or two home regions for a club, picked with the seed."""
+    regions = sorted(REGIONS)
+    return tuple(rng.sample(regions, rng.choice((1, 2))))
+
+
+def draw_name(rng: random.Random, region: str, taken_full: set[str], taken_surnames: set[str]) -> str:
+    """A first name and a surname from one region, new in the world and its surname new in the club."""
+    firsts, lasts = REGIONS[region]
+    for _ in range(200):
+        name = f"{rng.choice(firsts)} {rng.choice(lasts)}"
+        if fold(name) not in taken_full and fold(surname(name)) not in taken_surnames:
+            taken_full.add(fold(name))
+            taken_surnames.add(fold(surname(name)))
+            return name
+    raise ValueError(f"name pool {region} has nothing left")
+
+
+def squad_regions(rng: random.Random, home: tuple[str, ...], n: int) -> list[str]:
+    """A region for each of `n` players: about half from the home regions, the rest from anywhere else."""
+    others = sorted(set(REGIONS) - set(home))
+    return [rng.choice(home) if rng.random() < HOME_SHARE else rng.choice(others) for _ in range(n)]
 
 
 def fold(name: str) -> str:
