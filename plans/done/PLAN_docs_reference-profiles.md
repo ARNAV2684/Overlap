@@ -5,7 +5,7 @@
 | Change | Reword the "no real football IP" rule so some clubs and players can be **reference profiles**: invented names and crests, with style and attributes hand-set to resemble real teams and players |
 | Why | A club that plays like a well-known real team gives the whole pipeline an answer key: if the stats, agents or charts describe it wrongly, the team notices at once |
 | Author / owner | Azeem |
-| Status | In progress. Discussed with Arnav on 2026-10-15 (verbal); his review of this PR is the written record |
+| Status | Done (merged in PR #7; discussed with Arnav on 2026-10-15) |
 | Reviewed commit | main · 38a8038 |
 | Branch | `docs/reference-profiles` |
 | Governing spec | Not applicable — project rules, not a component spec. `generator/specs/world.md` §5 is updated separately in the world spec PR |
