@@ -34,6 +34,10 @@ uv run python relay_runner.py                   # the relay, reading both hubs a
 uv run python tests/e2e_local.py --speed 20     # in another terminal: plays a match and checks every message
 ```
 
+Run **one** relay at a time: two relays share the `relay` consumer group, split the partitions and send at the same
+time, so a match's envelopes can arrive out of order. On Azure the Function app is limited to one instance for the
+same reason.
+
 ## On Azure
 
 The same code runs as `function_app.py`. Only settings change: `EVENTHUBS__fullyQualifiedNamespace`,
