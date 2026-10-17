@@ -403,3 +403,160 @@ Numbers come from code. These definitions are shared so the agents, charts and t
 - [ ] Decide whether the translator is a full agent (football phrasing plus a numeric check) or a service call.
 - [ ] Confirm the hero moment's chart for the demo video (currently `shot_map` for every mode).
 - [ ] Decide which language the shared models are written in, and where they live.
+
+## 10. Proposed first insight handoffs (M1 review only)
+
+> **Status: proposed, not agreed.** This section is the shared-contract proposal for
+> [insights S1](plans/active/PLAN_agents_ai-insights-mcp_S1.md). Existing §§1–9 and running services are unchanged.
+> Stats owner (unassigned; Arnav decides), Pranav, Arnav and Vedant must agree their handoffs before dependent code.
+> Azeem reviews source-event meaning. No owner approval, service implementation or resource creation is implied.
+
+### 10.1 Shot-cluster evidence
+
+The first trigger uses only §3 events, not tracking or generator storyline labels. Proposed deterministic rule:
+
+1. Consume the contiguous, deduplicated event prefix for a match in `seq` order. A missing sequence blocks the
+   prefix; two different bodies with the same event identity are an error. Do not bridge a gap by guessing.
+2. Consider each `Shot` in periods 1 and 2 after at least 300,000 ms of that period have elapsed. This deliberate
+   full-window warm-up skips early-half clusters; its recall cost is a D1 review decision.
+3. At triggering event time `t`, count that team's shots in the **same period**, with `t-300000 < match_ms <= t`
+   and event `seq <=` the triggering event's `seq`. All shot outcomes and situations count; a goal is one shot.
+4. If count >= 3, emit unless that team emitted a shot cluster less than 300,000 match ms ago in that period.
+   At exactly the cooldown boundary another cluster is allowed. Reset cooldown at the next period. No trigger
+   on non-shot events; do not merge another team's cluster. Other trigger types are outside this first slice.
+5. Reuse the logical identity `(match_id, shot_cluster, period, team_id, triggering event_id)` on retries.
+   The stats publisher must persist its mapping to a §1.3 `moment_id` and its per-match ordinal atomically with
+   publication/checkpoint state. Never allocate a fresh ID for a repeated event after restart. Overflow fails loudly.
+
+Keep the §5 evidence-pack shape. `window` is `{from_ms:t-300000,to_ms:t}`; `match_ms=t`; `clock` and `period` are
+copied from the triggering event. `event_ids` contains **all counted shots**, ascending by event seq, and
+`player_ids` their distinct shooters in first-appearance order. The triggering shot is the last evidence event.
+
+Exactly these facts are citable in this first slice:
+
+| Key | Value | Unit | Decimals | Meaning |
+|---|---|---|---|---|
+| `shots_last_5min` | Integer count >= 3 | omitted | 0 | Shots by `team_id` in the bounded same-period window |
+| `window_duration_min` | `(to_ms-from_ms)/60000`, exactly 5 | `min` | 0 | Duration of that window, so the worded duration has a claim too |
+
+Labels describe the same meanings. Extra facts, score narration, xG, pressure, comparative dominance and tactical
+causes are deferred. Missing facts are invalid, never zero. A goal in the evidence does not authorise goal or score
+narration without a corresponding approved fact. The source events remain useful for audits/evaluation only.
+
+### 10.2 Immutable moment and context
+
+Proposed source document in Cosmos database `live`, container `moments`, partition `/match_id`:
+
+| Field | Type / rule |
+|---|---|
+| `id`, `moment_id` | Same §1.3 moment ID |
+| `match_id` | §1.3 match ID, matches evidence |
+| `kind` | Literal `moment` (distinguishes job/outbox records in this container) |
+| `schema_version` | Integer 1 |
+| `evidence_version` | Integer 1; corrections are not supported by this first slice |
+| `evidence` | Complete §5 pack restricted by §10.1 |
+| `source` | `{event_seq, period, match_ms}` at the final included event; positive seq, integer times |
+| `context` | `{phase, score:{home,away}, teams:{home:{team_id,name},away:{team_id,name}}}` |
+
+The stats publisher captures context **at the same contiguous event prefix** that generated the evidence. Phase
+is `live` here; nonnegative integer score is derived through `source.event_seq`, never from the final result.
+Names/IDs come from that match's setup. Source period/time must equal the evidence period/time, and every evidence
+event must belong to that prefix/team/period/window. A repeated ID with different content is a conflict; do not upsert
+over the old source. Cosmos system fields are storage metadata, not model input.
+
+This is a **new publisher obligation**, not a capability of today's stats placeholder. The archiver's `matches`
+result and the relay's latest `screen` snapshot cannot supply historical context safely. M2 can use clearly labelled,
+agreed fixtures of this document; M4 requires actual stats publication. Archived events can support a future
+bounded reconstruction design, but there is no automatic fallback to an unbounded archive or latest snapshot.
+
+MCP reads this immutable document by `(match_id, moment_id)`; it returns only the allowlisted context and source
+cursor, not the full document, evidence answer keys, prompts or processing state. The evidence pack is still the
+only numerical authority. Context score/time are metadata and **cannot be cited** by this slice's narrator.
+
+### 10.3 Narration and overlay profile
+
+Narrated lines retain §5.1 `{mode,lang,text,claims}`. Modes are `casual` and `analyst`; language is `en`. In this
+slice, write counts and durations as digits, each occurrence with a matching claim in textual order. A permitted
+line is `Kestlebury United have taken 3 shots in the last 5 minutes.` with claims for `shots_last_5min=3` then
+`window_duration_min=5`. Do not copy §5.1's broader illustrative line as a complete numeric-coverage fixture: it
+contains duration/ordinal numbers beyond its listed claims. The [checker spec](agents/specs/fact-checking.md)
+defines this slice's stricter coverage and semantic rules without changing the existing narrated-line shape.
+
+Overlay body uses §6 with one **proposed additive field**, `period` (integer 1 or 2), copied from the evidence.
+This lets the receiver check half boundaries without guessing or fetching context for every card. It requires
+Pranav, Arnav and Vedant's agreement and a later frontend schema update; no current runtime schema is changed here.
+Proposed first-slice values:
+
+- One overlay per moment, `OV-` plus the moment ID's numeric suffix. `kind=moment`, `priority=normal`.
+- Both English mode texts must pass; otherwise use the approved template for both with `fallback=true` and
+  `verified=false`. Verified model text sets the reverse. Invalid evidence suppresses the overlay entirely.
+- `facts_checked` is the unique union of fact keys checked in the actual text (including checked template values).
+- `player_tags=[]`; `visual.component=key_events`, window equal to the evidence window, highlight the team and
+  triggering event. Text must remain renderable if this optional visual is unavailable. A shot map is deferred.
+- `show_at_ms=evidence.match_ms`; `clock=evidence.clock`: this identifies the observed moment, not a fresh event
+  invented at model completion. `duration_ms=6000` is the **maximum wall-clock display duration**, independent of
+  playback speed. Recheck eligibility as the base playhead advances; remove early on expiry, period change or full time.
+- Suppress live delivery when current base-stream play time is more than 300,000 match ms past `show_at_ms`,
+  the period changed, or the match ended. Do not relabel late analysis as current. Preserve its terminal reason
+  for evaluation; recap/replay use is a future feature. If the current playhead cannot be established, do not send
+  a live card. Reading the latest `screen` for this expiry check is allowed; it is not model context.
+- Frontend eligibility requires a base playhead in the same period, between `show_at_ms` and `show_at_ms+300000`.
+  Period comes from the overlay's proposed `period` field, not guessed from the clock label. At most one card is
+  visible; keep at most
+  two waiting per audience, prefer newest eligible normal-priority cards and record/surface an appropriate empty
+  state. Switching mode/reconnecting must not redisplay the same overlay in one page session.
+
+These timing and visual choices require Vedant's agreement. Current web code does not implement them.
+
+### 10.4 Audience delivery, persistence and catch-up
+
+The relay remains the sole sender to `match-<id>`. Insights publish only to `match-<id>-casual-en` and
+`match-<id>-analyst-en`, with independent persistent seq counters **per group**. The §7 envelope is unchanged;
+its `match_ms`/`clock` describe the original moment and `data` is the full §10.3 overlay, including its proposed
+`period` field. No extra field is added to the outer envelope.
+
+Proposed `overlays` container, partition `/match_id`: store the immutable overlay as `{id:overlay_id, ...overlay}`,
+and typed audience-delivery documents `{id,match_id,kind:audience_delivery,group,seq,envelope,state}` plus
+one counter document per group. Delivery id is `delivery:<group>:<overlay_id>`; counter is
+`{id:counter:<group>,match_id,kind:audience_counter,group,last_seq}` with nonnegative integer `last_seq`.
+The **single insight publisher** reserves seq and creates deliveries/counters
+in one transaction in this container/partition, idempotently keyed by `(group,overlay_id)`. No counter reuse after
+restart. State is `pending`, `sent` or `expired`. Save before sending; ambiguous send failures may resend the
+same envelope. Successful send is service acceptance, not evidence that a browser displayed it.
+
+Workflow completion uses a durable outbox in `moments` (see workflow spec). Transfer to `overlays` is idempotent,
+not atomic across containers. Recovery retries pending entries; matching repeated writes reuse seq. Conflicting
+content is an error. Do not mark the job published merely because its outbox was saved. Partial audience success
+is retained per audience; expire the remaining entries when no longer eligible.
+
+**New endpoint proposal**, not implemented in the current stand-in or Next.js app:
+`GET /api/match/<id>/insights/snapshot?mode=casual&lang=en` (also accepts `analyst`).
+
+```json
+{
+  "match_id": "SYN-1017",
+  "group": "match-SYN-1017-casual-en",
+  "cursor": 1,
+  "envelopes": [{"seq": 1, "kind": "overlay", "match_id": "SYN-1017", "match_ms": 4174400, "clock": "65:34", "data": {}}],
+  "rejected": {"count": 0, "samples": []}
+}
+```
+
+`data` is abbreviated above; the complete example is in [shot-cluster examples](agents/specs/examples/shot-cluster.md).
+Snapshot returns at most the two newest eligible persisted cards (pending or sent), ordered by seq, and the highest
+persisted group seq as `cursor`; expiry filtering uses the base playhead. `envelopes=[]` is valid. `404` unknown match,
+`503` before trustworthy playhead/setup, `400` unsupported mode/language. IDs/modes are validated; caller may only
+read/join the authorised audience. Overlay period must match the original moment.
+
+Join the audience group first, buffer live messages, fetch this snapshot, merge by `(group,seq)` and dedupe visible
+cards by `overlay_id`. Do not assume contiguous seq or discard buffered cards just because seq <= cursor. On a new
+live overlay, validate its period/time against the base playhead before scheduling. Snapshot failure still permits
+valid newly received cards when the base playhead is available; show an insight-history-unavailable state and retry
+catch-up on reconnect. §7.3's base snapshot is not changed and does not already provide this feature.
+
+### 10.5 Approval and implementation boundary
+
+The numeric evidence and transport shapes above are review proposals. D1–D4/D6 decisions are recorded in the
+sprint, not inferred from this document's existence. Promotion requires explicit shared review and matching stats,
+storage and frontend specifications/implementation plans. No current consumer must start accepting §10 by
+accident. Model access/spending (D5) is a separate M3 gate; M1 and local MCP tests require no model calls.
