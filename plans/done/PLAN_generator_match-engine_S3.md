@@ -3,10 +3,10 @@
 | Field | Complete this |
 |---|---|
 | Sprint | S3 — Skyhaven vs Amberholt plays like the teams they resemble, and match totals land in range |
-| Parent plan | [`PLAN_generator_match-engine.md`](PLAN_generator_match-engine.md) · v0.2 |
+| Parent plan | [`PLAN_generator_match-engine.md`](../active/PLAN_generator_match-engine.md) · v0.2 |
 | Milestone in parent plan | M3 (part 2) and the match-total half of M5 · AC-05, AC-06 |
 | Author / owner | Azeem |
-| Status | Done, in review (go from Azeem, 2026-10-17) |
+| Status | Done (merged in PR #35, 2026-10-17) |
 | Reviewed branch and commit | `generator/batch-mode` · 60badf2; `main` · 8fa24d4 merged in on 2026-10-17 after PRs #20–#34 merged |
 | Planned branch | `generator/reference-realism`, from `generator/batch-mode` |
 

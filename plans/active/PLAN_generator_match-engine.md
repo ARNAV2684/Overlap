@@ -10,7 +10,7 @@
 | Review coordinator | Arnav |
 | Affected component owners | Consumers of events and tracking: stats engine, screen relay, archiver (all unassigned, Arnav decides); web app (Vedant). Arnav and Pranav (Event Hubs) |
 | Proposal version and date | v0.2 · 2026-10-16 |
-| Status | In progress (M1 merged in PR #15; M2 in PR #20; M4 in PR #22; M3 part 1 in PR #23; M3 part 2 in review; M5 next) |
+| Status | In progress (M1 merged in PR #15; M2 in PR #20; M4 in PR #22; M3 part 1 in PR #23; M3 part 2 in PR #35; M5 next) |
 | Plan tier and file | Full · `plans/active/PLAN_generator_match-engine.md` |
 | Repository | [ARNAV2684/Overlap](https://github.com/ARNAV2684/Overlap) |
 | Reviewed branch and commit | main · 75b7cba (PR #14, world traits, open and green) |
@@ -280,7 +280,7 @@ stats engine's metrics; the real connection is proven only when G5 streams into 
 ### Handover after implementation
 
 **M3 part 2 — the reference clubs look real** (branch `generator/reference-realism`; sprint plan
-[`PLAN_generator_match-engine_S3.md`](PLAN_generator_match-engine_S3.md), which has the details).
+[`PLAN_generator_match-engine_S3.md`](../done/PLAN_generator_match-engine_S3.md), which has the details).
 
 - **AC-05:** met in the 12-match report: Skyhaven has more possession (0.56 against 0.44), a lower PPDA (13.5 against
   33.3) and more high regains (51.5 against 23.1); Amberholt has the larger counter-shot share (0.17 against 0.10)
