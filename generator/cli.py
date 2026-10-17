@@ -23,6 +23,8 @@ import realism_report
 import recording
 import world
 
+STORYLINE_HELP = "a storyline from generator/storylines/ (repeat for two)"
+
 
 def _clubs() -> tuple[int, dict]:
     version, loaded = world.load_reference_clubs()
@@ -44,7 +46,8 @@ def cmd_world(args) -> int:
 
 def cmd_play(args) -> int:
     version, clubs = _clubs()
-    r = engine.play(clubs, args.home, args.away, match_id=args.match_id, seed=args.seed, kickoff_utc=args.kickoff)
+    r = engine.play(clubs, args.home, args.away, match_id=args.match_id, seed=args.seed, kickoff_utc=args.kickoff,
+                    storylines=tuple(args.storyline or ()))
     out = recording.save(r, Path(args.out) if args.out else recording.MATCHES_DIR, world_version=version)
     s = r.summary
     print(f"{args.match_id} {s['home']['team_id']} {r.score['home']}-{r.score['away']} {s['away']['team_id']} "
@@ -61,7 +64,8 @@ def cmd_live(args) -> int:
     for i, (h, a) in enumerate(zip(args.home, args.away)):
         seed = args.seed + i
         mid = _match_id(args.first_match + i)
-        r = engine.play(clubs, h, a, match_id=mid, seed=seed, kickoff_utc=args.kickoff)
+        r = engine.play(clubs, h, a, match_id=mid, seed=seed, kickoff_utc=args.kickoff,
+                        storylines=tuple(args.storyline or ()))
         print(f"{mid} {h} v {a} (seed {seed}) played: {r.score['home']}-{r.score['away']}, {len(r.events)} events")
         if args.record:
             recording.save(r, world_version=version)
@@ -85,7 +89,8 @@ def cmd_live(args) -> int:
 def cmd_season(args) -> int:
     version, clubs = _clubs()
     d = batch.play_run(clubs, season_id=args.season, seed=args.seed, repeat=args.repeat, home=args.home,
-                       away=args.away, keep_tracking=args.keep_tracking, world_version=version)
+                       away=args.away, keep_tracking=args.keep_tracking, world_version=version,
+                       storylines=tuple(args.storyline or ()))
     print(f"saved {d} (season seed {args.seed})")
     if args.report:
         print(f"report {realism_report.write(d)}")
@@ -163,6 +168,7 @@ def main(argv: list[str] | None = None) -> int:
     pl.add_argument("--seed", type=int, default=1)
     pl.add_argument("--kickoff", default="2026-10-24T19:00:00Z")
     pl.add_argument("--out", help="folder for recorded matches (default data/generated/matches)")
+    pl.add_argument("--storyline", action="append", help=STORYLINE_HELP)
     pl.set_defaults(func=cmd_play)
 
     lv = sub.add_parser("live", help="play matches and stream them live")
@@ -176,6 +182,7 @@ def main(argv: list[str] | None = None) -> int:
     lv.add_argument("--seed", type=int, default=1, help="seed of the first match; the next ones count up")
     lv.add_argument("--first-match", type=int, default=1, help="number of the first match id (SYN-NNNN)")
     lv.add_argument("--kickoff", default="2026-10-24T19:00:00Z")
+    lv.add_argument("--storyline", action="append", help=STORYLINE_HELP)
     lv.set_defaults(func=cmd_live)
 
     se = sub.add_parser("season", help="play a full season, or a repeat run of one fixture")
@@ -186,6 +193,7 @@ def main(argv: list[str] | None = None) -> int:
     se.add_argument("--away", default="AMH")
     se.add_argument("--keep-tracking", action="store_true", help="also save tracking (about 13 MB a match)")
     se.add_argument("--report", action="store_true", help="write the realism report afterwards")
+    se.add_argument("--storyline", action="append", help=STORYLINE_HELP)
     se.set_defaults(func=cmd_season)
 
     rp = sub.add_parser("report", help="write the realism report for a season or run")
@@ -206,7 +214,7 @@ def main(argv: list[str] | None = None) -> int:
         args.away = args.away or ["AMH"]
     try:
         return args.func(args)
-    except (world.WorldError, RuntimeError) as err:
+    except (world.WorldError, RuntimeError, ValueError) as err:
         print(f"error: {err}", file=sys.stderr)
         return 1
 

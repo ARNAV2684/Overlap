@@ -80,10 +80,10 @@ def _table(clubs: dict, results: list[dict]) -> list[dict]:
 
 def play_run(clubs: dict[str, world.Club], *, season_id: str = "S1", seed: int = 1, repeat: int | None = None,
              home: str = "SKH", away: str = "AMH", keep_tracking: bool = False, out_dir: Path = SEASONS_DIR,
-             world_version: int | None = None, log=print) -> Path:
+             world_version: int | None = None, storylines: tuple[str, ...] = (), log=print) -> Path:
     """Play a season (or a repeat run) and save it. Returns the run's folder."""
     if repeat:
-        run = f"{season_id}-repeat-{home}-{away}-{repeat}"
+        run = f"{season_id}-repeat-{home}-{away}-{repeat}" + "".join(f"-{s}" for s in storylines)
         plan = [(i + 1, home, away) for i in range(repeat)]
     else:
         run = season_id
@@ -104,7 +104,7 @@ def play_run(clubs: dict[str, world.Club], *, season_id: str = "S1", seed: int =
                 if shirts:
                     unavailable[tid] = shirts
         r = engine.play(clubs, h, a, match_id=match_id, seed=s, kickoff_utc=kickoff(mw), season_id=season_id,
-                        matchweek=mw, keep_frames=keep_tracking, unavailable=unavailable)
+                        matchweek=mw, keep_frames=keep_tracking, unavailable=unavailable, storylines=storylines)
         recording.save(r, d / "matches", world_version=world_version)
         if not repeat:
             for pid in [p for p, left in bans.items() if left > 0 and p.startswith((h, a))]:
@@ -123,7 +123,8 @@ def play_run(clubs: dict[str, world.Club], *, season_id: str = "S1", seed: int =
     (d / "fixtures.json").write_text(json.dumps(results, indent=2) + "\n", encoding="utf-8")
     (d / "table.json").write_text(json.dumps(_table({t: clubs[t] for t in {x for _, h2, a2 in plan for x in (h2, a2)}},
                                                     results), indent=2) + "\n", encoding="utf-8")
-    meta = {"run": run, "season_id": season_id, "seed": seed, "repeat": repeat, "matches": len(results),
+    meta = {"run": run, "season_id": season_id, "seed": seed, "repeat": repeat, "storylines": list(storylines),
+            "matches": len(results),
             "world_version": world_version, "keep_tracking": keep_tracking}
     (d / "run.json").write_text(json.dumps(meta, indent=2) + "\n", encoding="utf-8")
     return d
