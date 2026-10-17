@@ -12,7 +12,7 @@ and tests stay the same.
 | Azure service | Local replacement | Port | Notes |
 |---|---|---|---|
 | Event Hubs | Microsoft Event Hubs emulator (Docker) | 5672 (AMQP), 5300 (health) | Hubs and consumer groups from `infra/local/eventhubs-config.json` |
-| Storage (Functions checkpoints, later Blob) | Azurite (Docker) | 10000–10002 | Also used by the Event Hubs emulator |
+| Storage (Functions checkpoints, archived tracking) | Azurite (Docker) | 10000–10002 | Also used by the Event Hubs emulator; Blob container `tracking` |
 | Cosmos DB | Microsoft Cosmos DB emulator, Linux (Docker) | 8081 | Check before relying on it: create, upsert, query by partition key, ETag conditions |
 | Azure Functions | Functions Core Tools (`func start`) | 7071 | If its Event Hubs trigger can't use the emulator, `functions/relay_runner.py` runs the same core |
 | Web PubSub | `infra/local/webpubsub_standin/` (ours; Microsoft has no emulator), run on the host with `uv run standin` | 8787 | Same service send API, `/negotiate` and browser protocol `json.webpubsub.azure.v1` |
@@ -48,6 +48,9 @@ It runs on the host (not in Docker), accepts any token locally and binds to `127
 | `OVERLAP_EVENTS_HUB`, `OVERLAP_TRACKING_HUB` | `match-events`, `match-tracking` | Same |
 | `OVERLAP_WEBPUBSUB_ENDPOINT`, hub | `http://localhost:8787`, `live` | `https://<name>.webpubsub.azure.com`, `live`, managed identity |
 | `OVERLAP_COSMOS_ENDPOINT`, database, container | Emulator endpoint, `live`, `screen` | `https://<name>.documents.azure.com`, `live`, `screen`, managed identity |
+| Archive: Cosmos containers | `matches`, `events`, `stats` in `live` (created by the archiver) | Same, created by Bicep |
+| `OVERLAP_ARCHIVE_STORAGE` / `OVERLAP_ARCHIVE_BLOB_ENDPOINT` | Azurite (`UseDevelopmentStorage=true`) | `https://<name>.blob.core.windows.net`, managed identity |
+| `OVERLAP_ARCHIVER_CONSUMER_GROUP` | `archiver` | Same |
 | `AzureWebJobsStorage` | Azurite | Storage account, managed identity |
 | Negotiate URL used by the browser | `http://localhost:8787/negotiate` | Web app's `/api/negotiate` |
 
@@ -58,10 +61,12 @@ local keys are Microsoft's public, documented values, not secrets; Azure never u
 
 1. `ACCEPT_EULA=Y docker compose up -d` in `infra/local/` (the three emulators); wait for the health checks.
 2. Start the Web PubSub stand-in on the host: `uv run standin` in `infra/local/webpubsub_standin/`.
-3. Start the relay: `func start` in `functions/` (or `relay_runner.py`).
+3. Start the relay: `func start` in `functions/` (or `relay_runner.py`). `func start` also runs the archiver;
+   without it, run `uv run python main.py` in `archiver/`.
 4. Open the screen: Vedant's app or, until it exists, `mock/single-match-demo/` on 8788 (moved to the protocol).
-5. Send a match: `uv run python cli.py live --hubs emulator --speed 20` in `generator/`.
-6. Stop: `docker compose down` and Ctrl+C the stand-in and relay (data is cleared; every run starts clean).
+5. Send a match: `uv run python cli.py live --hubs emulator --speed 20` in `generator/`. Add `--record` to keep a
+   copy for `archiver/tests/check_archive.py`.
+6. Stop: `docker compose down` and Ctrl+C the stand-in, relay and archiver (data is cleared; every run starts clean).
 
 ## 6. What local testing does not prove
 
