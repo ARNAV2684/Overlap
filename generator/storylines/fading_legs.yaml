@@ -1,0 +1,18 @@
+# fading_legs.yaml — Storyline
+#
+# Purpose: the side ahead tires from the 70th minute and starts to concede chances
+# Inputs:  -
+# Outputs: read by storylines.py
+# Spec:    generator/specs/storylines.md
+
+name: fading_legs
+summary: The side ahead tires from the 70th minute and starts to concede more chances.
+team: leading
+starts: {minute: 70}
+ends: {minute: full_time}
+ramp_min: 10
+effects:
+  stamina_drain: 1.3
+answer_key:
+  signals: [shots_conceded_per_5min_up]
+  detect_within_min: 15

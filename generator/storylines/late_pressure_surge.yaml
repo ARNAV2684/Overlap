@@ -1,8 +1,19 @@
-# late_pressure_surge.yaml — Example storyline
+# late_pressure_surge.yaml — Storyline
 #
-# Purpose: one team raises its press after the 70th minute
+# Purpose: the home side raises its press and shoots more after the 55th minute
 # Inputs:  -
-# Outputs: -
+# Outputs: read by storylines.py
 # Spec:    generator/specs/storylines.md
-#
-# Status: placeholder. Nothing is implemented yet. Write and agree the spec first.
+
+name: late_pressure_surge
+summary: The home side raises its press and shoots more from around the 55th minute.
+team: home
+starts: {minute: 55, jitter_min: 3}
+ends: {minute: full_time}
+ramp_min: 5
+effects:
+  style: {press_intensity: 0.20, press_height: 0.15, counter_press: 0.10}
+  shot_appetite: 1.3
+answer_key:
+  signals: [pressures_per_5min_up, high_regains_up, shots_per_5min_up, momentum_share_up]
+  detect_within_min: 10

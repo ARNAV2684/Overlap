@@ -1,0 +1,20 @@
+# star_night.yaml — Storyline
+#
+# Purpose: one player has a big night (Skyhaven's number 9)
+# Inputs:  -
+# Outputs: read by storylines.py
+# Spec:    generator/specs/storylines.md
+
+name: star_night
+summary: Skyhaven's number 9 has one of those nights; his team looks for him more.
+team: SKH
+player: 9
+starts: {minute: 0}
+ends: {minute: full_time}
+ramp_min: 0
+effects:
+  player_form: 5
+  shot_appetite: 1.2
+answer_key:
+  signals: [player_shots, player_goals]
+  detect_within_min: 90

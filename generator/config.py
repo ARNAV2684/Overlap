@@ -26,7 +26,7 @@ ADDED_MAX_MINUTES = 10
 
 # --- Randomness (engine.md §7) -----------------------------------------------------------------------------------
 
-STREAMS = ("conditions", "decisions", "outcomes", "discipline", "movement", "restarts")
+STREAMS = ("conditions", "decisions", "outcomes", "discipline", "movement", "restarts", "storylines")
 
 # --- Conditions (engine.md §9) -----------------------------------------------------------------------------------
 

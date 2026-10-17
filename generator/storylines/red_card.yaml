@@ -1,0 +1,19 @@
+# red_card.yaml — Storyline
+#
+# Purpose: the away side fouls more in a first-half window, so a red card becomes likely (never certain)
+# Inputs:  -
+# Outputs: read by storylines.py
+# Spec:    generator/specs/storylines.md
+
+name: red_card
+summary: The away side loses its discipline between the 28th and 42nd minute; a red card becomes likely.
+team: away
+starts: {minute: 28}
+ends: {minute: 42}
+ramp_min: 1
+effects:
+  foul_rate: 2.5
+  card_rate: 2.0
+answer_key:
+  signals: [fouls_per_5min_up, cards_up, red_card]
+  detect_within_min: 5

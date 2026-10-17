@@ -1,0 +1,19 @@
+# comeback.yaml — Storyline
+#
+# Purpose: the side trailing at the hour goes for it
+# Inputs:  -
+# Outputs: read by storylines.py
+# Spec:    generator/specs/storylines.md
+
+name: comeback
+summary: From the hour, whichever side is behind goes more direct, presses higher and shoots more.
+team: trailing
+starts: {minute: 60}
+ends: {minute: full_time}
+ramp_min: 8
+effects:
+  style: {directness: 0.15, press_intensity: 0.20}
+  shot_appetite: 1.4
+answer_key:
+  signals: [shots_per_5min_up, momentum_share_up, pressures_per_5min_up]
+  detect_within_min: 10
