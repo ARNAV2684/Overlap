@@ -70,6 +70,22 @@ has already applied.**
 
 Consumers reject unknown fields, so a typo fails loudly instead of being silently dropped.
 
+### 1.4 Event Hubs transport
+
+How the generator (and the temporary mock) put messages on Event Hubs. This is the behaviour of the generator's live
+mode ([`generator/specs/live-and-batch.md`](generator/specs/live-and-batch.md) §1, decision L1).
+
+| Hub | Messages, in order | `kind` property |
+|---|---|---|
+| `match-events` | The match setup (§2), once per match and **before any of that match's events**; then every event (§3) in `seq` order | `setup`, then `event` |
+| `match-tracking` | Every 5 Hz tracking frame (§4), in time order | `tracking` |
+
+- **Partition key** `match_id` on both hubs, so one match stays on one partition and in order.
+- **Properties:** every message carries the application properties `kind` and `match_id`. The body is the JSON object
+  from §2–§4, with content type `application/json`.
+- Consumers of `match-events` use `kind` to tell the setup from events. The setup has no `seq`.
+- A send retry may deliver a message twice; consumers drop an event whose `seq` they have already applied (§1.3).
+
 ---
 
 ## 2. Match setup
