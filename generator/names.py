@@ -17,6 +17,7 @@ import yaml
 
 MIN_EDIT_DISTANCE = 4  # between a reference name and the real name it is modelled on
 PRIVATE_MAP = Path(__file__).with_name("reference_map.private.yaml")
+DENYLIST = Path(__file__).with_name("name_denylist.private.txt")  # well-known real full names, one per line
 HOME_SHARE = 0.5         # about half a squad comes from the club's one or two home regions (world.md §5)
 
 # First names and surnames per region (world.md §5). Common names only; a first name and a surname are drawn
@@ -28,7 +29,7 @@ REGIONS: dict[str, tuple[tuple[str, ...], tuple[str, ...]]] = {
          "Owen", "Rhys", "Rory", "Ryan", "Sam", "Tom"),
         ("Ashworth", "Bramley", "Calder", "Cardwell", "Coyle", "Dunleavy", "Ellery", "Fenwick", "Garside", "Gilmour",
          "Hackett", "Haworth", "Holloway", "Kearney", "Kinsella", "Lockhart", "Maddox", "McAlister", "McGowan",
-         "Moorcroft", "Nolan", "Ormsby", "Pennock", "Quinlan", "Radcliffe", "Rowntree", "Sheridan", "Tolan",
+         "Moorcroft", "Nolan", "Ormsby", "Pennock", "Quinlan", "Rawcliffe", "Rowntree", "Sheridan", "Tolan",
          "Thursby", "Wainwright", "Whitlock", "Yardley")),
     "iberian_latin": (
         ("Alejandro", "Álvaro", "Andrés", "Bruno", "Diego", "Emiliano", "Facundo", "Gonzalo", "Hugo", "Iker",
@@ -41,7 +42,7 @@ REGIONS: dict[str, tuple[tuple[str, ...], tuple[str, ...]]] = {
         ("Adrien", "Alexis", "Antoine", "Baptiste", "Bastien", "Clément", "Corentin", "Dorian", "Enzo", "Florian",
          "Hugo", "Jordan", "Julien", "Arthur", "Loïc", "Lucas", "Mathis", "Maxime", "Nathan", "Quentin", "Rayan",
          "Romain", "Théo", "Tristan", "Valentin", "Yanis", "Bilal", "Mehdi", "Noah", "Gaëtan"),
-        ("Arnaud", "Barbier", "Besson", "Bonnard", "Carpentier", "Chevalier", "Delorme", "Duval", "Fabre", "Gauthier",
+        ("Arnaud", "Barbier", "Bessard", "Bonnard", "Carpentier", "Chevalier", "Delorme", "Duval", "Fabre", "Gauthier",
          "Guérin", "Hamon", "Joubert", "Labbé", "Lacroix", "Lemaire", "Marchand", "Masson", "Morel", "Perrin",
          "Poirier", "Renaud", "Roussel", "Tessier", "Vasseur", "Vidal", "Brunet", "Collin", "Leclerc", "Mallet")),
     "west_african": (
@@ -64,7 +65,7 @@ REGIONS: dict[str, tuple[tuple[str, ...], tuple[str, ...]]] = {
          "Aksel", "Eirik", "Joel", "Linus", "Mads", "Oliver", "Teemu"),
         ("Aasen", "Berglund", "Brekke", "Dahl", "Ekström", "Engström", "Fjeld", "Halvorsen", "Hedlund", "Holmberg",
          "Isaksen", "Jensen", "Karlsson", "Kristiansen", "Lindqvist", "Lund", "Mikkelsen", "Nyberg", "Olsen",
-         "Rasmussen", "Sandvik", "Solberg", "Strand", "Sundqvist", "Thorsen", "Vik", "Virtanen", "Wikström",
+         "Rasmussen", "Sandvik", "Solvik", "Strand", "Sundqvist", "Thorsen", "Vik", "Virtanen", "Wikström",
          "Lehtonen", "Haugen")),
     "italian": (
         ("Alessandro", "Andrea", "Antonio", "Davide", "Edoardo", "Emanuele", "Fabio", "Federico", "Filippo",
@@ -72,8 +73,8 @@ REGIONS: dict[str, tuple[tuple[str, ...], tuple[str, ...]]] = {
          "Nicolò", "Pietro", "Riccardo", "Roberto", "Salvatore", "Simone", "Stefano", "Tommaso", "Valerio",
          "Vincenzo", "Daniele"),
         ("Amato", "Barone", "Bellini", "Bianchi", "Caruso", "Colombo", "Cattaneo", "De Luca", "Esposito", "Fabbri",
-         "Ferraro", "Gallo", "Gentile", "Greco", "Lombardi", "Longo", "Mancuso", "Marino", "Moretti", "Orlando",
-         "Palumbo", "Rinaldi", "Rizzo", "Santoro", "Serra", "Testa", "Valentini", "Vitale", "Ruggiero", "Sartori")),
+         "Ferraro", "Gualtieri", "Gentile", "Greco", "Lombardi", "Longo", "Mancuso", "Marino", "Moretti", "Orlando",
+         "Palumbo", "Rinaldi", "Rinaudo", "Santoro", "Serra", "Testa", "Valentini", "Vitale", "Ruggiero", "Sartori")),
     "dutch_german": (
         ("Bas", "Daan", "Dennis", "Florian", "Jannik", "Jasper", "Jonas", "Julian", "Kai", "Lars", "Lennart",
          "Levi", "Luuk", "Malte", "Marvin", "Max", "Moritz", "Niklas", "Pascal", "Rick", "Ruben", "Sem", "Stijn",
@@ -168,3 +169,17 @@ def reference_name_problems(players: list[tuple[str, int, str]], private_map: di
         elif edit_distance(invented, real) < MIN_EDIT_DISTANCE:
             problems.append(f"{team_id}-{shirt:02d} {invented}: fewer than {MIN_EDIT_DISTANCE} edits from the real name")
     return problems
+
+
+def load_denylist(path: Path = DENYLIST) -> set[str] | None:
+    """Folded well-known real full names, or None when the file isn't on this machine (world.md §5)."""
+    if not path.exists():
+        return None
+    lines = path.read_text(encoding="utf-8").splitlines()
+    return {fold(line) for line in lines if line.strip() and not line.lstrip().startswith("#")}
+
+
+def denylist_problems(players: list[tuple[str, str]], denylist: set[str]) -> list[str]:
+    """`players` is (team_id, full name). Names the player, never the list's entry."""
+    return [f"{team_id}: {name} matches a well-known real name; change the name pools"
+            for team_id, name in players if fold(name) in denylist]

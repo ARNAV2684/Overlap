@@ -16,7 +16,7 @@
 # `default_xi`: shirt numbers in the formation's slot order, goalkeeper first.
 # `set_pieces`: ordered taker shirt numbers for penalties, corners and direct free kicks.
 
-world_version: 3  # bump on every change to this file (specs/world.md §7)
+world_version: 4  # bump on every change to this file (specs/world.md §7)
 
 clubs:
   - team_id: CAL
@@ -41,7 +41,7 @@ clubs:
          attr: [66, 76, 62, 40, 87, 82, 62, 66, 88, 85, 88, 10]}
       - {shirt: 5, name: Stijn de Wit, pos: CB, role: stopper, other: [DM], weak_foot: 4,
          attr: [74, 72, 64, 42, 85, 82, 72, 62, 84, 82, 82, 10]}
-      - {shirt: 3, name: Clément Besson, pos: LB, role: inverted_fullback, other: [DM, AM], preferred_foot: left, weak_foot: 4,
+      - {shirt: 3, name: Clément Bessard, pos: LB, role: inverted_fullback, other: [DM, AM], preferred_foot: left, weak_foot: 4,
          attr: [78, 78, 76, 60, 74, 84, 78, 74, 74, 76, 76, 10]}
       - {shirt: 6, name: Tobias Strand, pos: DM, role: box_to_box, other: [CM, LM], preferred_foot: both, weak_foot: 5,
          attr: [74, 82, 80, 66, 78, 88, 76, 80, 80, 62, 80, 10]}
@@ -73,7 +73,7 @@ clubs:
          attr: [70, 86, 86, 62, 72, 80, 74, 82, 76, 55, 86, 10]}
       - {shirt: 20, name: Andrei Jankowski, pos: AM, role: playmaker,
          attr: [74, 78, 84, 70, 35, 70, 80, 80, 68, 40, 72, 10]}
-      - {shirt: 21, name: Giacomo Rizzo, pos: DM, role: anchor, other: [CM],
+      - {shirt: 21, name: Giacomo Serra, pos: DM, role: anchor, other: [CM],
          attr: [70, 76, 74, 52, 74, 82, 72, 74, 72, 62, 74, 10]}
       - {shirt: 22, name: Pietro Greco, pos: LW, role: inverted_winger,
          attr: [94, 70, 92, 68, 40, 78, 95, 70, 66, 45, 72, 10]}
@@ -81,7 +81,7 @@ clubs:
          attr: [80, 86, 89, 84, 52, 82, 86, 88, 82, 50, 85, 10]}
       - {shirt: 24, name: Federico Gentile, pos: RW, role: inverted_winger, preferred_foot: left, weak_foot: 2,
          attr: [84, 66, 78, 64, 38, 74, 85, 64, 64, 45, 64, 10]}
-      - {shirt: 25, name: Valerio Gallo, pos: RW, role: inverted_winger,
+      - {shirt: 25, name: Valerio Gualtieri, pos: RW, role: inverted_winger,
          attr: [82, 62, 74, 60, 35, 72, 84, 60, 60, 45, 60, 10]}
 
   - team_id: DTN
@@ -106,7 +106,7 @@ clubs:
          attr: [66, 64, 56, 50, 74, 74, 62, 54, 72, 82, 68, 10]}
       - {shirt: 5, name: Mattia Testa, pos: CB, role: stopper, weak_foot: 4,
          attr: [62, 64, 50, 38, 75, 74, 60, 54, 76, 80, 72, 10]}
-      - {shirt: 6, name: Nils Solberg, pos: CB, role: stopper, weak_foot: 1,
+      - {shirt: 6, name: Nils Solvik, pos: CB, role: stopper, weak_foot: 1,
          attr: [70, 60, 56, 35, 72, 74, 68, 50, 68, 76, 64, 10]}
       - {shirt: 3, name: Zayan Zaman, pos: LWB, role: wing_back, other: [LM, RM], preferred_foot: left, weak_foot: 2,
          attr: [76, 76, 68, 50, 64, 82, 74, 72, 66, 55, 68, 10]}
