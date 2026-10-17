@@ -1,0 +1,6 @@
+# Installed by the Azure Functions host. Keep in step with pyproject.toml.
+azure-functions>=1.21
+azure-cosmos>=4.7
+azure-messaging-webpubsubservice>=1.2
+azure-identity>=1.17
+azure-storage-blob>=12.20

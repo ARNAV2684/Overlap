@@ -1,0 +1,13 @@
+# Secrets scan configuration (used by the "Secrets scan" check in .github/workflows/pr-checks.yml).
+# Keeps all of gitleaks' default rules. The only allowed values are Microsoft's public, documented emulator keys
+# (Cosmos DB emulator, Azurite), which work solely against the local emulators. Never add a real key here.
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Cosmos DB emulator well-known key (public, local only)"
+regexes = ['''C2y6yDjf5/R\+ob0N8A7Cgv30VRDJIWEHLM\+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==''']
+
+[[allowlists]]
+description = "Azurite development account key (public, local only)"
+regexes = ['''Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==''']

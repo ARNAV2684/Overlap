@@ -10,7 +10,7 @@
 | Review coordinator | Arnav |
 | Affected component owners | Setup consumers: stats engine, screen relay, archiver (unassigned, Arnav decides), web app (Vedant), agents (unassigned, Arnav decides); `mock/` validator (Arnav) |
 | Proposal version and date | v0.1 · 2026-10-16 |
-| Status | Ready for review |
+| Status | Done (merged in PR #17) |
 | Plan tier and file | Full · `plans/active/PLAN_contracts_match-conditions.md` |
 | Repository | [ARNAV2684/Overlap](https://github.com/ARNAV2684/Overlap) |
 | Reviewed branch and commit | main · 75b7cba |

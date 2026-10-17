@@ -5,7 +5,7 @@
 | Change | Add a `Deliverables` section to `plans/REGISTRY.md` and record Azeem's deliverables: the whole synthetic generator layer (G1–G6), not only the world builder |
 | Why | Teammates' assistants read `REGISTRY.md` as the source of truth; with only a world-builder plan on record, the generator work was read as "build `world.py`" |
 | Author / owner | Arnav (assignment); Azeem is the owner recorded |
-| Status | In progress (go from Arnav, 16 Oct: push and merge) |
+| Status | Done (merged in PR #13) |
 | Reviewed commit | main · 3dd329c |
 | Branch | `plans/generator-deliverables` |
 | Governing spec | Not applicable — ownership record, not a component spec |

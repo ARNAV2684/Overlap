@@ -1,0 +1,24 @@
+[project]
+name = "overlap-webpubsub-standin"
+version = "0.1.0"
+description = "Local stand-in for Azure Web PubSub (hub live) and the snapshot route. Development only."
+requires-python = ">=3.12"
+dependencies = [
+    "aiohttp>=3.9",
+    "azure-cosmos>=4.7",
+]
+
+[dependency-groups]
+check = [
+    "azure-messaging-webpubsubservice>=1.2",
+]
+
+[project.scripts]
+standin = "standin.server:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["standin"]

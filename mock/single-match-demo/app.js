@@ -30,15 +30,25 @@ if(env.kind==='positions'&&Array.isArray(d.frames)){if(received!==null)state.fra
 state.dirty=true;}
 function updateConnection(text,good=false){$('connection').textContent=text;$('connection').classList.toggle('waiting',!good);}
 function note(text){if(!state.paused)$('notice').textContent=text;}
-async function connect(){const generation=++state.generation;updateConnection('Connecting');const ws=new WebSocket(`ws://localhost:8787/client/hubs/live?groups=match-${MATCH}`);state.socket=ws;let pending=[];let loading=true;
-ws.onmessage=event=>{if(generation!==state.generation)return;try{const env=JSON.parse(event.data),received=Date.now();if(loading)pending.push({env,received});else ingest(env,received);}catch(error){note('A message could not be parsed. The viewer is still listening.');}};
-ws.onopen=async()=>{if(generation!==state.generation)return;state.connected=true;resetView();updateConnection('● Live connection',true);note('Loading earlier match events while new messages arrive…');
+// Web PubSub client protocol (CONTRACTS.md §7): negotiate, connect with json.webpubsub.azure.v1, join the match group,
+// then load the snapshot. Works the same against the local stand-in and Azure Web PubSub; only SOURCE changes.
+const SUBPROTOCOL = 'json.webpubsub.azure.v1';
+async function connect(){const generation=++state.generation;updateConnection('Connecting');let url;
+try{const response=await fetch(`${SOURCE}/negotiate?groups=match-${MATCH}`,{signal:AbortSignal.timeout(7000),cache:'no-store'});if(!response.ok)throw new Error(`Negotiate HTTP ${response.status}`);url=(await response.json()).url;}
+catch(error){if(generation!==state.generation)return;updateConnection('Reconnecting');note('Cannot reach the stream server on port 8787. Retrying in 3 seconds.');state.retry=setTimeout(connect,3000);return;}
+if(generation!==state.generation)return;const ws=new WebSocket(url,SUBPROTOCOL);state.socket=ws;let pending=[];let loading=true;
+ws.onmessage=event=>{if(generation!==state.generation)return;let msg;try{msg=JSON.parse(event.data);}catch(error){note('A message could not be parsed. The viewer is still listening.');return;}
+if(msg.type==='system'&&msg.event==='connected'){ws.send(JSON.stringify({type:'joinGroup',group:`match-${MATCH}`,ackId:1}));return;}
+if(msg.type==='ack'&&msg.ackId===1){catchUp();return;}
+if(msg.type!=='message'||msg.from!=='group'||msg.dataType!=='json')return;const env=msg.data,received=Date.now();if(loading)pending.push({env,received});else ingest(env,received);};
+ws.onopen=()=>{if(generation!==state.generation)return;updateConnection('Joining match group');};
+const catchUp=async()=>{if(generation!==state.generation)return;state.connected=true;resetView();updateConnection('● Live connection',true);note('Loading earlier match events while new messages arrive…');
 let historyLoaded=false;let snapshotEnvelopes=[];
 try{const response=await fetch(`${SOURCE}/api/match/${MATCH}/snapshot`,{signal:AbortSignal.timeout(7000),cache:'no-store'});if(!response.ok)throw new Error(`Snapshot HTTP ${response.status}`);const snapshot=await response.json();if(generation!==state.generation||ws.readyState!==WebSocket.OPEN)return;setSetup(snapshot.setup);snapshotEnvelopes=snapshot.envelopes||[];historyLoaded=true;
 }catch(error){if(generation!==state.generation)return;note('Earlier history is unavailable. New live messages will still appear.');}
 if(generation!==state.generation||ws.readyState!==WebSocket.OPEN)return;loading=false;const combined=new Map(snapshotEnvelopes.map(env=>[`${env.seq}:${env.kind}`,{env,received:null}]));for(const p of pending)combined.set(`${p.env.seq}:${p.env.kind}`,p);for(const p of [...combined.values()].sort((a,b)=>a.env.seq-b.env.seq))ingest(p.env,p.received);pending=[];if(historyLoaded)note('Connected. New messages appear automatically; earlier events are marked History.');};
-ws.onerror=()=>{if(generation===state.generation)note('Cannot reach the mock. Keep its terminal running with --web on port 8787.');};
-ws.onclose=()=>{if(generation!==state.generation)return;state.connected=false;loading=false;pending=[];updateConnection(state.phase==='full_time'?'Match finished':'Reconnecting');note(state.phase==='full_time'?'Full time. The mock closed its connection; the last received data remains visible.':'Connection lost. Displaying the last received data; retrying in 3 seconds.');if(state.phase!=='full_time')state.retry=setTimeout(connect,3000);};}
+ws.onerror=()=>{if(generation===state.generation)note('Cannot reach the stream server. Keep it running on port 8787.');};
+ws.onclose=()=>{if(generation!==state.generation)return;state.connected=false;loading=false;pending=[];updateConnection(state.phase==='full_time'?'Match finished':'Reconnecting');note(state.phase==='full_time'?'Full time. The stream closed its connection; the last received data remains visible.':'Connection lost. Displaying the last received data; retrying in 3 seconds.');if(state.phase!=='full_time')state.retry=setTimeout(connect,3000);};}
 function node(tag,text,cls){const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;}
 function showPayload(row){if(!row)return;$('inspect-label').textContent=`${row.title} · elapsed ${elapsed(row.ms)} · ${row.received===null?'history':wallTime(row.received)}`;$('payload').textContent=JSON.stringify(row.raw,null,2);}
 function renderFeed(){const list=state.rows.filter(r=>state.filter==='all'||(state.filter==='tracking'?r.kind==='tracking':r.kind!=='tracking')).slice(-120).reverse();const fragment=document.createDocumentFragment();for(const row of list){const b=node('button',undefined,`row ${row.received===null?'history':''} ${state.selected===row.key?'selected':''}`);b.type='button';b.dataset.key=row.key;b.setAttribute('aria-label',`${row.title} at match elapsed ${elapsed(row.ms)}`);

@@ -5,7 +5,7 @@
 | Change | Fill `CALIBRATION.md` with public sources for the targets the engine specs use, mark each row's source quality, and add the shot, physical and conditions targets |
 | Why | `CALIBRATION.md` says no target is used for tuning without a public source; the engine's smoke check (M5 of `PLAN_generator_match-engine`) needs them |
 | Author / owner | Azeem |
-| Status | In progress (go from Azeem, 16 Oct) |
+| Status | Done (merged in PR #16). Follow-up: the rows still marked "needs source" in `CALIBRATION.md` |
 | Reviewed commit | main · 75b7cba |
 | Branch | `generator/calibration-sources` |
 | Governing spec | `generator/specs/actions.md` §4 and §6, `engine.md` §4 and §9, `movement.md` §4 (in PR #15). `CALIBRATION.md` itself has no spec |

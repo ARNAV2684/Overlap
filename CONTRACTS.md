@@ -70,6 +70,22 @@ has already applied.**
 
 Consumers reject unknown fields, so a typo fails loudly instead of being silently dropped.
 
+### 1.4 Event Hubs transport
+
+How the generator (and the temporary mock) put messages on Event Hubs. This is the behaviour of the generator's live
+mode ([`generator/specs/live-and-batch.md`](generator/specs/live-and-batch.md) §1, decision L1).
+
+| Hub | Messages, in order | `kind` property |
+|---|---|---|
+| `match-events` | The match setup (§2), once per match and **before any of that match's events**; then every event (§3) in `seq` order | `setup`, then `event` |
+| `match-tracking` | Every 5 Hz tracking frame (§4), in time order | `tracking` |
+
+- **Partition key** `match_id` on both hubs, so one match stays on one partition and in order.
+- **Properties:** every message carries the application properties `kind` and `match_id`. The body is the JSON object
+  from §2–§4, with content type `application/json`.
+- Consumers of `match-events` use `kind` to tell the setup from events. The setup has no `seq`.
+- A send retry may deliver a message twice; consumers drop an event whose `seq` they have already applied (§1.3).
+
 ---
 
 ## 2. Match setup
@@ -172,10 +188,30 @@ the same match.
 In period 2 the home team attacks west, so Okafor's team-frame position `(76, 10)` on the left wing is pitch-frame
 `(24, 90)`.
 
-- The screen relay bundles frames into **about one message per second**; the browser tweens between them.
-- The archiver stores tracking as compressed **per-minute chunks** in Blob Storage, not one document per frame.
+- The screen relay bundles up to five frames per `positions` envelope: about one message per **match** second (§7.2),
+  so about 20 per wall-clock second at 20×. The browser tweens between them.
+- The archiver stores tracking as compressed **per-minute chunks** in Blob Storage, not one document per frame (§4.1).
 - Speeds must come from smooth motion (acceleration and top-speed limits), not noise, or sprint tags and distance
   covered become meaningless.
+
+### 4.1 Archived match (archiver → replay, recap, judges' link)
+
+Every match is kept permanently by the archiver ([`archiver/specs/storage.md`](archiver/specs/storage.md)), so replays
+never depend on Event Hubs. All Cosmos containers are in database `live` with partition key `/match_id`.
+
+| Where | Holds | Document / file |
+|---|---|---|
+| Cosmos `matches` | The setup and, at full time, the result | `{ "id": <match_id>, "match_id", "status": "live" \| "finished", "setup": <§2>, "result": { "score": { "home", "away" }, "events" } }` (`result` only when finished) |
+| Cosmos `events` | Every event | The §3 event unchanged, plus `"id": <event_id>` |
+| Cosmos `stats` | Every stat panel | The panel unchanged, plus `"id": "stats-<match_ms, 9 digits>"` |
+| Blob container `tracking` | Every tracking frame | `<match_id>/p<period>/m<minute of the period, 3 digits>.ndjson.gz`: gzip, one §4 frame per line, ascending `match_ms` |
+
+- **Reading a match:** the `matches` document first (setup, status); events ordered by `seq`; frames from the tracking
+  files ordered by period then minute; stat panels ordered by `match_ms`.
+- A tracking file can contain the same frame twice after a redelivery: readers keep the first frame for each
+  `match_ms` and drop repeats. A file may be several gzip members joined together; standard gzip readers handle this.
+- The minute in a file name is `period_ms ÷ 60000` (minute 0 of period 2 is the first minute after kick-off).
+- Replays sent to browsers use the §7 envelope, built from this format by the replay route.
 
 ## 5. Evidence pack (stats engine → agents)
 
@@ -280,9 +316,64 @@ messages and replay files all use this one shape, so the client has one code pat
 
 | Group | Carries |
 |---|---|
-| `match-<id>` | Events, positions, stat panels |
+| `match-<id>` | `event`, `positions`, `status` and `stats`, all sent by the screen relay |
 | `match-<id>-<mode>-<lang>` | Overlays for one audience |
 | `match-<id>-player-<playerId>` | Tags for followers of one player |
+
+### 7.1 Senders and numbering
+
+- **One sender per group.** The screen relay is the only sender on `match-<id>`. Other producers never send to that
+  group directly: the stats engine puts its stat panels on `match-events` with application property `kind=stats`, and
+  the relay forwards them as `stats` envelopes.
+- **`seq` belongs to the group.** It starts at 1 for a match and goes up by one for every envelope the group's sender
+  sends, across all kinds. It survives a relay restart (the relay stores it). It is not the event's own `seq` (§3),
+  which stays unchanged inside `data`.
+- **Clients dedupe on `seq` within one group.** A client that joins several groups keeps one dedupe set per group.
+- `match_ms` and `clock` describe the content (below); envelope order is send order, so `match_ms` can step back
+  slightly between kinds. Clients order the timeline by `match_ms`, never by `clock`.
+
+### 7.2 Payloads on `match-<id>`
+
+| `kind` | `data` | Envelope `match_ms` / `clock` |
+|---|---|---|
+| `event` | The complete §3 event, unchanged | The event's |
+| `positions` | `{ "frames": [ … ] }`: 1 to 5 complete §4 frames from one period, in `match_ms` order. Five frames ≈ one second of match time | The last frame's |
+| `status` | `{ "phase", "period", "score": { "home", "away" } }`; the first status of a match (`phase: "pre_match"`) also has `"setup"` (the complete §2 setup) | The triggering setup or event's (0 and `"0:00"` before kickoff) |
+| `stats` | The stat panel payload, defined by the stats engine (§9) | The panel's |
+
+- `phase` is `pre_match`, `live`, `half_time` or `full_time`; `period` is 0 before kickoff, then 1 or 2.
+- A status is sent **after** the event that causes it: `PeriodStart` (→ `live`), a `Shot` with
+  `shot_outcome: "goal"` (score + 1 for that side), `PeriodEnd` of period 1 (→ `half_time`) and of period 2
+  (→ `full_time`). The score only ever comes from goal shots.
+- Frames are never dropped: a short bundle is sent when frames pause or the period changes.
+
+```json
+{ "seq": 3, "kind": "status", "match_id": "SYN-0042", "match_ms": 0, "clock": "0:00",
+  "data": { "phase": "live", "period": 1, "score": { "home": 0, "away": 0 } } }
+```
+
+### 7.3 Snapshot (catch-up)
+
+A browser that joins late or reconnects joins the group first, holds live messages back, fetches the snapshot, merges
+the two by `seq` and continues live.
+
+`GET /api/match/<id>/snapshot` returns:
+
+```json
+{ "match_id": "SYN-0042",
+  "setup": { },
+  "status": { "seq": 1204, "kind": "status", "...": "the latest status envelope" },
+  "envelopes": [ ],
+  "rejected": { "count": 0, "samples": [] } }
+```
+
+- `envelopes`: every `event`, `status` and `stats` envelope sent so far plus the latest `positions` envelope, in `seq`
+  order. Older `positions` are left out, so `seq` has gaps; clients never assume +1.
+- `rejected`: envelopes the server could not include because they failed validation; `samples` holds up to five short
+  descriptions. Always present, `count: 0` when nothing was rejected.
+- `404` for an unknown match, `503` while the match has no setup yet; error bodies are `{ "error": "<code>" }`.
+- The same shape is served locally (Web PubSub stand-in) and on Azure (the web app's snapshot route reading the relay's
+  store).
 
 ---
 
@@ -307,8 +398,8 @@ Numbers come from code. These definitions are shared so the agents, charts and t
 ## 9. Open questions for the team
 
 - [ ] Agree the momentum-swing and press-change thresholds.
-- [ ] Agree the stat panel (`kind: stats`) payload shape.
-- [ ] Agree the per-minute tracking chunk format for replays.
+- [ ] Agree the stat panel (`kind: stats`) payload shape (it reaches browsers through the relay, §7.1).
+- [x] Agree the per-minute tracking chunk format for replays (§4.1).
 - [ ] Decide whether the translator is a full agent (football phrasing plus a numeric check) or a service call.
 - [ ] Confirm the hero moment's chart for the demo video (currently `shot_map` for every mode).
 - [ ] Decide which language the shared models are written in, and where they live.
