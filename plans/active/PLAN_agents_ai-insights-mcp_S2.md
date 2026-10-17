@@ -5,7 +5,7 @@
 | Sprint | S2 — read a stored moment through a real local MCP client |
 | Parent | [AI insights/MCP roadmap](PLAN_agents_ai-insights-mcp.md), M2 / F2 |
 | Owner | Pranav |
-| Status | Implemented and verified locally; publication authorised, preparing implementation review |
+| Status | In review — implementation published in PR #45 |
 | Baseline | `main` at `cb3b3492abaf5acadb084b20cb30faba8b2d2828`, including merged #44 |
 | Branch | `mcp_server/local-moments-s2` |
 
@@ -121,8 +121,8 @@ OVERLAP_TEST_COSMOS=1 uv run --frozen --no-editable --env-file ../infra/local/en
   final GitHub search. Scope analysis lists the registry's still-unassigned MCP ownership, Pranav's predecessor S1
   and the housekeeping plan's broad plans-directory reference; these are disclosed, not claimed to be new owner
   approvals. Arnav owns the registry update. No hot shared file or shared message shape changed.
-- Hosted CI, the private blocklist and repository secret scan were **not checked** because this branch has not
-  been published. A future PR must run those repository checks; local success does not replace them.
+- At local validation time, hosted CI, the private blocklist and repository secret scan were **not checked**.
+  Published PR checks run separately; local success does not replace them.
 
 ### Remaining connections
 
@@ -139,3 +139,11 @@ Fresh main remains `cb3b349` and no open PRs were found on 18 October. Runtime f
 64-test Cosmos-enabled run. The README now explains per-laptop installation and seeding, how to review the branch
 before merge, and the producer/storage/frontend/workflow boundaries. The PR must distinguish the implemented
 local MCP capability from the later model and live-card milestones. Publication CI results are reported separately.
+
+### Published for review
+
+[PR #45 — Add local Cosmos-backed MCP context reader and team handoff](https://github.com/ARNAV2684/Overlap/pull/45)
+is open against main. The published description was read back and contains the intended implementation summary,
+per-laptop commands, validation results and teammate integration table, with no attribution footer. It distinguishes
+local sample/MCP proof from the pending model, real producer and live-card milestones. The branch is published;
+review and merge are still pending. Check the PR checks tab for the current hosted CI results.
