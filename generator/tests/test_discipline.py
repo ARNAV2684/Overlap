@@ -1,7 +1,7 @@
 # test_discipline.py — Fouls, cards, substitutions, offside, free kicks and penalties
 #
 # Purpose: check the discipline rules on whole matches and on hand-placed situations
-# Inputs:  seeded Skyhaven vs Amberholt matches without tracking; small set-ups of the match state
+# Inputs:  seeded Calverholme vs Dunmarrow matches without tracking; small set-ups of the match state
 # Outputs: pass / fail
 # Spec:    generator/specs/set-pieces-and-discipline.md
 
@@ -28,7 +28,7 @@ def clubs():
 
 @pytest.fixture(scope="module")
 def matches(clubs):
-    return [engine.play(clubs, "SKH", "AMH", match_id=f"SYN-{s:04d}", seed=s, keep_frames=False) for s in SEEDS]
+    return [engine.play(clubs, "CAL", "DTN", match_id=f"SYN-{s:04d}", seed=s, keep_frames=False) for s in SEEDS]
 
 
 def test_all_event_types_appear(matches):
@@ -89,7 +89,7 @@ def test_penalty_shots_use_the_penalty_xg_situation(matches):
 
 def _placed(clubs):
     """A match frozen at kickoff, with one attacker and one defender placed by hand."""
-    m = engine.Match(clubs["SKH"], clubs["AMH"], match_id="SYN-0050", seed=50, kickoff_utc="2026-10-24T19:00:00Z")
+    m = engine.Match(clubs["CAL"], clubs["DTN"], match_id="SYN-0050", seed=50, kickoff_utc="2026-10-24T19:00:00Z")
     m._update_style()
     m._update_lines()
     attacker = next(b for b in m.on_pitch("home") if b.slot == "ST")
@@ -103,7 +103,7 @@ def test_a_foul_in_the_box_is_a_penalty(clubs):
     dfd.x, dfd.y = att.x, att.y + 1
     discipline.commit_foul(m, dfd, att)
     assert m.restart.kind == "penalty" and m.restart.side == "home"
-    assert m.restart_taker.player.shirt == clubs["SKH"].set_pieces["penalties"][0]
+    assert m.restart_taker.player.shirt == clubs["CAL"].set_pieces["penalties"][0]
 
 
 def test_a_foul_outside_the_box_is_a_free_kick_or_advantage(clubs):

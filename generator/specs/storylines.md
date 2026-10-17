@@ -74,11 +74,11 @@ _Answer:_
 
 | Storyline | Team | When | Main effects | Good demo with |
 |---|---|---|---|---|
-| `late_pressure_surge` | home | 55' to full time | press +0.20, press height +0.15, counter-press +0.10, shots × 1.3 | Skyhaven at home |
-| `red_card` | away | 28'–42' window | fouls × 2.5, cards × 2.0 (a red becomes likely, never certain) | Amberholt away |
+| `late_pressure_surge` | home | 55' to full time | press +0.20, press height +0.15, counter-press +0.10, shots × 1.3 | Calverholme at home |
+| `red_card` | away | 28'–42' window | fouls × 2.5, cards × 2.0 (a red becomes likely, never certain) | Dunmarrow away |
 | `comeback` | trailing | from 60' if trailing | directness +0.15, press +0.20, shots × 1.4 | Either |
-| `star_night` | a club id + player | whole match | `player_form` +5 for one player; shots × 1.2 for his team | Skyhaven's striker |
-| `low_block_resistance` | away | whole match | line height −0.10, press height −0.10, counter-attack +0.10 | Amberholt away |
+| `star_night` | a club id + player | whole match | `player_form` +5 for one player; shots × 1.2 for his team | Calverholme's striker |
+| `low_block_resistance` | away | whole match | line height −0.10, press height −0.10, counter-attack +0.10 | Dunmarrow away |
 | `fading_legs` | either | from 70' | stamina drain × 1.3 | Hot-weather matches |
 
 The mock's three storylines (`late_pressure_surge`, `red_card`, `comeback`) keep their names so consumers built on the

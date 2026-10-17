@@ -37,8 +37,8 @@ def test_fixtures_depend_on_the_seed_and_handle_an_odd_league():
 
 
 def test_two_reference_clubs_make_a_two_match_season():
-    assert [(h, a) for _, h, a in batch.fixtures(["SKH", "AMH"], 1)] in (
-        [("SKH", "AMH"), ("AMH", "SKH")], [("AMH", "SKH"), ("SKH", "AMH")])
+    assert [(h, a) for _, h, a in batch.fixtures(["CAL", "DTN"], 1)] in (
+        [("CAL", "DTN"), ("DTN", "CAL")], [("DTN", "CAL"), ("CAL", "DTN")])
 
 
 @pytest.fixture(scope="module")
@@ -67,4 +67,4 @@ def test_report_measures_sourced_rows_and_prints_the_answer_key(run_dir, tmp_pat
     report = realism_report.write(run_dir, tmp_path).read_text(encoding="utf-8")
     assert "| Penalty xG | 0.78 | 0.78 | ✅ |" in report
     assert "not meaningful for a repeat run" in report
-    assert "## Answer key: Skyhaven vs Amberholt" in report
+    assert "## Answer key: Calverholme vs Dunmarrow" in report

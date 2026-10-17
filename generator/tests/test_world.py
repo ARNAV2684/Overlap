@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 import copy
+import random
 import re
 
 import pytest
@@ -33,7 +34,7 @@ def broken(change) -> dict:
     return data
 
 
-def setup(clubs, home="SKH", away="AMH", **kw):
+def setup(clubs, home="CAL", away="DTN", **kw):
     return world.build_setup(clubs[home], clubs[away], match_id="SYN-0001", seed=1,
                              kickoff_utc="2026-10-24T19:00:00Z", **kw)
 
@@ -42,9 +43,9 @@ def setup(clubs, home="SKH", away="AMH", **kw):
 
 
 def test_reference_world_loads(clubs):
-    assert set(clubs) == {"SKH", "AMH"}
-    assert clubs["SKH"].formation == "4-2-3-1"
-    assert clubs["AMH"].formation == "5-4-1"
+    assert set(clubs) == {"CAL", "DTN"}
+    assert clubs["CAL"].formation == "4-2-3-1"
+    assert clubs["DTN"].formation == "5-4-1"
 
 
 def test_same_seed_gives_byte_identical_world(tmp_path):
@@ -89,7 +90,7 @@ def test_style_has_all_ten_traits(clubs):
 def test_reference_clubs_contrast_on_new_traits(clubs):
     # world.md §4: the two clubs differ by 0.3 or more on each pressing, transition and set-piece trait
     for key in ("counter_press", "press_height", "counter_attack", "set_piece_focus"):
-        assert abs(clubs["SKH"].style[key] - clubs["AMH"].style[key]) >= 0.3, key
+        assert abs(clubs["CAL"].style[key] - clubs["DTN"].style[key]) >= 0.3, key
 
 
 def test_every_player_has_an_allowed_role(clubs):
@@ -121,7 +122,7 @@ def test_kits_readable_and_distinct(clubs):
 
 def test_strength_gap(clubs):
     # A is an elite side and B a newly promoted one (world.md §1, §4)
-    assert clubs["SKH"].strength > clubs["AMH"].strength + 8
+    assert clubs["CAL"].strength > clubs["DTN"].strength + 8
 
 
 def test_reference_names_not_recognisable(clubs):
@@ -132,13 +133,51 @@ def test_reference_names_not_recognisable(clubs):
     assert names.reference_name_problems(players, private_map) == []
 
 
+# --- Shirts, names and feet follow the same rules as generated clubs (world.md §2, §3, §5) -------------------------
+
+
+def test_shirts_follow_the_usual_numbers():
+    assert world.assign_shirts(["GK", "RB", "CB", "CB", "LB", "DM", "DM", "RW", "AM", "LW", "ST", "GK", "CB"]) == \
+        [1, 2, 4, 5, 3, 6, 8, 7, 10, 11, 9, 12, 13]
+
+
+def test_reference_shirts_follow_the_rule(clubs):
+    for club in clubs.values():
+        by_shirt = {p.shirt: p for p in club.squad}
+        xi = [by_shirt[s].pos for s in club.default_xi]
+        assert list(club.default_xi) == world.assign_shirts(xi)
+        for p in club.squad:
+            if p.shirt not in club.default_xi:
+                assert p.shirt >= world.FIRST_SPARE_SHIRT or p.shirt in world.USUAL_SHIRTS[p.pos]
+
+
+def test_reference_names_come_from_the_pools(clubs):
+    for club in clubs.values():
+        for p in club.squad:
+            first, last = p.name.split(" ", 1)
+            assert any(first in f and last in s for f, s in names.REGIONS.values()), p.name
+
+
+def test_the_foot_split_matches_calibration():
+    rng = random.Random(7)
+    squad = [("GK", "shot_stopper")] * 3 + [("CB", "stopper")] * 5 + [("LB", "wing_back"), ("RB", "wing_back")] * 2 \
+        + [("DM", "anchor"), ("CM", "box_to_box"), ("CM", "playmaker"), ("AM", "playmaker")] * 2 \
+        + [("LM", "wide_midfielder"), ("RM", "wide_midfielder"), ("LW", "inverted_winger"),
+           ("RW", "inverted_winger"), ("ST", "poacher"), ("ST", "target_man"), ("ST", "pressing_forward")]
+    feet = [world.draw_feet(rng, pos, role)[0] for _ in range(400) for pos, role in squad]
+    assert 0.20 <= feet.count("left") / len(feet) <= 0.27          # CALIBRATION.md, "Players"
+    assert feet.count("both") / len(feet) < 0.05
+    right_inverted = [world.draw_feet(rng, "RW", "inverted_winger")[0] for _ in range(2000)]
+    assert right_inverted.count("left") / len(right_inverted) > 0.75
+
+
 # --- Match setup (CONTRACTS.md §2) -------------------------------------------------------------------------------
 
 
 def test_setup_matches_contract_shape(clubs):
     s = setup(clubs)
     assert set(s) == {"match_id", "seed", "competition", "season_id", "venue", "kickoff_utc", "storylines", "teams"}
-    assert s["venue"] == clubs["SKH"].venue
+    assert s["venue"] == clubs["CAL"].venue
     ids = set()
     for side in ("home", "away"):
         t = s["teams"][side]
@@ -156,8 +195,8 @@ def test_setup_matches_contract_shape(clubs):
 
 
 def test_unavailable_player_is_replaced(clubs):
-    striker = clubs["SKH"].default_xi[-1]
-    s = setup(clubs, unavailable={"SKH": frozenset({striker})})
+    striker = clubs["CAL"].default_xi[-1]
+    s = setup(clubs, unavailable={"CAL": frozenset({striker})})
     lineup = s["teams"]["home"]["lineup"]
     assert all(p["shirt"] != striker for p in lineup + s["teams"]["home"]["bench"])
     assert lineup[-1]["pos"] == "ST"
@@ -165,15 +204,15 @@ def test_unavailable_player_is_replaced(clubs):
 
 def test_away_club_changes_kit_on_a_clash(clubs):
     lookalike = copy.deepcopy(DATA["clubs"][1])
-    lookalike["colours"]["home"] = {"primary": "#78B6E0", "secondary": "#14234B"}  # close to SKH's light blue
+    lookalike["colours"]["home"] = {"primary": "#127F7D", "secondary": "#F4F4F4"}  # close to CAL's teal
     _, (_, away) = world.clubs_from_data({"world_version": 1, "clubs": [DATA["clubs"][0], lookalike]})
-    s = world.build_setup(clubs["SKH"], away, match_id="SYN-0002", seed=2, kickoff_utc="2026-10-24T19:00:00Z")
+    s = world.build_setup(clubs["CAL"], away, match_id="SYN-0002", seed=2, kickoff_utc="2026-10-24T19:00:00Z")
     assert s["teams"]["away"]["colours"] == lookalike["colours"]["away"]
 
 
 def test_bad_match_id_rejected(clubs):
     with pytest.raises(world.WorldError):
-        world.build_setup(clubs["SKH"], clubs["AMH"], match_id="MATCH-1", seed=1, kickoff_utc="2026-10-24T19:00:00Z")
+        world.build_setup(clubs["CAL"], clubs["DTN"], match_id="MATCH-1", seed=1, kickoff_utc="2026-10-24T19:00:00Z")
 
 
 # --- Broken reference data fails loudly ---------------------------------------------------------------------------

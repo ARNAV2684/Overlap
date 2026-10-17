@@ -1,13 +1,13 @@
 # star_night.yaml — Storyline
 #
-# Purpose: one player has a big night (Skyhaven's number 9)
+# Purpose: one player has a big night (Calverholme's number 9)
 # Inputs:  -
 # Outputs: read by storylines.py
 # Spec:    generator/specs/storylines.md
 
 name: star_night
-summary: Skyhaven's number 9 has one of those nights; his team looks for him more.
-team: SKH
+summary: Calverholme's number 9 has one of those nights; his team looks for him more.
+team: CAL
 player: 9
 starts: {minute: 0}
 ends: {minute: full_time}
