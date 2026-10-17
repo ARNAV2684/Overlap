@@ -1,35 +1,100 @@
 # MCP tools spec
 
-> **Status: not started.** Write and agree this before coding `server.py` and `tools/*.py`.
-
-Decides every tool the server exposes, its inputs and its outputs.
+> **Status: draft for review.** First shot-cluster slice only; no runtime implementation is authorised by this
+> draft. Owner: Pranav under [PR #41](https://github.com/ARNAV2684/Overlap/pull/41); registry confirmation pending.
+> Governs `server.py`, `data_access.py` and `tools/match_state.py`.
+> Plan: [S1](../../plans/active/PLAN_agents_ai-insights-mcp_S1.md). Shared source: [contracts §10](../../CONTRACTS.md).
 
 ## 1. Tool list
 
-- Which tools exist (match state, compare periods, pressing window, player context, pass network, season milestones)?
+M2 exposes **only `get_match_state`**. Its purpose is to resolve the teams and bounded state of the moment being
+explained. It does not compute metrics, identify triggers or produce prose. `compare_periods`, pressing, player,
+pass-network and season tools remain deferred and must not appear in tool discovery as working tools.
 
-_Answer:_
+## 2. Tool definition and examples
 
-## 2. Each tool
+Description: "Read the immutable match context captured for this exact moment. It is not the latest state.
+Numeric context is not additional evidence for narration. Unavailable context must not be guessed."
 
-- For each tool: name, description shown to the agent, inputs with types, output shape, example call.
+Input JSON Schema:
 
-_Answer:_
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "match_id": {"type": "string", "pattern": "^SYN-[0-9]{4}$"},
+    "moment_id": {"type": "string", "pattern": "^MO-[0-9]{4}-[0-9]{4}$"},
+    "evidence_version": {"type": "integer", "const": 1}
+  },
+  "required": ["match_id", "moment_id", "evidence_version"]
+}
+```
 
-## 3. Data access
+IDs must have the same numeric match portion and equal the workflow's bound identity. Callers cannot supply a
+different cutoff, SQL, container name or arbitrary file path. Example:
 
-- Which Cosmos containers does each tool read, and how is it scoped by match and season?
+```json
+{"match_id":"SYN-1017","moment_id":"MO-1017-0001","evidence_version":1}
+```
 
-_Answer:_
+Every result has `status`, `match_id`, `moment_id`, `evidence_version`. No unknown application fields.
+
+| Result | Additional fields / meaning |
+|---|---|
+| `status=ok` | `as_of:{event_seq,period,match_ms}`; `state` is exactly the context in contracts §10.2; `provenance:{source,document_id}` where source is `fixture` or `cosmos` |
+| `status=unavailable` | `reason`: `not_found`, `version_mismatch`, `source_not_ready`, `context_mismatch`, `source_timeout`, `response_too_large`, `source_error`; no state |
+| `status=denied` | `reason=outside_scope`; no state or indication whether another match exists |
+
+`as_of` must equal the immutable source cursor and the bound evidence's period/time. Source event seq is positive;
+scores are nonnegative integers; team IDs are distinct and names are nonempty strings of at most 80 characters.
+The client validates the output against its declared output schema and the expected evidence before model use.
+Missing or inconsistent context is not a successful empty state. Complete result examples and negative cases:
+[shot-cluster example](../../agents/specs/examples/shot-cluster.md).
+
+Transport result uses MCP `structuredContent` plus an equivalent JSON text content block for compatibility.
+Declare input/output schemas at discovery. A domain `unavailable` is an expected result, not a fabricated answer.
+Malformed arguments / unknown tools are protocol errors; execution failures may use `isError`, which the client
+must handle as failure regardless of text. A library returning normally must not turn a failed tool into success.
+
+## 3. Data access and time boundary
+
+- Read a single `moments` document with partition key `match_id` and id `moment_id`, restricted to `kind=moment`.
+  This store and publisher schema are **proposed** in contracts §10.2; they do not exist merely because this spec does.
+- Verify source/evidence/context identity, schema/evidence version, period and time; return the allowlisted projection.
+  Do not return job/outbox documents, raw labels/extra fields, storyline names/answer keys or complete match setup.
+- No read of mutable `screen`/`match_state`, final match result, entire season, or event suffix beyond the moment.
+  No cross-partition queries. No calculating missing metrics in MCP.
+- A fixture adapter uses the exact proposed immutable-document shape, from a fixed configured fixture directory.
+  Report `source=fixture`; never silently fall back from Cosmos to fixtures. Switching source is explicit.
+- MCP credentials are read-only; workflow/publisher write credentials are a separate capability. Emulator keys do
+  not enforce production RBAC, so emulator tests prove application restrictions, not Azure authorisation.
+- No cache for M2. Later caching needs full identity/version keys and explicit invalidation rules.
 
 ## 4. Limits
 
-- Response size limits, timeouts and caching.
+Proposed limits: input <= 1 KiB; output <= 12 KiB UTF-8; one point read; no paging/truncating a success response;
+2 seconds per call; one retry only for timeout/transient source errors, within the workflow deadline. At most two
+calls per moment including retry. Never retry a validation error, denied scope or incompatible version.
 
-_Answer:_
+The workflow binds `match_id/moment_id/evidence_version`; a model request cannot expand them. Cancellation closes
+the pending operation. Logs contain IDs, duration, source and error code, never credentials or raw model prompts.
 
-## 5. Access
+## 5. Connection and authentication
 
-- How do the agents (and other MCP clients) connect and authenticate?
+M2 uses the official Python MCP SDK over **stdio**, launched by an explicit, allowlisted local workflow command.
+No network port or tunnel. The local MCP client must complete initialise, tools/list and tools/call; a direct Python
+function call alone is not an MCP integration test. Pin SDK/dependency versions in the later M2 implementation PR.
 
-_Answer:_
+The operating-system process boundary and configured scope are local access controls; the tool does not claim
+public-client authentication. One bound session per job prevents one match's calls from reading another's context.
+Future remote hosting needs a separate authenticated transport and deployment spec.
+
+M3 keeps this MCP client and orchestration local while sending approved evidence/context to the Azure model.
+The local client executes tool calls; Azure does not need inbound access to the laptop. Do not configure a
+server-hosted MCP feature to reach localhost.
+
+Technical references checked during S1: [MCP tools](https://modelcontextprotocol.io/specification/2025-11-25/server/tools),
+[stdio transport](https://modelcontextprotocol.io/specification/2025-11-25/basic/transports),
+[Agent Framework MCP tools](https://learn.microsoft.com/en-us/agent-framework/agents/tools/local-mcp-tools).
+Exact framework APIs/version compatibility are verified and pinned in M2/M3; this draft installs nothing.
