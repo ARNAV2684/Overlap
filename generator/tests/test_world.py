@@ -171,6 +171,90 @@ def test_the_foot_split_matches_calibration():
     assert right_inverted.count("left") / len(right_inverted) > 0.75
 
 
+# --- League clubs: templates with generated players (world.md §1-§5) ---------------------------------------------
+
+TEMPLATES = yaml.safe_load(world.LEAGUE_FILE.read_text(encoding="utf-8"))["clubs"]
+
+
+@pytest.fixture(scope="module")
+def league() -> dict[str, world.Club]:
+    _, loaded = world.load_league(seed=1)
+    return {c.team_id: c for c in loaded}
+
+
+def test_the_league_has_ten_clubs(league):
+    assert len(league) == 10
+    assert [c.team_id for c in league.values() if c.reference] == ["CAL", "DTN"]
+    assert world.build_world("S1", seed=1)["clubs"][0]["team_id"] in league
+
+
+def test_league_clubs_follow_their_templates(league):
+    for t in TEMPLATES:
+        club = league[t["team_id"]]
+        assert club.name == t["name"] and club.formation == t["formation"] and club.style == t["style"]
+        counts = {pos: sum(p.pos == pos for p in club.squad) for pos in t["shape"]}
+        assert counts == t["shape"] and len(club.squad) == world.LEAGUE_SQUAD_SIZE
+        for p in club.squad:
+            if p.pos in t.get("roles", {}):
+                assert p.role in t["roles"][p.pos]
+
+
+def test_league_strength_lands_on_the_level(league):
+    for t in TEMPLATES:
+        assert abs(league[t["team_id"]].strength - t["level"]) <= 1
+
+
+def test_league_players_follow_the_shared_rules(league):
+    generated = [c for c in league.values() if not c.reference]
+    for club in generated:
+        by_shirt = {p.shirt: p for p in club.squad}
+        assert list(club.default_xi) == world.assign_shirts([by_shirt[s].pos for s in club.default_xi])
+        for p in club.squad:
+            first, last = p.name.split(" ", 1)
+            assert any(first in f and last in s for f, s in names.REGIONS.values()), p.name
+            assert p.pos == "GK" or 5 <= p.attr["goalkeeping"] <= 15
+    feet = [p.preferred_foot for c in generated for p in c.squad]
+    assert 0.20 <= feet.count("left") / len(feet) <= 0.27
+
+
+def test_a_different_seed_gives_different_players_in_the_same_shape():
+    _, a = world.load_league(seed=1)
+    _, b = world.load_league(seed=2)
+    a, b = {c.team_id: c for c in a}, {c.team_id: c for c in b}
+    assert [p.name for p in a["KES"].squad] != [p.name for p in b["KES"].squad]
+    assert a["CAL"] == b["CAL"]                                     # the reference clubs never change with the seed
+    assert sorted(p.pos for p in a["KES"].squad) == sorted(p.pos for p in b["KES"].squad)
+
+
+@pytest.mark.parametrize("change, expected", [
+    (lambda t: t["shape"].update(GK=2, CB=5), "3 goalkeepers"),
+    (lambda t: t["shape"].update(ST=6, CM=1), "at least 2 CM"),
+    (lambda t: t.update(level=90), "level must be"),
+    (lambda t: t["roles"].update(ST=["anchor"]), "not allowed for ST"),
+])
+def test_broken_templates_fail(change, expected):
+    t = copy.deepcopy(TEMPLATES[0])
+    change(t)
+    with pytest.raises(world.WorldError, match=expected):
+        world.generate_club(t, 1, set())
+
+
+def test_league_setup_matches_contract_shape(league):
+    s = setup(league, home="KES", away="WEX")
+    assert s["teams"]["home"]["team_id"] == "KES" and len(s["teams"]["away"]["lineup"]) == 11
+
+
+def test_league_clubs_not_recognisable():
+    private_map = names.load_private_map()
+    if private_map is None or "templates" not in private_map:
+        pytest.skip("private reference mapping not on this machine")
+    for t in TEMPLATES:
+        real = private_map["templates"][t["team_id"]]
+        assert t["team_id"] != real["code"]
+        for invented in (t["name"], t["short_name"], t["city"]):
+            assert names.edit_distance(invented, real["team"]) >= names.MIN_EDIT_DISTANCE
+
+
 # --- Match setup (CONTRACTS.md §2) -------------------------------------------------------------------------------
 
 

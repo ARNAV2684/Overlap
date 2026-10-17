@@ -2,12 +2,12 @@
 #
 # Purpose: load and check the clubs, squads, attributes and team styles for a season; save the world; build match
 #          setups from it
-# Inputs:  reference_clubs.yaml, season id and seed
+# Inputs:  reference_clubs.yaml, league_clubs.yaml, season id and seed
 # Outputs: data/generated/world/<season_id>.json; match setups (CONTRACTS.md §2)
 # Spec:    generator/specs/world.md
 #
-# The two reference clubs come first. Invented clubs generated from the seed come in a later milestone.
-# Shirt numbers and feet follow the same rules for every club (world.md §2, §3).
+# The two reference clubs are hand-authored. The 8 league clubs are templates whose players are generated from the
+# seed. Shirt numbers and feet follow the same rules for every club (world.md §2, §3).
 
 from __future__ import annotations
 
@@ -23,6 +23,7 @@ import kits
 import names
 
 REFERENCE_FILE = Path(__file__).with_name("reference_clubs.yaml")
+LEAGUE_FILE = Path(__file__).with_name("league_clubs.yaml")
 WORLD_DIR = Path(__file__).resolve().parents[1] / "data" / "generated" / "world"
 
 ATTRIBUTES = ("pace", "passing", "dribbling", "finishing", "tackling", "stamina",
@@ -238,7 +239,7 @@ def _player(team_id: str, raw: dict, problems: list[str]) -> Player | None:
     )
 
 
-def _club(raw: dict, problems: list[str]) -> Club | None:
+def _club(raw: dict, problems: list[str], reference: bool = True) -> Club | None:
     team_id = raw.get("team_id", "?")
     if unknown := set(raw) - CLUB_FIELDS:
         problems.append(f"{team_id}: unknown fields {sorted(unknown)}")
@@ -258,7 +259,7 @@ def _club(raw: dict, problems: list[str]) -> Club | None:
         default_xi=tuple(raw["default_xi"]),
         set_pieces={kind: tuple(shirts) for kind, shirts in raw["set_pieces"].items()},
         squad=tuple(squad),
-        reference=True,
+        reference=reference,
     )
 
 
@@ -372,24 +373,223 @@ def validate_clubs(clubs: list[Club]) -> None:
     for club in clubs:
         problems += _club_problems(club)
     problems += names.duplicate_problems([(c.team_id, p.name) for c in clubs for p in c.squad])
+    if (denylist := names.load_denylist()) is not None:
+        problems += names.denylist_problems([(c.team_id, p.name) for c in clubs for p in c.squad], denylist)
     if all(set(c.colours) == {"home", "away"} for c in clubs) and not any("kit:" in m for m in problems):
         problems += kits.league_clash_problems({c.team_id: c.colours for c in clubs})
     if problems:
         raise WorldError("world check failed:\n  " + "\n  ".join(problems))
 
 
-def clubs_from_data(data: dict) -> tuple[int, list[Club]]:
-    """(world_version, clubs) from parsed reference data; raises WorldError when anything is wrong."""
+def _checked(raws: list[tuple[dict, bool]]) -> list[Club]:
+    """Clubs from (raw club, is reference) pairs; raises WorldError when anything is wrong."""
     problems: list[str] = []
-    clubs = [c for c in (_club(raw, problems) for raw in data.get("clubs", [])) if c is not None]
+    clubs = [c for c in (_club(raw, problems, ref) for raw, ref in raws) if c is not None]
     if problems:
         raise WorldError("world check failed:\n  " + "\n  ".join(problems))
     validate_clubs(clubs)
-    return data["world_version"], clubs
+    return clubs
+
+
+def clubs_from_data(data: dict) -> tuple[int, list[Club]]:
+    """(world_version, clubs) from parsed reference data; raises WorldError when anything is wrong."""
+    return data["world_version"], _checked([(raw, True) for raw in data.get("clubs", [])])
 
 
 def load_reference_clubs(path: Path = REFERENCE_FILE) -> tuple[int, list[Club]]:
     return clubs_from_data(yaml.safe_load(path.read_text(encoding="utf-8")))
+
+
+# --- League clubs: templates with generated players (world.md §1-§5) ----------------------------------------------
+
+TEMPLATE_FIELDS = (CLUB_FIELDS - {"default_xi", "set_pieces", "squad"}) | {"level", "shape", "roles"}
+LEAGUE_SQUAD_SIZE = 25
+LEAGUE_GOALKEEPERS = 3
+LEVEL_RANGE = (68, 80)
+ARCHETYPE_LEVEL = 70      # the level the archetype means below are set for
+FIRST_CHOICE_EDGE = 2     # first-choice players are drawn this much above the level, the rest this much below
+ATTRIBUTE_SD = 6
+OUTFIELD_GOALKEEPING = (5, 15)
+SECONDARY_COUNT = ((0, 0.3), (1, 0.5), (2, 0.2))
+
+# Archetype means per primary position for a level-70 club, in ATTRIBUTES order: pace, passing, dribbling,
+# finishing, tackling, stamina, acceleration, vision, positioning, aerial, composure, goalkeeping. Each position's
+# four main attributes (MAIN_ATTRIBUTES) average 70.
+_FULL_BACK_MEANS = (72, 68, 64, 45, 68, 72, 72, 60, 64, 58, 62, 10)
+_WINGER_MEANS = (74, 62, 70, 62, 45, 70, 74, 62, 62, 50, 62, 10)
+_WIDE_MID_MEANS = (73, 66, 68, 55, 55, 74, 73, 62, 62, 52, 62, 10)
+ARCHETYPES: dict[str, tuple[int, ...]] = {
+    "GK": (45, 64, 35, 12, 18, 55, 48, 55, 72, 66, 68, 76),
+    "CB": (64, 62, 52, 35, 72, 70, 62, 52, 70, 72, 66, 10),
+    "RB": _FULL_BACK_MEANS, "LB": _FULL_BACK_MEANS, "RWB": _FULL_BACK_MEANS, "LWB": _FULL_BACK_MEANS,
+    "DM": (62, 70, 62, 50, 70, 70, 62, 66, 70, 64, 66, 10),
+    "CM": (64, 72, 66, 58, 62, 70, 64, 70, 64, 58, 68, 10),
+    "AM": (68, 70, 72, 66, 45, 66, 70, 72, 66, 50, 68, 10),
+    "RM": _WIDE_MID_MEANS, "LM": _WIDE_MID_MEANS,
+    "RW": _WINGER_MEANS, "LW": _WINGER_MEANS,
+    "ST": (70, 60, 66, 72, 38, 68, 70, 58, 72, 68, 66, 10),
+}
+
+# Small shifts that give each role its shape (world.md §3).
+ROLE_BONUS: dict[str, dict[str, int]] = {
+    "sweeper_keeper": {"passing": 6, "pace": 5},
+    "shot_stopper": {"goalkeeping": 2, "passing": -4},
+    "ball_playing_cb": {"passing": 6, "composure": 3},
+    "stopper": {"tackling": 3, "aerial": 3, "passing": -3},
+    "overlapping_fullback": {"pace": 3, "stamina": 2},
+    "inverted_fullback": {"passing": 4, "vision": 2},
+    "wing_back": {"stamina": 4, "pace": 2},
+    "anchor": {"positioning": 5, "tackling": 3, "pace": -3},
+    "deep_playmaker": {"passing": 5, "vision": 3, "pace": -3},
+    "ball_winner": {"tackling": 6, "stamina": 3, "vision": -3},
+    "box_to_box": {"stamina": 6},
+    "playmaker": {"vision": 5, "passing": 3, "tackling": -3},
+    "inverted_winger": {"dribbling": 3, "finishing": 3},
+    "wide_winger": {"pace": 3, "dribbling": 3, "finishing": -2},
+    "wide_midfielder": {"stamina": 4},
+    "poacher": {"finishing": 4, "positioning": 4, "passing": -3},
+    "target_man": {"aerial": 8, "finishing": 2, "pace": -6},
+    "pressing_forward": {"stamina": 5, "pace": 3, "tackling": 5},
+}
+
+# Secondary positions a player may also play, next to his primary (world.md §3).
+NEAR_POSITIONS: dict[str, tuple[str, ...]] = {
+    "GK": (), "CB": ("DM", "RB", "LB"), "RB": ("RWB", "RM", "CB"), "LB": ("LWB", "LM", "CB"), "RWB": ("RB", "RM"),
+    "LWB": ("LB", "LM"), "DM": ("CM", "CB"), "CM": ("DM", "AM"), "AM": ("CM", "RW", "LW", "ST"), "RM": ("RW", "RB"),
+    "LM": ("LW", "LB"), "RW": ("RM", "LW", "AM"), "LW": ("LM", "RW", "AM"), "ST": ("AM", "RW", "LW"),
+}
+
+# Squad order after the default XI: goalkeepers, defenders, midfielders, forwards (world.md §2).
+POSITION_GROUP = {p: i for i, group in enumerate((("GK",), ("CB", "RB", "LB", "RWB", "LWB"),
+                                                   ("DM", "CM", "AM", "RM", "LM"), ("RW", "LW", "ST")))
+                  for p in group}
+
+# Set-piece takers for league clubs: the two best default-XI outfield players by these attributes (world.md §2).
+TAKER_ATTRIBUTES = {"penalties": ("finishing", "composure"), "corners": ("passing", "vision"),
+                    "free_kicks": ("passing", "finishing")}
+
+
+def _template_problems(t: dict) -> list[str]:
+    tid = t.get("team_id", "?")
+    problems = []
+    if unknown := set(t) - TEMPLATE_FIELDS:
+        problems.append(f"{tid}: unknown template fields {sorted(unknown)}")
+    if missing := TEMPLATE_FIELDS - {"roles"} - set(t):
+        problems.append(f"{tid}: missing template fields {sorted(missing)}")
+        return problems
+    low, high = LEVEL_RANGE
+    if not low <= t["level"] <= high:
+        problems.append(f"{tid}: level must be {low}–{high}")
+    shape = t["shape"]
+    if any(pos not in POSITIONS or not isinstance(n, int) or n < 1 for pos, n in shape.items()):
+        problems.append(f"{tid}: shape needs known positions with a count of 1 or more")
+        return problems
+    if sum(shape.values()) != LEAGUE_SQUAD_SIZE or shape.get("GK") != LEAGUE_GOALKEEPERS:
+        problems.append(f"{tid}: shape needs {LEAGUE_SQUAD_SIZE} players with {LEAGUE_GOALKEEPERS} goalkeepers")
+    slots = FORMATIONS.get(t["formation"], ())
+    for slot in sorted(set(slots)):
+        need = max(MIN_SLOT_COVER, slots.count(slot))
+        if shape.get(slot, 0) < need:
+            problems.append(f"{tid}: shape needs at least {need} {slot}")
+    for pos, roles in t.get("roles", {}).items():
+        for role in roles:
+            if role not in ROLES or pos not in ROLES[role]:
+                problems.append(f"{tid}: role {role} is not allowed for {pos}")
+    return problems
+
+
+def _clip(v: float) -> int:
+    return max(1, min(99, round(v)))
+
+
+def _draw_player(rng: random.Random, pos: str, role: str, level: float) -> dict:
+    bonus = ROLE_BONUS[role]
+    attr = [_clip(rng.gauss(mean + bonus.get(a, 0) + level - ARCHETYPE_LEVEL, ATTRIBUTE_SD))
+            for a, mean in zip(ATTRIBUTES, ARCHETYPES[pos])]
+    if pos != "GK":
+        attr[-1] = rng.randint(*OUTFIELD_GOALKEEPING)
+    near = NEAR_POSITIONS[pos]
+    other = rng.sample(near, min(_weighted(rng, SECONDARY_COUNT), len(near)))
+    foot, weak = draw_feet(rng, pos, role)
+    return {"pos": pos, "role": role, "other": other, "preferred_foot": foot, "weak_foot": weak, "attr": attr}
+
+
+def _overall(p: dict) -> float:
+    keys = MAIN_ATTRIBUTES[p["pos"]]
+    return sum(p["attr"][ATTRIBUTES.index(k)] for k in keys) / len(keys)
+
+
+def _pick_xi(players: list[dict], formation: str) -> list[int]:
+    """Indexes into `players` for each slot: the best with that primary position, else that secondary position."""
+    used: set[int] = set()
+    xi = []
+    for slot in FORMATIONS[formation]:
+        free = [i for i in range(len(players)) if i not in used]
+        for pool in ([i for i in free if players[i]["pos"] == slot], [i for i in free if slot in players[i]["other"]]):
+            if pool:
+                best = max(pool, key=lambda i: (_overall(players[i]), -i))
+                used.add(best)
+                xi.append(best)
+                break
+    return xi
+
+
+def generate_club(t: dict, seed: int, taken_names: set[str]) -> dict:
+    """A league club as raw club data (the same shape as reference_clubs.yaml) from its template and the seed.
+    `taken_names` holds every folded full name already in the world and gains this club's."""
+    if problems := _template_problems(t):
+        raise WorldError("world check failed:\n  " + "\n  ".join(problems))
+    rng = random.Random(f"{seed}:league:{t['team_id']}")
+    slots = FORMATIONS[t["formation"]]
+    players = []
+    for pos in POSITIONS:
+        roles = t.get("roles", {}).get(pos) or sorted(r for r, allowed in ROLES.items() if pos in allowed)
+        for i in range(t["shape"].get(pos, 0)):
+            edge = FIRST_CHOICE_EDGE if i < slots.count(pos) else -FIRST_CHOICE_EDGE
+            players.append(_draw_player(rng, pos, roles[i % len(roles)], t["level"] + edge))
+
+    xi = _pick_xi(players, t["formation"])
+    shift = round(t["level"] - sum(_overall(players[i]) for i in xi) / len(xi))
+    for p in players:            # the whole squad moves together, so the XI's strength lands on the level
+        outfield = p["pos"] != "GK"
+        p["attr"] = [v if outfield and a == "goalkeeping" else _clip(v + shift) for a, v in zip(ATTRIBUTES, p["attr"])]
+
+    rest = sorted((i for i in range(len(players)) if i not in xi),
+                  key=lambda i: (POSITION_GROUP[players[i]["pos"]], -_overall(players[i]), i))
+    order = xi + rest
+    shirts = assign_shirts([players[i]["pos"] for i in order])
+    regions = names.squad_regions(rng, names.club_regions(rng), len(order))
+    surnames: set[str] = set()
+    squad = []
+    for i, shirt, region in zip(order, shirts, regions):
+        p = players[i]
+        p["shirt"] = shirt
+        p["name"] = names.draw_name(rng, region, taken_names, surnames)
+        squad.append({k: p[k] for k in ("shirt", "name", "pos", "role", "other", "preferred_foot", "weak_foot",
+                                        "attr")})
+
+    shirt_of = dict(zip(order, shirts))
+    outfield_xi = [i for i in xi if players[i]["pos"] != "GK"]
+    takers = {}
+    for kind, keys in TAKER_ATTRIBUTES.items():
+        ranked = sorted(outfield_xi, key=lambda i: (-sum(players[i]["attr"][ATTRIBUTES.index(k)] for k in keys),
+                                                    shirt_of[i]))
+        takers[kind] = [shirt_of[i] for i in ranked[:MIN_TAKERS]]
+
+    club = {k: t[k] for k in CLUB_FIELDS - {"default_xi", "set_pieces", "squad"}}
+    club.update(default_xi=[shirt_of[i] for i in xi], set_pieces=takers, squad=squad)
+    return club
+
+
+def load_league(seed: int = 1, reference_path: Path = REFERENCE_FILE,
+                league_path: Path = LEAGUE_FILE) -> tuple[int, list[Club]]:
+    """(world_version, clubs): the reference clubs, then the league clubs generated from `seed`."""
+    ref = yaml.safe_load(reference_path.read_text(encoding="utf-8"))
+    league = yaml.safe_load(league_path.read_text(encoding="utf-8"))
+    taken = {names.fold(p["name"]) for c in ref["clubs"] for p in c["squad"]}
+    generated = [generate_club(t, seed, taken) for t in league["clubs"]]
+    raws = [(raw, True) for raw in ref["clubs"]] + [(raw, False) for raw in generated]
+    return ref["world_version"], _checked(raws)
 
 
 # --- The saved world --------------------------------------------------------------------------------------------
@@ -427,10 +627,11 @@ def _club_record(club: Club) -> dict:
     }
 
 
-def build_world(season_id: str = "S1", seed: int = 1, path: Path = REFERENCE_FILE) -> dict:
+def build_world(season_id: str = "S1", seed: int = 1, path: Path = REFERENCE_FILE,
+                league_path: Path = LEAGUE_FILE) -> dict:
     if not SEASON_ID.match(season_id):
         raise WorldError(f"season_id must look like S1, got {season_id!r}")
-    world_version, clubs = load_reference_clubs(path)
+    world_version, clubs = load_league(seed, path, league_path)
     return {
         "world_version": world_version,
         "season_id": season_id,

@@ -1,7 +1,8 @@
 # test_invariants.py — Generator invariants
 #
 # Purpose: check the CONTRACTS.md §3 invariants and the §2-§4 shapes on whole matches
-# Inputs:  seeded Calverholme vs Dunmarrow matches (OVERLAP_SEEDS=N plays N seeds; default 3 to keep CI quick)
+# Inputs:  seeded Calverholme vs Dunmarrow matches (OVERLAP_SEEDS=N plays N seeds; default 3 to keep CI quick),
+#          plus one match between two league clubs
 # Outputs: pass / fail
 # Spec:    generator/specs/engine.md §8
 
@@ -32,9 +33,10 @@ BODY_PARTS = {"left_foot", "right_foot", "head", "other"}
 
 @pytest.fixture(scope="module")
 def matches():
-    _, loaded = world.load_reference_clubs()
+    _, loaded = world.load_league()
     clubs = {c.team_id: c for c in loaded}
-    return [engine.play(clubs, "CAL", "DTN", match_id=f"SYN-{s:04d}", seed=s) for s in SEEDS]
+    reference = [engine.play(clubs, "CAL", "DTN", match_id=f"SYN-{s:04d}", seed=s) for s in SEEDS]
+    return reference + [engine.play(clubs, "KES", "WEX", match_id="SYN-0100", seed=100)]   # two generated squads
 
 
 def test_event_shapes(matches):
