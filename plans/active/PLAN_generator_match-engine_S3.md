@@ -79,10 +79,15 @@ report.
 
 ## 6. Conflict scan
 
-No overlaps found on 2026-10-17 at `main` 62678ce. Open PRs #20–#25 are all Azeem's and this branch stacks on #24;
-#25 (`generator/storylines-spec`) changes only `specs/storylines.md` and its own plan. No remote branch changes the
-files above beyond `generator/batch-mode`. Active plans that name these files (calibration-sources, world-traits)
-are merged work. Hot files: none.
+No overlaps found on 2026-10-17 at `main` 62678ce. Re-checked at `main` 8fa24d4 after PRs #20–#34 merged; the PR's
+scope report lists two plans, neither a conflict:
+
+| Overlap | Resolution |
+|---|---|
+| `PLAN_generator_storylines.md` (Azeem) lists `generator/engine.py` for its M2 | Its code hasn't started; it starts from `main` after this PR merges |
+| `PLAN_plans_housekeeping.md` (Arnav) lists `PLAN_generator_match-engine.md` | Its status-line edit merged in PR #26 and is already in this branch; this PR changes other lines |
+
+Hot files: none.
 
 ## 7. Acceptance criteria
 
