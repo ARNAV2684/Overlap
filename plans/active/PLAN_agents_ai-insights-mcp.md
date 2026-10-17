@@ -7,8 +7,8 @@
 | Author / primary owner | Pranav |
 | Review coordinator | Arnav |
 | Affected owners | Azeem: generator; Vedant: frontend; Arnav: storage, relay and delivery; stats: unassigned (Arnav decides) |
-| Version and date | 1.1 · 17 October 2026 |
-| Status | Ready for review — plan only; specifications and implementation not agreed |
+| Version and date | 1.2 · 17 October 2026 · M1 progress note |
+| Status | Roadmap merged in #41; M1 specification draft prepared, awaiting team review; runtime not started |
 | Tier | Full · Layer 5, with explicit upstream and downstream dependencies |
 | Branch | `agents/insights-plan` |
 | Reviewed baseline | [main at 103a5267e2846b7b1f5d0872816518b0a110d33f](https://github.com/ARNAV2684/Overlap/commit/103a5267e2846b7b1f5d0872816518b0a110d33f) |
@@ -16,7 +16,12 @@
 | Governing workflow | [CONTRIBUTING](../../CONTRIBUTING.md), [planning skill](../../.claude/skills/overlap-plan/SKILL.md), [registry](../REGISTRY.md) |
 | Change from discussion draft | Separates the one-file plan PR from future specification/code PRs; adds dependency gates, review questions, temporal grounding and a fresh conflict scan including PR #40 |
 
-**Approval requested:** accept the scope and specification-first roadmap in this document. Merging it does not approve unfinished specifications, change an interface, authorise spending, or start implementation. Reviewers can approve the roadmap while recording decisions that must be resolved before a later milestone.
+**M0 approval scope (merged in #41):** accept the scope and specification-first roadmap in this document. Merging it does not approve unfinished specifications, change an interface, authorise spending, or start implementation. Reviewers can approve the roadmap while recording decisions that must be resolved before a later milestone.
+
+**Current progress:** Pranav has authorised M1 specification preparation. Its exact file map, proposed defaults,
+shared-owner decisions and validation are in [S1](PLAN_agents_ai-insights-mcp_S1.md), based on main `ba75f51`
+after #40–#42 merged. No new team interface decisions have been supplied. The baseline, original PR scope and
+conflict scan below record M0; they are not a current implementation allowlist. Runtime and spending remain gated.
 
 ## 1. Purpose and intended outcome
 
@@ -131,13 +136,16 @@ Example intent, not an approved fixture: “Three attempts in this spell show re
 
 ## 8. File and specification map
 
-### Current PR: complete write allowlist
+### Original M0 PR: complete write allowlist
 
 | File | Action | Responsibility / governing reference | Owner |
 |---|---|---|---|
 | `plans/active/PLAN_agents_ai-insights-mcp.md` | Add | This roadmap, review checklist and dependency gates; full planning template | Pranav |
 
-### Future areas: references, not permission to edit in this PR
+### Subsequent areas: exact maps belong to their milestone plans
+
+M1's current exact specification map is in [S1 §3](PLAN_agents_ai-insights-mcp_S1.md#3-files). The rows below
+remain a roadmap; they do not authorise all files or runtime work in a directory.
 
 | Milestone / area | Anticipated files | Required scope agreement |
 |---|---|---|
@@ -201,8 +209,8 @@ M5 will define its own criteria in separate plans. Local emulators/fixtures do n
 
 | Milestone | Outcome / acceptance | Owner and prerequisite | Scheduling status |
 |---|---|---|---|
-| M0: this plan PR | Reviewable scope and roadmap; P1–P3 | Pranav; team review | Ready for review |
-| M1: first-slice specifications | MCP, evidence, workflow, limits, recovery and frontend handoffs agreed; F1 | Pranav coordinates D1–D4/D6 owners | Next; separate PR(s), no code |
+| M0: this plan PR | Reviewable scope and roadmap; P1–P3 | Pranav; team review | Merged in #41 |
+| M1: first-slice specifications | MCP, evidence, workflow, limits, recovery and frontend handoffs agreed; F1 | Pranav coordinates D1–D4/D6 owners | S1 draft prepared; owner agreement pending; no runtime code |
 | M2: local MCP | Read-only tool works through a real MCP client; F2 | Pranav; agreed tools spec and source | Estimate after M1; fixtures can unblock development |
 | M3: hosted explanation | Local workflow calls approved Azure model and checks its output; F3 | Pranav; M1, M2 and D5 | No paid calls before access/budget gate |
 | M4: connected insight | Real stats-to-card path plus failure/speed checks; F4–F6 | Pranav with stats owner, Arnav and Vedant | Depends on actual producer/renderer readiness |
@@ -271,6 +279,6 @@ Accepting M0 means the roadmap is suitable for specification work; it does not m
 
 **Pending implementation:** provide specification and implementation PRs, tested commit, reproducible commands/configuration names, fixture provenance, model/dependency versions, acceptance results, browser evidence, measured cost/latency, recovery checks, known limitations and follow-up owners. Do not move this roadmap to `plans/done/` merely because the planning PR merges.
 
-**Next action:** team review of this documentation PR, followed by a separate first-slice specification proposal. Runtime implementation waits for the governing specifications to be agreed and Pranav's explicit go.
-
-Waiting for **go** on the next agreed milestone; publishing this plan does not start runtime implementation.
+**Next action:** complete and review the [S1 specification proposal](PLAN_agents_ai-insights-mcp_S1.md). M1
+preparation has go; runtime implementation waits for governing specification agreement and a scoped M2 go.
+M1 is not complete merely because its draft files exist, and this roadmap remains active through later milestones.
