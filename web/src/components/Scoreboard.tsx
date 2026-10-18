@@ -13,13 +13,14 @@
 // The scoreboard is a live slice: it keeps updating while the feed is paused. Goals are found by comparing each
 // published score with the one before (components/scoreboard/goal.ts), so snapshot history never flashes.
 
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useState } from "react";
 import { ScoreCenter } from "@/components/scoreboard/ScoreCenter";
 import { TeamBlock } from "@/components/scoreboard/TeamBlock";
 import { goalAnnouncement, goalBetween, type Score } from "@/components/scoreboard/goal";
 import { VisuallyHidden } from "@/components/ui/VisuallyHidden";
 import { cn } from "@/lib/cn";
 import type { Scoreboard as ScoreboardState } from "@/lib/store";
+import { teamColourStyle } from "@/lib/team-colours";
 import { useScoreboard } from "@/lib/store-hooks";
 
 /** How long the score stays primary after a goal. */
@@ -39,14 +40,11 @@ export function ScoreboardView({ scoreboard, matchId, flashing, announcement, cl
   const { setup } = scoreboard;
   const home = setup?.teams.home.name ?? null;
   const away = setup?.teams.away.name ?? null;
-  const teamColours = setup
-    ? ({ "--team-home": setup.teams.home.colours.primary, "--team-away": setup.teams.away.colours.primary } as CSSProperties)
-    : undefined;
 
   return (
     <section
       aria-label="Scoreboard"
-      style={teamColours}
+      style={teamColourStyle(setup)}
       className={cn(
         "mb-[18px] grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 rounded-card border border-line",
         "bg-surface bg-linear-to-r from-team-home/15 via-transparent to-team-away/15 p-4 sm:gap-6 sm:p-6",

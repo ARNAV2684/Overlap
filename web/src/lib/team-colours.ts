@@ -2,10 +2,13 @@
 //
 // Purpose: pick readable text for a kit colour (the number on a player marker, a label on a team-coloured bar)
 // Inputs:  a kit colour as #RRGGBB (the setup guarantees this format)
-// Outputs: "dark" or "light", plus ready-made Tailwind classes for each
-// Spec:    web/IMPLEMENTATION_PLAN.md Phase 4.3
+// Outputs: "dark" or "light", plus ready-made Tailwind classes for each; teamColourStyle() for the CSS variables
+// Spec:    web/IMPLEMENTATION_PLAN.md Phase 4.3, Phase 7 (team colours)
 //
 // The class names are written out in full so Tailwind can see them.
+
+import type { CSSProperties } from "react";
+import type { MatchSetup } from "@/lib/contracts";
 
 /** #0b0b0b, the same near-black as the greys-950 token. */
 const DARK_INK = [11, 11, 11] as const;
@@ -46,4 +49,17 @@ export function inkTextClass(hex: string): string {
 /** SVG fill class for the ink that is readable on this kit colour (for numbers drawn inside an SVG). */
 export function inkFillClass(hex: string): string {
   return readableInk(hex) === "dark" ? "fill-greys-950" : "fill-white";
+}
+
+/**
+ * The --team-home / --team-away variables for an element, from the clubs' primary kit colours, or undefined before the
+ * setup arrives (globals.css then falls back to orange-500 and blue-400). bg-team-home, border-team-away and the Tag
+ * tones read them from the nearest element that sets them.
+ */
+export function teamColourStyle(setup: MatchSetup | null): CSSProperties | undefined {
+  if (!setup) return undefined;
+  return {
+    "--team-home": setup.teams.home.colours.primary,
+    "--team-away": setup.teams.away.colours.primary,
+  } as CSSProperties;
 }
