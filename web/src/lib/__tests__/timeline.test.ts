@@ -1,6 +1,7 @@
 import { createElement } from "react";
 import { renderToString } from "react-dom/server";
 import { describe, expect, it } from "vitest";
+import { TimelineRowsDemo } from "@/app/dev/ui/TimelineRowsDemo";
 import { EventTimelinePanelView, teamsFrom } from "@/components/timeline/EventTimelinePanel";
 import { TimelineRow, rowLabel } from "@/components/timeline/TimelineRow";
 import type { MatchEvent, ParsedEnvelope } from "@/lib/contracts";
@@ -88,9 +89,13 @@ describe("TimelineRow variants", () => {
     expect(card("yellow")).not.toContain("Nora 9 · yellow card");
   });
 
-  it("a substitution names who went off and who came on", () => {
-    const html = renderRow(oneEvent({ type: "Substitution", player_on_id: "NBR-12", outcome: undefined, receiver_id: undefined }));
-    expect(html).toContain("Nora 9 off → Nora 12 on");
+  it("a substitution shows an off arrow and an on arrow, keeping the words", () => {
+    const row = oneEvent({ type: "Substitution", player_on_id: "NBR-12", outcome: undefined, receiver_id: undefined });
+    const html = renderRow(row);
+    expect(html).toMatch(/↓<\/span>Nora 9 off/);
+    expect(html).toMatch(/↑<\/span>Nora 12 on/);
+    // The accessible name keeps the store's wording
+    expect(rowLabel(row, teams.get("NBR"))).toBe("Substitution, Northbridge FC, Nora 9 off → Nora 12 on, at 62:14");
   });
 
   it("history rows are dimmed and labelled", () => {
@@ -159,5 +164,17 @@ describe("EventTimelinePanelView", () => {
     expect(paused).toContain('aria-pressed="true"');
     const fallback = renderToString(createElement(EventTimelinePanelView, { ...base, rows: [] }));
     expect(fallback).toMatch(/<button[^>]*disabled=""[^>]*aria-pressed="false"|aria-pressed="false"[^>]*disabled=""/);
+  });
+});
+
+describe("TimelineRowsDemo (/dev/ui)", () => {
+  it("renders every variant, including the red and second-yellow rows SYN-9001 never produces", () => {
+    const html = visible(renderToString(createElement(TimelineRowsDemo)));
+    expect(html.match(/role="option"/g)).toHaveLength(14);
+    for (const text of ["Goal", "Yellow card", "Second yellow", "Red card", "Mira Castell", "Half time · 1–0", "Position frame", "History"]) {
+      expect(html).toContain(text);
+    }
+    expect(html).toContain("bg-card-red-soft");
+    expect(html).toContain('aria-selected="true"');
   });
 });

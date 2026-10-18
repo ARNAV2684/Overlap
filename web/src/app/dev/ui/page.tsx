@@ -3,7 +3,7 @@
 // Purpose: show every colour token, text class and UI primitive in one place for review and screenshots
 // Inputs:  none
 // Outputs: a page in development; a 404 in production
-// Spec:    web/IMPLEMENTATION_PLAN.md Phase 3 (primitives), Phase 6 (layout components)
+// Spec:    web/IMPLEMENTATION_PLAN.md Phase 3 (primitives), Phase 6 (layout components), Phase 8.2 (timeline rows)
 
 import { notFound } from "next/navigation";
 import { AppFooter } from "@/components/layout/AppFooter";
@@ -27,6 +27,7 @@ import { StatusBadge, type ConnectionStatus } from "@/components/ui/StatusBadge"
 import { Tag } from "@/components/ui/Tag";
 import { VisuallyHidden } from "@/components/ui/VisuallyHidden";
 import { SegmentedDemo } from "./SegmentedDemo";
+import { TimelineRowsDemo } from "./TimelineRowsDemo";
 
 const statuses: ConnectionStatus[] = ["connecting", "live", "stale", "reconnecting", "finished"];
 
@@ -293,6 +294,15 @@ export default function DevUiPage() {
         <div className="flex flex-wrap items-center gap-2 text-caption text-ink-muted">
           <Kbd>Tab</Kbd> <Kbd>Enter</Kbd> <Kbd>Space</Kbd> <Kbd>Esc</Kbd>
         </div>
+      </Section>
+
+      <Section title="Timeline rows (Phase 8.2)">
+        <p className="text-caption text-ink-muted">
+          Every row variant with hand-written data: success and failed passes, a saved shot, a goal, yellow, second
+          yellow and red cards, a substitution, a foul, a period start, a match state, a tracking frame, a history row
+          and a selected row.
+        </p>
+        <TimelineRowsDemo />
       </Section>
 
       <Section title="Skeleton, VisuallyHidden">

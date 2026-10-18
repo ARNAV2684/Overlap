@@ -941,6 +941,12 @@ second-yellow chips, substitution, history, selection, status, tracking) and the
 (18 files, 356 tests) and `npm run build` pass. The four "Done when" checks need a run against the mock (and the
 performance check, Chrome's Performance panel) and are **not done**.
 
+**Progress (8.2 audited, 18 Oct):** every row in the 8.2 table checked against the code. Two gaps closed: a
+substitution now shows a down arrow for the player going off and an up arrow for the one coming on (the words stay),
+and `/dev/ui` has a "Timeline rows (Phase 8.2)" section (`src/app/dev/ui/TimelineRowsDemo.tsx`) with every variant from
+hand-written rows, including the red and second-yellow cards SYN-9001 never produces. A second yellow uses the red row
+tint. A unit test renders that section. `npm test`: 18 files, 357 tests.
+
 ### 8.1 Component tree
 
 ```

@@ -1,7 +1,8 @@
 // EventRow.tsx — A match event in the timeline
 //
 // Purpose: one event (pass, shot, card, substitution…): its time, its description with team tag and badges, and when
-//          it arrived. A goal gets a primary left bar and a "Goal" badge; a card gets its chip and a row tint
+//          it arrived. A goal gets a primary left bar and a "Goal" badge; a card gets its chip and a row tint; a
+//          substitution gets an off arrow and an on arrow
 // Inputs:  row (an event row from the store), team? (the row's club), plus the shell's selection props
 // Outputs: a TimelineRowShell
 // Spec:    web/specs/screens.md (event timeline). web/IMPLEMENTATION_PLAN.md Phase 8.2
@@ -39,6 +40,25 @@ function withoutSuffix(text: string, suffix: string | undefined): string {
   return tail && text.endsWith(tail) ? text.slice(0, -tail.length) : text;
 }
 
+/** "Nora 9 off → Nora 12 on" (describe-event.ts) as a down arrow for the player going off and an up arrow for the one
+ *  coming on. The words stay, so the arrows are never the only signal. Any other text is shown as it is. */
+function SubstitutionText({ detail }: { detail: string }) {
+  const match = /^(.*) off → (.*) on$/.exec(detail);
+  if (!match) return detail;
+  return (
+    <span className="inline-flex flex-wrap gap-x-3">
+      <span>
+        <span aria-hidden="true" className="mr-1 text-ink-muted">↓</span>
+        {match[1]} off
+      </span>
+      <span>
+        <span aria-hidden="true" className="mr-1 text-secondary-text">↑</span>
+        {match[2]} on
+      </span>
+    </span>
+  );
+}
+
 export function EventRow({ row, team, ...shell }: RowProps) {
   const event = row.event;
   const card = event?.type === "Card" ? event.card : undefined;
@@ -60,7 +80,9 @@ export function EventRow({ row, team, ...shell }: RowProps) {
             {outcome ? <OutcomeBadge outcome={outcome} /> : null}
           </>
         }
-        description={withoutSuffix(row.detail, shown)}
+        description={
+          event?.type === "Substitution" ? <SubstitutionText detail={row.detail} /> : withoutSuffix(row.detail, shown)
+        }
       />
       <ArrivalCell received={row.received} />
     </TimelineRowShell>
