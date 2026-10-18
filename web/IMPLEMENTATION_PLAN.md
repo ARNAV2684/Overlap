@@ -1023,7 +1023,18 @@ the goal lines, so the SVG is `overflow-visible` inside a padded `pitch-surface`
 and named by player id. `pitch.test.ts` covers the empty pitch, the label, placement through `pitchToSvg` with no flips,
 kit fills and readable numbers, the ball drawn last, the pre-setup markers, the panel, and the CONTRACTS §1.1 sanity
 check as a unit test. Lint, typecheck, `npm test` (19 files, 365 tests) and `npm run build` pass. The live "Done when"
-checks (winger near the top in a real run, updates and freezes, timestamp) are **not done**. 9.2 is not started.
+checks (winger near the top in a real run, updates and freezes, timestamp) are **not done**.
+
+**Progress (9.2 built, 18 Oct; not yet checked against the running mock):** `inspector/{MessageInspectorPanel,
+JsonViewer,CopyButton}.tsx` are written; `InspectorFooter` lives inside the panel file. The inspector sits under the
+pitch in the workspace's right-hand column (the loading fallback shows it empty, buttons disabled). "Follow latest" is
+disabled while already following; a caption under the JSON says "Following the newest event" or "Pinned to the selected
+row". The copy button says "Copy JSON" and reports "Copied" or "Copy failed" in a polite status line for 2 s. The
+`<pre>` is focusable so it scrolls by keyboard, and capped at 340 px. Literals (`true`, `false`, `null`) are blue-200,
+which the list below does not name. `inspector.test.ts` covers the tokenizer (it never changes the text), the label,
+the payload shown exactly, Follow latest's state, and the rejection footer. Lint, typecheck, `npm test` (20 files, 372
+tests) and `npm run build` pass. The live "Done when" check (select a row, see its payload, Follow latest resumes) is
+**not done**.
 
 ### 9.1 `src/components/charts/LivePitch.tsx` (existing placeholder): SVG, not canvas
 
