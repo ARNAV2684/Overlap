@@ -870,6 +870,16 @@ Routing:
 
 **Goal:** the scoreboard and the four counters (B5, B10), with team colours from the setup.
 
+**Progress (built, 18 Oct; not yet checked against the running mock):** `Scoreboard.tsx`, `scoreboard/{TeamBlock,
+TeamColourBar,ScoreCenter,ScoreDisplay,MatchClock,goal}`, and `metrics/{MetricsGrid,MetricCard}` are written and
+composed into `LiveMatchView` (and its loading fallback, which shows a skeleton for the match id it does not know yet).
+`PhaseLabel` and `MatchIdLabel` live inside `ScoreCenter.tsx`. A goal is a rise from the score already shown
+(`scoreboard/goal.ts`); `reset()` publishes an empty score before the snapshot is read, so history never flashes.
+`store.ts` now exports `emptyScoreboard` and `emptyCounters` for the fallback. `scoreboard.test.ts` covers goal
+detection over a real store (live goals once each, none from snapshot history or after a reconnect) and both views.
+Lint, typecheck, `npm test` (17 files, 342 tests) and `npm run build` pass. Both "Done when" checks below need a run
+against the mock and are **not done**.
+
 ### Scoreboard (`src/components/Scoreboard.tsx`, existing placeholder) and its parts
 
 ```

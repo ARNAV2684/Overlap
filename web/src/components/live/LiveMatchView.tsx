@@ -2,15 +2,18 @@
 //
 // Purpose: compose the live match screen from the layout components: header with the connection badge, intro with the
 //          source card, the notice line, the screen's content, and the footer
-// Inputs:  LiveMatchView: the store from the nearest MatchStreamProvider (read by AppHeader and NoticeBar)
+// Inputs:  LiveMatchView: the store from the nearest MatchStreamProvider (read by AppHeader, NoticeBar, Scoreboard and
+//          MetricsGrid)
 //          LiveMatchFrame: header, notice, children (the parts that differ between live and loading)
 // Outputs: LiveMatchView (live), LiveMatchFallback (the same frame in its starting "Connecting" state, with no store,
 //          for the route's Suspense fallback), LiveMatchFrame (the shared layout)
-// Spec:    web/specs/screens.md (live match screen). web/IMPLEMENTATION_PLAN.md Phase 6 (frame), Phase 10 (composition)
+// Spec:    web/specs/screens.md (live match screen). web/IMPLEMENTATION_PLAN.md Phase 6 (frame), Phase 7 (scoreboard,
+//          metrics), Phase 10 (composition)
 //
-// The fallback matches the live screen's first render (status Connecting, the connecting notice), so the prerendered
-// HTML does not jump when the live screen replaces it. The scoreboard, metrics and workspace (Phases 7 to 9) go inside
-// <main>, after the notice.
+// The fallback matches the live screen's first render (status Connecting, the connecting notice, an empty scoreboard
+// and zero counters), so the prerendered HTML does not jump when the live screen replaces it. Only the match id differs:
+// the fallback does not know it yet and shows a skeleton of the same size. The workspace (Phases 8 and 9) goes inside
+// <main>, after the metrics.
 
 import type { ReactNode } from "react";
 import { AppFooter } from "@/components/layout/AppFooter";
@@ -19,7 +22,9 @@ import { AppShell } from "@/components/layout/AppShell";
 import { IntroHero } from "@/components/layout/IntroHero";
 import { NoticeBar, NoticeBarView } from "@/components/layout/NoticeBar";
 import { SourceCard } from "@/components/layout/SourceCard";
-import { notices } from "@/lib/store";
+import { MetricsGrid, MetricsGridView } from "@/components/metrics/MetricsGrid";
+import { Scoreboard, ScoreboardView } from "@/components/Scoreboard";
+import { emptyCounters, emptyScoreboard, notices } from "@/lib/store";
 
 type LiveMatchFrameProps = {
   header: ReactNode;
@@ -43,7 +48,12 @@ export function LiveMatchFrame({ header, notice, children }: LiveMatchFrameProps
 
 /** The live screen. Must sit inside a MatchStreamProvider. */
 export function LiveMatchView() {
-  return <LiveMatchFrame header={<AppHeader />} notice={<NoticeBar />} />;
+  return (
+    <LiveMatchFrame header={<AppHeader />} notice={<NoticeBar />}>
+      <Scoreboard />
+      <MetricsGrid />
+    </LiveMatchFrame>
+  );
 }
 
 /** The screen before the match id is known and the store exists. Shows, but never announces, the starting notice. */
@@ -52,6 +62,9 @@ export function LiveMatchFallback() {
     <LiveMatchFrame
       header={<AppHeaderView status="connecting" />}
       notice={<NoticeBarView notice={{ text: notices.connecting, tone: "info" }} announce={false} />}
-    />
+    >
+      <ScoreboardView scoreboard={emptyScoreboard("")} matchId={null} />
+      <MetricsGridView counters={emptyCounters()} />
+    </LiveMatchFrame>
   );
 }
