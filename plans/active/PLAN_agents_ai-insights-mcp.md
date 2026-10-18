@@ -6,9 +6,9 @@
 |---|---|
 | Author / primary owner | Pranav |
 | Review coordinator | Arnav |
-| Affected owners | Azeem: generator; Vedant: frontend; Arnav: storage, relay and delivery; stats: unassigned (Arnav decides) |
-| Version and date | 1.2 · 17 October 2026 · M1 progress note |
-| Status | Roadmap merged in #41; M1 specification draft prepared, awaiting team review; runtime not started |
+| Affected owners | Azeem: generator and stats (Pranav reports agreement); Vedant: frontend; Arnav: storage, relay and delivery |
+| Version and date | 1.3 · 18 October 2026 · local M2 evidence |
+| Status | #41 and #44 merged; local M2 implemented and verified in S2; Foundry and live integration pending |
 | Tier | Full · Layer 5, with explicit upstream and downstream dependencies |
 | Branch | `agents/insights-plan` |
 | Reviewed baseline | [main at 103a5267e2846b7b1f5d0872816518b0a110d33f](https://github.com/ARNAV2684/Overlap/commit/103a5267e2846b7b1f5d0872816518b0a110d33f) |
@@ -18,10 +18,11 @@
 
 **M0 approval scope (merged in #41):** accept the scope and specification-first roadmap in this document. Merging it does not approve unfinished specifications, change an interface, authorise spending, or start implementation. Reviewers can approve the roadmap while recording decisions that must be resolved before a later milestone.
 
-**Current progress:** Pranav has authorised M1 specification preparation. Its exact file map, proposed defaults,
-shared-owner decisions and validation are in [S1](PLAN_agents_ai-insights-mcp_S1.md), based on main `ba75f51`
-after #40–#42 merged. No new team interface decisions have been supplied. The baseline, original PR scope and
-conflict scan below record M0; they are not a current implementation allowlist. Runtime and spending remain gated.
+**Current progress:** the specifications in [S1](PLAN_agents_ai-insights-mcp_S1.md) merged in #44. Pranav supplied
+the owner agreements described in [S2](PLAN_agents_ai-insights-mcp_S2.md) and explicitly authorised its local
+Cosmos/MCP implementation. S2 passed the real stdio and local Cosmos checks; it makes no model or live delivery
+claim. The baseline, original PR scope and conflict scan below record M0; S2 is the current implementation allowlist.
+M3 model access/spending and M4 live integration remain pending.
 
 ## 1. Purpose and intended outcome
 
@@ -60,7 +61,7 @@ The immediate deliverable is this reviewable plan. The first connected demonstra
 
 | ID / dependency | Owner / coordinator | Required handoff and needed-by gate | Work possible meanwhile |
 |---|---|---|---|
-| D1: trigger and evidence | Stats owner: unassigned (Arnav decides); consumer Pranav | At M1: shot/window definition, event inclusion, facts/units, IDs, repeat-trigger policy and publication contract. At M4: actual producer | Use jointly reviewed fixtures after M1; never call this live integration |
+| D1: trigger and evidence | Azeem (Pranav reports agreement); consumer Pranav | Shot/window and frozen-context agreement reported for S2. At M4: actual producer and its integration evidence | Source-derived sample for M2; never call this live integration |
 | D2: synthetic source | Azeem; consumer Pranav | At M1: agreed fixture provenance. At M4: reproducible recording with commit, seed, clubs and expected shot-cluster events | Use the merged generator; refresh expected output after tuning lands |
 | D3: storage and delivery | Arnav and Pranav | At M1: readable sources, time/version semantics, moment/overlay persistence and audience delivery ownership; working endpoints before M4 | Isolated fixture-backed readers |
 | D4: displayed insight | Vedant; producer Pranav; transport Arnav | At M1: overlay acceptance, modes, timing, late/duplicate behaviour and reconnect plan. At M4: real card renderer | Validate payloads; do not count an inspector or stub as a displayed insight |
@@ -279,6 +280,15 @@ Accepting M0 means the roadmap is suitable for specification work; it does not m
 
 **Pending implementation:** provide specification and implementation PRs, tested commit, reproducible commands/configuration names, fixture provenance, model/dependency versions, acceptance results, browser evidence, measured cost/latency, recovery checks, known limitations and follow-up owners. Do not move this roadmap to `plans/done/` merely because the planning PR merges.
 
-**Next action:** complete and review the [S1 specification proposal](PLAN_agents_ai-insights-mcp_S1.md). M1
-preparation has go; runtime implementation waits for governing specification agreement and a scoped M2 go.
-M1 is not complete merely because its draft files exist, and this roadmap remains active through later milestones.
+**Next action:** review the separately scoped [S2 implementation](PLAN_agents_ai-insights-mcp_S2.md). Then obtain
+Foundry deployment access and an explicit test budget before M3 model calls. Confirm the remaining trigger/delivery
+specifications and Azeem's real producer before M4. This roadmap remains active through those later milestones.
+
+
+### 18 October local implementation update
+
+#44 merged. [S2](PLAN_agents_ai-insights-mcp_S2.md) implements Pranav's explicit go: seed the agreed
+source-derived document into local Cosmos and prove a real read-only MCP call. The 64-test suite passed with
+Cosmos enabled; the offline handoff records the actual source and contains no narration. Pranav confirms Azeem owns stats
+and the relevant source agreements; formal registry changes remain Arnav's responsibility. No Foundry access yet;
+Pranav explicitly selected completing the local milestone first. M3/M4 and whole-roadmap completion remain pending.

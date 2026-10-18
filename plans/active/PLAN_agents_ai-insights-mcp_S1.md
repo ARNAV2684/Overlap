@@ -6,13 +6,14 @@
 | Parent plan | [AI insights and MCP](PLAN_agents_ai-insights-mcp.md), roadmap v1.1 merged in [PR #41](https://github.com/ARNAV2684/Overlap/pull/41); v1.2 records progress |
 | Milestone | M1; parent acceptance F1 |
 | Author / owner | Pranav; Arnav coordinates shared review |
-| Status | In review — M1 agreement is not complete |
+| Status | #44 merged; local MCP scope authorised in S2; remaining model/trigger/delivery gates are separate |
 | Review PR | [#44 — Specify the first insight and MCP handoffs](https://github.com/ARNAV2684/Overlap/pull/44) |
 | Reviewed baseline | `main` · `ba75f51412a9b019fdb689d9c604d03ab82533d2` · 17 October 2026 |
 | Branch | `agents/insights-specs` |
 
-Pranav authorised starting M1. No new team decisions have been supplied since #41 merged. All defaults below
-are **proposals**, not recorded agreements. This sprint implements the documentation milestone, not runtime code.
+At the initial 17 October review, Pranav authorised starting M1 and no new team decisions had been supplied.
+Defaults below record that proposal. The dated handoff update at the end records the subsequent merge and
+user-reported agreements supporting S2. This sprint itself contains documentation, not runtime code.
 
 ## 1. Outcome
 
@@ -144,3 +145,13 @@ were created. Publication is authorised; owner approvals and runtime implementat
 source; Vedant agrees §10.3–§10.4. Record accepted/revised decisions in this table and PR review before marking
 specifications agreed. A proposed spec PR must disclose the new overlay period field and audience snapshot.
 After agreement, prepare the separately scoped M2 implementation for a real local MCP client/tool test.
+
+
+### 18 October handoff update
+
+PR #44 is merged at `cb3b349`. Pranav reports Azeem owns stats and has agreed to frozen context/evidence and the
+shot-cluster rule; he also confirms Arnav's storage/delivery agreement and Vedant's first card format/timing.
+Pranav authorised creating the source-derived sample and implementing the local Cosmos/MCP milestone. These
+statements support S2's consumer scope; they are not independent review records or proof that upstream code exists.
+MCP tooling is the only governing runtime spec promoted for S2. Other model/trigger/delivery specs and ownership
+registry updates remain for their owners/later milestones. See [S2](PLAN_agents_ai-insights-mcp_S2.md).

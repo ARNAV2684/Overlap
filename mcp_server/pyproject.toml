@@ -1,0 +1,38 @@
+[project]
+name = "overlap-mcp"
+version = "0.1.0"
+description = "Read-only moment context over local MCP stdio."
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "mcp==1.30.0",
+    "azure-cosmos==4.17.1",
+    "aiohttp==3.14.5",
+    "pydantic==2.14.1",
+    "jsonschema==4.26.0",
+]
+
+[project.scripts]
+overlap-mcp = "mcp_server.server:main"
+overlap-mcp-seed = "mcp_server.sample:main"
+overlap-mcp-check = "mcp_server.client:main"
+
+[dependency-groups]
+dev = ["pytest==8.4.2", "ruff==0.17.0"]
+
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["mcp_server", "mcp_server.tools"]
+package-dir = {mcp_server = "."}
+
+[tool.setuptools.package-data]
+mcp_server = ["samples/*.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["cosmos: opt-in local Cosmos emulator integration"]
+
+[tool.ruff]
+line-length = 110
