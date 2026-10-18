@@ -930,6 +930,17 @@ Values use `text-metric numeric` so digits don't jitter. They are **not** `aria-
 
 **Goal:** the main panel (B6–B9, B13, B14, B16). **Every row is its own component**, built from shared cells.
 
+**Progress (built, 18 Oct; not yet checked against the running mock):** every file in the tree below is written under
+`src/components/timeline/` (cells in `timeline/cells/`), and `LiveMatchView` now has the workspace grid with the
+timeline on the left (and the same panel, controls disabled, on the loading fallback). `EventTimelinePanelView` takes
+props, `EventTimelinePanel` wires it to the store. `GoalBadge` lives in `OutcomeBadge.tsx`. When a badge or card chip
+shows an outcome, the matching " · …" suffix is dropped from the visible description (the accessible name keeps it).
+Team tags read `--team-home` / `--team-away`, now set by `teamColourStyle()` in `src/lib/team-colours.ts` (shared with
+the scoreboard). `timeline.test.ts` covers the accessible names, every row variant (goal, yellow, red and
+second-yellow chips, substitution, history, selection, status, tracking) and the panel. Lint, typecheck, `npm test`
+(18 files, 356 tests) and `npm run build` pass. The four "Done when" checks need a run against the mock (and the
+performance check, Chrome's Performance panel) and are **not done**.
+
 ### 8.1 Component tree
 
 ```
