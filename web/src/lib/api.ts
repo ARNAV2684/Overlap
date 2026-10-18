@@ -93,12 +93,19 @@ export const matchSummarySchema = z.strictObject({
 });
 export type MatchSummary = z.infer<typeof matchSummarySchema>;
 
-/** `GET /api/match/{id}/snapshot` as sent. The envelopes are checked one by one afterwards, so one bad message does not hide the rest. */
+/**
+ * `GET /api/match/{id}/snapshot` as sent (CONTRACTS.md §7.3). The envelopes are checked one by one afterwards, so one
+ * bad message does not hide the rest. `rejected` counts envelopes the server itself left out; the relay's stand-in
+ * always sends it, the mock does not.
+ */
 const rawSnapshotSchema = z.strictObject({
   match_id: z.string().regex(/^SYN-\d{4}$/),
   setup: matchSetupSchema,
   status: z.unknown(),
   envelopes: z.array(z.unknown()),
+  rejected: z
+    .strictObject({ count: z.number().int().nonnegative(), samples: z.array(z.string()) })
+    .optional(),
 });
 
 /** A snapshot after validation: only envelopes that passed, plus a count of those that did not. */
@@ -109,6 +116,7 @@ export type Snapshot = {
   status: ParsedEnvelope | null;
   /** Every envelope that passed validation, in the order the server sent them (seq order). */
   envelopes: ParsedEnvelope[];
+  /** Envelopes left out, by the server or by this client's validation. */
   rejected: {
     count: number;
     /** The first few reasons, for the console. */
@@ -178,24 +186,27 @@ export function createApiClient(baseURL: string, timeoutMs = 7000): ApiClient {
 
       const envelopes: ParsedEnvelope[] = [];
       const rejected = { count: 0, samples: [] as string[] };
+      const addSample = (sample: string) => {
+        if (rejected.samples.length < MAX_REJECTION_SAMPLES) rejected.samples.push(sample);
+      };
       const accept = (value: unknown): ParsedEnvelope | null => {
         const result = parseEnvelope(value);
         if (result.ok) return result.envelope;
         rejected.count++;
-        if (rejected.samples.length < MAX_REJECTION_SAMPLES) rejected.samples.push(describeRejection(result));
+        addSample(describeRejection(result));
         return null;
       };
       for (const value of raw.envelopes) {
         const envelope = accept(value);
         if (envelope) envelopes.push(envelope);
       }
-      return {
-        matchId,
-        setup: raw.setup,
-        status: raw.status == null ? null : accept(raw.status),
-        envelopes,
-        rejected,
-      };
+      const status = raw.status == null ? null : accept(raw.status);
+      // The server's rejections are contract drift too, so they count towards the number shown on screen
+      if (raw.rejected) {
+        rejected.count += raw.rejected.count;
+        for (const sample of raw.rejected.samples) addSample(`Rejected by the server: ${sample}`);
+      }
+      return { matchId, setup: raw.setup, status, envelopes, rejected };
     },
   };
 }

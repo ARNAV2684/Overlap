@@ -131,6 +131,26 @@ describe("setup and tracking frames", () => {
   setupRule("style values stop at 1", (s) => (s.teams.home.style.width = 1.4), "<=1");
   setupRule("a formation looks like 4-3-3", (s) => (s.teams.home.formation = "433"), "formation");
 
+  const conditions = { temperature_c: 11.5, precipitation: "light", wind_ms: 6.0, attendance: 38250 };
+
+  it("accepts a setup with conditions, as the generator sends it (CONTRACTS.md §2)", () => {
+    expect(matchSetupSchema.safeParse({ ...makeSetup(), conditions }).success).toBe(true);
+  });
+
+  it("accepts a setup without conditions, as the mock sends it", () => {
+    expect(matchSetupSchema.safeParse(makeSetup()).success).toBe(true);
+  });
+
+  it("rejects an unknown precipitation, a negative wind or attendance, and an unknown field in conditions", () => {
+    const withConditions = (change: Partial<Record<string, unknown>>) =>
+      matchSetupSchema.safeParse({ ...makeSetup(), conditions: { ...conditions, ...change } }).success;
+    expect(withConditions({ precipitation: "snow" })).toBe(false);
+    expect(withConditions({ wind_ms: -1 })).toBe(false);
+    expect(withConditions({ attendance: -5 })).toBe(false);
+    expect(withConditions({ attendance: 100.5 })).toBe(false);
+    expect(withConditions({ humidity: 80 })).toBe(false);
+  });
+
   it("keeps the ball and players on the pitch", () => {
     expect(trackingFrameSchema.safeParse(broken(makeFrame(), (f) => (f.ball.x = -3))).success).toBe(false);
     expect(trackingFrameSchema.safeParse(broken(makeFrame(), (f) => (f.players[0].y = 101))).success).toBe(false);

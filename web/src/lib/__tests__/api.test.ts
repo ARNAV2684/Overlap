@@ -134,6 +134,38 @@ describe("getSnapshot", () => {
     expect(snapshot.rejected.samples).toHaveLength(3);
   });
 
+  it("accepts the server's own rejected count (CONTRACTS.md §7.3) and adds it to the client's", async () => {
+    const bad = envelope("event", { nope: 1 }, { seq: 4 });
+    respond = (_req, res) =>
+      json(res, {
+        match_id: "SYN-0042",
+        setup: makeSetup(),
+        status,
+        envelopes: [status, bad, event],
+        rejected: { count: 2, samples: ["env-7: unknown kind", "env-9: seq missing"] },
+      });
+    const snapshot = await client().getSnapshot("SYN-0042");
+    expect(snapshot.envelopes.map((e) => e.seq)).toEqual([1, 3]);
+    expect(snapshot.rejected.count).toBe(3);
+    expect(snapshot.rejected.samples).toEqual([
+      expect.stringMatching(/^Rejected event seq 4/),
+      "Rejected by the server: env-7: unknown kind",
+      "Rejected by the server: env-9: seq missing",
+    ]);
+  });
+
+  it("accepts a server count of zero, as the relay sends when nothing was left out", async () => {
+    respond = (_req, res) =>
+      json(res, { match_id: "SYN-0042", setup: makeSetup(), status, envelopes: [status], rejected: { count: 0, samples: [] } });
+    expect((await client().getSnapshot("SYN-0042")).rejected).toEqual({ count: 0, samples: [] });
+  });
+
+  it("rejects a malformed server count (invalid-response)", async () => {
+    respond = (_req, res) =>
+      json(res, { match_id: "SYN-0042", setup: makeSetup(), status, envelopes: [], rejected: { count: -1, samples: [] } });
+    expect((await failure(client().getSnapshot("SYN-0042"))).kind).toBe("invalid-response");
+  });
+
   it("returns a null status before the match has started", async () => {
     respond = (_req, res) => json(res, { match_id: "SYN-0042", setup: makeSetup(), status: null, envelopes: [] });
     expect((await client().getSnapshot("SYN-0042")).status).toBeNull();

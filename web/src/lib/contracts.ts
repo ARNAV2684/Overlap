@@ -81,6 +81,14 @@ export const teamSchema = z
     });
   });
 
+/** Weather and crowd, decided before kickoff. The generator always sends it; the mock leaves it out. */
+export const conditionsSchema = z.strictObject({
+  temperature_c: z.number(),
+  precipitation: z.enum(["none", "light", "heavy"]),
+  wind_ms: z.number().nonnegative(),
+  attendance: z.number().int().nonnegative(),
+});
+
 export const matchSetupSchema = z
   .strictObject({
     match_id: matchId,
@@ -89,6 +97,7 @@ export const matchSetupSchema = z
     season_id: seasonId,
     venue: z.strictObject({ name: z.string().min(1), city: z.string().min(1) }),
     kickoff_utc: z.iso.datetime(),
+    conditions: conditionsSchema.optional(),
     storylines: z.array(z.string()),
     teams: z.strictObject({ home: teamSchema, away: teamSchema }),
   })
