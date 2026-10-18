@@ -26,6 +26,16 @@ describe("LiveMatchView", () => {
     expect(html.indexOf("<h1")).toBeGreaterThan(main);
   });
 
+  it("has a named complementary landmark for the pitch and inspector, inside main, and an h2 per panel", () => {
+    const html = live();
+    const aside = html.indexOf('<aside aria-label="Positions and message inspector"');
+    expect(aside).toBeGreaterThan(html.indexOf("<main"));
+    expect(aside).toBeLessThan(html.indexOf("</main>"));
+    for (const title of ["Event timeline", "Live positions", "Message inspector"]) {
+      expect(html).toMatch(new RegExp(`<h2[^>]*>${title}`));
+    }
+  });
+
   it("starts as Connecting with the connecting notice, read from the store", () => {
     const html = visible(live());
     expect(html).toContain("Connecting");

@@ -1,10 +1,9 @@
 # Charts spec
 
-> **Status: draft for review.** Answers §1 for what the live pitch needs and §2 for **`LivePitch` only**. The other seven
-> charts, the overlay-driven rules (`window`, `highlight`) and §3 are **not started**. `LivePitch` is *planned*
-> (milestone M5 of [`PLAN_web_live-match-viewer`](../../plans/active/PLAN_web_live-match-viewer.md)); only the
-> coordinate helper it relies on exists today, on `web/live-match-ui-setup` (not on `main` yet). Nothing here is agreed
-> until this PR is approved.
+> **Status: merged for review in #19 (16 Oct); not yet marked agreed.** Answers §1 for what the live pitch needs and §2
+> for **`LivePitch` only**. The other seven charts, the overlay-driven rules (`window`, `highlight`) and §3 are **not
+> started**. `LivePitch` is built on `web/live-api` and checked with unit tests and an end-to-end run against the mock; not on `main` yet (milestone M5 of
+> [`PLAN_web_live-match-viewer`](../../plans/active/PLAN_web_live-match-viewer.md)).
 
 Decides each chart component's inputs and behaviour.
 
@@ -35,7 +34,7 @@ _Answer:_
 
 _Answer:_
 
-### Live pitch (`src/components/charts/LivePitch.tsx`, *planned*)
+### Live pitch (`src/components/charts/LivePitch.tsx`, built)
 
 - **Data source:** `latestFrame` from the match store (`realtime.md` §2) and the players from the setup. It reads no
   overlay and takes no `window` or `highlight`.
@@ -44,8 +43,10 @@ _Answer:_
 - **Drawing (all in metres):**
   - Surface `pitch-surface` with lighter stripes `pitch-stripe`; outline and markings in `pitch-line` (about 6.2 : 1 on the
     surface), stroke about 0.25 so lines stay visible at phone width.
-  - Outline, halfway line, centre circle (radius 9.15), penalty areas (16.5 × 40.32), goal areas (5.5 × 18.32), penalty
-    spots at 11 m and the goals.
+  - Outline, halfway line, centre circle (radius 9.15) and spot, penalty areas (16.5 × 40.32) and arcs, goal areas
+    (5.5 × 18.32), penalty spots at 11 m and the goals. The goals sit just outside the goal lines, so the SVG does not
+    clip and sits in a padded `pitch-surface` box.
+  - Before the setup arrives, markers are grey and named by player id, without numbers.
   - 22 player markers: a circle (radius about 1.5) filled with the club's primary colour, a dark `pitch-marker-edge`
     outline, the shirt number in `readableInk(colour)`, and the player's name as the `<title>`.
   - The ball: radius about 0.8, near-black with a white ring (white alone vanishes on the light pitch), drawn last.

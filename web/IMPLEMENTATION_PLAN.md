@@ -1096,6 +1096,22 @@ MessageInspectorPanel
 
 **Goal:** match the `:8788` result, then finish the polish. Close the spec gaps.
 
+**Progress (18 Oct): the code and docs are done; the checks that need a person and a browser are not.**
+
+| Step | State |
+|---|---|
+| 1. Composition | Done in Phases 7 to 9: shell, scoreboard, metrics, then the workspace grid (timeline \| pitch + inspector) |
+| 2. States | Done through the store's notices (connecting, loading history, history unavailable, unreachable, connection lost, stale, paused, full time) and each panel's empty state; skeletons on the scoreboard and the picker. The unreachable text stays generic ("Cannot reach the stream server. Is it running?"), because the store does not know the URL |
+| 3. Accessibility | Landmarks `header`, `main`, a named `aside` ("Positions and message inspector") and `footer`; one `h1`; an `h2` per panel (tested). Every motion is `motion-safe`. Keyboard order in the DOM: header, pause, filters, timeline listbox, inspector (Follow latest, JSON, Copy). The pause button sits in the timeline header, so it comes before the filters, not after the list. **Manual keyboard and screen-reader pass not done** |
+| 4. Theme | Already recorded in `design-system.md` §1 ("dark theme only") |
+| 5. Match picker | Done: `src/app/page.tsx` lists `listMatches()` (refreshed every 5 s), links each to `/match/[id]`, and still links the default match when the server is down or plays nothing. Replaces the redirect; `screens.md` §1 updated |
+| 6. Performance at 20× | **Not done** (needs the React Profiler and Chrome's Performance panel) |
+| 7. Side-by-side QA | Automated part done: `src/lib/__tests__/stream.qa.test.ts` (opt-in, `QA_STREAM=1`) runs the real socket and store to full time. Against the mock at 60×: `SYN-9001` 2,171 events (1 goal, 2 yellows, 8 substitutions), 1–0 at 90+5:31; `SYN-9002` 2,024 events (a red card), 1–2; `SYN-9003` 1,915 events, 4–2. 0 rejected, badge finished, every final score equal to the server's. **The visual B1–B17 run beside `:8788` is not done** |
+| 8. Docs | Done: `web/README.md` (run steps, picker, `/dev/ui`, the stream test, the live screen's component map); each spec's `Status` now says merged in #19, not yet agreed, built on `web/live-api` and not on `main`; the *planned* markers are gone |
+
+Lint, typecheck, `npm test` (20 files, 373 tests, the stream test skipped) and `npm run build` pass. Not done from
+"Done when": the full B1–B17 observation, Lighthouse, and screenshots at 375 and 1440 px.
+
 1. **`LiveMatchView`:** compose shell → scoreboard → metrics → `grid-cols-[minmax(0,1.65fr)_minmax(340px,1fr)]`
    workspace (timeline | pitch + inspector), with the demo's breakpoints (§1.1).
 2. **States:** loading (skeletons before the first message), mock not running ("Cannot reach the mock. Keep its

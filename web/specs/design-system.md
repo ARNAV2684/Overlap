@@ -1,11 +1,10 @@
 # Design system spec
 
-> **Status: draft for review.** Answers §1 (identity), §3 (layout, minimum text size), §4 (motion) and §5
-> (accessibility) for the live match screen, and §2 only where the live screen needs it. It describes the choices
-> already built on `web/live-match-ui-setup` (not on `main` yet), so the code can be reviewed against it. Items marked
-> *planned* are not built yet (scoreboard, timeline and pitch milestones M4 and M5). Plan:
-> [`PLAN_web_live-match-viewer`](../../plans/active/PLAN_web_live-match-viewer.md) (milestone M1). Nothing here is
-> agreed until this PR is approved.
+> **Status: merged for review in #19 (16 Oct); not yet marked agreed.** Answers §1 (identity), §3 (layout, minimum
+> text size), §4 (motion) and §5 (accessibility) for the live match screen, and §2 only where the live screen needs it.
+> Everything it describes for the live screen is built on `web/live-api` and checked with unit tests and an end-to-end run against the mock; not on `main` yet. Plan:
+> [`PLAN_web_live-match-viewer`](../../plans/active/PLAN_web_live-match-viewer.md). A Lighthouse audit and the
+> 375 / 768 / 1440 px check (Phase 10) are not recorded yet.
 
 Decides Overlap's own visual identity. It must be original.
 
@@ -98,7 +97,7 @@ _Answer:_
 
 - Every animation is gated by `prefers-reduced-motion` (Tailwind `motion-safe:`), so with reduced motion there is no
   pulse, spin, flash or movement; state is conveyed by text and icon.
-- Animations in use: the live dot's ping, the skeleton pulse, the button spinner (loading), and, *planned*, the score flash on a goal
+- Animations in use: the live dot's ping, the skeleton pulse, the button spinner (loading), the score flash on a goal
   (`primary`, 600 ms) and the pitch markers' movement (`transform` transition, 200 ms linear, so 1 message per second
   looks smooth).
 - The page glow and all other effects are static.
@@ -111,7 +110,7 @@ _Answer:_
 
 - **Keyboard:** every control is reachable by Tab in reading order and operable without a mouse. Radio-like groups
   (`SegmentedControl`, `role="radiogroup"`) are one Tab stop: arrows move and select (wrapping), Home and End jump,
-  disabled options are skipped. Buttons toggle with Space and Enter. The timeline listbox (*planned*, `screens.md` §1) uses a
+  disabled options are skipped. Buttons toggle with Space and Enter. The timeline listbox (`screens.md` §1) uses a
   roving tabindex with arrow keys and Enter or Space to select.
 - **Focus:** one global rule gives every interactive element a 2 px `primary` outline with a 2 px offset (7 : 1 or more
   on page and panels). It has zero specificity, so a component can override it on purpose. Components add no ring
@@ -119,7 +118,7 @@ _Answer:_
 - **Touch targets:** about 44 px tall for buttons and segments at phone width.
 - **Screen readers:** one `h1` per page and an `h2` per panel; `header`, `main`, `footer` landmarks; the connection
   badge is `role="status"`; decorative icons and the skeleton, live dot and pitch markings are `aria-hidden`; goals are
-  announced (*planned*) through a visually hidden `aria-live="assertive"` region; clock ticks and counters are never announced.
+  announced through a visually hidden `aria-live="assertive"` region; clock ticks and counters are never announced.
 - **Throttled announcements:** the notice line (`role="status"`, `aria-live="polite"`) announces at most once every 3 s,
   always the newest text, and not when only a number changed ("for 11 seconds" then "for 12 seconds" is one
   announcement). Implemented in `src/lib/announcer.ts`.

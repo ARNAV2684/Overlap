@@ -270,7 +270,7 @@ adds the step. Performance targets are unmeasured until AC-11.
 | M2 — Foundation | `web/` builds in CI: project setup, tokens, primitives, `/dev/ui` | Vedant | M1 (design-system) | AC-01, AC-12 (primitives) | 1 day · 17 Oct (estimate) | **Done on the PR branch; merge pending.** Setup, tokens, 15 UI files and `/dev/ui` pushed. Lint, typecheck, build and tests pass locally (AC-01). Not yet run in CI. AC-12 for primitives: contrast table is in `design-system.md` §5, the 375/768/1440 px check is not recorded |
 | M3 — Contracts and realtime | Strict contracts, API client, store, socket, provider; a debug view shows live counters from the mock | Vedant | M1 (realtime); mock running | AC-03, AC-04, AC-05 | 1½ days · 18 Oct (estimate) | **Done on the PR branch for the code; merge pending.** `env`, `contracts`, `api`, `store`, `store-hooks`, `socket`, `ring-buffer`, `announcer` and `MatchStreamProvider` pushed with unit tests (AC-04 met; AC-03 and AC-05 partly, see §15). Not done: the debug view with live counters, and any run against the mock or the stand-in |
 | M4 — Live screen | `/match/SYN-9001` shows shell, scoreboard, counters and the timeline end to end | Vedant | M3, M1 (screens) | AC-06, AC-07, AC-08, AC-10 | 1½ days · 19 Oct (estimate) | **Partly built.** Shell, header with connection badge, intro and source card, notice bar, footer, the `/` redirect and the `/match/[id]` route are pushed. Scoreboard, four counters (Phase 7) and the event timeline (Phase 8) built on `web/live-api` (18 Oct; lint, typecheck, tests and build pass locally; not yet checked against the running mock) |
-| M5 — Pitch, inspector, polish | Live pitch and inspector, responsive and accessible, README updated | Vedant | M4, M1 (charts) | AC-09, AC-11, AC-12 | 1 day · 20 Oct (estimate) | **Built; polish pending.** Live pitch and its panel (Phase 9.1) and the message inspector (Phase 9.2) built on `web/live-api` (18 Oct; lint, typecheck, tests and build pass locally; not yet checked against the running mock). Phase 10 (responsive, accessibility and QA pass) not started. `coordinates.ts` and its tests are done (AC-09). README is updated for running the app |
+| M5 — Pitch, inspector, polish | Live pitch and inspector, responsive and accessible, README updated | Vedant | M4, M1 (charts) | AC-09, AC-11, AC-12 | 1 day · 20 Oct (estimate) | **Built; manual QA pending.** Live pitch (9.1), message inspector (9.2) and Phase 10's code work (match picker, `aside` landmark, docs, honest spec `Status` lines, opt-in end-to-end stream test) on `web/live-api` (18 Oct). Lint, typecheck, tests and build pass; the stream test passes for all three mock matches. Not done: the side-by-side B1–B17 run, keyboard and screen-reader pass, Lighthouse, Performance trace, screenshots. `coordinates.ts` and its tests are done (AC-09). README is updated for running the app |
 
 - **Project calendar check:** the five milestones end on 20 Oct, which meets "one full match end to end in English by
   20 Oct" only with no slip. Everything beyond the live screen (overlays, moment cards, stats panels, replay, recap,
@@ -386,18 +386,18 @@ still defined only by the mock. **R-07 has moved**: the screen relay and a local
 
 | AC | Result | Evidence |
 |---|---|---|
-| AC-01 | Passed locally; CI not run | `npm run lint` clean; `tsc --noEmit` clean; `npm test` 16 files, 330 tests passed; `npm run build` succeeded; `env.test.ts` covers the all-problems-at-once message |
+| AC-01 | Passed locally; CI not run | 18 Oct on `web/live-api`: `npm run lint` clean; `tsc --noEmit` clean; `npm test` 20 files, 373 tests passed (the opt-in stream test skipped); `npm run build` succeeded; `env.test.ts` covers the all-problems-at-once message |
 | AC-02 | Met | #19 merged; `Status` lines not yet set to agreed |
-| AC-03 | Partly | `contracts.test.ts` (20 tests) rejects broken messages with a reason; the one-off run over recorded `SYN-9001` to `SYN-9003` is **not done** |
+| AC-03 | Passed (via the snapshot, not recorded files) | `contracts.test.ts` rejects broken messages with a reason. `stream.qa.test.ts` against the mock (18 Oct) parsed every envelope of `SYN-9001` to `SYN-9003` (2,171, 2,024 and 1,915 events) with **0 rejected**; it read them through the snapshot after full time, not from `mock record` files |
 | AC-04 | Passed | `store.test.ts`: duplicate `seq`, non-contiguous snapshot, history excluded from counters |
 | AC-05 | Partly | `socket.test.ts`: reconnect after a drop, no reconnect at full time, snapshot failure carries on live, late snapshot ignored. The manual stop-and-restart run is **not done** |
-| AC-06 | Not checked | Scoreboard and counters are not built |
-| AC-07 | Not checked | Timeline rows and goal flash are not built |
-| AC-08 | Not checked | Timeline listbox is not built |
-| AC-09 | Passed | `coordinates.test.ts` reproduces the `CONTRACTS.md` §4 worked example; a search of `web/src` finds flip logic only in `coordinates.ts` |
-| AC-10 | Partly | Store tests cover pause, resume and follow-latest; the manual check needs the timeline |
-| AC-11 | Not checked | Needs the full screen |
-| AC-12 | Not checked | Contrast table is in `design-system.md` §5; no 375/768/1440 px check recorded |
+| AC-06 | Partly | `stream.qa.test.ts` (18 Oct, 60×): `SYN-9001` ends 1–0 at 90+5:31 with 2,171 events (the demo's figure), phase full time, badge finished; `SYN-9002` 1–2, `SYN-9003` 4–2, each equal to the server's score. The side-by-side visual check with the `:8788` page and the screenshots are **not done** |
+| AC-07 | Partly | Component tests: goal badge and bar, yellow, red and second-yellow chips, substitution arrows, goal flash never for snapshot history (`scoreboard.test.ts`, `timeline.test.ts`); `/dev/ui` shows every row variant. Not yet watched in a live run |
+| AC-08 | Partly | Listbox with roving tabindex, arrows, Home/End, Enter/Space, accessible row names (`timeline.test.ts` checks one tabbable row and the names). The manual keyboard and screen-reader pass is **not done** |
+| AC-09 | Passed | `coordinates.test.ts`; `pitch.test.ts` renders the home left winger near the top in period 1; a search of `web/src` (18 Oct) still finds flip logic only in `coordinates.ts` |
+| AC-10 | Partly | Store tests cover pause, resume and follow-latest; the inspector's Follow latest state is tested. The manual check is **not done** |
+| AC-11 | Not checked | Needs Chrome's Performance panel and the React Profiler during a 20× run |
+| AC-12 | Partly | Contrast table in `design-system.md` §5; landmarks (`header`, `main`, named `aside`, `footer`), one `h1` and panel `h2`s are tested. No 375/768/1440 px check or Lighthouse audit recorded |
 
 - **Setup and integration instructions:** `web/README.md`. Copy `web/.env.example` to `web/.env.local`, then `npm install`, `npm test`, `npm run dev`. It now runs against the mock's stand-in or `infra/local/webpubsub_standin/` fed by the screen relay, both on port 8787.
 - **Differences from the agreed plan** (none has a recorded agreement from Arnav yet):

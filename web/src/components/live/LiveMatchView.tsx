@@ -30,12 +30,15 @@ import { Scoreboard, ScoreboardView } from "@/components/Scoreboard";
 import { EventTimelinePanel, EventTimelinePanelView } from "@/components/timeline/EventTimelinePanel";
 import { emptyCounters, emptyScoreboard, notices } from "@/lib/store";
 
-/** Timeline on the left; the right-hand column (pitch, then the inspector) beside it from 1000 px. */
+/** Timeline on the left; the right-hand column (pitch, then the inspector) beside it from 1000 px, as a complementary
+ *  landmark so screen-reader users can jump to it. */
 function Workspace({ timeline, side }: { timeline: ReactNode; side: ReactNode }) {
   return (
     <div className="mb-[18px] grid grid-cols-1 gap-[18px] min-[1000px]:grid-cols-[minmax(0,1.65fr)_minmax(340px,1fr)]">
       {timeline}
-      <div className="flex min-w-0 flex-col gap-[18px]">{side}</div>
+      <aside aria-label="Positions and message inspector" className="flex min-w-0 flex-col gap-[18px]">
+        {side}
+      </aside>
     </div>
   );
 }
