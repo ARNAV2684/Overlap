@@ -224,7 +224,8 @@ function mergeNewest(a: TimelineRow[], b: TimelineRow[], limit: number): Timelin
   return out;
 }
 
-const emptyScoreboard = (matchId: string): Scoreboard => ({
+/** The scoreboard before anything has arrived. Exported for the loading fallback, which must look the same. */
+export const emptyScoreboard = (matchId: string): Scoreboard => ({
   matchId,
   setup: null,
   phase: null,
@@ -234,7 +235,8 @@ const emptyScoreboard = (matchId: string): Scoreboard => ({
   matchMs: -1,
 });
 
-const emptyCounters = (): Counters => ({ messages: 0, events: 0, frames: 0, lastAt: null, recent: 0 });
+/** The counters before anything has arrived. Exported for the loading fallback. */
+export const emptyCounters = (): Counters => ({ messages: 0, events: 0, frames: 0, lastAt: null, recent: 0 });
 
 function playersFrom(setup: MatchSetup | null): Map<string, PlayerInfo> {
   const map = new Map<string, PlayerInfo>();

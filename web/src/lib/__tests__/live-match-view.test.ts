@@ -41,9 +41,10 @@ describe("LiveMatchView", () => {
 describe("LiveMatchFallback", () => {
   it("renders the same visible frame as the live screen's first render", () => {
     expect(visible(fallback())).toContain(notices.connecting);
-    // Same text in the same order, apart from the live screen's (empty) announcement region
+    // Same text in the same order, apart from the live screen's (empty) announcement regions and the match id, which
+    // the fallback does not know yet (it shows a skeleton of the same size)
     const text = (html: string) => visible(html).replace(/<[^>]+>/g, "|").replace(/\|+/g, "|");
-    expect(text(fallback())).toBe(text(live()));
+    expect(text(fallback())).toBe(text(live()).replace("|SYN-9001|", "|"));
   });
 
   it("does not announce its notice (the live NoticeBar does)", () => {
