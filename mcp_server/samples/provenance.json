@@ -1,0 +1,29 @@
+{
+  "purpose": "Local Cosmos/MCP/Foundry development sample; not live stats output",
+  "sample_kind": "constructed_from_generator_recording",
+  "schema_reference": "CONTRACTS.md section 10.2 at cb3b3492abaf5acadb084b20cb30faba8b2d2828",
+  "source_generator_commit": "0a52e71de763af7b50044718714b379cb2151428",
+  "source_sha256": {
+    "setup.json": "a7536c5173c8966f23c9b9d43716358eb0a9bf3da6dd3ac2ccd8886b0b0bcd5c",
+    "events.ndjson": "6d594aa5c0a3baca5ed379739d4eb6329d9716530a60d04ba25c564b916c0c39"
+  },
+  "match_id": "SYN-1017",
+  "seed": 1017,
+  "event_prefix_end": 1592,
+  "checks": [
+    "source file hashes",
+    "contiguous event prefix",
+    "shot selection and player IDs",
+    "five-minute window and warmup",
+    "team identities",
+    "score at event prefix"
+  ],
+  "moment_ordinal": "Illustrative test ID, not allocated by a stats publisher",
+  "cosmos_target": {
+    "database": "live",
+    "container": "moments",
+    "partition_key_path": "/match_id"
+  },
+  "live_delivery_status": "Historical fixture; offline workflow test only. No live card publication without a valid current playhead.",
+  "source_example": "agents/specs/examples/shot-cluster.md"
+}

@@ -1,9 +1,11 @@
 # MCP tools spec
 
-> **Status: draft for review.** First shot-cluster slice only; no runtime implementation is authorised by this
-> draft. Owner: Pranav under [PR #41](https://github.com/ARNAV2684/Overlap/pull/41); registry confirmation pending.
-> Governs `server.py`, `data_access.py` and `tools/match_state.py`.
-> Plan: [S1](../../plans/active/PLAN_agents_ai-insights-mcp_S1.md). Shared source: [contracts §10](../../CONTRACTS.md).
+> **Status: agreed.** Scope: local M2 implementation only. #44 merged; on 18 October 2026 Pranav confirmed
+> Azeem's source/trigger agreement, Arnav's storage agreement and authorised the local milestone. These are
+> user-reported decisions, not newly obtained review comments. Owner: Pranav; registry update remains Arnav's task.
+> Governs the files mapped in [S2](../../plans/active/PLAN_agents_ai-insights-mcp_S2.md).
+> Source contract: [§10.2](../../CONTRACTS.md#102-immutable-moment-and-context). Later cloud/model delivery gates remain.
+
 
 ## 1. Tool list
 
@@ -98,3 +100,34 @@ Technical references checked during S1: [MCP tools](https://modelcontextprotocol
 [stdio transport](https://modelcontextprotocol.io/specification/2025-11-25/basic/transports),
 [Agent Framework MCP tools](https://learn.microsoft.com/en-us/agent-framework/agents/tools/local-mcp-tools).
 Exact framework APIs/version compatibility are verified and pinned in M2/M3; this draft installs nothing.
+
+
+## 6. Local seed and workflow smoke (S2)
+
+- Keep source JSON unchanged under `mcp_server/samples/`, with generator hashes in a separate provenance file.
+  These are constructed samples derived from Azeem's recording, not output from a working stats producer.
+- The separate seed command accepts only a loopback emulator endpoint and database `live`, container `moments`,
+  partition `/match_id`. It may create these resources if absent. It creates a document once, reads it back, and
+  checks equality. An identical existing source succeeds; different content fails without replacement. It never
+  clears a container or changes other documents. Only this command has application-level write operations.
+- The reader has no create/upsert/query methods. Cosmos transport uses the async SDK with hidden retries disabled;
+  the tool has at most two point-read attempts per bound session, each bounded by two seconds including initial
+  SDK connection work. Only transient storage failures/timeouts retry. Wrong scope never reads. Additional calls
+  after the allowance return `source_not_ready`. No silent fixture fallback.
+- Local configuration restricts Cosmos to loopback, ignores the relay's `OVERLAP_COSMOS_CONTAINER=screen`, and
+  always chooses `moments`. Model/cloud SDKs and tokens are not required or loaded. Emulator credentials cannot
+  demonstrate production read-only RBAC.
+- Reject duplicate JSON fields in fixture files, non-finite values, booleans in integer fields and unknown source
+  fields. Strip only documented Cosmos system fields. Source documents have a 64 KiB bound; MCP application
+  results retain the 12 KiB bound. The source's labels and team names are untrusted data, never instructions.
+- Source validation checks IDs, versions, two facts, event count/order, shooter identities, window, source cursor
+  and context consistency. It cannot reconstruct event timestamps/score from the moment alone; those are verified
+  for the curated sample against the source recording and remain the stats producer's responsibility for live data.
+- The smoke client first loads evidence from the selected store and compares the sample oracle. It launches a
+  scoped real stdio server, initialises, discovers exactly one tool, calls it, validates schema/status/bound cursor
+  and context, and checks text/structured parity. Failed protocol/tool/domain results produce a nonzero exit.
+- A successful report is atomically written outside tracked source under `data/generated/insights/`. It records
+  sample status, source hash, evidence and MCP projection, with `model_called=false` and `live_delivery=false`.
+  This is an offline M2 handoff, not narrated output, an overlay, or a running Agent Framework workflow.
+- SDK/dependency versions are locked in this project. MCP 1.30.0 uses the supported v1 maintenance API; no claim of
+  compatibility with future Agent Framework versions is made. Evaluate/pin that adapter during M3.
