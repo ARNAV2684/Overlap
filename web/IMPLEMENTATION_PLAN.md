@@ -1015,6 +1015,16 @@ ArrivalCell}.tsx`. `CommentaryFeed.tsx` (existing placeholder) is the future age
 
 **Goal:** the right-hand column (B7, B14). Answers `charts.md` for `LivePitch`.
 
+**Progress (9.1 built, 18 Oct; not yet checked against the running mock):** `LivePitch.tsx`, `charts/pitch/{PitchMarkings,
+PlayerMarker,BallMarker,PitchLegend}.tsx` and `live/LivePositionsPanel.tsx` are written; `PitchTimestamp` and `PitchNote`
+live inside the panel file. `LiveMatchView`'s workspace now has its right-hand column with the pitch (the loading fallback
+shows the empty pitch). Also drawn, beyond the list below: the penalty arcs and a centre spot. The goals sit just outside
+the goal lines, so the SVG is `overflow-visible` inside a padded `pitch-surface` box. Before the setup, markers are grey
+and named by player id. `pitch.test.ts` covers the empty pitch, the label, placement through `pitchToSvg` with no flips,
+kit fills and readable numbers, the ball drawn last, the pre-setup markers, the panel, and the CONTRACTS §1.1 sanity
+check as a unit test. Lint, typecheck, `npm test` (19 files, 365 tests) and `npm run build` pass. The live "Done when"
+checks (winger near the top in a real run, updates and freezes, timestamp) are **not done**. 9.2 is not started.
+
 ### 9.1 `src/components/charts/LivePitch.tsx` (existing placeholder): SVG, not canvas
 
 ```
