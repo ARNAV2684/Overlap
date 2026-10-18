@@ -1,0 +1,70 @@
+{
+  "graphify_version": "0.9.92",
+  "python": "3.12",
+  "include_roots": [
+    "generator",
+    "stats",
+    "functions",
+    "archiver",
+    "agents",
+    "mcp_server",
+    "infra",
+    "web",
+    "docs"
+  ],
+  "include_root_files": [
+    "CONTRACTS.md",
+    "CONTRIBUTING.md",
+    "README.md",
+    "CALIBRATION.md"
+  ],
+  "extensions": [
+    ".py",
+    ".ts",
+    ".tsx",
+    ".js",
+    ".jsx",
+    ".mjs",
+    ".md",
+    ".bicep",
+    ".json",
+    ".yaml",
+    ".yml",
+    ".toml",
+    ".css"
+  ],
+  "exclude_parts": [
+    "plans",
+    "mock",
+    "data",
+    "fixtures",
+    "samples",
+    "tests",
+    "node_modules",
+    ".git",
+    ".venv",
+    "__pycache__",
+    "graphify-out",
+    "work",
+    "dist",
+    "build",
+    ".next"
+  ],
+  "exclude_names": [
+    "env.example",
+    "local.settings.json",
+    "provenance.json",
+    "package-lock.json",
+    "uv.lock"
+  ],
+  "exclude_globs": [
+    ".env*",
+    "*.pem",
+    "*.key",
+    "*lock*",
+    "*.log"
+  ],
+  "semantic_mode": "host-reviewed notes + explicit citation indexing; no deep semantic pass or provider calls",
+  "output": "graphify-out",
+  "description": "Tracked allowlist only; tests/samples excluded from graph, linked as evidence in notes. No application behaviour change."
+}

@@ -1,6 +1,6 @@
 # Shared knowledge map
 
-Status: Proposed — M1 specification; not yet agreed on main.
+Status: Agreed via PR #46, merged at `f2a85ae`. M2 implementation in progress.
 
 Governing plan: [Graphify knowledge map](../../plans/active/PLAN_docs_graphify-knowledge-map.md).
 

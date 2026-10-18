@@ -2,7 +2,7 @@
 
 Author: Pranav Anand · Coordinator: Arnav · Tier: Full · Version: 1.0 · 2026-10-18
 
-Status: M1 specification prepared for review; M2/M3 pending agreement and implementation.
+Status: M1 merged in #46; M2 notes and local Graphify exports implemented; browser verification and M3 cross-platform handover pending.
 
 Reviewed main: `cb3b3492abaf5acadb084b20cb30faba8b2d2828` (fresh fetch, 18 October).
 Branch: `docs/graphify-knowledge-map`.
@@ -97,3 +97,17 @@ M1 author checks: scope mapped; no runtime/interface changes; current main recor
 M1 validation: relative-link existence check passed for both documents; `git diff --check` passed. Runtime tests not applicable to this documentation-only change. M2/M3 setup, graph artifacts, release pin, screenshots and platform results: pending implementation.
 
 The next implementation milestone starts after the governing spec is agreed. This is the explicit sequence in the user-approved plan, not a request to repeat execution permission.
+
+## M2 execution record — 18 October 2026
+
+User authorised continuation after merge. PR #46 merged at f2a85ae; PR #45 also merged, baseline a61166b. Branch docs/graphify-notes. Mode implement, Full parent / M2 milestone. Scope clarification before creation: configuration is `docs/knowledge/graphify-config.json` and `docs/knowledge/requirements.txt`; validation is `docs/knowledge/validation.md`. All other notes follow §8. No repository executable helper is added; setup contains reproducible manual commands.
+
+Fresh scan: no open PRs; remote web/live-api changes frontend/its plan, not these new notes. Existing housekeeping and S1 plans broadly reference plans/; keep edits confined to this parent plan. Root ignore update is an additive Graphify-output rule only; do not change frontend rules. Docs/spec status update records actual merge without changing the agreed behaviour. Registry ownership remains untouched.
+
+Validation and tool handover to follow below. Windows remains pending unless actually run.
+
+### M2 validation and handover
+
+See [validation](../../docs/knowledge/validation.md) and [setup](../../docs/knowledge/setup.md). AC1 passed in M1. AC2: eleven source-inspected notes with resolving links; owner review pending. AC3: pinned Graphify build/export, provenance, exclusions and CLI query passed; visual interaction not verified because the browser tool blocks file URLs. AC4: macOS exclusion/stale/failure/cleanup checks passed; Windows pending. AC5: documented walkthrough; second-person execution pending.
+
+This milestone uses host-reviewed component notes and explicit document citations, not a deep semantic pass over every document. No provider keys/fallback, global hooks, custom dashboard or runtime code changes. Full and eleven-box HTML/JSON exports remain ignored locally. M3 and the parent plan remain open, not Done.

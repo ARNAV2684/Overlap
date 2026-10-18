@@ -1,0 +1,2 @@
+# Isolated development tool only; no application dependency.
+graphifyy==0.9.92
