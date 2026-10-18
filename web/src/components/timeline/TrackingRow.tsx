@@ -11,9 +11,17 @@ import { MatchTimeCell } from "@/components/timeline/cells/MatchTimeCell";
 import { TimelineRowShell } from "@/components/timeline/TimelineRowShell";
 import type { RowProps } from "@/components/timeline/TimelineRow";
 
-export function TrackingRow({ row, team: _team, ...shell }: RowProps) {
+export function TrackingRow({ row, label, selected, tabbable, onSelect, onFocusRow }: RowProps) {
   return (
-    <TimelineRowShell {...shell} rowKey={row.key} history={row.received === null}>
+    <TimelineRowShell
+      rowKey={row.key}
+      label={label}
+      selected={selected}
+      tabbable={tabbable}
+      history={row.received === null}
+      onSelect={onSelect}
+      onFocusRow={onFocusRow}
+    >
       <MatchTimeCell ms={row.ms} period={row.period} seq={row.seq} />
       <DetailCell
         icon="tracking"

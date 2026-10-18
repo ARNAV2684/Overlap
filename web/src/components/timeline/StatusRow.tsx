@@ -20,9 +20,17 @@ export function statusText(row: TimelineRow): string {
   return score ? `${row.detail} · ${score.home}–${score.away}` : row.detail;
 }
 
-export function StatusRow({ row, team: _team, ...shell }: RowProps) {
+export function StatusRow({ row, label, selected, tabbable, onSelect, onFocusRow }: RowProps) {
   return (
-    <TimelineRowShell {...shell} rowKey={row.key} history={row.received === null}>
+    <TimelineRowShell
+      rowKey={row.key}
+      label={label}
+      selected={selected}
+      tabbable={tabbable}
+      history={row.received === null}
+      onSelect={onSelect}
+      onFocusRow={onFocusRow}
+    >
       <MatchTimeCell ms={row.ms} period={row.period} seq={row.seq} />
       <DetailCell icon="status" title={row.title} titleClassName="text-secondary-text" description={statusText(row)} />
       <ArrivalCell received={row.received} />

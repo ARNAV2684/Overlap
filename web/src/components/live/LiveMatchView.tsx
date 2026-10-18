@@ -2,18 +2,19 @@
 //
 // Purpose: compose the live match screen from the layout components: header with the connection badge, intro with the
 //          source card, the notice line, the screen's content, and the footer
-// Inputs:  LiveMatchView: the store from the nearest MatchStreamProvider (read by AppHeader, NoticeBar, Scoreboard and
-//          MetricsGrid)
+// Inputs:  LiveMatchView: the store from the nearest MatchStreamProvider (read by AppHeader, NoticeBar, Scoreboard,
+//          MetricsGrid and EventTimelinePanel)
 //          LiveMatchFrame: header, notice, children (the parts that differ between live and loading)
 // Outputs: LiveMatchView (live), LiveMatchFallback (the same frame in its starting "Connecting" state, with no store,
 //          for the route's Suspense fallback), LiveMatchFrame (the shared layout)
 // Spec:    web/specs/screens.md (live match screen). web/IMPLEMENTATION_PLAN.md Phase 6 (frame), Phase 7 (scoreboard,
-//          metrics), Phase 10 (composition)
+//          metrics), Phase 8 (timeline), Phase 10 (composition)
 //
 // The fallback matches the live screen's first render (status Connecting, the connecting notice, an empty scoreboard
-// and zero counters), so the prerendered HTML does not jump when the live screen replaces it. Only the match id differs:
-// the fallback does not know it yet and shows a skeleton of the same size. The workspace (Phases 8 and 9) goes inside
-// <main>, after the metrics.
+// and zero counters, an empty timeline with its controls disabled), so the prerendered HTML does not jump when the live
+// screen replaces it. Only the match id differs: the fallback does not know it yet and shows a skeleton of the same size.
+// The workspace is one column below 1000 px, then the timeline (about 1.65 fr) beside the right-hand column, where the
+// pitch and inspector (Phase 9) will go.
 
 import type { ReactNode } from "react";
 import { AppFooter } from "@/components/layout/AppFooter";
@@ -24,7 +25,17 @@ import { NoticeBar, NoticeBarView } from "@/components/layout/NoticeBar";
 import { SourceCard } from "@/components/layout/SourceCard";
 import { MetricsGrid, MetricsGridView } from "@/components/metrics/MetricsGrid";
 import { Scoreboard, ScoreboardView } from "@/components/Scoreboard";
+import { EventTimelinePanel, EventTimelinePanelView } from "@/components/timeline/EventTimelinePanel";
 import { emptyCounters, emptyScoreboard, notices } from "@/lib/store";
+
+/** Timeline on the left; the right-hand column (pitch and inspector) arrives in Phase 9. */
+function Workspace({ children }: { children: ReactNode }) {
+  return (
+    <div className="mb-[18px] grid grid-cols-1 gap-[18px] min-[1000px]:grid-cols-[minmax(0,1.65fr)_minmax(340px,1fr)]">
+      {children}
+    </div>
+  );
+}
 
 type LiveMatchFrameProps = {
   header: ReactNode;
@@ -52,6 +63,9 @@ export function LiveMatchView() {
     <LiveMatchFrame header={<AppHeader />} notice={<NoticeBar />}>
       <Scoreboard />
       <MetricsGrid />
+      <Workspace>
+        <EventTimelinePanel />
+      </Workspace>
     </LiveMatchFrame>
   );
 }
@@ -65,6 +79,9 @@ export function LiveMatchFallback() {
     >
       <ScoreboardView scoreboard={emptyScoreboard("")} matchId={null} />
       <MetricsGridView counters={emptyCounters()} />
+      <Workspace>
+        <EventTimelinePanelView rows={[]} filter="events" paused={false} live={false} selectedKey={null} setup={null} />
+      </Workspace>
     </LiveMatchFrame>
   );
 }
