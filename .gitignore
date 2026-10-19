@@ -45,3 +45,7 @@ data/seasons/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Local knowledge graphs and isolated Graphify environment
+graphify-out/
+.graphify-venv/
