@@ -1,6 +1,6 @@
 # Stats engine
 
-Last verified: 2026-10-19 · source main `a61166b` · source inspection, not fresh runtime certification.
+Last verified: 2026-10-19 · branch `stats/specs` (from main `5ef36be`) · specifications written; runtime not started.
 
 ## Purpose
 
@@ -8,21 +8,28 @@ Calculates deterministic metrics and spots moments for explanation.
 
 ## Ownership
 
-Registry: Unassigned (Arnav decides). See [registry](../../plans/REGISTRY.md). Team-reported: User reports Azeem has agreed to own stats; registry has not recorded it.
+Registry: Unassigned (Arnav decides). See [registry](../../plans/REGISTRY.md). Azeem owns stats by his own report and in [`PLAN_stats_engine`](../../plans/active/PLAN_stats_engine.md) (D-07 asks Arnav to record it); the registry has not recorded it yet.
 
 ## Inputs and outputs
 
-Planned: hubs → stats panels for relay/archive, moments with evidence and frozen context, match-state snapshots. Contract §§5, 8, 10; unresolved shapes remain in §9. See [shared contracts](../../CONTRACTS.md).
+Specified in the stats spec PR (not yet built):
+
+- **In:** both hubs as consumer group `stats`.
+- **Out, stat panels:** once per match second as `kind=stats` on `match-events`; the relay forwards them and the archiver keeps them (CONTRACTS §7.4).
+- **Out, match state:** the latest numbers in Cosmos `match_state` (§4.2).
+- **Out, moments:** documents in Cosmos `moments` with evidence packs and frozen context (§5, §10.1–§10.2, used for every trigger).
+
+See [shared contracts](../../CONTRACTS.md).
 
 ## Implementation and specifications
 
 Source: [`stats/consumer.py`](../../stats/consumer.py), [`stats/main.py`](../../stats/main.py), [`stats/publish.py`](../../stats/publish.py), [`stats/triggers.py`](../../stats/triggers.py), [`stats/evidence.py`](../../stats/evidence.py).
 
-Specifications: [`stats/specs/publishing.md`](../../stats/specs/publishing.md), [`stats/specs/triggers.md`](../../stats/specs/triggers.md), [`stats/specs/evidence-packs.md`](../../stats/specs/evidence-packs.md).
+Specifications: [`stats/specs/metrics.md`](../../stats/specs/metrics.md), [`stats/specs/windows.md`](../../stats/specs/windows.md), [`stats/specs/triggers.md`](../../stats/specs/triggers.md), [`stats/specs/evidence-packs.md`](../../stats/specs/evidence-packs.md), [`stats/specs/publishing.md`](../../stats/specs/publishing.md); plan [`PLAN_stats_engine`](../../plans/active/PLAN_stats_engine.md).
 
 ## Status and evidence
 
-Unavailable runtime: stats entrypoints and calculations remain placeholder headers. Specifications contain unfinished work. Do not infer implementation from README file lists.
+Unavailable runtime: stats entrypoints and calculations remain placeholder headers. All five specifications are answered in the stats spec PR. The xG and pass-difficulty models were fitted and checked on generated league seasons; the trigger volumes were measured on 90 generated matches. Do not infer implementation from README file lists.
 
 Evidence / checks to inspect: [`stats/tests`](../../stats/tests), [`CONTRACTS.md`](../../CONTRACTS.md). Existing recorded tests are attributed to their handover; no runtime suite was re-run for these notes.
 
@@ -36,7 +43,13 @@ Connections include planned dependencies; status above determines whether a conn
 
 ## Next work
 
-Agree remaining producer shapes and implement the first evidence-producing trigger. The MCP sample is not a working stats producer.
+Once the spec PR merges:
+
+- **S1:** numbers from a recorded match.
+- **S2:** live panels through the relay and archiver.
+- **S3:** moments, starting with `shot_cluster` exactly as Pranav's KES–ORR fixture (seed 1017) expects. That fixture still matches the current generator.
+
+The MCP sample is not a working stats producer.
 
 ## Work and coordination record
 
