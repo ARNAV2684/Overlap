@@ -1,6 +1,6 @@
 # AI insights workflow
 
-Last verified: 2026-10-18 · source main `a61166b` · source inspection, not fresh runtime certification.
+Last verified: 2026-10-19 · source main `a61166b` · source inspection, not fresh runtime certification.
 
 ## Purpose
 
@@ -37,5 +37,27 @@ Connections include planned dependencies; status above determines whether a conn
 ## Next work
 
 Model access, bounded budget and stats producer integration are later gates. Graphify work does not resume this paused feature.
+
+## Work and coordination record
+
+Verified 19 October 2026 against main `a61166b`. This describes recorded responsibility and repository evidence, not a live report of someone's laptop activity.
+
+| Responsible person / basis | Recorded work | Governing reference | Current integration boundary |
+|---|---|---|---|
+| Pranav (team-reported; registry unassigned); see Ownership above | Local MCP context is available; workflow, model and live card execution remain future work. | [Specification](../../agents/specs/workflow.md) | See Inputs and outputs and Status above; implementation and review are distinct. |
+
+### AI-01
+
+| Field | Value |
+|---|---|
+| Review/input needed from | Vedant |
+| Request | Review the agreed card contract against the actual UI: period, mode/language, expiry, delivery group and reconnect behaviour. |
+| Connected component | [frontend](frontend.md) |
+| Why it matters | A mismatch here can block the connected component; do not create a private contract to work around it. |
+| Done when | An explicit frontend compatibility response linked to the delivery spec; a real card round trip is a later test. |
+| Status | Proposed coordination item; no notification sent and no fresh reviewer acceptance recorded. |
+| Decision evidence / due date | Not recorded / no deadline agreed. Record the review URL and affected revision here when available. |
+
+Upstream producer dependency: [MCP-01](mcp.md#mcp-01). This must be satisfied before claiming real stats-to-explanation integration.
 
 [Project map](README.md) · [Rebuild and verification](setup.md)

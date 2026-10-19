@@ -1,6 +1,6 @@
 # Web PubSub
 
-Last verified: 2026-10-18 · source main `a61166b` · source inspection, not fresh runtime certification.
+Last verified: 2026-10-19 · source main `a61166b` · source inspection, not fresh runtime certification.
 
 ## Purpose
 
@@ -37,5 +37,27 @@ Connections include planned dependencies; status above determines whether a conn
 ## Next work
 
 Verify real Azure identity/negotiation and delivery separately. The local stand-in is not Azure-hosted PubSub.
+
+## Work and coordination record
+
+Verified 19 October 2026 against main `a61166b`. This describes recorded responsibility and repository evidence, not a live report of someone's laptop activity.
+
+| Responsible person / basis | Recorded work | Governing reference | Current integration boundary |
+|---|---|---|---|
+| Arnav; Pranav helping; see Ownership above | Local stand-in exists; audience insight delivery and Azure hosting are separate work. | [Specification](../../web/specs/realtime.md) | See Inputs and outputs and Status above; implementation and review are distinct. |
+
+### PUBSUB-01
+
+| Field | Value |
+|---|---|
+| Review/input needed from | Vedant |
+| Request | Confirm subscription/negotiation and snapshot expectations for the match path; audience-card delivery follows AI-01. |
+| Connected component | [frontend](frontend.md) |
+| Why it matters | A mismatch here can block the connected component; do not create a private contract to work around it. |
+| Done when | A browser/stand-in check with reconnect, plus a separate audience contract review. |
+| Status | Proposed coordination item; no notification sent and no fresh reviewer acceptance recorded. |
+| Decision evidence / due date | Not recorded / no deadline agreed. Record the review URL and affected revision here when available. |
+
+
 
 [Project map](README.md) · [Rebuild and verification](setup.md)

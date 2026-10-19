@@ -1,6 +1,6 @@
 # Local development and Azure deployment
 
-Last verified: 2026-10-18 · source main `a61166b` · source inspection, not fresh runtime certification.
+Last verified: 2026-10-19 · source main `a61166b` · source inspection, not fresh runtime certification.
 
 ## Purpose
 
@@ -37,5 +37,27 @@ Connections include planned dependencies; status above determines whether a conn
 ## Next work
 
 Use approved local instructions. Do not start cloud resources or consume paid services for this knowledge-map milestone.
+
+## Work and coordination record
+
+Verified 19 October 2026 against main `a61166b`. This describes recorded responsibility and repository evidence, not a live report of someone's laptop activity.
+
+| Responsible person / basis | Recorded work | Governing reference | Current integration boundary |
+|---|---|---|---|
+| Arnav; Pranav helping for local stack; other infrastructure unassigned; see Ownership above | Local service substitutes exist; cloud deployment remains a separate unfinished milestone. | [Specification](../../infra/specs/local-development.md) | See Inputs and outputs and Status above; implementation and review are distinct. |
+
+### ENV-01
+
+| Field | Value |
+|---|---|
+| Review/input needed from | Arnav |
+| Request | Confirm Pages availability and workflow permissions for documentation hosting; this is separate from Azure runtime deployment. |
+| Connected component | [README](README.md) |
+| Why it matters | A mismatch here can block the connected component; do not create a private contract to work around it. |
+| Done when | Repository settings confirmed by an authorised maintainer; no new paid service or account change. |
+| Status | Proposed coordination item; no notification sent and no fresh reviewer acceptance recorded. |
+| Decision evidence / due date | Not recorded / no deadline agreed. Record the review URL and affected revision here when available. |
+
+
 
 [Project map](README.md) · [Rebuild and verification](setup.md)

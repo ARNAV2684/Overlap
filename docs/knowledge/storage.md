@@ -1,6 +1,6 @@
 # Cosmos DB and blob storage
 
-Last verified: 2026-10-18 · source main `a61166b` · source inspection, not fresh runtime certification.
+Last verified: 2026-10-19 · source main `a61166b` · source inspection, not fresh runtime certification.
 
 ## Purpose
 
@@ -37,5 +37,27 @@ Connections include planned dependencies; status above determines whether a conn
 ## Next work
 
 Keep source moments immutable and separate from delivery/job state. Do not equate emulator keys with production read-only RBAC.
+
+## Work and coordination record
+
+Verified 19 October 2026 against main `a61166b`. This describes recorded responsibility and repository evidence, not a live report of someone's laptop activity.
+
+| Responsible person / basis | Recorded work | Governing reference | Current integration boundary |
+|---|---|---|---|
+| Arnav; Pranav helping for Cosmos; see Ownership above | Local stores/emulators exist; source moments and delivery state have different responsibilities. | [Specification](../../infra/specs/local-development.md) | See Inputs and outputs and Status above; implementation and review are distinct. |
+
+### STORE-01
+
+| Field | Value |
+|---|---|
+| Review/input needed from | Pranav |
+| Request | Review the moment point-read and immutability boundary before hosted MCP integration; credentials/RBAC are separate from local emulator checks. |
+| Connected component | [mcp](mcp.md) |
+| Why it matters | A mismatch here can block the connected component; do not create a private contract to work around it. |
+| Done when | See canonical request MCP-02; record local and hosted checks separately. |
+| Status | Proposed coordination item; no notification sent and no fresh reviewer acceptance recorded. |
+| Decision evidence / due date | Not recorded / no deadline agreed. Record the review URL and affected revision here when available. |
+
+Incoming handoff: [MCP-02](mcp.md#mcp-02) is the canonical moment-storage request.
 
 [Project map](README.md) · [Rebuild and verification](setup.md)
