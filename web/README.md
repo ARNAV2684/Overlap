@@ -15,9 +15,8 @@ npm install
 npm run dev                  # http://localhost:3000
 ```
 
-Copy `.env.local` before you start. `src/lib/env.ts` throws a clear message if a value is missing or malformed, but
-nothing imports it yet, so today the app still runs without it; it will be required once the realtime code
-(Phase 5) imports it. `package-lock.json` is gitignored, so installs are not pinned.
+`.env.local` is required: `src/lib/env.ts` throws one message listing every missing or malformed value.
+`package-lock.json` is gitignored, so installs are not pinned.
 
 | Script | What it does |
 |---|---|
@@ -25,23 +24,57 @@ nothing imports it yet, so today the app still runs without it; it will be requi
 | `npm run build` / `npm start` | Production build, then serve it |
 | `npm run lint` | ESLint |
 | `npm run typecheck` | `tsc --noEmit` |
+| `npm test` / `npm run test:watch` | Vitest unit and component tests (no server needed) |
 
-Run `lint`, `typecheck` and `build` before asking for review (the CI web job runs the same three).
+Run `lint`, `typecheck`, `test` and `build` before asking for review (the CI web job runs lint, typecheck and build).
 
 ### With the mock stream
 
-The app reads from the stream server at `NEXT_PUBLIC_STREAM_BASE_URL` (default `http://localhost:8787`). To get live
-data locally, start the temporary mock first (details in [`../mock/single-match-demo/README.md`](../mock/single-match-demo/README.md)):
+The app reads from the stream server at `NEXT_PUBLIC_STREAM_BASE_URL` (default `http://localhost:8787`). Start the
+temporary mock first (details in [`../mock/single-match-demo/README.md`](../mock/single-match-demo/README.md)), keep its
+terminal running, then open `http://localhost:3000`:
 
 ```bash
 cd mock
 uv sync
-uv run python -m overlap_mock.cli play --match SYN-9001 --speed 20 --hubs off --web --stdout events --linger-s 600
+uv run python -m overlap_mock.cli play --match all --speed 20 --hubs off --web --linger-s 600
 ```
 
-**Current state:** the pages and API routes are build-safe stubs, so `/` renders an empty page and `/api/*` answer
-`501 not_implemented`. Nothing reads the stream yet. The old viewer on `http://127.0.0.1:8788` is the reference for
-what the Next.js app will rebuild; see [`IMPLEMENTATION_PLAN.md`](IMPLEMENTATION_PLAN.md).
+- `/` lists the matches the server is playing (phase, score, clock), refreshed every 5 s. Pick one.
+- `/match/SYN-9001` is the live screen: scoreboard, four counters, event timeline, live pitch and message inspector.
+  After full time the server stays up for `--linger-s` seconds; reload the page to start a new run.
+- `/dev/ui` (development only) shows every token, primitive and timeline row variant, including the red and
+  second-yellow cards `SYN-9001` never produces (`SYN-9002` has a red card).
+- `infra/local/webpubsub_standin/` fed by the screen relay also serves port 8787 and works the same way.
+
+The old viewer on `http://127.0.0.1:8788` (`mock/single-match-demo/`) is the reference the screen was rebuilt from.
+
+### End-to-end check against the stream
+
+`src/lib/__tests__/stream.qa.test.ts` runs the real socket and store against a running stream until full time and
+checks that nothing is rejected, every message is applied once, the badge reaches "finished" and the final score
+matches the server. It is skipped unless asked for:
+
+```bash
+QA_STREAM=1 QA_MATCHES=SYN-9001,SYN-9002,SYN-9003 npx vitest run src/lib/__tests__/stream.qa.test.ts
+```
+
+## The live screen
+
+| Part | Files | Reads from the store |
+|---|---|---|
+| Frame: header and badge, intro, notice, footer | `src/components/layout/*`, `src/components/live/LiveMatchView.tsx` | connection, notice |
+| Scoreboard, goal flash and announcement | `src/components/Scoreboard.tsx`, `src/components/scoreboard/*` | scoreboard (live while paused) |
+| Four counters | `src/components/metrics/*` | counters (frozen while paused) |
+| Event timeline: one component per row type | `src/components/timeline/**` | timeline, controls, inspector |
+| Live pitch | `src/components/charts/LivePitch.tsx`, `src/components/charts/pitch/*`, `src/components/live/LivePositionsPanel.tsx` | latest frame, players |
+| Message inspector | `src/components/inspector/*` | inspector, connection (rejected count) |
+| Match picker | `src/app/page.tsx` | none (`listMatches()`) |
+| Data path | `src/lib/{env,contracts,api,socket,store,store-hooks,ring-buffer}.ts`, `src/components/live/MatchStreamProvider.tsx` | — |
+
+Every panel has a store-free `…View` version, used by the route's loading fallback so the first paint does not jump.
+Plan and progress: [`IMPLEMENTATION_PLAN.md`](IMPLEMENTATION_PLAN.md) and
+[`../plans/active/PLAN_web_live-match-viewer.md`](../plans/active/PLAN_web_live-match-viewer.md).
 
 ## Define before you code
 
@@ -56,8 +89,8 @@ what the Next.js app will rebuild; see [`IMPLEMENTATION_PLAN.md`](IMPLEMENTATION
 
 | Path | Job |
 |---|---|
-| `src/app/page.tsx` | Match picker |
-| `src/app/match/[id]/page.tsx` | Live match screen |
+| `src/app/page.tsx` | Match picker (built) |
+| `src/app/match/[id]/page.tsx` | Live match screen (built) |
 | `src/app/match/[id]/recap/page.tsx` | Full-time recap |
 | `src/app/replay/[id]/page.tsx` | Replay at 1×, 5×, 20× |
 | `src/app/how-it-works/page.tsx` | Architecture and agent trace for judges |

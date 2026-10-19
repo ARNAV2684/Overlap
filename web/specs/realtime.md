@@ -1,10 +1,9 @@
 # Real-time data spec
 
-> **Status: draft for review.** Answers §1 (connection), §2 (store), §3 (catch-up) and adds §6 (testing and checks)
-> for the live match screen. §4 (overlay scheduler) and §5 (replay) are **not started** and out of scope for this
-> change. It describes code already written on `web/live-match-ui-setup` (not on `main` yet) so it can be reviewed
-> against this spec. Plan: [`PLAN_web_live-match-viewer`](../../plans/active/PLAN_web_live-match-viewer.md)
-> (milestone M1). Nothing here is agreed until this PR is approved. The `status` and `positions` payloads and the
+> **Status: merged for review in #19 (16 Oct); not yet marked agreed.** Answers §1 (connection), §2 (store), §3
+> (catch-up) and adds §6 (testing and checks) for the live match screen. §4 (overlay scheduler) and §5 (replay) are
+> **not started** and out of scope. The code it describes is on `main` (#43); the screen built on it is
+> built on `web/live-api` and checked with unit tests and an end-to-end run against the mock; not on `main` yet. Plan: [`PLAN_web_live-match-viewer`](../../plans/active/PLAN_web_live-match-viewer.md). The `status` and `positions` payloads and the
 > snapshot, match-list and negotiate responses are **provisional**: they come from the mock (`mock/README.md`), not
 > from `CONTRACTS.md`.
 

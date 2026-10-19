@@ -870,6 +870,16 @@ Routing:
 
 **Goal:** the scoreboard and the four counters (B5, B10), with team colours from the setup.
 
+**Progress (built, 18 Oct; not yet checked against the running mock):** `Scoreboard.tsx`, `scoreboard/{TeamBlock,
+TeamColourBar,ScoreCenter,ScoreDisplay,MatchClock,goal}`, and `metrics/{MetricsGrid,MetricCard}` are written and
+composed into `LiveMatchView` (and its loading fallback, which shows a skeleton for the match id it does not know yet).
+`PhaseLabel` and `MatchIdLabel` live inside `ScoreCenter.tsx`. A goal is a rise from the score already shown
+(`scoreboard/goal.ts`); `reset()` publishes an empty score before the snapshot is read, so history never flashes.
+`store.ts` now exports `emptyScoreboard` and `emptyCounters` for the fallback. `scoreboard.test.ts` covers goal
+detection over a real store (live goals once each, none from snapshot history or after a reconnect) and both views.
+Lint, typecheck, `npm test` (17 files, 342 tests) and `npm run build` pass. Both "Done when" checks below need a run
+against the mock and are **not done**.
+
 ### Scoreboard (`src/components/Scoreboard.tsx`, existing placeholder) and its parts
 
 ```
@@ -919,6 +929,23 @@ Values use `text-metric numeric` so digits don't jitter. They are **not** `aria-
 ## Phase 8: Event timeline, one component per row type
 
 **Goal:** the main panel (B6–B9, B13, B14, B16). **Every row is its own component**, built from shared cells.
+
+**Progress (built, 18 Oct; not yet checked against the running mock):** every file in the tree below is written under
+`src/components/timeline/` (cells in `timeline/cells/`), and `LiveMatchView` now has the workspace grid with the
+timeline on the left (and the same panel, controls disabled, on the loading fallback). `EventTimelinePanelView` takes
+props, `EventTimelinePanel` wires it to the store. `GoalBadge` lives in `OutcomeBadge.tsx`. When a badge or card chip
+shows an outcome, the matching " · …" suffix is dropped from the visible description (the accessible name keeps it).
+Team tags read `--team-home` / `--team-away`, now set by `teamColourStyle()` in `src/lib/team-colours.ts` (shared with
+the scoreboard). `timeline.test.ts` covers the accessible names, every row variant (goal, yellow, red and
+second-yellow chips, substitution, history, selection, status, tracking) and the panel. Lint, typecheck, `npm test`
+(18 files, 356 tests) and `npm run build` pass. The four "Done when" checks need a run against the mock (and the
+performance check, Chrome's Performance panel) and are **not done**.
+
+**Progress (8.2 audited, 18 Oct):** every row in the 8.2 table checked against the code. Two gaps closed: a
+substitution now shows a down arrow for the player going off and an up arrow for the one coming on (the words stay),
+and `/dev/ui` has a "Timeline rows (Phase 8.2)" section (`src/app/dev/ui/TimelineRowsDemo.tsx`) with every variant from
+hand-written rows, including the red and second-yellow cards SYN-9001 never produces. A second yellow uses the red row
+tint. A unit test renders that section. `npm test`: 18 files, 357 tests.
 
 ### 8.1 Component tree
 
@@ -988,6 +1015,27 @@ ArrivalCell}.tsx`. `CommentaryFeed.tsx` (existing placeholder) is the future age
 
 **Goal:** the right-hand column (B7, B14). Answers `charts.md` for `LivePitch`.
 
+**Progress (9.1 built, 18 Oct; not yet checked against the running mock):** `LivePitch.tsx`, `charts/pitch/{PitchMarkings,
+PlayerMarker,BallMarker,PitchLegend}.tsx` and `live/LivePositionsPanel.tsx` are written; `PitchTimestamp` and `PitchNote`
+live inside the panel file. `LiveMatchView`'s workspace now has its right-hand column with the pitch (the loading fallback
+shows the empty pitch). Also drawn, beyond the list below: the penalty arcs and a centre spot. The goals sit just outside
+the goal lines, so the SVG is `overflow-visible` inside a padded `pitch-surface` box. Before the setup, markers are grey
+and named by player id. `pitch.test.ts` covers the empty pitch, the label, placement through `pitchToSvg` with no flips,
+kit fills and readable numbers, the ball drawn last, the pre-setup markers, the panel, and the CONTRACTS §1.1 sanity
+check as a unit test. Lint, typecheck, `npm test` (19 files, 365 tests) and `npm run build` pass. The live "Done when"
+checks (winger near the top in a real run, updates and freezes, timestamp) are **not done**.
+
+**Progress (9.2 built, 18 Oct; not yet checked against the running mock):** `inspector/{MessageInspectorPanel,
+JsonViewer,CopyButton}.tsx` are written; `InspectorFooter` lives inside the panel file. The inspector sits under the
+pitch in the workspace's right-hand column (the loading fallback shows it empty, buttons disabled). "Follow latest" is
+disabled while already following; a caption under the JSON says "Following the newest event" or "Pinned to the selected
+row". The copy button says "Copy JSON" and reports "Copied" or "Copy failed" in a polite status line for 2 s. The
+`<pre>` is focusable so it scrolls by keyboard, and capped at 340 px. Literals (`true`, `false`, `null`) are blue-200,
+which the list below does not name. `inspector.test.ts` covers the tokenizer (it never changes the text), the label,
+the payload shown exactly, Follow latest's state, and the rejection footer. Lint, typecheck, `npm test` (20 files, 372
+tests) and `npm run build` pass. The live "Done when" check (select a row, see its payload, Follow latest resumes) is
+**not done**.
+
 ### 9.1 `src/components/charts/LivePitch.tsx` (existing placeholder): SVG, not canvas
 
 ```
@@ -1047,6 +1095,22 @@ MessageInspectorPanel
 ## Phase 10: Composition, responsive layout, accessibility and QA
 
 **Goal:** match the `:8788` result, then finish the polish. Close the spec gaps.
+
+**Progress (18 Oct): the code and docs are done; the checks that need a person and a browser are not.**
+
+| Step | State |
+|---|---|
+| 1. Composition | Done in Phases 7 to 9: shell, scoreboard, metrics, then the workspace grid (timeline \| pitch + inspector) |
+| 2. States | Done through the store's notices (connecting, loading history, history unavailable, unreachable, connection lost, stale, paused, full time) and each panel's empty state; skeletons on the scoreboard and the picker. The unreachable text stays generic ("Cannot reach the stream server. Is it running?"), because the store does not know the URL |
+| 3. Accessibility | Landmarks `header`, `main`, a named `aside` ("Positions and message inspector") and `footer`; one `h1`; an `h2` per panel (tested). Every motion is `motion-safe`. Keyboard order in the DOM: header, pause, filters, timeline listbox, inspector (Follow latest, JSON, Copy). The pause button sits in the timeline header, so it comes before the filters, not after the list. **Manual keyboard and screen-reader pass not done** |
+| 4. Theme | Already recorded in `design-system.md` §1 ("dark theme only") |
+| 5. Match picker | Done: `src/app/page.tsx` lists `listMatches()` (refreshed every 5 s), links each to `/match/[id]`, and still links the default match when the server is down or plays nothing. Replaces the redirect; `screens.md` §1 updated |
+| 6. Performance at 20× | **Not done** (needs the React Profiler and Chrome's Performance panel) |
+| 7. Side-by-side QA | Automated part done: `src/lib/__tests__/stream.qa.test.ts` (opt-in, `QA_STREAM=1`) runs the real socket and store to full time. Against the mock at 60×: `SYN-9001` 2,171 events (1 goal, 2 yellows, 8 substitutions), 1–0 at 90+5:31; `SYN-9002` 2,024 events (a red card), 1–2; `SYN-9003` 1,915 events, 4–2. 0 rejected, badge finished, every final score equal to the server's. **The visual B1–B17 run beside `:8788` is not done** |
+| 8. Docs | Done: `web/README.md` (run steps, picker, `/dev/ui`, the stream test, the live screen's component map); each spec's `Status` now says merged in #19, not yet agreed, built on `web/live-api` and not on `main`; the *planned* markers are gone |
+
+Lint, typecheck, `npm test` (20 files, 373 tests, the stream test skipped) and `npm run build` pass. Not done from
+"Done when": the full B1–B17 observation, Lighthouse, and screenshots at 375 and 1440 px.
 
 1. **`LiveMatchView`:** compose shell → scoreboard → metrics → `grid-cols-[minmax(0,1.65fr)_minmax(340px,1fr)]`
    workspace (timeline | pitch + inspector), with the demo's breakpoints (§1.1).
