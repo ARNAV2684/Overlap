@@ -10,7 +10,7 @@
 | Review coordinator | Arnav |
 | Affected component owners | Arnav (screen relay, archiver, Cosmos, `CONTRACTS.md`), Pranav (agents, MCP), Vedant (web charts) |
 | Proposal version and date | v0.1 · 2026-10-19 |
-| Status | Draft |
+| Status | In progress (M1; go from Azeem, 2026-10-19) |
 | Plan tier and file | Full · `plans/active/PLAN_stats_engine.md` |
 | Repository | [ARNAV2684/Overlap](https://github.com/ARNAV2684/Overlap) |
 | Reviewed branch and commit | main · 5ef36be |
@@ -249,8 +249,8 @@ receiver needs a change, its owner makes it.
 | AC-06 | Restarting the engine mid-match produces no duplicate moments and no gap in panels after the restart | Kill-and-restart run | Local stack | Run log |
 | AC-07 | `shot_cluster` reproduces Pranav's expected moments for KES–ORR, seed 1017, exactly (IDs, window, facts) | Test | Pranav's fixture (`agents/specs/examples/`) | Test output |
 | AC-08 | Pranav's MCP reader accepts the engine's first real moment from the Cosmos emulator (STATS-01 / MCP-01) | Pranav's validator | MCP reader | Pranav's review link |
-| AC-09 | Over 20 matches with `late_pressure_surge`, a `momentum_swing` or `press_change` moment for the surging side fires within the storyline's `detect_within_min` in at least 70 % of matches. Over 20 matches without the storyline, the false-alarm rate is reported | Replay runner with storyline matches | Generator storylines | Table |
-| AC-10 | A typical match produces 30–60 moments (`triggers.md` §2) | Replay over a league season | Season S1 | Histogram |
+| AC-09 | Over 20 matches with `late_pressure_surge`, a `momentum_swing` or `press_change` moment for the surging side fires within 15 minutes of onset in at least 70 % of matches, and in clearly more matches than on the same seeds without the storyline. The prototype in M1 gave 15 of 20 against 9 of 20 (`triggers.md` §1) | Replay runner with storyline matches | Generator storylines | Table |
+| AC-10 | A league season averages 15–35 moments a match (`triggers.md` §2). The M1 prototype gave 19.9 (10–34) on season S1 | Replay over a league season | Season S1 | Histogram |
 
 **Validation limits:** Azure scale and identity aren't tested until AC-05 is repeated on Azure (AZ2). Chart rendering
 of panels is Vedant's. Agent quality is Pranav's.
@@ -325,6 +325,7 @@ or `CONTRACTS.md`) · hot files ✓ (`CONTRACTS.md`: Arnav, Pranav, Vedant to be
 | D-05 | The engine's own xG model vs reusing the generator's | Self-confirming numbers if reused | Azeem | Own model; AC-03 checks agreement | S1 |
 | D-06 | Restart by replay from the match start | Slow recovery late in a long match (about 1,400 events: under 1 s) | Arnav | Accept; revisit only if a match lasts hours | S2 |
 | D-07 | Registry still says stats is unassigned | Reviews routed to the wrong person | Arnav | Arnav records the owner | M1 |
+| D-08 | The storyline answer key's `detect_within_min` for `late_pressure_surge` is 10. The stats engine catches the surge within 15 minutes in 15 of 20 matches, but within 10 in only 7. Proposed: the agents' recall evaluation uses 15 for this storyline (a generator file change by Azeem, agreed with Pranav, who owns the evaluation) | Recall scored against a window the numbers can't meet | Pranav, Azeem | Agree in M1 review; change `generator/storylines/late_pressure_surge.yaml` in its own PR | None |
 | R-01 | Calendar: M1 to S3 in five days | S3 slips past 24 Oct | Azeem | Cut list in §12; the minimum stays | S3 |
 | R-02 | Azure infrastructure (AZ1) not ready | Stats only runs locally for the demo | Arnav, Pranav | Local stack demo; S4 when ready | S4 |
 
@@ -363,4 +364,19 @@ or `CONTRACTS.md`) · hot files ✓ (`CONTRACTS.md`: Arnav, Pranav, Vedant to be
 
 ### Handover after implementation
 
-**Pending implementation.**
+**M1 (spec PR, branch `stats/specs`):**
+- **What's in it:** the five specs answered; `CONTRACTS.md` §4.2, §5, §7.2, §7.4, §8, §9 and §10 edited in one
+  commit; the knowledge note updated.
+- **Models and thresholds were checked on generated data before being written down,** with scratch prototypes
+  outside the repository:
+  - **xG:** 452 goals against 452.0 xG over 180 league matches, and every `CALIBRATION.md` anchor met.
+  - **Pass difficulty:** calibrated by fifths on 55,503 passes.
+  - **Triggers:** 19.9 moments a match on season S1.
+  - **Storyline detection:** as in AC-09.
+- **Differences from v0.1 of this plan:**
+  - `press_change` compares pressures per opponent pass, not press height or PPDA (`triggers.md` §1 says why).
+  - The moment target is 15–35, not 30–60.
+  - Cards are credited to the side that drew the foul, and substitutions carry no momentum.
+  - `context.players` is added to §10.2.
+
+Later sprints: pending implementation.
