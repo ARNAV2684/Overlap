@@ -300,6 +300,9 @@ Each sprint gets its own sprint plan (`PLAN_stats_engine_S<n>.md`) and branch (`
 | `stats/specs/*.md` spec gate | `PLAN_ci_pr-checks.md` | Arnav | Specs marked agreed in M1 before any code PR | Agreed (the gate's normal use) |
 | `docs/knowledge/stats-engine.md` | `PLAN_docs_graphify-knowledge-map.md`, `PLAN_docs_knowledge-sharing.md` | Pranav | Update the note in each stats PR, as the knowledge-sharing spec asks | Agreed (that spec's rule) |
 | Cosmos `match_state` vs relay `screen` | Work map 17 Oct; `PLAN_functions_screen-relay.md` | Arnav | Decision D-02 in M1 | Pending |
+| `CONTRACTS.md` §4.1 (archived match) | `PLAN_archiver_archive-flow.md` | Arnav | Not edited. The new §4.2 sits after it, and the archiver keeps panels as its spec already says | Agreed (no shared edit) |
+| `CONTRACTS.md` §1.4 (transport) | `PLAN_contracts_setup-transport.md` | Arnav | Not edited. The stats engine follows §1.4 as merged | Agreed (no shared edit) |
+| `plans/active/` | `PLAN_plans_housekeeping.md` | Arnav | Its edits merged in PR #26. This PR adds a new plan file only | Agreed (no shared edit) |
 
 Scanned at `5ef36be` on 2026-10-19. Sources checked: plans ✓ · PRs ✓ (none open) · branches ✓ (none touch `stats/`
 or `CONTRACTS.md`) · hot files ✓ (`CONTRACTS.md`: Arnav, Pranav, Vedant to be told).
