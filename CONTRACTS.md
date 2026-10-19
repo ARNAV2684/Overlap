@@ -213,6 +213,27 @@ never depend on Event Hubs. All Cosmos containers are in database `live` with pa
 - The minute in a file name is `period_ms ÷ 60000` (minute 0 of period 2 is the first minute after kick-off).
 - Replays sent to browsers use the §7 envelope, built from this format by the replay route.
 
+### 4.2 Match state (stats engine → Cosmos `match_state`)
+
+The stats engine's latest numbers for a match: one document per match, overwritten every 5 seconds of match time and
+at period starts and ends ([`stats/specs/publishing.md`](stats/specs/publishing.md) §1). Database `live`, container
+`match_state`, partition `/match_id`.
+
+```json
+{ "id": "state", "match_id": "SYN-0042", "kind": "match_state", "schema_version": 1,
+  "source": { "event_seq": 1186, "match_ms": 3854000 },
+  "phase": "live", "period": 2, "clock": "62:14", "score": { "home": 1, "away": 0 },
+  "panel": { "...": "the latest light stat panel, §7.4" },
+  "totals": { "home": { "...": "whole-match team totals" }, "away": { } },
+  "players": { "NBR-09": { "...": "player stats" } } }
+```
+
+- Readers: the MCP server's current-stats tool and a late-joining browser's stats. It is "now", not history:
+  past panels are in Cosmos `stats` (archiver, §4.1).
+- `source` is the last event included. Every number in it was computed from events up to `source.event_seq`.
+- Field lists: [`stats/specs/metrics.md`](stats/specs/metrics.md) §6. A value below its minimum sample is `null` and
+  listed in `panel.low_sample`.
+
 ## 5. Evidence pack (stats engine → agents)
 
 The **only** source of numbers an agent may cite.
@@ -234,8 +255,11 @@ The **only** source of numbers an agent may cite.
 }
 ```
 
-- `trigger`: `goal`, `red_card`, `penalty`, `big_chance` (shot xG > 0.2), `shot_cluster` (3 shots in 5 min),
-  `momentum_swing`, `press_change`, `sprint`, `milestone`.
+- `trigger`: `goal`, `red_card`, `penalty`, `big_chance` (shot xG ≥ 0.20), `shot_cluster` (3 shots in 5 min, §10.1),
+  `momentum_swing`, `press_change`, `sprint`, `milestone`. Exact rules and cooldowns:
+  [`stats/specs/triggers.md`](stats/specs/triggers.md). The facts each trigger's pack holds:
+  [`stats/specs/evidence-packs.md`](stats/specs/evidence-packs.md). Every pack is stored inside a moment document
+  (§10.2).
 - `facts[]`: `key`, `value`, optional `unit`, `decimals` (the precision a narrated value is rounded to) and
   `label`. Keys are unique within a pack.
 - **Fact key naming:** snake_case with the window and unit in the name, so a key can't be misread:
@@ -339,7 +363,7 @@ messages and replay files all use this one shape, so the client has one code pat
 | `event` | The complete §3 event, unchanged | The event's |
 | `positions` | `{ "frames": [ … ] }`: 1 to 5 complete §4 frames from one period, in `match_ms` order. Five frames ≈ one second of match time | The last frame's |
 | `status` | `{ "phase", "period", "score": { "home", "away" } }`; the first status of a match (`phase: "pre_match"`) also has `"setup"` (the complete §2 setup) | The triggering setup or event's (0 and `"0:00"` before kickoff) |
-| `stats` | The stat panel payload, defined by the stats engine (§9) | The panel's |
+| `stats` | The stat panel (§7.4), unchanged | The panel's (a whole match second) |
 
 - `phase` is `pre_match`, `live`, `half_time` or `full_time`; `period` is 0 before kickoff, then 1 or 2.
 - A status is sent **after** the event that causes it: `PeriodStart` (→ `live`), a `Shot` with
@@ -375,6 +399,31 @@ the two by `seq` and continues live.
 - The same shape is served locally (Web PubSub stand-in) and on Azure (the web app's snapshot route reading the relay's
   store).
 
+### 7.4 Stat panel (stats engine → `match-events` → relay → browsers; archiver)
+
+Sent by the stats engine once per match second on `match-events` (properties `kind=stats`, `match_id`; partition key
+`match_id`). The relay forwards it as a `stats` envelope's `data`, unchanged. The archiver keeps it in Cosmos `stats` as
+`stats-<match_ms, 9 digits>`. Full rules: [`stats/specs/publishing.md`](stats/specs/publishing.md) §2.
+
+```json
+{ "match_id": "SYN-0042", "match_ms": 3854000, "clock": "62:14", "period": 2, "source_seq": 1186,
+  "score": { "home": 1, "away": 0 },
+  "teams": {
+    "home": { "team_id": "NBR", "possession_pct": 58, "shots": 11, "shots_on_target": 5, "xg": 1.42, "passes": 402,
+              "pass_completion_pct": 83, "ppda_last_10min": 7.5, "pressures_per_opp_pass_last_10min": 1.34,
+              "momentum_share_last_10min_pct": 71, "press_height_last_10min_m": 52 },
+    "away": { "team_id": "HBA", "...": "same fields" } },
+  "momentum": { "period": 2, "bucket": 3, "home": 9.5, "away": 3.0 },
+  "low_sample": [] }
+```
+
+- `match_ms` is a whole second, so a resent panel replaces the same archived document.
+- `low_sample` lists fields sent as `null` because their sample is too small (`metrics.md` §7). Charts show them as
+  "not enough data", never as zero.
+- On the panel at every whole minute and at each `PeriodEnd`, an extra `heavy` object holds `momentum_buckets`,
+  `pass_network`, `pressing_grid`, `zones` and, with tracking, `players` (shapes in `publishing.md` §2).
+- Numbers on panels are for screens. Agents cite only evidence-pack facts (§5).
+
 ---
 
 ## 8. Metric definitions (stats engine)
@@ -383,22 +432,23 @@ Numbers come from code. These definitions are shared so the agents, charts and t
 
 | Metric | Definition |
 |---|---|
-| **xG** | Logistic model of distance, angle, body part and situation. Penalty = 0.78 (Opta's value, sourced in [`CALIBRATION.md`](CALIBRATION.md)). |
-| **Pass difficulty** (0–1) | Length, under pressure, forward progress, lines broken, receiver under pressure |
-| **Momentum** | Per team, per 5-minute bucket of `period_ms`: goal 5, shot on target 3, other shot 1.5, key pass 2, completed take-on 1, red card 3, yellow 1, substitution 0.5. A goal counts once, as a shot. |
+| **xG** | Logistic model of distance, angle, body part, situation and the key pass's type. Penalty = 0.78 (Opta's value, sourced in [`CALIBRATION.md`](CALIBRATION.md)). Coefficients and checks: [`stats/specs/metrics.md`](stats/specs/metrics.md) §1 |
+| **Pass difficulty** (0–1) | `1 − P(complete)` from length, under pressure, forward progress, lofted, through ball, set piece, ending in the final third (`metrics.md` §2). Lines broken and receiver under pressure are deferred: they need tracking at the moment of the pass |
+| **Momentum** | Per team, per 5-minute bucket of `period_ms`: goal 5, shot on target 3, other shot 1.5, key pass 2, completed take-on 1. An opponent's red card 3 and yellow card 1 are credited to the **other** team (the side that drew the foul). Substitutions 0. A goal counts once, as a shot. |
 | **Momentum share** | A team's weighted actions ÷ both teams' over a window, in %. A **momentum swing** is a change in share between consecutive windows past a threshold. |
-| **PPDA** | Opponent passes with `x ≤ 60` in **their** frame ÷ our `Tackle`, `Interception` and committed `Foul` events with `x ≥ 40` in **our** frame. Lower means more intense pressing. |
-| **Press height** | Mean `x` of our defensive actions, in metres (`× 1.05`). Shown **alongside** PPDA, because the two often disagree. |
+| **PPDA** | Opponent passes with `x ≤ 60` in **their** frame ÷ our `Tackle` (any outcome), `Interception` and committed `Foul` events with `x ≥ 40` in **our** frame. Lower means more intense pressing. Missing below 3 defensive actions. |
+| **Press height** | Mean `x` of our `Tackle`, `Interception`, `Foul`, `BallRecovery` and `Pressure` events, in metres (`× 1.05`). Shown **alongside** PPDA, because the two often disagree. |
+| **Pressing rate** | Our `Pressure` events ÷ the opponent's passes in the same window. What `press_change` compares (`stats/specs/triggers.md`). |
 | **Pressing zones** | Defensive actions binned into a 9 × 6 grid, in the stats engine rather than the browser |
 | **Chance creation** | Shots with `key_pass_event_id` set; the creator is `assisted_by` |
 | **Control ↔ chaos** | Turnovers per minute, share of very short possessions, fast transitions |
 | **Rhythm** | Passes per minute, stoppages, possession duration |
-| **Small samples** | Per-90 rates and percentiles are shrunk towards the group mean: `(rate × minutes + mean × K) / (minutes + K)`, with K = 270 minutes (pass accuracy: K = 60 attempts). Values below a minimum sample are flagged so the narrator avoids them. |
+| **Small samples** | Per-90 rates and percentiles are shrunk towards the group mean: `(rate × minutes + mean × K) / (minutes + K)`, with K = 270 minutes (pass accuracy: K = 60 attempts). Values below a minimum sample (`metrics.md` §7) are flagged, sent as `null` on panels and never put in evidence. |
 
 ## 9. Open questions for the team
 
-- [ ] Agree the momentum-swing and press-change thresholds.
-- [ ] Agree the stat panel (`kind: stats`) payload shape (it reaches browsers through the relay, §7.1).
+- [x] Agree the momentum-swing and press-change thresholds: [`stats/specs/triggers.md`](stats/specs/triggers.md) §1.
+- [x] Agree the stat panel (`kind: stats`) payload shape: §7.4.
 - [x] Agree the per-minute tracking chunk format for replays (§4.1).
 - [ ] Decide whether the translator is a full agent (football phrasing plus a numeric check) or a service call.
 - [ ] Confirm the hero moment's chart for the demo video (currently `shot_map` for every mode).
@@ -406,6 +456,12 @@ Numbers come from code. These definitions are shared so the agents, charts and t
 
 ## 10. Proposed first insight handoffs (M1 review only)
 
+> **Stats owner's agreement:** Azeem (stats owner) agrees §10.1 and §10.2 as written, in the stats spec PR for
+> [`PLAN_stats_engine`](plans/active/PLAN_stats_engine.md). §10.2's document is used for **every** trigger type (§5),
+> and its `context` gains `players: [{player_id, name, pos}]` for the evidence's `player_ids`
+> ([`stats/specs/evidence-packs.md`](stats/specs/evidence-packs.md) §3), which is no more citable than the rest of
+> `context`. §10.3–§10.4 are unchanged and remain for Pranav, Arnav and Vedant.
+>
 > **Status: proposed, not agreed.** This section is the shared-contract proposal for
 > [insights S1](plans/active/PLAN_agents_ai-insights-mcp_S1.md). Existing §§1–9 and running services are unchanged.
 > Stats owner (unassigned; Arnav decides), Pranav, Arnav and Vedant must agree their handoffs before dependent code.
