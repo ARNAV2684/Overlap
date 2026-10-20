@@ -6,7 +6,7 @@
 | Parent plan | [`PLAN_agents_insights-build.md`](PLAN_agents_insights-build.md) · v0.1 |
 | Milestone in parent plan | S0 · AC-F1, AC-F2, AC-F3, AC-F4 |
 | Author / owner | Arnav |
-| Status | In progress (F1 #58, F5 #59, F6 #60; F2 running; F3 this PR) |
+| Status | In progress: F1 #58, F2 done, F3 #61, F4 #62 (needs Azeem and Vedant), F5 #59, F6 #60, F7 #63 |
 | Reviewed branch and commit | main · a1cef33 |
 | Planned branch | One per fix: `mcp_server/real-moments`, `agents/specs-seven-agents`, `contracts/insights-handoffs`, `archiver/storage-agreed`, `registry/layer5-owner`, `docs/knowledge-layer5` (F2 changes no files) |
 
@@ -91,4 +91,14 @@ plans (superseded scope recorded in F3), Vedant's web plans (F4 agreement) and `
 
 ## 9. Handover
 
-**Pending implementation.**
+**In progress (20 Oct 2026).**
+
+| Fix | Result |
+|---|---|
+| F1 | PR #58: reader accepts all 21 `SYN-1017` engine moments; 22 broken variants rejected; 109 tests pass, 3 skipped; two existing tests fixed for Windows |
+| F2 | **Passed (AC-F2).** Stats engine live on the local stack, match SYN-0507 at 20× (seed 507): Cosmos `moments` holds 24 moments identical to `stats/main.py replay --moments` of the recording (same ids, order and content; Cosmos system fields aside; 2 goal, 3 big chance, 5 shot cluster, 5 momentum swing, 9 press change). `match_state` ended `full_time`, 2–0, `source.event_seq` 2425. Closes stats S3 D-03. On the way the local Cosmos emulator corrupted its data after the stack was killed under memory pressure; recreating the container fixed it |
+| F3 | PR #61 (this plan + specs) |
+| F4 | PR #62, waiting for Azeem's and Vedant's approval |
+| F5 | PR #59 |
+| F6 | PR #60 |
+| F7 | PR #63 |
