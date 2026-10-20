@@ -10,7 +10,7 @@
 | Review coordinator | Arnav |
 | Affected component owners | Arnav (screen relay, archiver, Cosmos, `CONTRACTS.md`), Pranav (agents, MCP), Vedant (web charts) |
 | Proposal version and date | v0.1 · 2026-10-19 |
-| Status | In progress (M1; go from Azeem, 2026-10-19) |
+| Status | In progress (M1 merged in PR #50; S1 in review, see [`PLAN_stats_engine_S1.md`](PLAN_stats_engine_S1.md)) |
 | Plan tier and file | Full · `plans/active/PLAN_stats_engine.md` |
 | Repository | [ARNAV2684/Overlap](https://github.com/ARNAV2684/Overlap) |
 | Reviewed branch and commit | main · 5ef36be |
@@ -193,6 +193,7 @@ told beforehand.
 | `stats/publish.py` | Modify (S2, S3) | Panels to the hub; `match_state` and `moments` to Cosmos | `publishing.md` | Azeem |
 | `stats/triggers.py`, `evidence.py` | Modify (S3) | Triggers, merging, priority; evidence packs | `triggers.md`, `evidence-packs.md` | Azeem |
 | `stats/tests/` | Modify / add | Metrics, windows, triggers, dedupe, idempotency, replay against generator answer keys | All above | Azeem |
+| `stats/tests/fixtures/SYN-1017/` | Add (S1) | One generated match (KES v ORR, seed 1017; events and setup, gzipped) for replay tests, the same match as Pranav's shot-cluster example | — | Azeem |
 | `docs/knowledge/stats-engine.md` | Modify (each PR) | Status, interfaces, evidence (knowledge-sharing rule) | `docs/specs/knowledge-sharing.md` | Azeem / Pranav |
 | `plans/active/PLAN_stats_engine.md` (+ sprint plans `_S1`…`_S3`) | Add | This plan | — | Azeem |
 
