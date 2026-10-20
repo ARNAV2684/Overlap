@@ -1,8 +1,13 @@
-"""Strict first-slice document and tool schemas. Spec: mcp_server/specs/tools.md §§2–4."""
+"""Strict moment document and tool schemas. Spec: mcp_server/specs/tools.md §§2–4.
+
+Accepts every moment the stats engine writes (stats/agents-guide.md §5): eight triggers, their fact keys,
+context.players and 1–500 event ids. Anything else is still rejected."""
 
 from __future__ import annotations
 
+import itertools
 import json
+import math
 from pathlib import Path
 from typing import Annotated, Literal
 
@@ -24,6 +29,39 @@ Reason = Literal[
     "not_found", "version_mismatch", "source_not_ready", "context_mismatch",
     "source_timeout", "response_too_large", "source_error", "outside_scope",
 ]
+Trigger = Literal["goal", "red_card", "penalty", "big_chance", "shot_cluster", "momentum_swing", "press_change",
+                  "milestone"]
+Position = Literal["GK", "CB", "LB", "RB", "LWB", "RWB", "DM", "CM", "AM", "LM", "RM", "LW", "RW", "ST"]
+FIVE_MIN_MS = 300000
+
+# Fact key -> (unit or None, decimals). stats/specs/evidence-packs.md §1; stats/agents-guide.md §3.
+FACT_SPECS: dict[str, tuple[str | None, int]] = {
+    "shot_xg": ("xG", 2), "shot_distance_m": ("m", 0), "team_goals_match": (None, 0),
+    "opponent_goals_match": (None, 0), "player_goals_match": (None, 0), "team_shots_match": (None, 0),
+    "shot_is_penalty": (None, 0), "team_xg_match": ("xG", 2), "team_players_on_pitch": (None, 0),
+    "team_fouls_match": (None, 0), "team_cards_match": (None, 0), "shots_last_5min": (None, 0),
+    "window_duration_min": ("min", 0), "momentum_share_last_5min_pct": ("%", 0),
+    "momentum_share_previous_10min_pct": ("%", 0), "team_shots_last_5min": (None, 0),
+    "pressures_per_opp_pass_last_5min": (None, 2), "pressures_per_opp_pass_previous_10min": (None, 2),
+    "team_pressures_last_5min": (None, 0), "team_high_regains_last_5min": (None, 0),
+    "press_height_last_5min_m": ("m", 0),
+}
+# Trigger -> (required fact keys, optional fact keys).
+TRIGGER_FACTS: dict[str, tuple[frozenset[str], frozenset[str]]] = {
+    "goal": (frozenset({"shot_xg", "shot_distance_m", "team_goals_match", "opponent_goals_match",
+                        "player_goals_match", "team_shots_match", "shot_is_penalty"}), frozenset()),
+    "red_card": (frozenset({"team_players_on_pitch", "team_fouls_match", "team_cards_match"}), frozenset()),
+    "penalty": (frozenset({"shot_xg", "team_goals_match", "opponent_goals_match"}), frozenset()),
+    "big_chance": (frozenset({"shot_xg", "shot_distance_m", "team_shots_match", "team_xg_match"}), frozenset()),
+    "shot_cluster": (frozenset({"shots_last_5min", "window_duration_min"}), frozenset()),
+    "momentum_swing": (frozenset({"momentum_share_last_5min_pct", "momentum_share_previous_10min_pct",
+                                  "team_shots_last_5min", "window_duration_min"}), frozenset()),
+    "press_change": (frozenset({"pressures_per_opp_pass_last_5min", "pressures_per_opp_pass_previous_10min",
+                                "team_pressures_last_5min", "team_high_regains_last_5min",
+                                "window_duration_min"}), frozenset({"press_height_last_5min_m"})),
+    "milestone": (frozenset({"player_goals_match", "shot_xg"}), frozenset()),
+}
+FIVE_MINUTE_WINDOW = frozenset({"shot_cluster", "momentum_swing", "press_change"})
 
 
 class StrictModel(BaseModel):
@@ -69,10 +107,23 @@ class Score(StrictModel):
     away: NonNegative
 
 
+class Player(StrictModel):
+    player_id: PlayerId
+    name: Annotated[str, Field(min_length=1, max_length=80)]
+    pos: Position
+
+    @model_validator(mode="after")
+    def valid_name(self):
+        if not self.name.strip() or any(ord(c) < 32 for c in self.name):
+            raise ValueError("Invalid player name")
+        return self
+
+
 class Context(StrictModel):
     phase: Literal["live"]
     score: Score
     teams: Teams
+    players: Annotated[list[Player], Field(max_length=99)] | None = None   # stats S3; absent in the old sample
 
 
 class Window(StrictModel):
@@ -81,53 +132,85 @@ class Window(StrictModel):
 
 
 class Fact(StrictModel):
-    key: Literal["shots_last_5min", "window_duration_min"]
-    value: int
+    key: str
+    value: int | float
     unit: str | None = None
-    decimals: Annotated[int, Field(ge=0, le=0)]
+    decimals: Annotated[int, Field(ge=0, le=2)]
     label: Annotated[str, Field(min_length=1, max_length=240)]
 
     @model_validator(mode="after")
     def meanings(self):
-        if self.key == "shots_last_5min":
-            if self.value < 3 or "unit" in self.model_fields_set:
-                raise ValueError("Shot count must be at least three, without a unit")
-        elif self.value != 5 or self.unit != "min":
+        spec = FACT_SPECS.get(self.key)
+        if spec is None:
+            raise ValueError("Unknown fact key")
+        unit, decimals = spec
+        if self.decimals != decimals:
+            raise ValueError("Unexpected decimals for this fact")
+        if unit is None and "unit" in self.model_fields_set:
+            raise ValueError("This fact has no unit")
+        if unit is not None and self.unit != unit:
+            raise ValueError("Unexpected unit for this fact")
+        v = self.value
+        if decimals == 0 and not isinstance(v, int):
+            raise ValueError("Whole-number fact must be an integer")
+        if not math.isfinite(v) or v < 0 or round(v, decimals) != v:
+            raise ValueError("Fact value out of range or not at its decimals")
+        if unit == "%" and v > 100:
+            raise ValueError("Percentage above 100")
+        if unit == "xG" and v > 1:
+            raise ValueError("xG above 1")
+        if self.key == "shot_is_penalty" and v not in (0, 1):
+            raise ValueError("Penalty flag must be 0 or 1")
+        if self.key == "shots_last_5min" and v < 3:
+            raise ValueError("Shot count must be at least three")
+        if self.key == "window_duration_min" and v != 5:
             raise ValueError("Window duration must be five minutes")
+        if self.key == "player_goals_match" and v < 1:
+            raise ValueError("A scorer has at least one goal")
         return self
 
 
 class Evidence(StrictModel):
     moment_id: MomentId
     match_id: MatchId
-    trigger: Literal["shot_cluster"]
+    trigger: Trigger
     period: Period
     match_ms: NonNegative
     clock: Annotated[str, Field(pattern=r"^[0-9]{1,3}(?:\+[0-9]{1,2})?:[0-5][0-9]$")]
     team_id: TeamId
-    player_ids: Annotated[list[PlayerId], Field(min_length=1, max_length=99)]
-    event_ids: Annotated[list[EventId], Field(min_length=3, max_length=500)]
+    player_ids: Annotated[list[PlayerId], Field(max_length=99)]
+    event_ids: Annotated[list[EventId], Field(min_length=1, max_length=500)]
     window: Window
-    facts: Annotated[list[Fact], Field(min_length=2, max_length=2)]
+    facts: Annotated[list[Fact], Field(min_length=2, max_length=7)]
 
     @model_validator(mode="after")
     def consistent(self):
-        if {f.key for f in self.facts} != {"shots_last_5min", "window_duration_min"}:
-            raise ValueError("Exactly the two agreed facts are required")
-        shots = next(f.value for f in self.facts if f.key == "shots_last_5min")
-        if shots != len(self.event_ids) or len(set(self.event_ids)) != shots:
-            raise ValueError("Shot count must match distinct evidence events")
-        if len(set(self.player_ids)) != len(self.player_ids) or len(self.player_ids) > shots:
-            raise ValueError("Invalid distinct shooter list")
+        keys = [f.key for f in self.facts]
+        required, optional = TRIGGER_FACTS[self.trigger]
+        if len(set(keys)) != len(keys) or not required <= set(keys) <= required | optional:
+            raise ValueError("Facts do not match the trigger's evidence pack")
+        if len(set(self.player_ids)) != len(self.player_ids):
+            raise ValueError("Duplicate player id")
         if any(p[:3] != self.team_id for p in self.player_ids):
-            raise ValueError("Shooter belongs to a different team")
+            raise ValueError("Player belongs to a different team")
         if any(e[:8] != self.match_id for e in self.event_ids):
             raise ValueError("Event belongs to a different match")
         seqs = [int(e[-5:]) for e in self.event_ids]
-        if seqs != sorted(seqs) or seqs[0] < 1:
-            raise ValueError("Events must be in sequence order")
-        if self.window.to_ms != self.match_ms or self.window.to_ms - self.window.from_ms != 300000:
+        if seqs[0] < 1 or any(b <= a for a, b in itertools.pairwise(seqs)):
+            raise ValueError("Events must be distinct and in sequence order")
+        if self.window.to_ms != self.match_ms or self.window.from_ms > self.window.to_ms:
+            raise ValueError("Invalid evidence window")
+        if self.trigger in FIVE_MINUTE_WINDOW and self.window.to_ms - self.window.from_ms != FIVE_MIN_MS:
             raise ValueError("Invalid five-minute window")
+        if self.trigger != "shot_cluster" and self.trigger not in ("momentum_swing", "press_change") \
+                and not self.player_ids:
+            raise ValueError("This trigger names at least one player")
+        if self.trigger == "shot_cluster":                  # CONTRACTS.md §10.1
+            shots = next(f.value for f in self.facts if f.key == "shots_last_5min")
+            if shots != len(self.event_ids):
+                raise ValueError("Shot count must match distinct evidence events")
+            if not self.player_ids or len(self.player_ids) > shots:
+                raise ValueError("Invalid distinct shooter list")
         return self
 
 
@@ -152,6 +235,10 @@ class Moment(Identity):
             raise ValueError("Source must end at the triggering evidence event")
         if e.team_id not in (self.context.teams.home.team_id, self.context.teams.away.team_id):
             raise ValueError("Evidence team absent from context")
+        if self.context.players is not None:
+            ids = [p.player_id for p in self.context.players]
+            if len(set(ids)) != len(ids) or not set(ids) <= set(e.player_ids):
+                raise ValueError("Context players must be distinct evidence players")
         return self
 
     @property
