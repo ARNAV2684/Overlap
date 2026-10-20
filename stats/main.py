@@ -18,6 +18,7 @@ import gzip
 import json
 import logging
 import sys
+import threading
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -77,10 +78,9 @@ class Pipeline:
                 self.publisher.after(state, e, received_at)
             if e["type"] == "PeriodEnd" and state.phase == "full_time":
                 log.info("%s full time %s-%s", match_id, state.score["home"], state.score["away"])
-                lat = sorted(self.publisher.latency_s.get(match_id, ())) if self.publisher else []
-                if lat:
-                    log.info("%s: %d panels, event-to-panel median %.3f s, 95th %.3f s", match_id, len(lat),
-                             lat[len(lat) // 2], lat[int(len(lat) * 0.95)])
+                sender = self.publisher.sender if self.publisher else None
+                if sender is not None and hasattr(sender, "latency_s"):
+                    threading.Timer(5.0, log_latency, (sender, match_id)).start()   # once the queue has drained
 
     def finished(self, match_id: str) -> bool:
         """True once the match's full-time event has been applied (or the match was stopped)."""
@@ -93,6 +93,13 @@ class Pipeline:
         out["input"] = {"duplicates": orderer.duplicates, "waiting_after_gap": orderer.waiting,
                         "gap_at_seq": orderer.gap, "stopped": self.stopped.get(match_id)}
         return out
+
+
+def log_latency(sender, match_id: str) -> None:
+    lat = sorted(sender.latency_s.get(match_id, ()))
+    if lat:
+        log.info("%s: %d panels, event-to-panel median %.3f s, 95th %.3f s", match_id, len(lat), lat[len(lat) // 2],
+                 lat[int(len(lat) * 0.95)])
 
 
 # --- replay ------------------------------------------------------------------------------------------------------
@@ -146,21 +153,27 @@ def live() -> int:
     import time
 
     import consumer
-    sender = publish.HubSender.from_env()
-    publisher = publish.Publisher(sender, publish.CosmosStateStore.from_env(), clock=time.time)
-    pipeline = Pipeline(publisher)
+    background = publish.Background(publish.HubSender.from_env(), publish.CosmosStateStore.from_env(), time.time)
+    pipeline = Pipeline(publish.Publisher(background, background))
     runner = consumer.Runner(pipeline.handle, pipeline.finished)
+
+    def progress() -> None:                                  # one line every 10 s, as the archiver does
+        while True:
+            time.sleep(10)
+            with runner.lock:
+                rows = [f"{m} seq {s.source_seq} {s.phase}" for m, s in sorted(pipeline.states.items())
+                        if not pipeline.finished(m) or s.source_seq]
+            log.info("progress: %s | panels queued %d, sent %s", "; ".join(rows[-4:]) or "no matches",
+                     background.queued(), dict(sorted(background.sent.items())[-4:]))
+
+    threading.Thread(target=progress, daemon=True, name="stats-progress").start()
     try:
         runner.run()
     except KeyboardInterrupt:
         pass
     finally:
         runner.stop()
-        sender.close()
-        for match_id, lat in sorted(publisher.latency_s.items()):
-            lat = sorted(lat)
-            log.info("%s: %d panels, event-to-panel median %.3f s, 95th %.3f s", match_id, len(lat),
-                     lat[len(lat) // 2], lat[int(len(lat) * 0.95)])
+        background.close()
     return 0
 
 
@@ -178,7 +191,8 @@ def main(argv: list[str] | None = None) -> int:
     rp.add_argument("--panels", action="store_true", help="write the stat panels instead of the match totals")
     sub.add_parser("live", help="read both hubs, send stat panels and keep match_state")
     args = parser.parse_args(argv)
-    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+    logging.getLogger("azure").setLevel(logging.WARNING)       # the SDKs log every HTTP call at INFO
     if args.command == "live":
         return live()
     if not args.folder.exists():
