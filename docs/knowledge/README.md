@@ -1,6 +1,6 @@
 # Overlap project map
 
-Verified against main `a61166b` on 19 October 2026. PR #46 and #45 are merged. PR [#47](https://github.com/ARNAV2684/Overlap/pull/47) (these notes) is an open draft; PR [#48](https://github.com/ARNAV2684/Overlap/pull/48) (`web/live-api`, `0ef55ee`) is open and unmerged. Branch work is not current main.
+Verified against main `36f5d00` on 20 October 2026. PRs #45–#53 are merged, including these notes (#47), the web live screen (#48) and stats S1–S2 (#51, #53). Stats S3 (moments, #54) is open. Branch work is not current main.
 
 Start with the notes below. Graphify helps navigate source; an arrow is not proof that a live integration passed. [Contracts](../../CONTRACTS.md), [registry](../../plans/REGISTRY.md) and component specs retain authority. Notes are source-inspected and await component-owner factual review.
 
@@ -16,7 +16,7 @@ Relay persists recoverable screen state in [storage](storage.md). Local relay ha
 
 ## Insight path
 
-[Event Hubs](event-hubs.md) → [Stats engine](stats-engine.md) (placeholder) → moments in [storage](storage.md) → [AI workflow](ai-insights.md) (placeholder), using [MCP](mcp.md) (local first tool implemented) → [PubSub](web-pubsub.md) → [Frontend](frontend.md) (future verified cards).
+[Event Hubs](event-hubs.md) → [Stats engine](stats-engine.md) (numbers and panels built; moments in review) → moments in [storage](storage.md) → [AI workflow](ai-insights.md) (placeholder), using [MCP](mcp.md) (local first tool implemented) → [PubSub](web-pubsub.md) → [Frontend](frontend.md) (future verified cards).
 
 Only evidence facts may supply narrated numbers. The seeded MCP example does not prove a working stats publisher, model or overlay.
 
@@ -34,7 +34,7 @@ After pulling, rebuild manually; generated graphs are ignored. No new API key, G
 
 | Person | Recorded responsibility | Notes and handoffs |
 |---|---|---|
-| Azeem | Generator (registry); stats (team-reported, registry unresolved) | [Generator](generator.md), [stats](stats-engine.md), [MCP-01 producer input](mcp.md#mcp-01) |
+| Azeem | Generator and stats engine (registry, stats recorded in #52) | [Generator](generator.md), [stats](stats-engine.md), [MCP-01 producer input](mcp.md#mcp-01) |
 | Arnav | Relay, archiver, Cosmos, PubSub and local stack; Event Hubs with Pranav (registry) | [Relay](screen-relay.md), [archive](archiver.md), [storage](storage.md), [PubSub](web-pubsub.md), [environment](environments.md), [MCP-02](mcp.md#mcp-02) |
 | Pranav | Event Hubs and helping shared infrastructure (registry); insights/MCP (team-reported) | [Hubs](event-hubs.md), [MCP](mcp.md), [insights](ai-insights.md) |
 | Vedant | Frontend (registry) | [Frontend](frontend.md), [card review AI-01](ai-insights.md#ai-01), [relay review](screen-relay.md#relay-01) |
