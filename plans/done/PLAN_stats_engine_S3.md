@@ -3,10 +3,10 @@
 | Field | Complete this |
 |---|---|
 | Sprint | S3 — triggers, evidence packs and moment documents for the AI agents (work map ST5), plus a stats-side guide to how each agent should use them |
-| Parent plan | [`PLAN_stats_engine.md`](PLAN_stats_engine.md) · v0.1 |
+| Parent plan | [`PLAN_stats_engine.md`](../active/PLAN_stats_engine.md) · v0.1 |
 | Milestone in parent plan | S3 · AC-07, AC-08, AC-09, AC-10 |
 | Author / owner | Azeem |
-| Status | In review (go from Azeem, 2026-10-20; implemented on `stats/moments`) |
+| Status | Done (merged in PR #54, 2026-10-20) |
 | Reviewed branch and commit | main · 36f5d00 (after #53, S2, merged) |
 | Planned branch | `stats/moments`, from main |
 

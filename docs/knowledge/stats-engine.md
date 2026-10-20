@@ -1,6 +1,6 @@
 # Stats engine
 
-Last verified: 2026-10-20 · branch `stats/moments` (from main `36f5d00`) · S1 (#51) and S2 (#53) merged; S3 moments built and replayed, not yet run against a live Cosmos.
+Last verified: 2026-10-20 · main `75ca4ee` · S1 (#51), S2 (#53) and S3 (#54) merged; S3 moments built and replayed, not yet run against a live Cosmos.
 
 ## Purpose
 
@@ -90,7 +90,7 @@ Verified 19 October 2026 against main `a61166b`. This describes recorded respons
 | Why it matters | A mismatch here can block the connected component; do not create a private contract to work around it. |
 | Done when | See canonical request MCP-01 below; a constructed sample alone does not close it. |
 | Status | Partly evidenced (stats S3, branch `stats/moments`): real engine-written shot-cluster moments pass `parse_moment` with `context.players` removed; as written they fail on `players` (D-02). No reviewer acceptance recorded yet. |
-| Decision evidence / due date | S3 plan AC-08 (part), [`PLAN_stats_engine_S3.md`](../../plans/active/PLAN_stats_engine_S3.md). MCP-01 itself is Pranav's record to update. |
+| Decision evidence / due date | S3 plan AC-08 (part), [`PLAN_stats_engine_S3.md`](../../plans/done/PLAN_stats_engine_S3.md). MCP-01 itself is Pranav's record to update. |
 
 Incoming handoff: [MCP-01](mcp.md#mcp-01) is the canonical consumer request. Update that record with evidence rather than maintaining a second acceptance status.
 

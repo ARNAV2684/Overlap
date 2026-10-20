@@ -10,7 +10,7 @@
 | Review coordinator | Arnav |
 | Affected component owners | Arnav (screen relay, archiver, Cosmos, `CONTRACTS.md`), Pranav (agents, MCP), Vedant (web charts) |
 | Proposal version and date | v0.1 · 2026-10-19 |
-| Status | In progress (M1 merged in PR #50; S1 in PR #51; S2 in PR #53; S3 in review, see [`PLAN_stats_engine_S3.md`](PLAN_stats_engine_S3.md); S4 waits on Azure) |
+| Status | In progress (M1 merged in PR #50; S1 in PR #51, S2 in PR #53 and S3 in PR #54, sprint plans in [`done/`](../done/PLAN_stats_engine_S3.md); S4 waits on Azure) |
 | Plan tier and file | Full · `plans/active/PLAN_stats_engine.md` |
 | Repository | [ARNAV2684/Overlap](https://github.com/ARNAV2684/Overlap) |
 | Reviewed branch and commit | main · 5ef36be |

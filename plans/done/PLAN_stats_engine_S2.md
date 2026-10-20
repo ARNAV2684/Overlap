@@ -3,10 +3,10 @@
 | Field | Complete this |
 |---|---|
 | Sprint | S2 — windows, whole-match charts, stat panels once a match second through the relay to browsers and the archive, and `match_state` (work map ST3 + ST4) |
-| Parent plan | [`PLAN_stats_engine.md`](PLAN_stats_engine.md) · v0.1 |
+| Parent plan | [`PLAN_stats_engine.md`](../active/PLAN_stats_engine.md) · v0.1 |
 | Milestone in parent plan | S2 · AC-05, AC-06 (panels part) |
 | Author / owner | Azeem |
-| Status | Done, in review (go from Azeem, 2026-10-20) |
+| Status | Done (merged in PR #53, 2026-10-20) |
 | Reviewed branch and commit | main · 0edfc15 (after #51, S1, merged) |
 | Planned branch | `stats/live-panels`, from main |
 

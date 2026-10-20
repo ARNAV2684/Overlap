@@ -3,10 +3,10 @@
 | Field | Complete this |
 |---|---|
 | Sprint | S1 — the stats engine reads a match in order and computes its numbers (work map ST1 + ST2) |
-| Parent plan | [`PLAN_stats_engine.md`](PLAN_stats_engine.md) · v0.1 |
+| Parent plan | [`PLAN_stats_engine.md`](../active/PLAN_stats_engine.md) · v0.1 |
 | Milestone in parent plan | S1 · AC-02, AC-03 (xG, possession and PPDA), AC-04 |
 | Author / owner | Azeem |
-| Status | Done, in review (go from Azeem, 2026-10-20) |
+| Status | Done (merged in PR #51, 2026-10-20) |
 | Reviewed branch and commit | main · 7bda05a (after #50 merged) |
 | Planned branch | `stats/numbers` |
 
