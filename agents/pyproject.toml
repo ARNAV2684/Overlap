@@ -1,0 +1,25 @@
+[project]
+name = "overlap-agents"
+version = "0.1.0"
+description = "Overlap insight agents: seven roles on stats moments, Microsoft Agent Framework, local first then Azure Foundry."
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "agent-framework-core==1.22.0",
+    "agent-framework-openai==1.17.0",
+    "azure-identity==1.26.0",
+    "azure-ai-translation-text==2.0.0",
+    "pydantic>=2,<3",
+]
+
+[dependency-groups]
+dev = ["pytest>=8", "ruff==0.17.0"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+line-length = 120
