@@ -11,7 +11,7 @@ import json
 from pathlib import Path
 
 import pytest
-from mcp_server.schema import TRIGGER_FACTS, parse_moment, projection
+from mcp_server.schema import TRIGGER_FACTS, Fact, parse_moment, projection
 
 DATA = Path(__file__).parent / "data" / "SYN-1017-moments.json"
 MOMENTS = json.loads(DATA.read_text(encoding="utf-8"))
@@ -71,7 +71,7 @@ _DELETE = object()
     ("goal", ("evidence", "trigger"), "sprint"),                                   # not produced (deferred)
     ("goal", ("evidence", "trigger"), "big_chance"),                               # facts don't match the trigger
     ("goal", ("evidence", "facts", 0, "value"), 0.155),                            # not at its decimals
-    ("goal", ("evidence", "facts", 0, "value"), 1.5),                              # xG above 1
+    ("goal", ("evidence", "facts", 0, "value"), 1.5),                              # shot xG above 1
     ("goal", ("evidence", "facts", 0, "unit"), "%"),                               # wrong unit
     ("goal", ("evidence", "facts", 1, "value"), 12.0),                             # whole number as float
     ("goal", ("evidence", "facts", 2, "unit"), "goals"),                           # unit where none exists
@@ -109,3 +109,11 @@ def test_too_many_events_rejected():
     doc["evidence"]["event_ids"] = [f"SYN-1017-{i:05d}" for i in range(1, 501)] + [last]
     with pytest.raises(ValueError):
         parse_moment(doc)
+
+
+def test_team_xg_can_pass_one():
+    """A team's match xG is a running total, so only a single shot's xG is capped at 1 (seen live on SYN-0508)."""
+    team = {"key": "team_xg_match", "value": 1.14, "unit": "xG", "decimals": 2, "label": "Team xG this match"}
+    assert Fact.model_validate(team).value == 1.14
+    with pytest.raises(ValueError):
+        Fact.model_validate({**team, "key": "shot_xg", "label": "xG of the shot"})
