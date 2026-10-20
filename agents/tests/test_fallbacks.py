@@ -2,9 +2,9 @@
 import pytest
 
 from config import MODES
+from fact_checker import numeric_check
 from fallbacks import template
 from validate import InvalidMoment, validate_moment
-from workflow import numeric_check
 
 
 def test_every_moment_validates(moments):
