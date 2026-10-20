@@ -1,8 +1,9 @@
 # Storage spec
 
-> **Status: draft for review.** Plan: [`PLAN_archiver_archive-flow`](../../plans/active/PLAN_archiver_archive-flow.md).
-> Stored format: [`CONTRACTS.md`](../../CONTRACTS.md) §4.1. Set this line to `> **Status: agreed.**` in the PR that
-> approves it.
+> **Status: agreed.** Approved by Vedant (consumer, web replay) on 20 Oct 2026; see
+> [`PLAN_web_replay`](../../plans/active/PLAN_web_replay.md) R-04. Plan:
+> [`PLAN_archiver_archive-flow`](../../plans/active/PLAN_archiver_archive-flow.md). Stored format:
+> [`CONTRACTS.md`](../../CONTRACTS.md) §4.1.
 
 Decides how every event and tracking frame is kept for replays. The archiver reads both hubs as consumer group
 `archiver`, independently of the screen relay, so live delivery never waits for storage. The same code runs locally
