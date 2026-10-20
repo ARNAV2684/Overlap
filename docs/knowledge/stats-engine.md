@@ -1,6 +1,6 @@
 # Stats engine
 
-Last verified: 2026-10-20 · branch `stats/live-panels` (from main `0edfc15`) · S1 merged (#51); S2 live panels checked on the local stack.
+Last verified: 2026-10-20 · branch `stats/moments` (from main `36f5d00`) · S1 (#51) and S2 (#53) merged; S3 moments built and replayed, not yet run against a live Cosmos.
 
 ## Purpose
 
@@ -44,7 +44,14 @@ Specifications agreed in #50.
 - **A 20× match (SYN-0505):** all 5,981 panels reached a browser socket through the relay, identical to the replay, and were archived in Cosmos `stats`. Median 0.65 s from event to panel.
 - **A run with the engine killed and restarted mid-match (SYN-0506):** no gap in panels.
 
-**Not running yet:** moments and evidence (`triggers.py`, `evidence.py` are placeholders), and Azure. Do not infer more from README file lists.
+**Built in stats S3:** triggers (goal, red card, penalty, big chance, shot cluster, momentum swing, press change, milestone; `sprint` deferred), evidence packs, and moment documents written once to Cosmos `live` / `moments` with stable ids `MO-<match>-<ordinal>`. `main.py replay --moments` lists them. How each agent role should use them: [`stats/agents-guide.md`](../../stats/agents-guide.md).
+
+**S3 measurements (2026-10-20, replay):**
+- **Volume, season S1:** 19.7 moments a match (median 19.5, range 10–33).
+- **Recall, 20 surge matches against 20 controls:** a `momentum_swing` or `press_change` fires for the surging team within 15 minutes of onset in 15 of 20 matches, against 10 of 20 controls.
+- **Pranav's reader:** the fixture's shot clusters (`MO-1017-0013`, `MO-1017-0019`) pass `mcp_server/schema.parse_moment` once `context.players` is removed. The fixture's KES cluster equals his `agents/specs/examples/shot-cluster.md` apart from the ordinal.
+
+**Not running yet:** moments against a live Cosmos (create-once is tested with an in-memory store), the `sprint` trigger, and Azure. Do not infer more from README file lists.
 
 Evidence / checks to inspect: [`stats/tests`](../../stats/tests), [`CONTRACTS.md`](../../CONTRACTS.md). Existing recorded tests are attributed to their handover; no runtime suite was re-run for these notes.
 
@@ -60,7 +67,8 @@ Connections include planned dependencies; status above determines whether a conn
 
 Next:
 
-- **S3:** moments, starting with `shot_cluster` exactly as Pranav's KES–ORR fixture (seed 1017) expects. That fixture still matches the current generator.
+- **Pranav (D-02):** his reader must accept `context.players`, the other trigger types and their fact keys, and 1–500 `event_ids`. The exact list is in [`stats/agents-guide.md`](../../stats/agents-guide.md) §5.
+- **S4:** the same engine against Azure, once its infrastructure exists, including a live check of the moments container.
 
 The MCP sample is not a working stats producer.
 
@@ -81,8 +89,8 @@ Verified 19 October 2026 against main `a61166b`. This describes recorded respons
 | Connected component | [mcp](mcp.md) |
 | Why it matters | A mismatch here can block the connected component; do not create a private contract to work around it. |
 | Done when | See canonical request MCP-01 below; a constructed sample alone does not close it. |
-| Status | Proposed coordination item; no notification sent and no fresh reviewer acceptance recorded. |
-| Decision evidence / due date | Not recorded / no deadline agreed. Record the review URL and affected revision here when available. |
+| Status | Partly evidenced (stats S3, branch `stats/moments`): real engine-written shot-cluster moments pass `parse_moment` with `context.players` removed; as written they fail on `players` (D-02). No reviewer acceptance recorded yet. |
+| Decision evidence / due date | S3 plan AC-08 (part), [`PLAN_stats_engine_S3.md`](../../plans/active/PLAN_stats_engine_S3.md). MCP-01 itself is Pranav's record to update. |
 
 Incoming handoff: [MCP-01](mcp.md#mcp-01) is the canonical consumer request. Update that record with evidence rather than maintaining a second acceptance status.
 
