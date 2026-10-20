@@ -18,8 +18,9 @@ Source-derived sample -> local Cosmos moments -> read-only MCP tool
 Governing [tools spec](specs/tools.md), [S2 plan and evidence](../plans/active/PLAN_agents_ai-insights-mcp_S2.md),
 and [source example](../agents/specs/examples/shot-cluster.md). The reader accepts every moment the stats engine
 writes (all eight triggers, `context.players`; [tools spec §2a](specs/tools.md)). This is M2: no model calls, live trigger,
-Agent Framework workflow, overlays, Web PubSub or frontend delivery. Other tool files remain placeholders and are
-not advertised by the server. No Azure subscription or AI key is needed.
+Agent Framework workflow, overlays, Web PubSub or frontend delivery. The server also advertises five read-only analyst tools
+(`get_live_state`, `get_player_context`, `get_team_pressing`, `get_pass_network`, `compare_periods`; tools spec §2b).
+`season` remains a placeholder and is not advertised. No Azure subscription or AI key is needed.
 
 ## 1. Install the isolated environment
 

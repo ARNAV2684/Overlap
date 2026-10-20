@@ -11,9 +11,17 @@
 
 ## 1. Tool list
 
-M2 exposes **only `get_match_state`**. Its purpose is to resolve the teams and bounded state of the moment being
-explained. It does not compute metrics, identify triggers or produce prose. `compare_periods`, pressing, player,
-pass-network and season tools remain deferred and must not appear in tool discovery as working tools.
+| Tool | Reads | Purpose |
+|---|---|---|
+| `get_match_state` | the bound moment in `moments` | The teams and score captured at this exact moment (frozen context) |
+| `get_live_state` | `match_state` (`state`) | Latest score, phase, panel team numbers and team totals; `after_moment` when newer than the moment |
+| `get_player_context` | `match_state` (`state`) | One player's match numbers: minutes, goals, shots, xG, passes, distance, top speed, sprints |
+| `get_team_pressing` | archived panel `stats-<minute>` at or before the moment | Pressing grid and pressing rates over the last 10 minutes |
+| `get_pass_network` | the same archived minute panel | Most frequent passing links (up to 40) |
+| `compare_periods` | archived panels at the moment's second and 10 minutes earlier | A team's panel numbers then and now, same half only |
+
+None computes metrics or produces prose. `season` stays unadvertised until a `season` producer exists. Every tool
+returns context for the analyst; narrated numbers still come only from the moment's `evidence.facts`.
 
 ## 2. Tool definition and examples
 
@@ -88,6 +96,25 @@ engine writes ([`stats/agents-guide.md`](../../stats/agents-guide.md) §2–§5,
 
 Evidence: `tests/test_real_moments.py` parses all 21 moments the engine writes for its fixture match
 (`tests/data/SYN-1017-moments.json`) and rejects broken variants.
+
+## 2b. Analyst tools (M2)
+
+Every analyst tool takes the session's bound identity (`match_id`, `moment_id`, `evidence_version`), plus
+`team_id` (`get_team_pressing`, `get_pass_network`, `compare_periods`) or `player_id` (`get_player_context`). A
+request for another match or moment, or a team or player not in this match, is denied without a read.
+
+Reply: `{match_id, moment_id, evidence_version, tool, status, as_of: {event_seq, match_ms}, after_moment,
+provenance: {source, container, document_id}, data}` on success; `{…, status: unavailable|denied, reason}` on
+failure, with no data. Rules:
+
+- **Point reads only**, in database `live`: `match_state/state`, and `stats/stats-<match_ms 9 digits>` (archived
+  panels, one per match second, a `heavy` block every whole minute). No queries, no writes.
+- **Time:** history tools never read past the moment and stay in the moment's period; a missing panel is
+  `not_found`, never interpolated. `get_live_state` and `get_player_context` read "now"; `after_moment` is `true`
+  when `match_state.source.event_seq` is later than the moment's, and later numbers are never the moment's cause.
+- **Fields are allowlisted**; a field the engine did not compute (for example speed and distance without tracking)
+  is left out, never zero.
+- **Limits:** the same per-call deadline and output limit as `get_match_state`; two attempts per tool per session.
 
 ## 3. Data access and time boundary
 
