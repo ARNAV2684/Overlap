@@ -6,7 +6,7 @@
 | Parent plan | [`PLAN_agents_insights-build.md`](PLAN_agents_insights-build.md) · v0.1 |
 | Milestone in parent plan | M2 · AC-02 |
 | Author / owner | Arnav |
-| Status | In progress |
+| Status | Done, in review |
 | Reviewed branch and commit | main · 67bf962 |
 | Planned branch | `mcp_server/tools` |
 
@@ -85,4 +85,14 @@ plans ✓ · PRs ✓ · branches ✓ · hot files ✓.
 
 ## 9. Handover
 
-**Pending implementation.**
+**Done (20 Oct 2026, branch `mcp_server/tools`).**
+
+| AC | Result |
+|---|---|
+| AC-02a | Passed: on the stats engine's own output for `SYN-1017` at `MO-1017-0013` (moment, `match_state` right after it, archived panels), each tool returns the bounded projection; another match or moment, a team or a player outside the match is denied with no read |
+| AC-02b | Passed: missing documents → `unavailable/not_found`; a `match_state` of another match → `context_mismatch`; two attempts per tool per session; fields the engine did not compute (speed and distance without tracking) are left out, never zero |
+| AC-02c | **Passed (live).** Stats engine and archiver running beside a 20× match SYN-0508 (seed 508, 27 moments, 5–0). A real MCP client listed all six tools and called each for `MO-0508-0002` (shot cluster, 13:37): all `ok`, Cosmos provenance, `get_live_state` and `get_player_context` flagged `after_moment: true`, pressing and pass network from `stats-000780000`, `compare_periods` from `stats-000817000`; a request for another moment was denied |
+
+- 123 MCP tests pass (3 skipped: two opt-in Cosmos tests, one symlink test on Windows); ruff clean.
+- **Differences from the plan:** the pass-network tool lives in its own module (`tools/pass_network.py`) as the repository layout suggests; the stdio smoke client now accepts exactly the six read-only tools instead of one.
+- **Follow-ups:** `season` stays unadvertised until a `season` producer exists.
