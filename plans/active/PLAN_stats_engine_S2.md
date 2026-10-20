@@ -80,6 +80,8 @@
 | `kind=stats` on `match-events`; Cosmos `stats` | `PLAN_functions_screen-relay.md`, `PLAN_archiver_archive-flow.md` | Arnav | Use only, as their specs say; no change on their side | Agreed (no shared edit) |
 | Panel consumers | `PLAN_web_live-match-viewer.md` | Vedant | Panels follow §7.4. Tell Vedant the replay runner can write sample panels for his charts | Pending (tell Vedant) |
 | `docs/knowledge/stats-engine.md` | `PLAN_docs_graphify-knowledge-map.md`, `PLAN_docs_knowledge-sharing.md` | Pranav | Updated in this PR, as the rule asks | Agreed |
+| `plans/active/PLAN_stats_engine*.md` | `PLAN_agents_ai-insights-mcp_S1.md` (#53's scope report) | Pranav | That plan reads the stats plans as its producer's plan and doesn't edit them; panels don't touch the agreed moment handoff | Agreed (no shared edit) |
+| `plans/active/` | `PLAN_plans_housekeeping.md` | Arnav | Its edits merged in PR #26. This PR adds a sprint plan and updates its own parent's status | Agreed (no shared edit) |
 
 **Scanned on 2026-10-20** at main `0edfc15`. Sources checked: plans ✓ · PRs ✓ (none open) · branches ✓ (none touch
 `stats/`, the relay or the archiver) · hot files ✓ (none touched).
