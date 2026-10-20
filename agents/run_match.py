@@ -141,6 +141,7 @@ async def run(match_id: str, moments: list[dict], state: dict | None, settings: 
                          sample={a["group"]: a["line"]["text"] for a in intent["audiences"] if a["lang"] == "en"})
             wrong += bad
         print(f"recap {recap}", flush=True)
+    await deps.models.close()
     return summarise(match_id, settings, rows, recap, wrong)
 
 

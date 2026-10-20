@@ -187,3 +187,15 @@ def test_ask_is_off_without_a_provider():
     with pytest.raises(ModelFailed) as e:
         asyncio.run(Models(Settings()).ask("spotter", "r", {}, Out, match_id="M", moment_id="MO", deadline_utc=1e12))
     assert e.value.reason == "off"
+
+
+def test_models_close_their_http_client():
+    closed = []
+
+    class Inner:
+        async def close(self):
+            closed.append(True)
+
+    asyncio.run(Models(Settings(), client=SimpleNamespace(client=Inner())).close())
+    asyncio.run(Models(Settings()).close())                    # no client: nothing to close
+    assert closed == [True]

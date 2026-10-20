@@ -203,6 +203,12 @@ class Models:
     def on(self) -> bool:
         return self.settings.provider != "off" and self.gate is not None and self.client is not None
 
+    async def close(self) -> None:
+        """Close the provider's HTTP client (and its credential on Azure) before the event loop ends."""
+        inner = getattr(self.client, "client", None)
+        if inner is not None and hasattr(inner, "close"):
+            await inner.close()
+
     async def ask(self, name: str, instructions: str, payload: dict, schema: type[BaseModel], *, match_id: str,
                   moment_id: str, deadline_utc: float) -> BaseModel:
         if not self.on:

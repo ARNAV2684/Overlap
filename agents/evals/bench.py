@@ -102,6 +102,7 @@ async def run_one(folder: Path, settings: Settings, cache: Path) -> dict:
                      "stages": {k: v for k, v in job.get("stage_outputs", {}).items() if k != "director"},
                      "intent": intent, "wrong": recheck(intent, m) if intent else []})
     recap = await process_recap(match_id, deps)
+    await deps.models.close()
     found = await store.read(match_id, f"outbox:RC-{match_id[4:]}")
     recap_intent = found[0]["intent"] if found else None
     recap_doc = recap_moment(state, moments)
