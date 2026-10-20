@@ -265,7 +265,7 @@ Review the diff and this document at its recorded baseline, then read the linked
 |---|---|---|
 | Arnav | Component boundary, ownership, storage/delivery, Azure access and conflict coordination | Pending |
 | Azeem | Synthetic inputs, reproducibility, event meaning and keeping answer keys out of model context | Pending |
-| Vedant | English card variants, audience contract, timing, missing/late/fallback states and reconnect | Pending |
+| Vedant | English card variants, audience contract, timing, missing/late/fallback states and reconnect | Approved 20 Oct: D4 as written in `CONTRACTS.md` §10.3–§10.4 (`period` field, at most 6 wall seconds, 300,000 match ms eligibility, one card shown and two waiting, `casual-en` and `analyst-en` groups, insight snapshot, dedupe by group + `seq` and by `overlay_id`). The web app doesn't render cards yet; that is new frontend work with its own plan |
 | Stats owner once confirmed | Trigger/window/evidence definitions, publication and bounded-time state | Pending |
 
 Accepting M0 means the roadmap is suitable for specification work; it does not mark placeholders agreed. Approval records belong in PR reviews or linked written decisions, not inferred from another tool's response. A reviewer may request changes; no guaranteed approval is claimed.

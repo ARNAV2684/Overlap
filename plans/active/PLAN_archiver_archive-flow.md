@@ -237,6 +237,7 @@ D-03 events stored unchanged with `id` = `event_id`; Cosmos on the free tier wit
 | Reviewer | Proposal version | Finding / required change | Outcome | Date and reference |
 |---|---|---|---|---|
 | Arnav | v1 | — | Pending | — |
+| Vedant (stored format, AC-01) | v1 | No change needed. `CONTRACTS.md` §4.1 and `storage.md` §3 give the replay route everything it needs: setup, events in `seq` order, frames by period and minute with repeats dropped, panels by `match_ms`. The replay route builds §7 envelopes (with its own `seq`) and `status` envelopes from `PeriodStart`, goal `Shot` and `PeriodEnd`, as the relay does | Approved | 20 Oct |
 
 **Implementation readiness:** A1 merged (#33); A2 built and verified locally (this PR).
 **Next action and owner:** review and merge the A2 PR; then A3 with the screen flow's Azure pass · Arnav.
