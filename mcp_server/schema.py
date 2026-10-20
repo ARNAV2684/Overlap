@@ -157,8 +157,8 @@ class Fact(StrictModel):
             raise ValueError("Fact value out of range or not at its decimals")
         if unit == "%" and v > 100:
             raise ValueError("Percentage above 100")
-        if unit == "xG" and v > 1:
-            raise ValueError("xG above 1")
+        if self.key == "shot_xg" and v > 1:
+            raise ValueError("Shot xG above 1")
         if self.key == "shot_is_penalty" and v not in (0, 1):
             raise ValueError("Penalty flag must be 0 or 1")
         if self.key == "shots_last_5min" and v < 3:

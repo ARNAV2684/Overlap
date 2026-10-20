@@ -80,7 +80,7 @@ engine writes ([`stats/agents-guide.md`](../../stats/agents-guide.md) §2–§5,
 - **Facts:** 2–7 per pack, unique keys, exactly the trigger's required keys plus its optional ones (only
   `press_height_last_5min_m` for `press_change`). Each key has a fixed unit (`xG`, `m`, `min`, `%`, or none — then
   the `unit` field is absent) and fixed `decimals` (0 or 2). Values are finite, non-negative and already at their
-  decimals; whole-number facts are integers; `%` ≤ 100; `xG` ≤ 1; `shot_is_penalty` is 0 or 1;
+  decimals; whole-number facts are integers; `%` ≤ 100; `shot_xg` ≤ 1 (team totals such as `team_xg_match` can exceed 1); `shot_is_penalty` is 0 or 1;
   `shots_last_5min` ≥ 3; `window_duration_min` = 5.
 - **Events:** 1–500 `event_ids` of the same match, strictly ascending by `seq`, ending with the triggering event
   (`source.event_seq`).
