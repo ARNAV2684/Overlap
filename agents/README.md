@@ -2,6 +2,20 @@
 
 A Microsoft Agent Framework workflow on Microsoft Foundry. It runs only on flagged moments, never on every event.
 
+## Run
+
+```bash
+uv sync                    # Python 3.12; Microsoft Agent Framework core 1.22.0 + OpenAI client 1.17.0
+uv run pytest              # no model or network calls
+uv run python smoke.py     # one call through the configured provider; settings in infra/local/env.example
+```
+
+**Model switch (settings only):** `OVERLAP_MODEL_PROVIDER=off` (default: every call refused, templates only),
+`local` (Foundry Local on this machine: `OVERLAP_LOCAL_MODEL_URL`, `OVERLAP_LOCAL_MODEL`) or `azure` (Azure OpenAI in
+Foundry: `OVERLAP_AZURE_OPENAI_ENDPOINT`, `OVERLAP_AZURE_OPENAI_DEPLOYMENT`, managed identity, no key). Every call
+goes through `models.ModelGate`: per-moment and per-match budgets and a timeout. Plan:
+[`PLAN_agents_insights-build`](../plans/active/PLAN_agents_insights-build.md).
+
 ## Define before you code
 
 | # | Spec | What it decides | Governs |
@@ -26,6 +40,9 @@ A Microsoft Agent Framework workflow on Microsoft Foundry. It runs only on flagg
 | `director.py` | Chart, timing, priority and audience for each overlay |
 | `recap_writer.py` | Half-time and full-time recaps |
 | `fallbacks.py` | Labelled template lines for when an agent fails |
-| `config.py` | Models, timeouts and limits |
+| `config.py` | Settings: provider, endpoints, timeouts, budgets, modes, languages |
+| `models.py` | The chat client for the provider, and the gate every model call goes through |
+| `translation.py` | Azure AI Translator, or a local fake |
+| `smoke.py` | One call through the configured provider |
 | `prompts/` | One prompt file per agent |
 | `evals/` | Recall, numeric accuracy, fault injection, latency |
