@@ -10,7 +10,7 @@
 | Review coordinator | Arnav |
 | Affected component owners | Arnav (archiver: producer of the stored match, `CONTRACTS.md` §4.1, `archiver/specs/storage.md`; Azure resources and roles, A3 / S4; Pranav helping). Azeem (stats engine: its panels are archived and replayed unchanged). Docs and scripts: unassigned (Arnav decides) |
 | Proposal version and date | v0.2 · 2026-10-20 (v0.1 same day; see the change note in §12) |
-| Status | In progress · Phase 1 (specs) written; spec PR not opened yet |
+| Status | In progress · Phase 1 (specs) pushed, spec PR not opened yet; Phase 2 (server read path) done except the emulator check |
 | Plan tier and file | Full · `plans/active/PLAN_web_replay.md` |
 | Repository | [ARNAV2684/Overlap](https://github.com/ARNAV2684/Overlap) |
 | Reviewed branch and commit | main · 36f5d00 |
@@ -175,7 +175,7 @@ route's own responses.
 | `web/src/components/layout/AppHeader.tsx` | Modify (M3) | Optional `section` text on `AppHeaderView` (default "Live stream"), for "/ Replay". Live screen unchanged | `screens.md` §1 | Vedant |
 | `web/src/lib/stream-source.ts`, `web/src/components/timeline/cells/ArrivalCell.tsx` | Add / modify (M3) | A stream-source context (default live) so replay rows read "Replay · archive" instead of "Live WebSocket". Live screen unchanged | `realtime.md` §5.2 | Vedant |
 | `web/src/app/replay/[id]/page.tsx` | Modify (M3) | Route: id check, not-found, render the replay view | `screens.md` §1 | Vedant |
-| `web/src/lib/__tests__/{replay-envelopes,replay-route,replay-player,replay-view}.test.ts(x)`, `replay.qa.test.ts` | Add (M2, M3) | Unit tests; the `qa` test is opt-in and reads the local archive | `realtime.md` §6 | Vedant |
+| `web/src/lib/__tests__/{archive-env,archive-store,replay-envelopes,replay-route,replay-player,replay-view}.test.ts(x)`, `replay.qa.test.ts` | Add (M2, M3) | Unit tests; the `qa` test is opt-in and reads the local archive | `realtime.md` §6 | Vedant |
 | `web/README.md` | Modify (M3) | How to archive a match locally and open its replay | — | Vedant |
 | `docs/knowledge/frontend.md`, `docs/knowledge/archiver.md` (ARCH-01 status only) | Modify (M3, own commit) | Record the replay boundary and the ARCH-01 result | Knowledge-sharing spec | Docs: unassigned (Arnav decides); Pranav told |
 | Optional (M4): `web/src/app/api/replay/route.ts`, `web/src/app/replay/page.tsx`, the match picker's link | Add / modify | List finished archived matches | `screens.md` §1 (to be added in M1 if kept) | Vedant |
@@ -260,15 +260,27 @@ is done):
       line updated (20 Oct)
 - [x] File map updated for three small additive changes found while writing the specs: `AppHeader.tsx` (`section`
       text), `ArrivalCell.tsx` with a new `stream-source.ts` (row source), and `ReplayIntro.tsx` (20 Oct)
-- [ ] Spec PR opened on `web/replay-spec` (waits for Vedant's OK to commit and push)
+- [x] Specs committed and pushed to `web/replay-spec` (`4edc684`, 21 Oct)
+- [ ] Spec PR opened from `web/replay-spec` (no open PR at 21 Oct; the branch's earlier PR #57, the plan, is closed)
 - [ ] Spec PR reviewed and merged (AC-01) · Arnav. Code in phases 2–5 can be written meanwhile, but not merged before it
 
-**Phase 2 — Server read path (M2, first half)**
-- [ ] `web/package.json`: add `@azure/cosmos`, `@azure/storage-blob`, `@azure/identity`
-- [ ] `web/.env.example`: server-only variable names with local defaults, no key value
-- [ ] `src/lib/server/archive-env.ts` and its test: settings read, missing names listed, `replay_unavailable`
-- [ ] `src/lib/server/archive-store.ts`: match document, a minute's events and panels, a tracking file, 10 s timeout
-- [ ] Assumptions checked against the local emulators: multi-member gzip files read, `ORDER BY c.seq` works
+**Phase 2 — Server read path (M2, first half)** · branch `web/replay-route`, stacked on `web/replay-spec`
+- [x] `web/package.json`: `@azure/cosmos` 4.10.1, `@azure/storage-blob` 12.34.0, `@azure/identity` 4.13.3, pinned
+      exactly (identity 4.14.0 was under two weeks old). `npm audit --omit=dev`: 0 vulnerabilities (21 Oct)
+- [x] `web/.env.example`: server-only names with local defaults; the key left empty, pointing to
+      `infra/local/env.example` (21 Oct)
+- [x] `src/lib/server/archive-env.ts` and `archive-env.test.ts`: settings read, every problem listed by name, values
+      never printed, Blob endpoint wins over the connection string as in the archiver (21 Oct)
+- [x] `src/lib/server/archive-store.ts` and `archive-store.test.ts`: match document, period markers, goals, event
+      `seq`s, a minute's events and panels, a tracking file (404 → none); partition-scoped parameterised queries;
+      10 s timeout; failures become `ArchiveStoreError` naming the operation only (21 Oct)
+- [x] Multi-member gzip checked: Node's `gunzipSync` reads every member, including a file written by Python's `gzip`
+      as the archiver does (21 Oct)
+- [ ] Checked against the local emulators: `ORDER BY c.seq` and range queries, a real tracking file, the emulator over
+      `http` with endpoint discovery off. **Not run:** Docker isn't installed on this machine, so the emulators can't
+      start here. Moved to Phase 3's AC-02 run
+- [x] Lint, typecheck, all tests (392 passed, 1 opt-in skipped) and build pass (21 Oct). The build doesn't yet load
+      the Azure SDKs: no route imports `archive-store.ts` until Phase 3
 
 **Phase 3 — Envelope builder and route (M2, second half)**
 - [ ] `src/lib/replay-envelopes.ts`: manifest, chunk list, status building, bundles, order, `seq`, Cosmos fields
