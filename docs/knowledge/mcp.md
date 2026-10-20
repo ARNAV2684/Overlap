@@ -1,6 +1,6 @@
 # MCP context tools
 
-Last verified: 2026-10-19 · source main `a61166b` · source inspection, not fresh runtime certification.
+Last verified: 2026-10-20 · main `a1cef33` plus open PRs #58–#62 (labelled) · source inspection; F2 live run recorded.
 
 ## Purpose
 
@@ -8,7 +8,7 @@ Provides bounded read-only access to one moment’s frozen context.
 
 ## Ownership
 
-Registry: Unassigned (Arnav decides). See [registry](../../plans/REGISTRY.md). Team-reported: User reports Pranav owns MCP; registry has not recorded it.
+Registry: Arnav from 20 Oct (registry PR #60, open). See [registry](../../plans/REGISTRY.md). Pranav built the first tool and client (#45).
 
 ## Inputs and outputs
 
@@ -22,7 +22,7 @@ Specifications: [`mcp_server/specs/tools.md`](../../mcp_server/specs/tools.md).
 
 ## Status and evidence
 
-Implemented local first tool and protocol client, merged in PR #45. Other tool modules remain placeholders and are not advertised. No hosted agent integration.
+Implemented local first tool and protocol client, merged in PR #45. PR #58 (open) makes the reader accept every moment the stats engine writes (stats D-02: eight triggers, `context.players`, 1–500 event ids), tested on the 21 moments of `SYN-1017`; see [tools spec §2a](../../mcp_server/specs/tools.md). Other tool modules remain placeholders and are not advertised (milestone M2 of the build plan). No hosted agent integration.
 
 Evidence / checks to inspect: [`mcp_server/tests`](../../mcp_server/tests), [`plans/active/PLAN_agents_ai-insights-mcp_S2.md`](../../plans/active/PLAN_agents_ai-insights-mcp_S2.md). Existing recorded tests are attributed to their handover; no runtime suite was re-run for these notes.
 
