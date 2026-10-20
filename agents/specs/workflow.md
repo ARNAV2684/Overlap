@@ -1,27 +1,31 @@
 # Agent workflow spec
 
-> **Status: draft for review.** First shot-cluster slice. Governs `workflow.py`, `state.py`, `fallbacks.py`.
-> Owner: Pranav; storage/delivery decisions require Arnav and upstream/downstream owners.
-> [S1 plan](../../plans/active/PLAN_agents_ai-insights-mcp_S1.md) · [proposed contracts §10](../../CONTRACTS.md).
+> **Status: agreed for the build** (Arnav, layer 5 owner, 20 Oct 2026). Governs `workflow.py`, `state.py`,
+> `fallbacks.py`. Plan: [`PLAN_agents_insights-build`](../../plans/active/PLAN_agents_insights-build.md).
+> Extends Pranav's first slice (#44) from `shot_cluster` to all eight triggers and seven agents; its state, lease,
+> budget, outbox and recovery design is unchanged. [Contracts §10](../../CONTRACTS.md).
 
 ## 1. Chain and boundaries
 
-`immutable moment -> validate/admit -> bounded MCP context -> draft two lines -> check -> durable outbox -> publish`.
+`immutable moment -> spotter -> analyst (MCP context) -> narrator -> fact-checker -> translator -> director -> durable outbox -> publish`;
+`full time -> recap writer -> fact-checker -> translator -> director -> outbox -> publish`.
 
 | Stage | Input | Output / failure |
 |---|---|---|
 | Validate | §10.2 immutable moment | Identity/version/window/fact validation; invalid -> rejected, no model call |
-| Spotter policy | Valid shot cluster + job/budget state | Admit, dedupe, suppress expired/over-cap; no model call |
+| Spotter | Valid moment + job/budget state + recent admitted moments | Code rules admit/merge/suppress; optional small-model rank of normal moments ([agents](agents.md) §1) |
 | Context | Bound match/moment/version | Real `get_match_state` MCP response; transient/missing source -> template if evidence/name source is valid; identity/version/scope conflict -> reject |
-| Analyst + narrator | Two facts, permitted team names and scoped context | One model call for bounded interpretation and casual/analyst §5.1 lines |
+| Analyst | Evidence facts, names, MCP context | One model call: bounded interpretation (no numbers) and the fact keys that matter |
+| Narrator | Facts, interpretation, names, requested modes | One model call: English §5.1 lines for `casual`, `analyst`, `player`, `club` |
 | Numeric check | Each line and evidence | Ordered claim coverage and value/unit equality, or rejection reasons |
 | Semantic check | Interpretation, both lines, evidence and permitted context | Separate model verdict with per-line support; no pass on malformed verdict |
 | Rewrite | Failed candidate + bounded reasons | At most two candidate rewrites; each repeats both checks |
-| Director | Checked model pair or approved template pair | One §10.3 overlay and a durable publication intent |
+| Translator | Checked English lines | `es`, `hi`, `fr` lines via Azure AI Translator; each re-checked; failed language -> translated template or suppressed |
+| Director | Checked lines or approved templates per mode and language | One §10.3 overlay per moment, deliveries per audience group, player tags; a durable publication intent |
 | Publisher | Outbox + current base playhead | Persist audience deliveries, send/recover; terminal outcome per audience |
 
-Roles are logical responsibilities, not seven separately hosted agents. This first slice combines analyst/narrator
-in one structured candidate request to bound calls. See [agents](agents.md), [prompts](prompts.md) and
+The seven agents are separate roles with their own prompts and outputs, recorded in the shared job document, and
+run in sequence inside one job. They need not be separately hosted services. See [agents](agents.md), [prompts](prompts.md) and
 [fact-checking](fact-checking.md). Model output never directly executes a tool, changes an ID or publishes a card.
 
 ## 2. Shared state and storage
@@ -67,9 +71,9 @@ All values below are **proposed**, unmeasured defaults for owner review. A timeo
 | Moment workflow deadline | 15 wall seconds from first durable observation, including queue wait; persist once |
 | MCP | 2 seconds/call, at most 2 calls including one transient retry |
 | Model request | 4 seconds or remaining deadline minus 1 second for fallback, whichever is smaller |
-| Total model requests | At most 6 per moment, covering initial candidate/check and two rewrite/check pairs; transient retries consume the same cap |
+| Total model requests | At most 12 per moment: spotter rank 1, analyst 1, narrator 1, semantic check 1, two rewrite/check pairs 4, semantic checks of translations 3; transient retries consume the same cap. Translator service calls are counted separately |
 | Prompt/output cap | At most 3,000 input tokens and 800 generated tokens/request; no silent truncation of evidence |
-| Match budget | At most 12 admitted model jobs, 50 model calls and 200,000 total metered/reserved tokens; a separately approved monetary cap is also mandatory |
+| Match budget | At most 12 admitted model jobs plus the recap, 120 model calls and 400,000 total metered/reserved tokens; the $25 Azure cap (Arnav, 20 Oct) also applies across all matches |
 | Concurrency | 1 running job per match, 2 globally; at most 2 queued per match; suppress oldest queued overflow durably |
 | Freshness | Same period and <=300,000 match ms behind playhead, per §10; unknown playhead -> hold within deadline, then suppress |
 | Display | Up to 6 wall seconds at 1x and 20x; remove early if live eligibility ends |
@@ -99,8 +103,10 @@ Expiry wins over displaying a stale fallback.
 | One audience accepted, other expired | Retain individual outcomes; mark partially_expired; do not duplicate the accepted card |
 | Restart beyond deadline / period boundary | Suppress or expire; never reset lifetime |
 
-Fallback: `<team name> have taken <shots> shots in the last <duration> minutes.` Both values come from validated
-facts; run the deterministic check even on templates. `verified=false,fallback=true` and a visible template label
+Fallback: one approved template per trigger and mode, filled only from validated facts and context names
+(for example `shot_cluster`: `<team name> have taken <shots> shots in the last <duration> minutes.`; `red_card`:
+`<team name> are down to <players>.`). Templates live in `fallbacks.py`; run the deterministic check even on
+templates, and translate them like any line. `verified=false,fallback=true` and a visible template label
 are mandatory. Reason stays in audit state, not an invented public overlay field.
 
 ## 5. Triggering and approval
