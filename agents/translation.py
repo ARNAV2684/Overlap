@@ -22,7 +22,16 @@ class TranslationError(RuntimeError):
 
 
 class Translator(Protocol):
-    async def translate(self, texts: list[str], to: str) -> list[str]: ...
+    async def translate(self, texts: list[str], to: str, keep: list[str] | None = None) -> list[str]: ...
+
+
+def protect(text: str, keep: list[str]) -> str:
+    """Mark names so Azure AI Translator leaves them as written (dynamic dictionary, longest name first)."""
+    for name in sorted({k for k in keep if k}, key=len, reverse=True):
+        if name in text:
+            safe = name.replace('"', "")
+            text = text.replace(name, f'<mstrans:dictionary translation="{safe}">{safe}</mstrans:dictionary>')
+    return text
 
 
 def _check(texts: list[str], to: str) -> None:
@@ -36,9 +45,9 @@ class FakeTranslator:
     """Offline stand-in: returns the English text marked with the language, so numbers and names are untouched.
     It proves the plumbing, never translation quality."""
 
-    async def translate(self, texts: list[str], to: str) -> list[str]:
+    async def translate(self, texts: list[str], to: str, keep: list[str] | None = None) -> list[str]:
         _check(texts, to)
-        return [f"[{to}] {t}" for t in texts]
+        return [f"({to}) {t}" for t in texts]
 
 
 class AzureTranslator:
@@ -53,10 +62,11 @@ class AzureTranslator:
             client = TextTranslationClient(endpoint=endpoint, credential=credential, region=region or None)
         self.client = client
 
-    async def translate(self, texts: list[str], to: str) -> list[str]:
+    async def translate(self, texts: list[str], to: str, keep: list[str] | None = None) -> list[str]:
         _check(texts, to)
+        body = [protect(t, keep or []) for t in texts]
         try:
-            items = await self.client.translate(body=list(texts), to_language=[to], from_language="en")
+            items = await self.client.translate(body=body, to_language=[to], from_language="en")
         except Exception as e:                                # the service, network or credential failed
             raise TranslationError(f"translator failed for {to}") from e
         out = []

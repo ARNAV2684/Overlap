@@ -15,7 +15,7 @@ def run(coro):
 
 
 def test_fake_keeps_the_text_and_marks_the_language():
-    assert run(FakeTranslator().translate([LINE], "hi")) == [f"[hi] {LINE}"]
+    assert run(FakeTranslator().translate([LINE], "hi")) == [f"(hi) {LINE}"]
 
 
 @pytest.mark.parametrize("to", ["en", "de", ""])

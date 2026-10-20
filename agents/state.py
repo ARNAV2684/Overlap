@@ -55,6 +55,8 @@ class Store(Protocol):
     async def read(self, match_id: str, doc_id: str) -> tuple[dict, str] | None: ...
     async def replace(self, doc: dict, etag: str) -> str: ...                  # raises PreconditionFailed
     async def moments(self, match_id: str | None = None, since_ts: int = 0) -> list[dict]: ...
+    async def of_kind(self, match_id: str, kind: str) -> list[dict]: ...      # one partition, one document kind
+    async def match_state(self, match_id: str) -> dict | None: ...           # live/match_state `state` (§4.2)
 
 
 class MemoryStore:
@@ -62,6 +64,7 @@ class MemoryStore:
 
     def __init__(self):
         self.docs: dict[tuple[str, str], tuple[dict, str]] = {}
+        self.states: dict[str, dict] = {}                      # match_id -> match_state document
         self.version = 0
 
     def _etag(self) -> str:
@@ -95,12 +98,21 @@ class MemoryStore:
         return [json.loads(json.dumps(d)) for (m, _), (d, _) in sorted(self.docs.items())
                 if d.get("kind") == "moment" and (match_id is None or m == match_id) and d.get("_ts", 0) >= since_ts]
 
+    async def of_kind(self, match_id: str, kind: str) -> list[dict]:
+        return [json.loads(json.dumps(d)) for (m, _), (d, _) in sorted(self.docs.items())
+                if m == match_id and d.get("kind") == kind]
+
+    async def match_state(self, match_id: str) -> dict | None:
+        doc = self.states.get(match_id)
+        return json.loads(json.dumps(doc)) if doc is not None else None
+
 
 class CosmosStore:
     """Cosmos `live/moments` (partition `/match_id`). Key only for the local emulator; managed identity on Azure."""
 
-    def __init__(self, container: Any, closers: tuple = ()):
+    def __init__(self, container: Any, closers: tuple = (), states: Any = None):
         self.container = container
+        self.states = states                                   # live/match_state, read only
         self._closers = closers
 
     @classmethod
@@ -117,7 +129,7 @@ class CosmosStore:
             credential = DefaultAzureCredential()
             client, closers = CosmosClient(endpoint, credential=credential), (credential,)
         db = client.get_database_client(env.get("OVERLAP_COSMOS_DATABASE", "live"))
-        return cls(db.get_container_client("moments"), (client, *closers))
+        return cls(db.get_container_client("moments"), (client, *closers), db.get_container_client("match_state"))
 
     async def close(self) -> None:
         """Close the client (and credential) this store opened."""
@@ -156,6 +168,20 @@ class CosmosStore:
         items = self.container.query_items(query, parameters=params, partition_key=match_id) if match_id \
             else self.container.query_items(query, parameters=params)
         return [d async for d in items]
+
+    async def of_kind(self, match_id: str, kind: str) -> list[dict]:
+        items = self.container.query_items("SELECT * FROM c WHERE c.kind = @kind",
+                                           parameters=[{"name": "@kind", "value": kind}], partition_key=match_id)
+        return [d async for d in items]
+
+    async def match_state(self, match_id: str) -> dict | None:
+        from azure.cosmos.exceptions import CosmosResourceNotFoundError
+        if self.states is None:
+            return None
+        try:
+            return await self.states.read_item("state", partition_key=match_id)
+        except CosmosResourceNotFoundError:
+            return None
 
 
 # --- jobs ---------------------------------------------------------------------------------------------------------
@@ -312,6 +338,27 @@ class DurableBudget:
 
         await self._update(match_id, change)
         return DurableReservation(match_id, moment_id, self.reserve_tokens)
+
+    async def claim_model_job(self, match_id: str, moment_id: str, *, high: bool, max_jobs: int,
+                              reserve: int) -> bool:
+        """A model-job slot for this moment (idempotent). Normal moments leave `reserve` slots for high ones."""
+        got: dict[str, bool] = {}
+
+        def change(doc: dict) -> None:
+            jobs = doc.setdefault("model_jobs", [])
+            if moment_id in jobs:
+                got["ok"] = True
+                return
+            got["ok"] = len(jobs) < (max_jobs if high else max_jobs - reserve)
+            if got["ok"]:
+                jobs.append(moment_id)
+
+        await self._update(match_id, change)
+        return got["ok"]
+
+    async def model_jobs_used(self, match_id: str) -> int:
+        found = await self.store.read(match_id, f"budget:{match_id}")
+        return len(found[0].get("model_jobs", [])) if found else 0
 
     async def settle(self, r: DurableReservation, used_tokens: int | None) -> None:
         if r.settled:
