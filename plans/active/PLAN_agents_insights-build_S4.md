@@ -94,7 +94,7 @@ Scanned at `402c0b4` on 2026-10-20: no open PRs touch `agents/` or `functions/mo
 |---|---|---|---|
 | AC-04a | Each agent's rules hold with a fake model and fake MCP: spotter merge, thinning and slots; analyst drops post-moment numbers and digits; narrator lines per mode, club per team, player per player; checker rejects every fault in `fact-checking.md` §3; rewrites then template; translator normalisation and drops; director bodies; recap pack and lines | Unit tests, no model or network | Pass: 139 agents tests (fact-checker 38 incl. every `fact-checking.md` §3 fault, names, translations in es/fr/hi; agents 31 with a scripted model and fake MCP) |
 | AC-04b | Any model failure (off, timeout, budget, invalid JSON, schema breach) falls back to the template for that step only and never publishes an unchecked number | Fault-injection tests | Pass: off, timeout, budget, deadline, invalid JSON, inconsistent verdicts, translator down — each falls back for that step only |
-| AC-04c | On SYN-1017 and ≥ 3 recorded matches, all seven agents run locally with Foundry Local and produce lines for four modes and four languages; zero wrong numbers in the outboxes | `run_match.py` + numeric re-check of every outbox line | Pass on SYN-1017 (fixture), SYN-0507, SYN-0508 with phi-4-mini on Foundry Local: 0 wrong numbers in 1,356 published lines (en/es/hi/fr, four modes) and in every recap; SYN-0509 rerun in progress (see handover) |
+| AC-04c | On SYN-1017 and ≥ 3 recorded matches, all seven agents run locally with Foundry Local and produce lines for four modes and four languages; zero wrong numbers in the outboxes | `run_match.py` + numeric re-check of every outbox line | Pass on SYN-1017 (fixture), SYN-0507, SYN-0508 and SYN-0509 with phi-4-mini on Foundry Local: 0 wrong numbers in 1,824 published lines (en/es/hi/fr, four modes) and in every recap |
 | AC-04d | The analyst reads context through the real MCP server process | Live run against the local Cosmos | Pass: on SYN-0507/0508 the analyst called the MCP server process (Cosmos source) for frozen context, live state, player, pressing and compare-periods tools |
 
 ## 8. Risks and decisions needed
@@ -119,9 +119,12 @@ Scanned at `402c0b4` on 2026-10-20: no open PRs touch `agents/` or `functions/mo
   to the match's names, and the prompts say names come only from the input; (2) the independent re-check compared a
   fallback translation with the model's English line (a false alarm; the published numbers were right): it now
   checks a fallback translation against its own template.
-- **SYN-0509:** its first rerun ran while Foundry Local was down after the laptop slept, so every call fell back
-  (0 wrong numbers, but not a model run); the rerun with the restarted server is in progress and its result will
-  be added to the PR.
+- **SYN-0509:** a first rerun ran while Foundry Local was down after the laptop slept (every call fell back; 0 wrong
+  numbers, but not a model run). After restarting the server: 468 lines, 8 verified, 0 wrong, recap
+  "Kestlebury United 3–3 Orrinford Albion".
+- **Quality gap for M6/M7:** the local model's meaning check passed a verified line saying a player was "on the
+  verge of" a chance that had already happened. Wording like this is beyond the code check; it is what the Azure
+  model's meaning check and Azeem's review (M6) are for.
 - **Dependency:** `mcp==1.30.0` was installed from PyPI by an automatic `uv` sync before it was approved; it is the
   MCP server's existing pin.
 - **Not done here:** sending (M5), the evaluation bench and Azeem's review (M6), Azure (M7).
