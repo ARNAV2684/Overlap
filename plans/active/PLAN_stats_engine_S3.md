@@ -95,7 +95,7 @@
 | Overlapping file or contract | Other plan / PR / branch | Its owner | Resolution | Status |
 |---|---|---|---|---|
 | Cosmos `moments` documents (`CONTRACTS.md` §10.2) | `PLAN_agents_ai-insights-mcp.md`, `_S1`, `_S2` (MCP reader, workflow) | Pranav | No shared file edit. His reader must accept the agreed `context.players` and more trigger types (D-02). The guide and PR give him the exact list | Pending (Pranav) |
-| `plans/active/PLAN_stats_engine*.md` | `PLAN_agents_ai-insights-mcp_S1.md`, `PLAN_plans_housekeeping.md` | Pranav, Arnav | Read-only references; housekeeping merged in #26 | Agreed (no shared edit) |
+| `plans/active/PLAN_stats_engine*.md` | `PLAN_agents_ai-insights-mcp_S1.md`, `PLAN_plans_housekeeping.md`, `PLAN_docs_graphify-knowledge-map.md` (#54's scope report) | Pranav, Arnav | Read-only references: the agents plan reads these as its producer's plans, the knowledge map links them, housekeeping merged in #26. None edits them | Agreed (no shared edit) |
 | `docs/knowledge/stats-engine.md` | `PLAN_docs_graphify-knowledge-map.md`, `PLAN_docs_knowledge-sharing.md` | Pranav | Updated in this PR, as the rule asks. STATS-01 / MCP-01 are updated with the AC-08 evidence | Agreed |
 
 **Scanned at `36f5d00` on 2026-10-20.** Sources checked: plans ✓ · PRs ✓ (none open) · branches ✓ · hot files ✓
