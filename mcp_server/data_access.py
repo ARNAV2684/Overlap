@@ -21,11 +21,20 @@ class SourceFailure(Exception):
         self.reason, self.transient = reason, transient
 
 
+DOC_CONTAINERS = ("match_state", "stats")          # read-only analyst sources (tools.md §2b)
+
+
 class Reader(Protocol):
     source: str
 
     async def read(self, identity: Identity) -> dict: ...
+    async def read_doc(self, container: str, match_id: str, doc_id: str) -> dict: ...
     async def close(self) -> None: ...
+
+
+def _check_doc_args(container: str, doc_id: str) -> None:
+    if container not in DOC_CONTAINERS or not doc_id.replace("-", "").isalnum():
+        raise SourceFailure("outside_scope")
 
 
 def local_cosmos_settings() -> tuple[str, str]:
@@ -70,6 +79,22 @@ class FixtureReader:
         except OSError:
             raise SourceFailure("source_error") from None
 
+    async def read_doc(self, container: str, match_id: str, doc_id: str) -> dict:
+        """Fixture layout: <dir>/<container>/<match_id>/<doc_id>.json."""
+        _check_doc_args(container, doc_id)
+        base = (self.directory / container / match_id).resolve()
+        path = (base / f"{doc_id}.json").resolve()
+        if path.parent != base or self.directory not in base.parents:
+            raise SourceFailure("source_error")
+        try:
+            return read_json(path)
+        except FileNotFoundError:
+            raise SourceFailure("not_found") from None
+        except (ValueError, TypeError, UnicodeError):
+            raise SourceFailure("context_mismatch") from None
+        except OSError:
+            raise SourceFailure("source_error") from None
+
     async def close(self) -> None:
         pass
 
@@ -99,6 +124,25 @@ class CosmosReader:
         except (ServiceRequestError, ServiceResponseError):
             raise SourceFailure("source_error", transient=True) from None
 
+    async def read_doc(self, container: str, match_id: str, doc_id: str) -> dict:
+        _check_doc_args(container, doc_id)
+        try:
+            if not self.ready:
+                await self.client.__aenter__()
+                self.ready = True
+            client = self.client.get_database_client("live").get_container_client(container)
+            doc = await client.read_item(doc_id, partition_key=match_id)
+            if len(encoded(doc)) > DOCUMENT_LIMIT:
+                raise SourceFailure("response_too_large")
+            return doc
+        except exceptions.CosmosResourceNotFoundError:
+            raise SourceFailure("not_found") from None
+        except exceptions.CosmosHttpResponseError as exc:
+            transient = exc.status_code in (408, 429, 500, 502, 503, 504)
+            raise SourceFailure("source_error", transient=transient) from None
+        except (ServiceRequestError, ServiceResponseError):
+            raise SourceFailure("source_error", transient=True) from None
+
     async def close(self) -> None:
         await self.client.close()
 
@@ -109,6 +153,14 @@ def make_reader(source: str, directory: Path) -> Reader:
     if source == "cosmos":
         return CosmosReader()
     raise ValueError("Choose explicitly between fixture and cosmos")
+
+
+async def bounded_doc(reader: Reader, container: str, match_id: str, doc_id: str, timeout: float = 2.0) -> dict:
+    try:
+        async with asyncio.timeout(timeout):
+            return await reader.read_doc(container, match_id, doc_id)
+    except TimeoutError:
+        raise SourceFailure("source_timeout", transient=True) from None
 
 
 async def bounded_read(reader: Reader, identity: Identity, timeout: float = 2.0) -> dict:

@@ -1,0 +1,50 @@
+{
+ "match_id": "SYN-1017",
+ "match_ms": 3574000,
+ "clock": "55:33",
+ "period": 2,
+ "source_seq": 1353,
+ "score": {
+  "home": 2,
+  "away": 0
+ },
+ "teams": {
+  "home": {
+   "team_id": "KES",
+   "possession_pct": 54,
+   "shots": 8,
+   "shots_on_target": 5,
+   "xg": 0.92,
+   "passes": 292,
+   "pass_completion_pct": 85,
+   "ppda_last_10min": null,
+   "pressures_per_opp_pass_last_10min": 1.0,
+   "momentum_share_last_10min_pct": 60,
+   "press_height_last_10min_m": 34
+  },
+  "away": {
+   "team_id": "ORR",
+   "possession_pct": 46,
+   "shots": 4,
+   "shots_on_target": 3,
+   "xg": 0.12,
+   "passes": 250,
+   "pass_completion_pct": 83,
+   "ppda_last_10min": null,
+   "pressures_per_opp_pass_last_10min": 0.57,
+   "momentum_share_last_10min_pct": 40,
+   "press_height_last_10min_m": 55
+  }
+ },
+ "momentum": {
+  "period": 2,
+  "bucket": 2,
+  "home": 0.0,
+  "away": 0.0
+ },
+ "low_sample": [
+  "teams.home.ppda_last_10min",
+  "teams.away.ppda_last_10min"
+ ],
+ "id": "stats-003574000"
+}

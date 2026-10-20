@@ -17,9 +17,9 @@ from mcp_server.server import SAMPLE_DIR, TOOL_NAME
 @pytest.mark.anyio
 async def test_real_initialize_list_call_and_scope(moment):
     async with session_for(moment.identity, "fixture") as session:
-        listed = (await session.list_tools()).tools
-        assert [t.name for t in listed] == [TOOL_NAME]
-        assert listed[0].annotations.readOnlyHint
+        listed = sorted((await session.list_tools()).tools, key=lambda t: t.name != TOOL_NAME)
+        assert listed[0].name == TOOL_NAME and len(listed) == 6
+        assert all(t.annotations.readOnlyHint for t in listed)
         assert listed[0].inputSchema["additionalProperties"] is False
         args = moment.identity.model_dump()
         result = await session.call_tool(TOOL_NAME, args)
