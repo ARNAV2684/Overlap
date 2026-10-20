@@ -9,6 +9,7 @@
 # Local (from agents/, which has the agents' dependencies):
 #   uv run python ../functions/moment_trigger.py --match SYN-0508          # poll one match every second
 #   uv run python ../functions/moment_trigger.py --once                    # one pass over every match, then stop
+#   (with OVERLAP_WEBPUBSUB_ENDPOINT set it also publishes; --no-publish writes outboxes only)
 # Only `kind = "moment"` documents start a job; the workflow's own job, budget and outbox records never do.
 
 from __future__ import annotations
@@ -55,9 +56,11 @@ async def handle_batch(docs: list[dict], deps=None) -> list[dict]:
     return results
 
 
-async def poll(deps, match_id: str | None = None, interval_s: float = 1.0, once: bool = False) -> dict[str, int]:
+async def poll(deps, match_id: str | None = None, interval_s: float = 1.0, once: bool = False,
+               publisher=None) -> dict[str, int]:
     """Local stand-in for the change feeds: read new moments every `interval_s` and process each once; when a
-    match's final state says full time, run its recap once (agents.md §7)."""
+    match's final state says full time, run its recap once (agents.md §7); then let the publisher send what is
+    live, expire what is late and send player tags (CONTRACTS.md §10.4, §10.6)."""
     from workflow import process_recap
     seen: set[str] = set()
     matches: set[str] = {match_id} if match_id else set()
@@ -79,17 +82,40 @@ async def poll(deps, match_id: str | None = None, interval_s: float = 1.0, once:
                 recapped.add(m)
                 log.info("recap %s: %s", m, result["status"])
                 totals[f"recap_{result['status']}"] = totals.get(f"recap_{result['status']}", 0) + 1
+        if publisher is not None:
+            for m in sorted(matches):
+                for k, v in (await publisher.run_once(m)).items():
+                    totals[f"published_{k}"] = totals.get(f"published_{k}", 0) + v
         if once:
             return totals
         await asyncio.sleep(interval_s)
 
 
-async def run(match_id: str | None, interval_s: float, once: bool) -> dict[str, int]:
+async def make_publisher(settings):
+    """The insights publisher on Cosmos `overlays` and Web PubSub (the stand-in locally)."""
+    import os
+
+    from publisher import Publisher, WebPubSubSender
+    from state import CosmosStore
+    moments = CosmosStore.from_env()
+    overlays = CosmosStore.from_env(container="overlays")
+    await overlays.create_if_local()
+    sender = WebPubSubSender(os.environ["OVERLAP_WEBPUBSUB_ENDPOINT"], os.environ.get("OVERLAP_WEBPUBSUB_HUB", "live"))
+    return Publisher(moments, overlays, sender, settings), (moments, overlays, sender)
+
+
+async def run(match_id: str | None, interval_s: float, once: bool, publish: bool = True) -> dict[str, int]:
+    import os
     deps = make_deps()
+    publisher, closers = None, ()
+    if publish and os.environ.get("OVERLAP_WEBPUBSUB_ENDPOINT"):
+        publisher, closers = await make_publisher(deps.settings)
     try:
-        return await poll(deps, match_id, interval_s, once)
+        return await poll(deps, match_id, interval_s, once, publisher)
     finally:
         await deps.store.close()
+        for c in closers:
+            await c.close()
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -97,11 +123,12 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--match", help="only this match (default: every match)")
     ap.add_argument("--once", action="store_true", help="one pass, then stop")
     ap.add_argument("--interval", type=float, default=1.0)
+    ap.add_argument("--no-publish", action="store_true", help="write outboxes only; don't send (no publisher)")
     args = ap.parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
     for noisy in ("azure", "agent_framework"):
         logging.getLogger(noisy).setLevel(logging.WARNING)
-    totals = asyncio.run(run(args.match, args.interval, args.once))
+    totals = asyncio.run(run(args.match, args.interval, args.once, not args.no_publish))
     log.info("totals %s", totals)
     return 0
 
