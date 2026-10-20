@@ -4,6 +4,7 @@ Used locally when the Functions host can't read the Event Hubs emulator, and by 
 store and sender as the Azure Function; only the way messages arrive differs.
 
     uv run python relay_runner.py            # settings from the environment (infra/local/env.example)
+    uv run python relay_runner.py --from-latest   # skip what arrived while the relay was off (clears its positions)
 
 Reads `match-events` and `match-tracking` as consumer group `relay`. Reading positions are saved in Blob Storage
 (Azurite locally) only after a batch's envelopes and state are saved, so a restart resumes where it left off.
@@ -56,11 +57,25 @@ def consumer(hub: str, store: BlobCheckpointStore) -> EventHubConsumerClient:
                                   credential=DefaultAzureCredential(), checkpoint_store=store)
 
 
+def clear_positions(group: str) -> int:
+    """Delete this consumer group's saved reading positions, so reading starts at the newest messages. For a local
+    relay that was off while matches streamed: otherwise it replays their events without their setups."""
+    conn = os.environ.get("AzureWebJobsStorage", "UseDevelopmentStorage=true")
+    if conn.strip().rstrip(";") == "UseDevelopmentStorage=true":
+        conn = AZURITE
+    container = BlobServiceClient.from_connection_string(conn).get_container_client(CHECKPOINT_CONTAINER)
+    names = [b.name for b in container.list_blobs() if f"/{group}/checkpoint/" in b.name.lower()]
+    for name in names:
+        container.delete_blob(name)
+    return len(names)
+
+
 class Runner:
-    def __init__(self, batch_size: int = 100):
+    def __init__(self, batch_size: int = 100, from_latest: bool = False):
         store, sender = from_env()
         self.relay = R.Relay(store, sender)
         self.batch_size = batch_size
+        self.start = "@latest" if from_latest else "-1"
         self.stop = threading.Event()
         self.clients: list[EventHubConsumerClient] = []
         self.lock = threading.Lock()
@@ -88,7 +103,7 @@ class Runner:
         self.clients.append(client)
         with client:
             client.receive_batch(on_event_batch=self._on_batch(hub), on_error=self._on_error,
-                                 max_batch_size=self.batch_size, max_wait_time=0.1, starting_position="-1")
+                                 max_batch_size=self.batch_size, max_wait_time=0.1, starting_position=self.start)
 
     def _ticks(self):
         last_report = time.monotonic()
@@ -123,10 +138,16 @@ class Runner:
 def main(argv=None):
     ap = argparse.ArgumentParser(prog="relay_runner")
     ap.add_argument("--batch-size", type=int, default=100)
+    ap.add_argument("--from-latest", action="store_true",
+                    help="start at the newest messages, clearing this relay's saved positions (local catch-up)")
     args = ap.parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
     logging.getLogger("azure").setLevel(logging.WARNING)
-    runner = Runner(args.batch_size)
+    if args.from_latest:
+        checkpoint_store()                                   # creates the container if it's missing
+        cleared = clear_positions(os.environ.get("OVERLAP_RELAY_CONSUMER_GROUP", "relay"))
+        log.info("cleared %d saved positions; reading from the newest messages", cleared)
+    runner = Runner(args.batch_size, args.from_latest)
     signal.signal(signal.SIGINT, lambda *_: runner.stop.set())
     runner.run()
 
