@@ -127,7 +127,8 @@ class FakeBatch:
         self.items.append(data)
 
 
-def test_hub_sender_sends_kind_stats_and_retries_then_skips():
+def test_hub_sender_sends_kind_stats_and_retries_then_skips(monkeypatch):
+    monkeypatch.setattr(publish, "RETRY_WAIT_S", (0.0, 0.0))
     ok = publish.HubSender(FlakyProducer(failures=2))
     ok.send("SYN-0001", {"match_id": "SYN-0001", "match_ms": 1000})
     batch = ok.producer.sent[0]

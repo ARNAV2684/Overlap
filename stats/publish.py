@@ -11,9 +11,12 @@
 
 from __future__ import annotations
 
+import json
 import logging
 import math
 import os
+import queue
+import threading
 import time
 from collections.abc import Callable
 from typing import Protocol
@@ -27,11 +30,12 @@ log = logging.getLogger("stats.publish")
 HEAVY_EVERY_S = 60
 STATE_EVERY_S = 5
 SEND_ATTEMPTS = 3
+RETRY_WAIT_S = (1.0, 10.0)            # a throttled hub asks for 10 s
 MATCH_STATE_CONTAINER = "match_state"
 
 
 class Sender(Protocol):
-    def send(self, match_id: str, panel: dict) -> None: ...
+    def send(self, match_id: str, panel: dict, received_at: float | None = None) -> None: ...
 
 
 class StateStore(Protocol):
@@ -84,22 +88,18 @@ def match_state_doc(state: MatchState, panel: dict | None) -> dict:
 class Publisher:
     """Decides when panels and match_state documents are due, builds them and hands them on."""
 
-    def __init__(self, sender: Sender, store: StateStore | None = None, clock: Callable[[], float] = time.monotonic):
+    def __init__(self, sender: Sender, store: StateStore | None = None):
         self.sender = sender
         self.store = store
-        self.clock = clock
         self.next_second: dict[str, int] = {}
         self.last_panel: dict[str, dict] = {}
-        self.latency_s: dict[str, list[float]] = {}
 
     def _emit(self, state: MatchState, second: int, heavy: bool, received_at: float | None) -> None:
         panel = light_panel(state, second)
         if heavy:
             panel["heavy"] = whole_match.heavy(state)
-        self.sender.send(state.match_id, panel)
+        self.sender.send(state.match_id, panel, received_at)
         self.last_panel[state.match_id] = panel
-        if received_at is not None:
-            self.latency_s.setdefault(state.match_id, []).append(self.clock() - received_at)
         if self.store is not None and second % STATE_EVERY_S == 0:
             self.store.upsert(match_state_doc(state, panel))
 
@@ -138,7 +138,7 @@ class ListSender:
     def __init__(self):
         self.panels: dict[str, list[dict]] = {}
 
-    def send(self, match_id: str, panel: dict) -> None:
+    def send(self, match_id: str, panel: dict, received_at: float | None = None) -> None:
         self.panels.setdefault(match_id, []).append(panel)
 
 
@@ -153,8 +153,8 @@ class DictStore:
 
 
 class HubSender:
-    """Sends panels on match-events as kind=stats (publishing.md §2). Retries a send up to 3 times, then skips that
-    second's panel: the next one supersedes it."""
+    """Sends panels on match-events as kind=stats (publishing.md §2), as many as fit in one batch. A batch is retried
+    up to 3 times, then its panels are skipped: the next ones supersede them."""
 
     def __init__(self, producer):
         self.producer = producer
@@ -171,27 +171,117 @@ class HubSender:
         return cls(EventHubProducerClient(os.environ["OVERLAP_EVENTHUBS_NAMESPACE"], hub,
                                           credential=DefaultAzureCredential()))
 
-    def send(self, match_id: str, panel: dict) -> None:
-        import json
+    def send(self, match_id: str, panel: dict, received_at: float | None = None) -> None:
+        self.send_many(match_id, [panel])
 
-        from azure.core.exceptions import AzureError
+    def send_many(self, match_id: str, panels: list[dict]) -> int:
+        """Sends panels in order, packing each batch as full as it goes. Returns how many were sent."""
         from azure.eventhub import EventData
-        for attempt in range(SEND_ATTEMPTS):
-            try:
-                batch = self.producer.create_batch(partition_key=match_id)
-                data = EventData(json.dumps(panel, separators=(",", ":")))
+        sent, i = 0, 0
+        while i < len(panels):
+            batch = self.producer.create_batch(partition_key=match_id)
+            start = i
+            while i < len(panels):
+                data = EventData(json.dumps(panels[i], separators=(",", ":")))
                 data.properties = {"kind": "stats", "match_id": match_id}
                 data.content_type = "application/json"
-                batch.add(data)
+                try:
+                    batch.add(data)
+                except ValueError:                     # the batch is full
+                    if i == start:
+                        raise
+                    break
+                i += 1
+            if self._send_batch(match_id, batch, panels[start]["match_ms"]):
+                sent += i - start
+            else:
+                self.skipped += i - start
+        return sent
+
+    def _send_batch(self, match_id: str, batch, first_ms: int) -> bool:
+        from azure.core.exceptions import AzureError
+        from azure.eventhub.exceptions import EventHubError
+        for attempt in range(SEND_ATTEMPTS):
+            try:
                 self.producer.send_batch(batch)
-                return
-            except (AzureError, ValueError) as err:     # Event Hubs errors derive from AzureError
-                log.warning("%s: panel %s send failed (%s/%s): %s", match_id, panel["match_ms"], attempt + 1,
-                            SEND_ATTEMPTS, err)
-        self.skipped += 1
+                return True
+            except (AzureError, EventHubError) as err:    # EventHubError does not derive from AzureError
+                log.warning("%s: panels from %s send failed (%s/%s): %s", match_id, first_ms, attempt + 1,
+                            SEND_ATTEMPTS, str(err).splitlines()[0][:200])
+                if attempt < SEND_ATTEMPTS - 1:
+                    time.sleep(RETRY_WAIT_S[min(attempt, len(RETRY_WAIT_S) - 1)])
+        return False
 
     def close(self) -> None:
         self.producer.close()
+
+
+class Background:
+    """Keeps network calls off the pipeline: panels are queued and sent in order, packed into as few batches as
+    possible; match_state writes are coalesced to the latest document per match. One worker thread."""
+
+    def __init__(self, hub: HubSender, store: StateStore | None, clock: Callable[[], float] = time.time):
+        self.hub = hub
+        self.store = store
+        self.clock = clock
+        self.panels: queue.SimpleQueue = queue.SimpleQueue()
+        self.latest_state: dict[str, dict] = {}
+        self.lock = threading.Lock()
+        self.latency_s: dict[str, list[float]] = {}
+        self.sent: dict[str, int] = {}
+        self.stopping = threading.Event()
+        self.worker = threading.Thread(target=self._run, daemon=True, name="stats-publisher")
+        self.worker.start()
+
+    # Sender
+    def send(self, match_id: str, panel: dict, received_at: float | None = None) -> None:
+        self.panels.put((match_id, panel, received_at))
+
+    # StateStore
+    def upsert(self, doc: dict) -> None:
+        with self.lock:
+            self.latest_state[doc["match_id"]] = doc
+
+    def _drain(self) -> bool:
+        items = []
+        try:
+            items.append(self.panels.get(timeout=0.2))
+            while True:
+                items.append(self.panels.get_nowait())
+        except queue.Empty:
+            pass
+        by_match: dict[str, list[tuple[dict, float | None]]] = {}
+        for match_id, panel, received_at in items:
+            by_match.setdefault(match_id, []).append((panel, received_at))
+        for match_id, rows in by_match.items():
+            self.sent[match_id] = self.sent.get(match_id, 0) + self.hub.send_many(match_id, [p for p, _ in rows])
+            now = self.clock()
+            self.latency_s.setdefault(match_id, []).extend(now - r for _, r in rows if r is not None)
+        with self.lock:
+            docs, self.latest_state = self.latest_state, {}
+        for doc in docs.values():
+            if self.store is not None:
+                try:
+                    self.store.upsert(doc)
+                except Exception as err:               # noqa: BLE001 - a failed write is retried with the next one
+                    log.warning("%s: match_state write failed: %s", doc["match_id"], err)
+        return bool(items or docs)
+
+    def _run(self) -> None:
+        while not self.stopping.is_set() or not self.panels.empty() or self.latest_state:
+            try:
+                self._drain()
+            except Exception:                          # the worker must outlive any one failure
+                log.exception("publisher worker: a drain failed; carrying on")
+                time.sleep(1.0)
+
+    def queued(self) -> int:
+        return self.panels.qsize()
+
+    def close(self) -> None:
+        self.stopping.set()
+        self.worker.join(timeout=30)
+        self.hub.close()
 
 
 class CosmosStateStore:
