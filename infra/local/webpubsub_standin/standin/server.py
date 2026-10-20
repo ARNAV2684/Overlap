@@ -13,6 +13,8 @@ What it serves, matching the real service so the same code works locally and on 
     acks, group messages as {"type":"message","from":"group","group":...,"dataType":"json","data":...}
 - GET /negotiate?groups=match-<id>   {baseUrl, url, token}, what the web app's negotiate route returns on Azure
 - GET /api/match/{match_id}/snapshot  CONTRACTS.md §7.3, read from the Cosmos container the relay writes
+- GET /api/match/{match_id}/insights/snapshot?mode=&lang=(&club=|&player=)  CONTRACTS.md §10.4/§10.6, read from
+    the `overlays` container the insights publisher writes and the `match_state` playhead
 
 Tokens are accepted without checking (local only). Binds to 127.0.0.1. No plain-socket mode.
 """
@@ -29,6 +31,7 @@ import uuid
 
 from aiohttp import WSMsgType, web
 
+from .insights import InsightsReader, group_for
 from .snapshot import SnapshotReader
 
 log = logging.getLogger("standin")
@@ -64,10 +67,12 @@ class Connection:
 
 
 class StandIn:
-    def __init__(self, host: str, port: int, snapshots: SnapshotReader | None):
+    def __init__(self, host: str, port: int, snapshots: SnapshotReader | None,
+                 insights: InsightsReader | None = None):
         self.host = host
         self.port = port
         self.snapshots = snapshots
+        self.insights = insights
         self.connections: set[Connection] = set()
         self.counts = {"sent_to_group": 0, "delivered": 0}
 
@@ -84,6 +89,7 @@ class StandIn:
         r.add_post("/api/hubs/{hub}/:generateToken", self._generate_token)
         r.add_get("/client/hubs/{hub}", self._client)
         r.add_get("/api/match/{match_id}/snapshot", self._snapshot)
+        r.add_get("/api/match/{match_id}/insights/snapshot", self._insights)
         r.add_route("OPTIONS", "/{tail:.*}", self._preflight)
         return app
 
@@ -113,6 +119,7 @@ class StandIn:
             f"browser:   ws://{self.host}:{self.port}/client/hubs/live  (json.webpubsub.azure.v1)",
             f"send:      POST {base}/api/hubs/live/groups/<group>/:send",
             f"snapshot:  {base}/api/match/<match_id>/snapshot",
+            f"insights:  {base}/api/match/<match_id>/insights/snapshot?mode=casual&lang=en",
         ]))
 
     async def _health(self, request):
@@ -214,6 +221,17 @@ class StandIn:
         return web.json_response(body, status=status, headers={"Cache-Control": "no-store"})
 
 
+    async def _insights(self, request):
+        if self.insights is None:
+            return web.json_response({"error": "snapshot_store_not_configured"}, status=503)
+        match_id = request.match_info["match_id"]
+        group, error = group_for(match_id, dict(request.query))
+        if error:
+            return web.json_response({"error": error}, status=400)
+        status, body = await asyncio.to_thread(self.insights.read, match_id, group)
+        return web.json_response(body, status=status, headers={"Cache-Control": "no-store"})
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(prog="standin", description="Local Web PubSub stand-in (development only)")
     ap.add_argument("--host", default="127.0.0.1")
@@ -221,7 +239,7 @@ def main(argv=None):
     ap.add_argument("--no-snapshot", action="store_true", help="run without the Cosmos snapshot store")
     args = ap.parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(message)s")
-    snapshots = None
+    snapshots = insights = None
     if not args.no_snapshot:
         endpoint, key = os.environ.get("OVERLAP_COSMOS_ENDPOINT"), os.environ.get("OVERLAP_COSMOS_KEY")
         if not (endpoint and key):
@@ -229,7 +247,8 @@ def main(argv=None):
                      "or run with --no-snapshot.")
         snapshots = SnapshotReader(endpoint, key, os.environ.get("OVERLAP_COSMOS_DATABASE", "live"),
                                    os.environ.get("OVERLAP_COSMOS_CONTAINER", "screen"))
-    standin = StandIn(args.host, args.port, snapshots)
+        insights = InsightsReader(endpoint, key, os.environ.get("OVERLAP_COSMOS_DATABASE", "live"))
+    standin = StandIn(args.host, args.port, snapshots, insights)
     log.info("Web PubSub stand-in on http://%s:%d/", args.host, args.port)
     web.run_app(standin.app(), host=args.host, port=args.port, print=None)
 
