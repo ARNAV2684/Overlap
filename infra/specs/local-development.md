@@ -65,9 +65,15 @@ local keys are Microsoft's public, documented values, not secrets; Azure never u
 3. Start the relay: `func start` in `functions/` (or `relay_runner.py`). `func start` also runs the archiver;
    without it, run `uv run python main.py` in `archiver/`.
 4. Open the screen: Vedant's app or, until it exists, `mock/single-match-demo/` on 8788 (moved to the protocol).
-5. Send a match: `uv run python cli.py live --hubs emulator --speed 20` in `generator/`. Add `--record` to keep a
+5. Start the stats engine: `uv run python main.py live` in `stats/` (moments, `match_state`, stat panels).
+6. Start the insights flow: `uv run python ../functions/moment_trigger.py` in `agents/` (polls moments, runs the
+   agents, the recap at full time and the publisher, which sends cards and player tags to the stand-in's audience
+   groups). Model settings are in `infra/local/env.example`; provider `off` uses templates.
+7. Send a match: `uv run python cli.py live --hubs emulator --speed 20` in `generator/`. Add `--record` to keep a
    copy for `archiver/tests/check_archive.py`.
-6. Stop: `docker compose down` and Ctrl+C the stand-in, relay and archiver (data is cleared; every run starts clean).
+8. Optional: `uv run python check_delivery.py --match <id> --club <teamId> --player <playerId>` in `agents/` plays
+   two viewers (one joins late through the insights snapshot).
+9. Stop: `docker compose down` and Ctrl+C the stand-in, relay and archiver (data is cleared; every run starts clean).
 
 ## 6. What local testing does not prove
 
