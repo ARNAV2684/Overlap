@@ -27,10 +27,15 @@ _Answer:_
 | `red_card` | `team_players_on_pitch` · — · 0; `team_fouls_match` · — · 0; `team_cards_match` · — · 0 | The card and the foul it followed |
 | `momentum_swing` | `momentum_share_last_5min_pct` · % · 0; `momentum_share_previous_10min_pct` · % · 0; `team_shots_last_5min` · — · 0; `window_duration_min` (5) · min · 0 | The last 5 minutes; the team's weighted actions in it |
 | `press_change` | `pressures_per_opp_pass_last_5min` · — · 2; `pressures_per_opp_pass_previous_10min` · — · 2; `team_pressures_last_5min` · — · 0; `team_high_regains_last_5min` · — · 0; `window_duration_min` (5) · min · 0; plus `press_height_last_5min_m` · m · 0 when its sample allows | The last 5 minutes; the team's pressures in it (at most 20, the latest) |
-| `sprint` | `player_top_speed_kmh` · km/h · 1; `player_sprints_match` · — · 0; `player_distance_km` · km · 2 | The 10 seconds before the frame; no events required |
+| `sprint` (deferred, stats S3 D-01) | `player_top_speed_kmh` · km/h · 1; `player_sprints_match` · — · 0; `player_distance_km` · km · 2 | The 10 seconds before the frame; no events required |
 | `milestone` | `player_goals_match` (2 or 3) · — · 0; `shot_xg` · xG · 2 | The goal |
 
 **Rules:**
+- **As built (stats S3):** every pack in a replay of season S1 has exactly the keys above, `event_ids` ascending by
+  `seq` and ending with the triggering event (so `source.event_seq` is that event), and no `unit` key where the table
+  shows "—" (`tests/test_evidence.py` on the fixture; the same checks pass by hand on all 1,776 moments of
+  season S1). The fixture's first shot cluster equals Pranav's example in
+  `agents/specs/examples/shot-cluster.md` apart from its ordinal.
 - A `goal` pack never claims a score that isn't a fact: the narrator may state "2–1" only from `team_goals_match`
   and `opponent_goals_match`.
 - `shot_is_penalty` is a number (1 or 0) so the checker can verify it. Words like "from the spot" are

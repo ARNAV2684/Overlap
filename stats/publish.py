@@ -1,13 +1,15 @@
 # publish.py — Publish
 #
-# Purpose: build a stat panel for every whole match second and send it; keep each match's match_state document
-# Inputs:  state.MatchState, before and after each ordered event
-# Outputs: stat panels (CONTRACTS.md §7.4) to a sender; match_state documents (§4.2) to a store
-# Spec:    stats/specs/publishing.md §1–§2
+# Purpose: build a stat panel for every whole match second and send it; keep each match's match_state document;
+#          write each moment exactly once
+# Inputs:  state.MatchState, before and after each ordered event; fired triggers
+# Outputs: stat panels (CONTRACTS.md §7.4) to a sender; match_state documents (§4.2) to a store; moment documents
+#          (§10.2) to a moment store
+# Spec:    stats/specs/publishing.md §1–§3
 #
 # Panel N describes every event with match_ms < N × 1000. It is built when the first event at or after N × 1000
 # arrives, from the state before that event, so a live run and a replay give the same panels (frames never trigger
-# one). Moments come in stats S3.
+# one).
 
 from __future__ import annotations
 
@@ -21,7 +23,9 @@ import time
 from collections.abc import Callable
 from typing import Protocol
 
+import evidence
 import rolling
+import triggers
 import whole_match
 from state import SIDES, MatchState
 
@@ -32,6 +36,12 @@ STATE_EVERY_S = 5
 SEND_ATTEMPTS = 3
 RETRY_WAIT_S = (1.0, 10.0)            # a throttled hub asks for 10 s
 MATCH_STATE_CONTAINER = "match_state"
+MOMENTS_CONTAINER = "moments"
+SYSTEM_FIELDS = ("_rid", "_self", "_etag", "_attachments", "_ts")
+
+
+class MomentConflict(RuntimeError):
+    """A moment with this id exists with different content: the match stops, the old document stays."""
 
 
 class Sender(Protocol):
@@ -40,6 +50,17 @@ class Sender(Protocol):
 
 class StateStore(Protocol):
     def upsert(self, doc: dict) -> None: ...
+
+
+class MomentStore(Protocol):
+    def create(self, doc: dict) -> bool: ...          # True when written, False for an identical repeat
+
+
+def same_moment(a: dict, b: dict) -> bool:
+    """Equal apart from Cosmos system fields."""
+    def clean(d):
+        return {k: v for k, v in d.items() if k not in SYSTEM_FIELDS}
+    return clean(a) == clean(b)
 
 
 def clock_at(period: int, period_ms: int) -> str:
@@ -129,6 +150,40 @@ class Publisher:
                 self.store.upsert(match_state_doc(state, self.last_panel.get(mid)))
 
 
+class Moments:
+    """Triggers, evidence and moment documents for every match (publishing.md §3). Moments are written directly,
+    not queued, so they are stored before the checkpoint can move past their event; match_state follows each."""
+
+    def __init__(self, store: MomentStore, state_store: StateStore | None = None,
+                 last_panel: Callable[[str], dict | None] | None = None):
+        self.store = store
+        self.state_store = state_store
+        self.last_panel = last_panel
+        self.triggers: dict[str, triggers.Triggers] = {}
+        self.builders: dict[str, evidence.Builder] = {}
+        self.ordinal: dict[str, int] = {}
+        self.written: dict[str, int] = {}
+        self.repeats: dict[str, int] = {}
+
+    def after(self, state: MatchState, event: dict, numbers: dict) -> list[dict]:
+        mid = state.match_id
+        if mid not in self.triggers:
+            self.triggers[mid] = triggers.Triggers(state)
+            self.builders[mid] = evidence.Builder(state)
+        docs = []
+        for fired in self.triggers[mid].evaluate(event, numbers):
+            self.ordinal[mid] = self.ordinal.get(mid, 0) + 1
+            doc = self.builders[mid].document(fired, self.ordinal[mid])
+            if self.store.create(doc):
+                self.written[mid] = self.written.get(mid, 0) + 1
+            else:
+                self.repeats[mid] = self.repeats.get(mid, 0) + 1
+            docs.append(doc)
+        if docs and self.state_store is not None:
+            self.state_store.upsert(match_state_doc(state, self.last_panel(mid) if self.last_panel else None))
+        return docs
+
+
 # --- senders and stores ------------------------------------------------------------------------------------------
 
 
@@ -150,6 +205,23 @@ class DictStore:
     def upsert(self, doc: dict) -> None:
         self.docs[(doc["match_id"], doc["id"])] = doc
         self.writes += 1
+
+
+class DictMomentStore:
+    """Moments in memory (replay, tests), with the same create-once rule as Cosmos."""
+
+    def __init__(self):
+        self.docs: dict[tuple[str, str], dict] = {}
+
+    def create(self, doc: dict) -> bool:
+        key = (doc["match_id"], doc["id"])
+        old = self.docs.get(key)
+        if old is None:
+            self.docs[key] = doc
+            return True
+        if same_moment(old, doc):
+            return False
+        raise MomentConflict(f"{doc['match_id']}: moment {doc['id']} already exists with different content")
 
 
 class HubSender:
@@ -306,3 +378,34 @@ class CosmosStateStore:
 
     def upsert(self, doc: dict) -> None:
         self.container.upsert_item(doc)
+
+
+class CosmosMomentStore:
+    """Cosmos `live` / `moments`, partition /match_id: create, never upsert (publishing.md §3)."""
+
+    def __init__(self, container):
+        self.container = container
+
+    @classmethod
+    def from_env(cls) -> CosmosMomentStore:
+        from azure.cosmos import CosmosClient, PartitionKey
+        endpoint = os.environ["OVERLAP_COSMOS_ENDPOINT"]
+        key = os.environ.get("OVERLAP_COSMOS_KEY")
+        database = os.environ.get("OVERLAP_COSMOS_DATABASE", "live")
+        if key:                               # local emulator: create what's missing (Bicep creates these on Azure)
+            db = CosmosClient(endpoint, credential=key).create_database_if_not_exists(database)
+            return cls(db.create_container_if_not_exists(MOMENTS_CONTAINER, partition_key=PartitionKey("/match_id")))
+        from azure.identity import DefaultAzureCredential
+        db = CosmosClient(endpoint, credential=DefaultAzureCredential()).get_database_client(database)
+        return cls(db.get_container_client(MOMENTS_CONTAINER))
+
+    def create(self, doc: dict) -> bool:
+        from azure.cosmos.exceptions import CosmosResourceExistsError
+        try:
+            self.container.create_item(doc)
+            return True
+        except CosmosResourceExistsError:
+            old = self.container.read_item(doc["id"], partition_key=doc["match_id"])
+            if same_moment(old, doc):
+                return False
+            raise MomentConflict(f"{doc['match_id']}: moment {doc['id']} already exists with different content")

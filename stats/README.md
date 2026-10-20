@@ -32,14 +32,16 @@ Starting definitions are in [`CONTRACTS.md` §8](../CONTRACTS.md#8-metric-defini
 | `publish.py` | Writes snapshots and moments; sends stat panels |
 | `main.py` | Routes messages to each match (`Pipeline`); `replay` for recorded matches |
 | `consumer.py` | Both hubs as consumer group `stats`, with checkpoints that only move past finished matches |
-| `tests/` | Ordering, metrics, consumer, and a replay of a generated match (`tests/fixtures/SYN-1017`) |
+| `tests/` | Ordering, metrics, consumer, windows, panels, triggers, evidence, moments, and a replay of a generated match (`tests/fixtures/SYN-1017`) |
 
 ## Status
 
 - **Built:**
   - S1: ordering, match state, xG, pass difficulty, speeds and sprints, whole-match totals, the replay runner and the hub consumer.
   - S2: rolling windows, stat panels every match second (heavy block every minute), `match_state`, and live mode.
-- **Next:** triggers, evidence and moments (S3). `triggers.py` and `evidence.py` are still placeholders.
+  - S3: triggers, evidence packs and moment documents, written once to Cosmos `moments` with stable ids. `sprint`
+    is deferred. Season S1 gives 19.7 moments a match. How the agents use them: [`agents-guide.md`](agents-guide.md).
+- **Next:** S4, the Azure deployment, once its infrastructure exists.
 - **Plan:** [`PLAN_stats_engine`](../plans/active/PLAN_stats_engine.md).
 
 ## Run
@@ -52,12 +54,13 @@ uv run pytest
 uv run python main.py replay tests/fixtures/SYN-1017          # one match: its numbers as JSON
 uv run python main.py replay ../data/seasons/S1 --out s1.json # a whole generated season
 uv run python main.py replay tests/fixtures/SYN-1017 --panels # the stat panels it would send
+uv run python main.py replay tests/fixtures/SYN-1017 --moments # the moment documents it would write
 ```
 
 **Live**, beside the local stack (`infra/specs/local-development.md` §5), with the settings from `infra/local/env.example`:
 
 ```bash
-uv run python main.py live                                  # both hubs in; panels and match_state out
+uv run python main.py live                                  # both hubs in; panels, match_state and moments out
 uv run python tests/e2e_local.py --seed 505 --match 505     # the end-to-end check (add --restart-after 120)
 ```
 

@@ -57,8 +57,8 @@ class Team:
     possession_ms: int = 0
     momentum: float = 0.0
     press_x_sum: float = 0.0       # metres from own goal, summed over PRESS_ACTIONS
-    # Timelines for windows (windows.md): name -> [(period, period_ms, value)], in event order
-    timeline: dict[str, list[tuple[int, int, float]]] = field(default_factory=dict)
+    # Timelines for windows (windows.md): name -> [(period, period_ms, value, event_id)], in event order
+    timeline: dict[str, list[tuple[int, int, float, str]]] = field(default_factory=dict)
     # Pass network (starting XI until the team's first substitution), zones and pressing grid (metrics.md §4, §6)
     first_sub_ms: int | None = None
     pass_nodes: dict[str, list[float]] = field(default_factory=dict)      # player_id -> [sum x, sum y, passes]
@@ -67,7 +67,7 @@ class Team:
     pressing_grid: list[list[int]] = field(default_factory=lambda: [[0] * GRID_ROWS for _ in range(GRID_COLS)])
 
     def log(self, name: str, event: dict, value: float = 1.0) -> None:
-        self.timeline.setdefault(name, []).append((event["period"], event["period_ms"], value))
+        self.timeline.setdefault(name, []).append((event["period"], event["period_ms"], value, event["event_id"]))
 
 
 class MatchState:
@@ -90,6 +90,7 @@ class MatchState:
         self.source_seq = 0
         self.phase = "pre_match"
         self.passes: dict[str, dict] = {}            # event_id -> Pass, so a shot can find its key pass
+        self.event_players: dict[str, str] = {}      # event_id -> player_id, for evidence
         self.shots: list[dict] = []                   # shot events with their numbers, in order
         self.momentum_log: list[tuple[int, int, int, str, float]] = []   # (match_ms, period, period_ms, side, weight)
         self.period_ms = 0
@@ -97,6 +98,9 @@ class MatchState:
         self.period_length_ms: dict[int, int] = {}                 # period -> period_ms of its PeriodEnd
         self.unknown_types = 0
         self._poss: tuple[int, int, int] | None = None   # (possession_id, start match_ms, period)
+        self.possession_events: list[dict] = []           # the current possession's events, for evidence windows
+        self.last_foul: dict[str, dict] = {}              # player_id -> his latest Foul (cards follow fouls)
+        self.last_foul_by_side: dict[str, dict] = {}      # side -> its latest Foul (penalties follow fouls)
         self._poss_owner: str | None = None
         self._poss_first_team: str | None = None
 
@@ -130,10 +134,16 @@ class MatchState:
             self._close_possession(event["match_ms"])
             self._poss = (pid, event["match_ms"], event["period"])
             self._poss_owner, self._poss_first_team = None, None
+            self.possession_events = []
+        self.possession_events.append(event)
         if side is not None:
             self._poss_first_team = self._poss_first_team or side
             if self._poss_owner is None and event["type"] in OWNING_TYPES:
                 self._poss_owner = side
+
+    def on_pitch(self, side: str) -> int:
+        """Players of this side on the pitch now (starters and substitutes on, minus anyone off or sent off)."""
+        return sum(1 for p in self.players.values() if p.side == side and p.on_ms is not None and p.off_ms is None)
 
     def possession_ms(self, side: str) -> int:
         """Possession time so far, the open possession included up to the latest event."""
@@ -148,6 +158,8 @@ class MatchState:
         """Applies one ordered event; returns its numbers (per_event.annotate)."""
         self.source_seq = event["seq"]
         self.match_ms = event["match_ms"]
+        if event.get("player_id"):
+            self.event_players[event["event_id"]] = event["player_id"]
         self.period = event["period"]
         self.period_ms = event["period_ms"]
         self.clock = event["clock"]
@@ -262,6 +274,9 @@ class MatchState:
         elif kind == "Foul":
             for c in (tc, pc):
                 c["fouls"] += 1
+            self.last_foul_by_side[side] = event
+            if player:
+                self.last_foul[player.player_id] = event
         elif kind == "Card":
             red = event["card"] in ("red", "second_yellow")
             for c in (tc, pc):

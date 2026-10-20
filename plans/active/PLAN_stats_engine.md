@@ -10,7 +10,7 @@
 | Review coordinator | Arnav |
 | Affected component owners | Arnav (screen relay, archiver, Cosmos, `CONTRACTS.md`), Pranav (agents, MCP), Vedant (web charts) |
 | Proposal version and date | v0.1 · 2026-10-19 |
-| Status | In progress (M1 merged in PR #50; S1 in PR #51; S2 in review, see [`PLAN_stats_engine_S2.md`](PLAN_stats_engine_S2.md)) |
+| Status | In progress (M1 merged in PR #50; S1 in PR #51; S2 in PR #53; S3 in review, see [`PLAN_stats_engine_S3.md`](PLAN_stats_engine_S3.md); S4 waits on Azure) |
 | Plan tier and file | Full · `plans/active/PLAN_stats_engine.md` |
 | Repository | [ARNAV2684/Overlap](https://github.com/ARNAV2684/Overlap) |
 | Reviewed branch and commit | main · 5ef36be |
@@ -90,7 +90,7 @@
 | Cosmos `moments`, `match_state` containers and keys | Arnav (storage), Pranav (MCP reader) | Container, partition `/match_id`, document shapes (D-02) | Pending · M1 decision; working locally by S3 | Cosmos emulator, as the archiver uses |
 | Event Hubs `stats` consumer group | Arnav | Exists locally on both hubs (`infra/local/eventhubs-config.json`) | Confirmed locally; Azure pending (AZ1) | Local emulator |
 | Generator recordings and answer keys | Azeem | Recorded matches with storylines; `summary.json` answer keys | Available (main) | — |
-| MCP reader validation (STATS-01) | Pranav | Validates the first real moment | Pending · S3 | Pranav's source validator run locally |
+| MCP reader validation (STATS-01) | Pranav | Validates the first real moment | Partly done in S3: shot clusters pass with `context.players` removed; the rest waits on his D-02 update | Pranav's source validator run locally |
 | Registry ownership | Arnav | Record the stats owner (D-07) | Pending · M1 | — |
 
 **My owned deliverables:** the specs, `stats/` code and tests, the stats sections of `CONTRACTS.md` (with agreement),
