@@ -11,7 +11,7 @@ from mcp_server.schema import Identity, encoded, parse_moment, projection, read_
 def test_sample_matches_merged_example(document, moment):
     example = Path(__file__).parents[2] / "agents/specs/examples/shot-cluster.md"
     fence = chr(96) * 3
-    blocks = [json.loads(x) for x in re.findall(fence + r"json\s*\n(.*?)\n" + fence, example.read_text(), re.DOTALL)]
+    blocks = [json.loads(x) for x in re.findall(fence + r"json\s*\n(.*?)\n" + fence, example.read_text(encoding="utf-8"), re.DOTALL)]
     assert document == next(x for x in blocks if isinstance(x, dict) and x.get("kind") == "moment")
     projected = projection(moment, "fixture").payload()
     assert projected == next(x for x in blocks if isinstance(x, dict) and x.get("status") == "ok")

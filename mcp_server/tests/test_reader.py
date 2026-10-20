@@ -109,7 +109,10 @@ async def test_symlink_cannot_escape_configured_directory(tmp_path, moment):
     root.mkdir()
     outside = tmp_path / "outside.json"
     outside.write_text("{}")
-    (root / f"{moment.id}.json").symlink_to(outside)
+    try:
+        (root / f"{moment.id}.json").symlink_to(outside)
+    except OSError:                         # Windows without symlink privilege
+        pytest.skip("creating symlinks is not permitted on this system")
     with pytest.raises(SourceFailure, match="source_error"):
         await FixtureReader(root).read(moment.identity)
 
