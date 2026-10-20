@@ -12,7 +12,16 @@ uv run python ../functions/moment_trigger.py --match SYN-0508 --once   # run a p
 uv run python run_match.py --match SYN-0508 --report out.json        # one match through the agents, re-checked
 uv run python run_match.py --fixture                                 # the same on the stats fixture SYN-1017
 uv run python check_delivery.py --match <id> --club <teamId> --player <playerId>   # two viewers during a live match
+uv run python -m evals.bench --matches ../data/generated/bench --out <dir>/matches  # the evaluation bench
+uv run python -m evals.report --bench <dir>/matches --out evals/results/round-1     # recall, accuracy, faults, latency
+uv run python -m evals.review_sheet --results <dir>/matches --out evals/review/round-1   # Azeem's sheets
+uv run python -m evals.gold import --sheets evals/review/round-1 --out evals/gold/round-1.json   # his answers
 ```
+
+**Evaluation (`evals/`):** generated matches (each storyline and a control) go through the stats replay and the
+agents; the report covers detection recall from independent labels, storyline hits against controls, numeric
+accuracy, fault injection and latency. Round 1: [`evals/results/round-1/report.md`](evals/results/round-1/report.md);
+Azeem's sheets: [`evals/review/round-1/`](evals/review/round-1/).
 
 **Delivery:** `publisher.py` is the single sender on every audience group. For each outbox it checks the card
 against the playhead (`match_state`), reserves the group's next `seq` together with the delivery document in one
@@ -82,4 +91,4 @@ goes through `models.ModelGate`: per-moment and per-match budgets and a timeout.
 | `translation.py` | Azure AI Translator, or a local fake |
 | `smoke.py` | One call through the configured provider |
 | `prompts/` | One prompt file per agent |
-| `evals/` | Recall, numeric accuracy, fault injection, latency |
+| `evals/` | The bench, recall, numeric accuracy, fault injection, latency, Azeem's review sheet, the gold set, the report |
