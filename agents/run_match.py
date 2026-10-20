@@ -29,7 +29,8 @@ from collections import Counter
 from pathlib import Path
 
 from config import Settings
-from fact_checker import numeric_check
+from fact_checker import _template, core, numeric_check
+from fallbacks import template_line
 from recap_writer import recap_moment
 from runtime import agent_deps
 from state import MemoryStore
@@ -65,17 +66,27 @@ def _clean(doc: dict) -> dict:
 
 
 def recheck(intent: dict, moment: dict) -> list[dict]:
-    """Every audience line re-checked from scratch: English against the facts, translations against English."""
+    """Every audience line re-checked from scratch: English against the facts; a translation against the English
+    line it was translated from (the model's line, or for a fallback the template, which is checked too)."""
     english = {}
     for a in intent["audiences"]:
         if a["lang"] == "en":
             english[(a["mode"], a.get("club") or a.get("player"))] = a["line"]
     wrong = []
     for a in intent["audiences"]:
-        line = {"id": a["mode"], **a["line"]}
-        en = english.get((a["mode"], a.get("club") or a.get("player")))
-        problems = numeric_check(line, moment) if a["lang"] == "en" else (
-            numeric_check(line, moment, english={"id": a["mode"], **en}) if en else ["no_english_line"])
+        target = a.get("club") or a.get("player")
+        line_id = f"{a['mode']}:{target}" if target else a["mode"]
+        line = {"id": line_id, **a["line"]}
+        if a["lang"] == "en":
+            problems = numeric_check(line, moment)
+        else:
+            sources = [{"id": line_id, **english[(a["mode"], target)]}] if (a["mode"], target) in english else []
+            if (a.get("overlay") or a.get("recap") or {}).get("fallback"):
+                sources.append(core(_template(moment, line_id, template_line)))
+            results = [numeric_check(line, moment, english=src) for src in sources] or [["no_english_line"]]
+            problems = [] if any(r == [] for r in results) else results[0]
+            if problems == [] and len(sources) > 1 and results[0]:
+                problems = numeric_check(sources[-1], moment)          # the template itself must pass too
         if problems:
             wrong.append({"group": a["group"], "text": a["line"]["text"], "problems": problems})
     return wrong

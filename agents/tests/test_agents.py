@@ -416,3 +416,31 @@ def test_recap_templates_pass_the_check(moments):
     assert ids[:2] == ["casual", "analyst"] and any(i.startswith("player:") for i in ids)
     for i in ids:
         assert numeric_check(core(recap_template(recap, i)), recap) == [], i
+
+
+def test_the_independent_recheck_accepts_template_translations_of_verified_lines(moments, clock):
+    """English stays the model's verified line while French falls back to its translated template: both correct."""
+    from run_match import recheck
+
+    def strict(agent, payload):
+        if agent == "translator" and payload["lang"] == "fr":
+            return {"pass": False, "lines": [{"id": ln["id"], "pass": False, "reasons": ["meaning changed"]}
+                                             for ln in payload["lines"]]}
+        return good(agent, payload)
+
+    def worded(agent, payload):
+        reply = strict(agent, payload)
+        if agent == "narrator":
+            for ln in reply["lines"]:
+                ln["text"] = ln["text"].replace("have taken", "keep going with")    # model wording, same facts
+        return reply
+    store, cluster = MemoryStore(), by_id(moments, "MO-1017-0019")
+    process(cluster, deps(store, clock, worded))
+    intent = outbox(store, "MO-1017-0019")
+    en = next(a for a in intent["audiences"] if a["group"] == "match-SYN-1017-casual-en")
+    fr = next(a for a in intent["audiences"] if a["group"] == "match-SYN-1017-casual-fr")
+    assert en["overlay"]["verified"] and "keep going with" in en["line"]["text"]
+    assert fr["overlay"]["fallback"] and "have taken" in fr["line"]["text"]
+    assert recheck(intent, cluster) == []
+    fr["line"]["text"] = fr["line"]["text"].replace(" 3 ", " 4 ")                    # a real wrong number
+    assert recheck(intent, cluster)
