@@ -2,8 +2,8 @@
 #
 # Purpose: keep score, clock, players, possessions and running totals in memory, one event at a time
 # Inputs:  the match setup, then ordered events (dedupe.Orderer) and tracking frames
-# Outputs: the current match state, read by whole_match.py (and later by windows, panels and triggers)
-# Spec:    stats/specs/metrics.md §4–§6; stats/specs/publishing.md §1
+# Outputs: the current match state, read by whole_match.py, rolling.py and publish.py (and triggers, stats S3)
+# Spec:    stats/specs/metrics.md §4–§6; stats/specs/windows.md; stats/specs/publishing.md §1
 #
 # Events are in their acting team's frame (CONTRACTS.md §1.1), so every position here is in that team's frame.
 
@@ -24,6 +24,14 @@ HIGH_REGAIN_X = 60.0
 
 # Momentum weights (metrics.md §5; CONTRACTS.md §8)
 MOMENTUM = {"goal": 5.0, "saved": 3.0, "other_shot": 1.5, "key_pass": 2.0, "take_on": 1.0, "red": 3.0, "yellow": 1.0}
+
+# Grids (metrics.md §4, §6), in each team's own frame
+GRID_COLS, GRID_ROWS = 9, 6           # pressing grid: x columns from own goal, y rows from own left
+ZONE_COLS, ZONE_CHANNELS = 6, 3       # touch zones
+
+
+def cell(x: float, y: float, cols: int, rows: int) -> tuple[int, int]:
+    return min(int(x * cols / 100), cols - 1), min(int(y * rows / 100), rows - 1)
 
 
 @dataclass
@@ -49,6 +57,17 @@ class Team:
     possession_ms: int = 0
     momentum: float = 0.0
     press_x_sum: float = 0.0       # metres from own goal, summed over PRESS_ACTIONS
+    # Timelines for windows (windows.md): name -> [(period, period_ms, value)], in event order
+    timeline: dict[str, list[tuple[int, int, float]]] = field(default_factory=dict)
+    # Pass network (starting XI until the team's first substitution), zones and pressing grid (metrics.md §4, §6)
+    first_sub_ms: int | None = None
+    pass_nodes: dict[str, list[float]] = field(default_factory=dict)      # player_id -> [sum x, sum y, passes]
+    pass_links: Counter = field(default_factory=Counter)                   # (passer, receiver) -> completed passes
+    zones: list[list[int]] = field(default_factory=lambda: [[0] * ZONE_COLS for _ in range(ZONE_CHANNELS)])
+    pressing_grid: list[list[int]] = field(default_factory=lambda: [[0] * GRID_ROWS for _ in range(GRID_COLS)])
+
+    def log(self, name: str, event: dict, value: float = 1.0) -> None:
+        self.timeline.setdefault(name, []).append((event["period"], event["period_ms"], value))
 
 
 class MatchState:
@@ -72,7 +91,10 @@ class MatchState:
         self.phase = "pre_match"
         self.passes: dict[str, dict] = {}            # event_id -> Pass, so a shot can find its key pass
         self.shots: list[dict] = []                   # shot events with their numbers, in order
-        self.momentum_log: list[tuple[int, int, str, float]] = []   # (match_ms, period, side, weight)
+        self.momentum_log: list[tuple[int, int, int, str, float]] = []   # (match_ms, period, period_ms, side, weight)
+        self.period_ms = 0
+        self.period_start_ms: dict[int, int] = {}                  # period -> match_ms of its PeriodStart
+        self.period_length_ms: dict[int, int] = {}                 # period -> period_ms of its PeriodEnd
         self.unknown_types = 0
         self._poss: tuple[int, int, int] | None = None   # (possession_id, start match_ms, period)
         self._poss_owner: str | None = None
@@ -88,7 +110,8 @@ class MatchState:
 
     def _momentum(self, side: str, weight: float, event: dict) -> None:
         self.teams[side].momentum += weight
-        self.momentum_log.append((event["match_ms"], event["period"], side, weight))
+        self.teams[side].log("momentum", event, weight)
+        self.momentum_log.append((event["match_ms"], event["period"], event["period_ms"], side, weight))
 
     def _close_possession(self, end_ms: int) -> None:
         if self._poss is None:
@@ -126,12 +149,15 @@ class MatchState:
         self.source_seq = event["seq"]
         self.match_ms = event["match_ms"]
         self.period = event["period"]
+        self.period_ms = event["period_ms"]
         self.clock = event["clock"]
         kind = event["type"]
         side = self._team_of(event)
         if kind == "PeriodStart":
             self.phase = "live"
+            self.period_start_ms[event["period"]] = event["match_ms"] - event["period_ms"]
         elif kind == "PeriodEnd":
+            self.period_length_ms[event["period"]] = event["period_ms"]
             self._close_possession(event["match_ms"])
             self.phase = "half_time" if event["period"] == 1 else "full_time"
             if self.phase == "full_time":
@@ -148,10 +174,23 @@ class MatchState:
         pc = player.counts if player else Counter()
         tc = team.counts
         x = event.get("x")
+        if x is not None and event.get("y") is not None:
+            col, ch = cell(x, event["y"], ZONE_COLS, ZONE_CHANNELS)
+            team.zones[ch][col] += 1
 
         if kind == "Pass":
             self.passes[event["event_id"]] = event
             done = event.get("outcome") == "success"
+            team.log("passes", event)
+            if x is not None and x <= PPDA_PASS_MAX_X:
+                team.log("passes_own_60", event)
+            if team.first_sub_ms is None and player is not None and x is not None:
+                node = team.pass_nodes.setdefault(player.player_id, [0.0, 0.0, 0])
+                node[0] += x
+                node[1] += event.get("y", 50.0)
+                node[2] += 1
+                if done and event.get("receiver_id"):
+                    team.pass_links[(player.player_id, event["receiver_id"])] += 1
             quals = set(event.get("qualifiers", ()))
             for c in (tc, pc):
                 c["passes"] += 1
@@ -175,6 +214,7 @@ class MatchState:
                 c["goals"] += outcome == "goal"
             if outcome == "goal":
                 self.score[side] += 1
+            team.log("shots", event)
             self._momentum(side, MOMENTUM["goal"] if outcome == "goal" else MOMENTUM["saved"] if outcome == "saved"
                            else MOMENTUM["other_shot"], event)
             if key_pass is not None:
@@ -200,11 +240,13 @@ class MatchState:
                 c["tackles_won"] += won
             if won and x is not None and x >= HIGH_REGAIN_X:
                 tc["high_regains"] += 1
+                team.log("high_regains", event)
         elif kind in ("Interception", "BallRecovery"):
             for c in (tc, pc):
                 c["interceptions" if kind == "Interception" else "recoveries"] += 1
             if x is not None and x >= HIGH_REGAIN_X:
                 tc["high_regains"] += 1
+                team.log("high_regains", event)
         elif kind == "Clearance":
             tc["clearances"] += 1
         elif kind == "Aerial":
@@ -213,6 +255,10 @@ class MatchState:
         elif kind == "Pressure":
             for c in (tc, pc):
                 c["pressures"] += 1
+            team.log("pressures", event)
+            if x is not None:
+                col, row = cell(x, event.get("y", 50.0), GRID_COLS, GRID_ROWS)
+                team.pressing_grid[col][row] += 1
         elif kind == "Foul":
             for c in (tc, pc):
                 c["fouls"] += 1
@@ -229,6 +275,8 @@ class MatchState:
             tc["offsides"] += 1
         elif kind == "Substitution":
             tc["substitutions"] += 1
+            if team.first_sub_ms is None:
+                team.first_sub_ms = event["match_ms"]
             if player:
                 player.off_ms = event["match_ms"]
             sub = self.players.get(event.get("player_on_id"))
@@ -239,9 +287,11 @@ class MatchState:
 
         if kind in PPDA_ACTIONS and x is not None and x >= PPDA_ACTION_MIN_X:
             tc["ppda_actions"] += 1
+            team.log("ppda_actions", event)
         if kind in PRESS_ACTIONS and x is not None:
             tc["press_actions"] += 1
             team.press_x_sum += x * 1.05
+            team.log("press_m", event, x * 1.05)
         return numbers
 
     # --- tracking -----------------------------------------------------------------------------------------------
