@@ -5,9 +5,11 @@
 # Outputs: a JSON-ready summary of the match so far
 # Spec:    stats/specs/metrics.md §4–§7
 #
-# Pass network, zones and the pressing grid come with the stat panels (stats S2).
+# The pass network, zones, pressing grid and momentum buckets are the stat panel's heavy block (publishing.md §2).
 
 from __future__ import annotations
+
+from collections import defaultdict
 
 from state import SIDES, MatchState
 
@@ -16,6 +18,8 @@ MIN_PASSES = 10
 MIN_PPDA_ACTIONS = 3
 MIN_PRESS_ACTIONS = 8
 MIN_SHOTS_FOR_XG_PER_SHOT = 3
+MIN_LINK_PASSES = 3                # pass network links (metrics.md §6)
+BUCKET_MS = 5 * 60_000
 
 
 def _ratio(num: float, den: float, minimum: float, digits: int, scale: float = 1.0):
@@ -92,3 +96,50 @@ def summary(state: MatchState) -> dict:
         "teams": {s: team_summary(state, s) for s in SIDES},
         "players": player_summary(state),
     }
+
+
+# --- heavy block (metrics.md §4–§6; publishing.md §2) ------------------------------------------------------------
+
+
+def pass_network(state: MatchState, side: str) -> dict:
+    """Starting XI until the team's first substitution: mean pass-start position per player, links with ≥ 3."""
+    team = state.teams[side]
+    nodes = [{"player_id": pid, "x": round(sx / n, 1), "y": round(sy / n, 1), "passes": n}
+             for pid, (sx, sy, n) in sorted(team.pass_nodes.items()) if n]
+    links = [{"from": a, "to": b, "count": c} for (a, b), c in sorted(team.pass_links.items()) if c >= MIN_LINK_PASSES]
+    return {"nodes": nodes, "links": links}
+
+
+def momentum_buckets(state: MatchState) -> list[dict]:
+    """Every 5-minute bucket so far: {period, bucket, home, away} weighted points."""
+    buckets: dict[tuple[int, int], dict[str, float]] = defaultdict(lambda: {"home": 0.0, "away": 0.0})
+    for p in state.period_start_ms:                 # every bucket so far, empty ones as zeros
+        length = state.period_length_ms.get(p, state.period_ms if p == state.period else 0)
+        for b in range(length // BUCKET_MS + 1):
+            buckets[(p, b)]
+    for _, period, period_ms, side, weight in state.momentum_log:
+        buckets[(period, period_ms // BUCKET_MS)][side] += weight
+    return [{"period": p, "bucket": b, "home": v["home"], "away": v["away"]} for (p, b), v in sorted(buckets.items())]
+
+
+def current_bucket(state: MatchState) -> dict:
+    period, bucket = state.period, state.period_ms // BUCKET_MS
+    out = {"period": period, "bucket": bucket, "home": 0.0, "away": 0.0}
+    for _, p, period_ms, side, weight in state.momentum_log:
+        if p == period and period_ms // BUCKET_MS == bucket:
+            out[side] += weight
+    return out
+
+
+def heavy(state: MatchState) -> dict:
+    out = {
+        "momentum_buckets": momentum_buckets(state),
+        "pass_network": {s: pass_network(state, s) for s in SIDES},
+        "pressing_grid": {s: [row[:] for row in state.teams[s].pressing_grid] for s in SIDES},
+        "zones": {s: [row[:] for row in state.teams[s].zones] for s in SIDES},
+    }
+    if state.has_tracking():
+        out["players"] = {pid: {"distance_km": round(p.motion.distance_m / 1000, 2),
+                                "top_speed_kmh": round(p.motion.top_speed_kmh, 1), "sprints": p.motion.sprints}
+                          for pid, p in sorted(state.players.items()) if p.motion.top_speed_kmh > 0}
+    return out

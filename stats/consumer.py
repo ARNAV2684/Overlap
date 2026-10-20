@@ -57,9 +57,10 @@ class PartitionWatch:
 
 
 class Reader:
-    """Reads one hub. `handle(kind, body)` is the pipeline; `finished(match_id)` says whether a match is over."""
+    """Reads one hub. `handle(kind, body, received_at)` is the pipeline; `finished(match_id)` says whether a match is
+    over. `received_at` is when the message entered the hub (seconds since the epoch), for latency figures."""
 
-    def __init__(self, hub: str, handle: Callable[[str, dict], None], finished: Callable[[str], bool]):
+    def __init__(self, hub: str, handle: Callable[..., None], finished: Callable[[str], bool]):
         self.hub = hub
         self.handle = handle
         self.finished = finished
@@ -81,7 +82,8 @@ class Reader:
             if kind == "stats":
                 self.counts["skipped_stats"] += 1
             else:
-                self.handle(kind, body)
+                enqueued = getattr(event, "enqueued_time", None)
+                self.handle(kind, body, enqueued.timestamp() if enqueued else None)
             watch = self.partitions.setdefault(partition_context.partition_id, PartitionWatch())
             if body.get("match_id"):
                 watch.open.add(body["match_id"])
@@ -89,6 +91,44 @@ class Reader:
             watch.open = {m for m in watch.open if not self.finished(m)}
             if not watch.open:
                 partition_context.update_checkpoint(event)
+
+
+class Runner:
+    """Both hubs, one thread each, into one pipeline (whose methods are called under one lock)."""
+
+    def __init__(self, handle: Callable[..., None], finished: Callable[[str], bool]):
+        self.lock = threading.Lock()
+
+        def locked(kind, body, received_at=None):
+            with self.lock:
+                handle(kind, body, received_at)
+
+        self.readers = [Reader(EVENTS_HUB, locked, finished), Reader(TRACKING_HUB, locked, finished)]
+        self.clients = []
+        self.threads: list[threading.Thread] = []
+
+    def run(self) -> None:
+        store = checkpoint_store()
+        for reader in self.readers:
+            c = client(reader.hub, store)
+            self.clients.append(c)
+            t = threading.Thread(target=c.receive, daemon=True, name=f"stats-{reader.hub}",
+                                 kwargs={"on_event": reader.on_event, "starting_position": "-1",
+                                         "on_error": self._on_error})
+            t.start()
+            self.threads.append(t)
+        log.info("reading %s as consumer group %s", ", ".join(r.hub for r in self.readers),
+                 os.environ.get("OVERLAP_STATS_CONSUMER_GROUP", CONSUMER_GROUP))
+        for t in self.threads:
+            while t.is_alive():
+                t.join(1.0)
+
+    def _on_error(self, partition_context, error) -> None:
+        log.error("reader error on partition %s: %s", getattr(partition_context, "partition_id", "?"), error)
+
+    def stop(self) -> None:
+        for c in self.clients:
+            c.close()
 
 
 def checkpoint_store():
