@@ -463,9 +463,9 @@ Numbers come from code. These definitions are shared so the agents, charts and t
 > `context`. §10.3–§10.4 are unchanged and remain for Pranav, Arnav and Vedant.
 >
 > **Status:** §10.1–§10.2 agreed by the stats owner (above). §10.3–§10.4, with the build extensions in §10.6, are
-> proposed by Arnav (layer 5 owner from 20 Oct; [`PLAN_agents_insights-build`](plans/active/PLAN_agents_insights-build.md))
-> and become agreed when Azeem (producer) and Vedant (consumer) approve the PR that adds §10.6. Existing §§1–9 and
-> running services are unchanged.
+> agreed by Arnav (layer 5 owner; [`PLAN_agents_insights-build`](plans/active/PLAN_agents_insights-build.md)) on
+> 20 Oct 2026 and merged before Azeem's (producer) and Vedant's (consumer) review. They are asked to confirm;
+> any change they need follows as an amendment to this section. Existing §§1–9 and running services are unchanged.
 
 ### 10.1 Shot-cluster evidence
 
