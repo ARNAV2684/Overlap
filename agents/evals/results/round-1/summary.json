@@ -1,0 +1,777 @@
+{
+ "matches": 24,
+ "moments": 538,
+ "detection": {
+  "goal": {
+   "eligible": 87,
+   "detected": 87,
+   "extra": 0,
+   "recall": 1.0
+  },
+  "red_card": {
+   "eligible": 11,
+   "detected": 11,
+   "extra": 0,
+   "recall": 1.0
+  },
+  "penalty": {
+   "eligible": 2,
+   "detected": 2,
+   "extra": 0,
+   "recall": 1.0
+  },
+  "milestone": {
+   "eligible": 27,
+   "detected": 27,
+   "extra": 0,
+   "recall": 1.0
+  },
+  "shot_cluster": {
+   "eligible": 68,
+   "detected": 68,
+   "extra": 0,
+   "recall": 1.0
+  },
+  "big_chance": {
+   "eligible": null,
+   "detected": 52,
+   "extra": null,
+   "recall": null
+  },
+  "momentum_swing": {
+   "eligible": null,
+   "detected": 136,
+   "extra": null,
+   "recall": null
+  },
+  "press_change": {
+   "eligible": null,
+   "detected": 155,
+   "extra": null,
+   "recall": null
+  }
+ },
+ "storylines": {
+  "rows": [
+   {
+    "match_id": "SYN-0601",
+    "control_id": "SYN-0613",
+    "storyline": "late_pressure_surge",
+    "triggered": true,
+    "effect": true,
+    "team_id": "CAL",
+    "window_ms": [
+     3313800,
+     4213800
+    ],
+    "hit": true,
+    "first": "momentum_swing",
+    "control_hit": true
+   },
+   {
+    "match_id": "SYN-0602",
+    "control_id": "SYN-0614",
+    "storyline": "late_pressure_surge",
+    "triggered": true,
+    "effect": true,
+    "team_id": "KES",
+    "window_ms": [
+     3383400,
+     4283400
+    ],
+    "hit": true,
+    "first": "press_change",
+    "control_hit": true
+   },
+   {
+    "match_id": "SYN-0603",
+    "control_id": "SYN-0615",
+    "storyline": "red_card",
+    "triggered": true,
+    "effect": true,
+    "team_id": "DTN",
+    "window_ms": [
+     1680000,
+     2820000
+    ],
+    "hit": true,
+    "first": "red_card",
+    "control_hit": false
+   },
+   {
+    "match_id": "SYN-0604",
+    "control_id": "SYN-0616",
+    "storyline": "red_card",
+    "triggered": true,
+    "effect": false,
+    "team_id": "ORR",
+    "window_ms": [
+     1680000,
+     2820000
+    ],
+    "hit": false,
+    "first": null,
+    "control_hit": false
+   },
+   {
+    "match_id": "SYN-0605",
+    "control_id": "SYN-0617",
+    "storyline": "star_night",
+    "triggered": true,
+    "effect": false,
+    "team_id": "CAL",
+    "window_ms": [
+     0,
+     5400000
+    ],
+    "hit": true,
+    "first": "goal",
+    "control_hit": true
+   },
+   {
+    "match_id": "SYN-0606",
+    "control_id": "SYN-0618",
+    "storyline": "star_night",
+    "triggered": false,
+    "effect": false,
+    "team_id": null,
+    "window_ms": [
+     0,
+     5400000
+    ],
+    "hit": false,
+    "first": null,
+    "control_hit": false
+   },
+   {
+    "match_id": "SYN-0607",
+    "control_id": "SYN-0619",
+    "storyline": "comeback",
+    "triggered": true,
+    "effect": true,
+    "team_id": "DTN",
+    "window_ms": [
+     3600000,
+     4680000
+    ],
+    "hit": false,
+    "first": null,
+    "control_hit": false
+   },
+   {
+    "match_id": "SYN-0608",
+    "control_id": "SYN-0620",
+    "storyline": "comeback",
+    "triggered": true,
+    "effect": true,
+    "team_id": "KES",
+    "window_ms": [
+     3600000,
+     4680000
+    ],
+    "hit": true,
+    "first": "momentum_swing",
+    "control_hit": true
+   },
+   {
+    "match_id": "SYN-0609",
+    "control_id": "SYN-0621",
+    "storyline": "fading_legs",
+    "triggered": true,
+    "effect": true,
+    "team_id": "CAL",
+    "window_ms": [
+     4200000,
+     5700000
+    ],
+    "hit": true,
+    "first": "momentum_swing",
+    "control_hit": true
+   },
+   {
+    "match_id": "SYN-0610",
+    "control_id": "SYN-0622",
+    "storyline": "fading_legs",
+    "triggered": true,
+    "effect": false,
+    "team_id": "KES",
+    "window_ms": [
+     4200000,
+     5700000
+    ],
+    "hit": true,
+    "first": "momentum_swing",
+    "control_hit": true
+   },
+   {
+    "match_id": "SYN-0611",
+    "control_id": "SYN-0623",
+    "storyline": "low_block_resistance",
+    "triggered": true,
+    "effect": false,
+    "team_id": "DTN",
+    "window_ms": [
+     0,
+     1800000
+    ],
+    "hit": true,
+    "first": "momentum_swing",
+    "control_hit": true
+   },
+   {
+    "match_id": "SYN-0612",
+    "control_id": "SYN-0624",
+    "storyline": "low_block_resistance",
+    "triggered": true,
+    "effect": false,
+    "team_id": "ORR",
+    "window_ms": [
+     0,
+     1800000
+    ],
+    "hit": true,
+    "first": "big_chance",
+    "control_hit": false
+   }
+  ],
+  "triggered": 6,
+  "configured": 12,
+  "hit": 5,
+  "control_hit": 4
+ },
+ "numeric_template_bench": {
+  "moments": 538,
+  "recap_lines": 604,
+  "dropped_lines": 0,
+  "wrong_numbers": 0,
+  "published_lines": 12236,
+  "lines": {
+   "template": 12236
+  },
+  "status": {
+   "delivery_pending": 488,
+   "suppressed": 50
+  },
+  "suppressed": {
+   "merged": 50
+  },
+  "rates": {
+   "verified": 0.0,
+   "template": 1.0,
+   "unverified": 0.0,
+   "suppressed_moments": 0.0929,
+   "wrong_numbers_per_line": 0.0
+  }
+ },
+ "numeric_model_bench": {
+  "moments": 151,
+  "recap_lines": 144,
+  "dropped_lines": 0,
+  "wrong_numbers": 0,
+  "published_lines": 2996,
+  "lines": {
+   "verified": 3,
+   "template": 2993
+  },
+  "status": {
+   "delivery_pending": 118,
+   "suppressed": 33
+  },
+  "suppressed": {
+   "thinned": 14,
+   "merged": 19
+  },
+  "rates": {
+   "verified": 0.001,
+   "template": 0.999,
+   "unverified": 0.0,
+   "suppressed_moments": 0.2185,
+   "wrong_numbers_per_line": 0.0
+  }
+ },
+ "faults": {
+  "cases": 33,
+  "matches": 3,
+  "valid": {
+   "cases": 12,
+   "flagged": 0,
+   "code_checkable": 12,
+   "code_caught": 0
+  },
+  "numeric": {
+   "cases": 11,
+   "flagged": 11,
+   "code_checkable": 11,
+   "code_caught": 11
+  },
+  "meaning": {
+   "cases": 10,
+   "flagged": 9,
+   "code_checkable": 9,
+   "code_caught": 9
+  },
+  "false_rejections": 0
+ },
+ "fault_rows": [
+  {
+   "kind": "valid",
+   "fault": "template",
+   "match_id": "SYN-0601",
+   "moment_id": "MO-0601-0001",
+   "text": "Big chance for Calverholme Athletic: 0.25 xG from 5 m.",
+   "caught": false,
+   "problems": [],
+   "code_blind": false
+  },
+  {
+   "kind": "valid",
+   "fault": "template",
+   "match_id": "SYN-0601",
+   "moment_id": "MO-0601-0002",
+   "text": "Calverholme Athletic have taken 3 shots in the last 5 minutes.",
+   "caught": false,
+   "problems": [],
+   "code_blind": false
+  },
+  {
+   "kind": "valid",
+   "fault": "template",
+   "match_id": "SYN-0601",
+   "moment_id": "MO-0601-0003",
+   "text": "Calverholme Athletic are pressing less: 0.58 pressures per opponent pass, down from 1.00.",
+   "caught": false,
+   "problems": [],
+   "code_blind": false
+  },
+  {
+   "kind": "valid",
+   "fault": "template",
+   "match_id": "SYN-0601",
+   "moment_id": "MO-0601-0008",
+   "text": "Goal for Calverholme Athletic: a 0.46 xG chance from 3 m. 1–0.",
+   "caught": false,
+   "problems": [],
+   "code_blind": false
+  },
+  {
+   "kind": "valid",
+   "fault": "template",
+   "match_id": "SYN-0601",
+   "moment_id": "MO-0601-0012",
+   "text": "Calverholme Athletic have taken over: 100% of the attacking actions in the last 5 minutes, up from 50%.",
+   "caught": false,
+   "problems": [],
+   "code_blind": false
+  },
+  {
+   "kind": "valid",
+   "fault": "template",
+   "match_id": "SYN-0602",
+   "moment_id": "MO-0602-0001",
+   "text": "Goal for Kestlebury United: a 0.78 xG chance from 11 m. 1–0.",
+   "caught": false,
+   "problems": [],
+   "code_blind": false
+  },
+  {
+   "kind": "valid",
+   "fault": "template",
+   "match_id": "SYN-0602",
+   "moment_id": "MO-0602-0002",
+   "text": "Kestlebury United have taken 3 shots in the last 5 minutes.",
+   "caught": false,
+   "problems": [],
+   "code_blind": false
+  },
+  {
+   "kind": "valid",
+   "fault": "template",
+   "match_id": "SYN-0602",
+   "moment_id": "MO-0602-0003",
+   "text": "Kestlebury United have taken over: 100% of the attacking actions in the last 5 minutes, up from 74%.",
+   "caught": false,
+   "problems": [],
+   "code_blind": false
+  },
+  {
+   "kind": "valid",
+   "fault": "template",
+   "match_id": "SYN-0602",
+   "moment_id": "MO-0602-0004",
+   "text": "Orrinford Albion are pressing less: 0.45 pressures per opponent pass, down from 0.84.",
+   "caught": false,
+   "problems": [],
+   "code_blind": false
+  },
+  {
+   "kind": "valid",
+   "fault": "template",
+   "match_id": "SYN-0602",
+   "moment_id": "MO-0602-0008",
+   "text": "Big chance for Kestlebury United: 0.33 xG from 5 m.",
+   "caught": false,
+   "problems": [],
+   "code_blind": false
+  },
+  {
+   "kind": "valid",
+   "fault": "template",
+   "match_id": "SYN-0602",
+   "moment_id": "MO-0602-0014",
+   "text": "Kestlebury United are down to 10.",
+   "caught": false,
+   "problems": [],
+   "code_blind": false
+  },
+  {
+   "kind": "valid",
+   "fault": "template",
+   "match_id": "SYN-0603",
+   "moment_id": "MO-0603-0001",
+   "text": "Calverholme Athletic have taken 3 shots in the last 5 minutes.",
+   "caught": false,
+   "problems": [],
+   "code_blind": false
+  },
+  {
+   "kind": "numeric",
+   "fault": "wrong_value",
+   "match_id": "SYN-0601",
+   "moment_id": "MO-0601-0008",
+   "text": "Goal for Calverholme Athletic: a 0.46 xG chance from 3 m. 1–0.",
+   "caught": true,
+   "problems": [
+    "wrong_value:shot_xg"
+   ],
+   "code_blind": false
+  },
+  {
+   "kind": "numeric",
+   "fault": "score_swapped",
+   "match_id": "SYN-0601",
+   "moment_id": "MO-0601-0008",
+   "text": "Calverholme Athletic score. 0–1.",
+   "caught": true,
+   "problems": [
+    "score_not_from_facts",
+    "score_not_from_facts"
+   ],
+   "code_blind": false
+  },
+  {
+   "kind": "numeric",
+   "fault": "xg_as_percent",
+   "match_id": "SYN-0601",
+   "moment_id": "MO-0601-0008",
+   "text": "Goal for Calverholme Athletic: a 46% chance.",
+   "caught": true,
+   "problems": [
+    "wrong_value:shot_xg",
+    "text_differs:shot_xg",
+    "unit_wrong:shot_xg"
+   ],
+   "code_blind": false
+  },
+  {
+   "kind": "numeric",
+   "fault": "missing_claim",
+   "match_id": "SYN-0601",
+   "moment_id": "MO-0601-0002",
+   "text": "Calverholme Athletic have taken 3 shots in the last 5 minutes.",
+   "caught": true,
+   "problems": [
+    "numbers_without_claims"
+   ],
+   "code_blind": false
+  },
+  {
+   "kind": "numeric",
+   "fault": "number_word",
+   "match_id": "SYN-0601",
+   "moment_id": "MO-0601-0002",
+   "text": "Calverholme Athletic have taken three shots in the last 5 minutes.",
+   "caught": true,
+   "problems": [
+    "spelled_number:three"
+   ],
+   "code_blind": false
+  },
+  {
+   "kind": "numeric",
+   "fault": "context_number",
+   "match_id": "SYN-0601",
+   "moment_id": "MO-0601-0002",
+   "text": "Calverholme Athletic have taken 3 shots in the last 5 minutes, 14 today.",
+   "caught": true,
+   "problems": [
+    "numbers_without_claims"
+   ],
+   "code_blind": false
+  },
+  {
+   "kind": "numeric",
+   "fault": "duplicate_claim",
+   "match_id": "SYN-0601",
+   "moment_id": "MO-0601-0002",
+   "text": "Calverholme Athletic have taken 3 shots in the last 5 minutes.",
+   "caught": true,
+   "problems": [
+    "duplicate_claim",
+    "text_differs:shots_last_5min",
+    "unit_wrong:shots_last_5min"
+   ],
+   "code_blind": false
+  },
+  {
+   "kind": "numeric",
+   "fault": "unknown_fact",
+   "match_id": "SYN-0601",
+   "moment_id": "MO-0601-0002",
+   "text": "Calverholme Athletic have taken 3 shots in the last 5 minutes.",
+   "caught": true,
+   "problems": [
+    "unknown_fact:shots_last_10min"
+   ],
+   "code_blind": false
+  },
+  {
+   "kind": "numeric",
+   "fault": "down_to_wrong",
+   "match_id": "SYN-0602",
+   "moment_id": "MO-0602-0014",
+   "text": "Kestlebury United are down to 9.",
+   "caught": true,
+   "problems": [
+    "wrong_value:team_players_on_pitch",
+    "text_differs:team_players_on_pitch",
+    "down_to_wrong"
+   ],
+   "code_blind": false
+  },
+  {
+   "kind": "numeric",
+   "fault": "percent_dropped",
+   "match_id": "SYN-0601",
+   "moment_id": "MO-0601-0012",
+   "text": "Calverholme Athletic have taken over: 100 of the attacking actions in the last 5 minutes, up from 50%.",
+   "caught": true,
+   "problems": [
+    "unit_missing:momentum_share_last_5min_pct"
+   ],
+   "code_blind": false
+  },
+  {
+   "kind": "numeric",
+   "fault": "too_precise",
+   "match_id": "SYN-0601",
+   "moment_id": "MO-0601-0001",
+   "text": "Big chance for Calverholme Athletic: 0.25 xG from 5.0 m.",
+   "caught": true,
+   "problems": [
+    "too_precise:shot_distance_m"
+   ],
+   "code_blind": false
+  },
+  {
+   "kind": "meaning",
+   "fault": "penalty_wording",
+   "match_id": "SYN-0601",
+   "moment_id": "MO-0601-0008",
+   "text": "Calverholme Athletic score from the spot. 1–0.",
+   "caught": true,
+   "problems": [
+    "penalty_wording"
+   ],
+   "code_blind": false
+  },
+  {
+   "kind": "meaning",
+   "fault": "hat_trick_claim",
+   "match_id": "SYN-0601",
+   "moment_id": "MO-0601-0008",
+   "text": "A hat-trick for Calverholme Athletic! 1–0.",
+   "caught": true,
+   "problems": [
+    "hat_trick_wrong"
+   ],
+   "code_blind": false
+  },
+  {
+   "kind": "meaning",
+   "fault": "cluster_dominance",
+   "match_id": "SYN-0601",
+   "moment_id": "MO-0601-0002",
+   "text": "Calverholme Athletic dominate: 3 shots in the last 5 minutes.",
+   "caught": true,
+   "problems": [
+    "cluster_inference"
+   ],
+   "code_blind": false
+  },
+  {
+   "kind": "meaning",
+   "fault": "other_club",
+   "match_id": "SYN-0601",
+   "moment_id": "MO-0601-0002",
+   "text": "Harbourside City have taken 3 shots in the last 5 minutes.",
+   "caught": true,
+   "problems": [
+    "unknown_name:Harbourside"
+   ],
+   "code_blind": false
+  },
+  {
+   "kind": "meaning",
+   "fault": "unsupported_tactic",
+   "match_id": "SYN-0601",
+   "moment_id": "MO-0601-0002",
+   "text": "Calverholme Athletic changed their shape and have taken 3 shots in the last 5 minutes.",
+   "caught": false,
+   "problems": [],
+   "code_blind": true
+  },
+  {
+   "kind": "meaning",
+   "fault": "card_reason",
+   "match_id": "SYN-0602",
+   "moment_id": "MO-0602-0014",
+   "text": "Kestlebury United are down to 10 after a second yellow.",
+   "caught": true,
+   "problems": [
+    "red_card_reason"
+   ],
+   "code_blind": false
+  },
+  {
+   "kind": "meaning",
+   "fault": "possession",
+   "match_id": "SYN-0601",
+   "moment_id": "MO-0601-0012",
+   "text": "Calverholme Athletic have taken over: 100% of the possession in the last 5 minutes, up from 50%.",
+   "caught": true,
+   "problems": [
+    "momentum_possession"
+   ],
+   "code_blind": false
+  },
+  {
+   "kind": "meaning",
+   "fault": "press_direction",
+   "match_id": "SYN-0601",
+   "moment_id": "MO-0601-0003",
+   "text": "Calverholme Athletic are pressing harder: 0.58 pressures per opponent pass, up from 1.00.",
+   "caught": true,
+   "problems": [
+    "press_direction"
+   ],
+   "code_blind": false
+  },
+  {
+   "kind": "meaning",
+   "fault": "press_intent",
+   "match_id": "SYN-0601",
+   "moment_id": "MO-0601-0003",
+   "text": "Calverholme Athletic look tired and are pressing less: 0.58 pressures per opponent pass, down from 1.00.",
+   "caught": true,
+   "problems": [
+    "press_intent"
+   ],
+   "code_blind": false
+  },
+  {
+   "kind": "meaning",
+   "fault": "xg_verdict",
+   "match_id": "SYN-0601",
+   "moment_id": "MO-0601-0001",
+   "text": "Big chance for Calverholme Athletic: 0.25 xG from 5 m. He should have scored.",
+   "caught": true,
+   "problems": [
+    "xg_verdict",
+    "xg_verdict"
+   ],
+   "code_blind": false
+  }
+ ],
+ "latency": {
+  "template_bench": {
+   "model_moments": {
+    "n": 0,
+    "p50": null,
+    "p95": null,
+    "max": null
+   },
+   "template_moments": {
+    "n": 538,
+    "p50": 0.01,
+    "p95": 0.01,
+    "max": 0.06
+   }
+  },
+  "model_bench": {
+   "model_moments": {
+    "n": 18,
+    "p50": 87.17,
+    "p95": 197.46,
+    "max": 197.46
+   },
+   "template_moments": {
+    "n": 133,
+    "p50": 0.01,
+    "p95": 0.03,
+    "max": 0.08
+   }
+  },
+  "model_runs": {
+   "n": 16,
+   "p50": 120.81,
+   "p95": 1538.49,
+   "max": 1538.49
+  },
+  "live": [
+   {
+    "match_id": "SYN-0510",
+    "moment_to_send_s": {
+     "n": 18,
+     "p50": 1,
+     "p95": 3,
+     "max": 3
+    }
+   },
+   {
+    "match_id": "SYN-0511",
+    "moment_to_send_s": {
+     "n": 25,
+     "p50": 1,
+     "p95": 3,
+     "max": 4
+    }
+   }
+  ]
+ },
+ "model_runs": [
+  {
+   "match_id": "SYN-0507",
+   "lines": 528,
+   "verified": 0,
+   "wrong_numbers": 0
+  },
+  {
+   "match_id": "SYN-0508",
+   "lines": 472,
+   "verified": 2,
+   "wrong_numbers": 0
+  },
+  {
+   "match_id": "SYN-0509",
+   "lines": 468,
+   "verified": 8,
+   "wrong_numbers": 0
+  },
+  {
+   "match_id": "SYN-1017",
+   "lines": 356,
+   "verified": 2,
+   "wrong_numbers": 0
+  }
+ ]
+}
