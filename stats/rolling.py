@@ -45,11 +45,24 @@ def _records(state: MatchState, side: str, name: str, at: At, span: tuple[int, i
     start (or at an earlier period) instead of reading the whole match every second."""
     lo, hi = span
     start, end = at.period_ms - hi, at.period_ms - lo
-    for period, pms, value in reversed(state.teams[side].timeline.get(name, ())):
+    for period, pms, value, _ in reversed(state.teams[side].timeline.get(name, ())):
         if period != at.period or pms <= start:
             break
         if pms <= end:
             yield value
+
+
+def event_ids(state: MatchState, side: str, name: str, at: At, span: tuple[int, int]) -> list[str]:
+    """The ids of the timeline's events in the window, oldest first."""
+    lo, hi = span
+    start, end = at.period_ms - hi, at.period_ms - lo
+    out = []
+    for period, pms, _, event_id in reversed(state.teams[side].timeline.get(name, ())):
+        if period != at.period or pms <= start:
+            break
+        if pms <= end:
+            out.append(event_id)
+    return out[::-1]
 
 
 def total(state: MatchState, side: str, name: str, at: At, span: tuple[int, int]) -> float:
