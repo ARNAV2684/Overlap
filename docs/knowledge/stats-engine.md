@@ -1,6 +1,6 @@
 # Stats engine
 
-Last verified: 2026-10-20 · branch `stats/numbers` (from main `7bda05a`) · specs agreed (#50); stats S1 runtime: replay only.
+Last verified: 2026-10-20 · branch `stats/live-panels` (from main `0edfc15`) · S1 merged (#51); S2 live panels checked on the local stack.
 
 ## Purpose
 
@@ -8,7 +8,7 @@ Calculates deterministic metrics and spots moments for explanation.
 
 ## Ownership
 
-Registry: Unassigned (Arnav decides). See [registry](../../plans/REGISTRY.md). Azeem owns stats by his own report and in [`PLAN_stats_engine`](../../plans/active/PLAN_stats_engine.md) (D-07 asks Arnav to record it); the registry has not recorded it yet.
+Registry: Azeem (recorded in PR #52). See [registry](../../plans/REGISTRY.md) and [`PLAN_stats_engine`](../../plans/active/PLAN_stats_engine.md).
 
 ## Inputs and outputs
 
@@ -38,7 +38,13 @@ Specifications agreed in #50.
 - **PPDA:** equals the generator's answer key.
 - **Possession:** 0.03 from the generator's internal ball-time, a definition difference.
 
-**Not running yet:** no live service, panels, `match_state` or moments; `rolling.py`, `publish.py`, `triggers.py` and `evidence.py` are placeholders. Do not infer more from README file lists.
+**Built in stats S2:** rolling windows, stat panels every match second (with a heavy block of pass network, pressing grid, zones and momentum buckets every minute), `match_state`, and `main.py live`.
+
+**Local stack checks (2026-10-20):**
+- **A 20× match (SYN-0505):** all 5,981 panels reached a browser socket through the relay, identical to the replay, and were archived in Cosmos `stats`. Median 0.65 s from event to panel.
+- **A run with the engine killed and restarted mid-match (SYN-0506):** no gap in panels.
+
+**Not running yet:** moments and evidence (`triggers.py`, `evidence.py` are placeholders), and Azure. Do not infer more from README file lists.
 
 Evidence / checks to inspect: [`stats/tests`](../../stats/tests), [`CONTRACTS.md`](../../CONTRACTS.md). Existing recorded tests are attributed to their handover; no runtime suite was re-run for these notes.
 
@@ -54,7 +60,6 @@ Connections include planned dependencies; status above determines whether a conn
 
 Next:
 
-- **S2:** live panels through the relay and archiver.
 - **S3:** moments, starting with `shot_cluster` exactly as Pranav's KES–ORR fixture (seed 1017) expects. That fixture still matches the current generator.
 
 The MCP sample is not a working stats producer.

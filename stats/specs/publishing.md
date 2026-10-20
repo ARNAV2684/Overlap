@@ -41,8 +41,13 @@ not kept here. The relay's `screen` container stays the log of envelopes for the
 
 _Answer:_
 
-**Once per match second, yes.** A panel is built at each whole second of `match_ms`, on the first event or frame at
-or after it. It is sent on `match-events` with partition key `match_id` and properties `kind=stats` and
+**Once per match second, yes.** Panel `N` describes every event with `match_ms < N × 1000`. It is built when the
+first **event** at or after `N × 1000` arrives, from the state before that event. A second with no events gets its
+panel then too, so there is one panel for every whole second. Frames never trigger a panel: they arrive on the other
+hub at their own pace, and letting them trigger panels would make panels differ between a live run and a replay.
+Tracking-only values therefore appear only in the heavy block. At 20×, a second with no events gets its panel when
+the next event arrives, usually 1–3 seconds of match time later, about 0.1 s of wall time. The panel at each
+`PeriodEnd` describes the period including its last event. It is sent on `match-events` with partition key `match_id` and properties `kind=stats` and
 `match_id`.
 - The relay forwards it as a `stats` envelope with the panel unchanged.
 - The archiver saves it as `stats-<match_ms, 9 digits>`. Its `match_ms` is a whole second, so a repeat after a

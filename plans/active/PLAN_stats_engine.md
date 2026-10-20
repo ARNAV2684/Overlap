@@ -10,7 +10,7 @@
 | Review coordinator | Arnav |
 | Affected component owners | Arnav (screen relay, archiver, Cosmos, `CONTRACTS.md`), Pranav (agents, MCP), Vedant (web charts) |
 | Proposal version and date | v0.1 · 2026-10-19 |
-| Status | In progress (M1 merged in PR #50; S1 in review, see [`PLAN_stats_engine_S1.md`](PLAN_stats_engine_S1.md)) |
+| Status | In progress (M1 merged in PR #50; S1 in PR #51; S2 in review, see [`PLAN_stats_engine_S2.md`](PLAN_stats_engine_S2.md)) |
 | Plan tier and file | Full · `plans/active/PLAN_stats_engine.md` |
 | Repository | [ARNAV2684/Overlap](https://github.com/ARNAV2684/Overlap) |
 | Reviewed branch and commit | main · 5ef36be |
@@ -328,7 +328,7 @@ or `CONTRACTS.md`) · hot files ✓ (`CONTRACTS.md`: Arnav, Pranav, Vedant to be
 | D-04 | Momentum-swing and press-change thresholds (§9) | Too many or too few moments | Arnav (contract), Pranav (consumer) | Start values in `triggers.md`, tuned in S3 against storyline answer keys (AC-09) | S3 |
 | D-05 | The engine's own xG model vs reusing the generator's | Self-confirming numbers if reused | Azeem | Own model; AC-03 checks agreement | S1 |
 | D-06 | Restart by replay from the match start | Slow recovery late in a long match (about 1,400 events: under 1 s) | Arnav | Accept; revisit only if a match lasts hours | S2 |
-| D-07 | Registry still says stats is unassigned | Reviews routed to the wrong person | Arnav | Arnav records the owner | M1 |
+| D-07 | Registry still says stats is unassigned | Reviews routed to the wrong person | Arnav | **Done:** Arnav recorded Azeem as owner in PR #52 | M1 |
 | D-08 | The storyline answer key's `detect_within_min` for `late_pressure_surge` is 10. The stats engine catches the surge within 15 minutes in 15 of 20 matches, but within 10 in only 7. Proposed: the agents' recall evaluation uses 15 for this storyline (a generator file change by Azeem, agreed with Pranav, who owns the evaluation) | Recall scored against a window the numbers can't meet | Pranav, Azeem | Agree in M1 review; change `generator/storylines/late_pressure_surge.yaml` in its own PR | None |
 | R-01 | Calendar: M1 to S3 in five days | S3 slips past 24 Oct | Azeem | Cut list in §12; the minimum stays | S3 |
 | R-02 | Azure infrastructure (AZ1) not ready | Stats only runs locally for the demo | Arnav, Pranav | Local stack demo; S4 when ready | S4 |
