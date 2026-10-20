@@ -9,7 +9,22 @@ uv sync                    # Python 3.12; Microsoft Agent Framework core 1.22.0 
 uv run pytest              # no model or network calls
 uv run python smoke.py     # one call through the configured provider; settings in infra/local/env.example
 uv run python ../functions/moment_trigger.py --match SYN-0508 --once   # run a played match's moments from Cosmos
+uv run python run_match.py --match SYN-0508 --report out.json        # one match through the agents, re-checked
+uv run python run_match.py --fixture                                 # the same on the stats fixture SYN-1017
 ```
+
+
+**The seven agents:** the **spotter** applies code rules (fixed priority; moments of the same event merge into the
+highest-priority one; comparison moments thinned when the model budget is tight; model-job slots per match) and,
+behind `OVERLAP_SPOTTER_RANK`, a small-model ranking of normal moments. The **analyst** reads context through the
+real MCP server (Agent Framework `MCPStdioTool`, bound to the moment) and writes an interpretation without numbers.
+The **narrator** writes English lines for casual, analyst, each club and each followed player. The
+**fact-checker** checks every number in code, then the meaning with a separate model call, sends failures back
+for at most two rewrites, then uses the line's template. The **translator** translates with Azure AI Translator
+(names kept), re-checks every language and asks a model to confirm the meaning. The **director** (rules only)
+builds one overlay body per audience group. At full time the **recap writer** writes the recap from a fact pack
+built by code. Any model failure falls back to the template for that step only. Prompts: `prompts/*.md` (sent as
+the agents' instructions; each job records the prompt version and model).
 
 **Jobs (one per moment):** the moment trigger (`functions/moment_trigger.py`; locally a poller on Cosmos `moments`,
 on Azure the `moment_trigger` change-feed Function) validates each moment and claims `job:<moment_id>` once, with a
@@ -38,16 +53,20 @@ goes through `models.ModelGate`: per-moment and per-match budgets and a timeout.
 
 | File | Job |
 |---|---|
-| `workflow.py` | Runs the seven stages for one moment as an Agent Framework workflow, saving each stage on the job |
+| `workflow.py` | Runs the agents for one moment (and the recap) as an Agent Framework workflow, saving each stage on the job |
+| `runtime.py` | Run state, dependencies and the model-call helper every agent uses |
+| `context.py` | The MCP server as the analyst's tool (Agent Framework `MCPStdioTool`) |
+| `prompts.py` | Loads `prompts/*.md` and their versions |
+| `run_match.py` | One match through the agents with a report and an independent re-check |
 | `state.py` | Job, budget and outbox documents in Cosmos `moments` (or in memory): claim, lease, resume |
 | `validate.py` | Checks a moment with the MCP reader's schema (one source of truth) |
-| `spotter.py` | Is this worth saying? Classify and prioritise |
+| `spotter.py` | Is this worth saying? Code rules, then optional small-model ranking |
 | `analyst.py` | Explain *why*, using the MCP stats tools |
 | `narrator.py` | One line per viewer mode, with a claim for every number |
 | `fact_checker.py` | Verify every claim; send failures back for a rewrite |
 | `translator.py` | Other languages, numbers intact |
 | `director.py` | Chart, timing, priority and audience for each overlay |
-| `recap_writer.py` | Half-time and full-time recaps |
+| `recap_writer.py` | The full-time recap |
 | `fallbacks.py` | Labelled template lines for when an agent fails |
 | `config.py` | Settings: provider, endpoints, timeouts, budgets, modes, languages |
 | `models.py` | The chat client for the provider, and the gate every model call goes through |

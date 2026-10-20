@@ -26,16 +26,14 @@ if AGENTS.is_dir() and str(AGENTS) not in sys.path:
 log = logging.getLogger("moment_trigger")
 
 
-def make_deps(store=None):
-    """Settings from the environment; the Cosmos store unless one is given."""
+def make_deps(store=None, settings=None):
+    """Settings from the environment; the Cosmos store unless one is given; the model, budget and MCP context the
+    settings ask for (provider `off`: templates only, no MCP)."""
     from config import Settings
-    from state import CosmosStore, JobStore
-    from translation import translator
-    from workflow import Deps
-    settings = Settings.from_env()
-    store = store or CosmosStore.from_env()
-    return Deps(store=store, jobs=JobStore(store, deadline_s=settings.moment_deadline_s), settings=settings,
-                translator=translator(settings))
+    from runtime import agent_deps
+    from state import CosmosStore
+    settings = settings or Settings.from_env()
+    return agent_deps(store or CosmosStore.from_env(), settings)
 
 
 async def handle_batch(docs: list[dict], deps=None) -> list[dict]:
@@ -58,8 +56,12 @@ async def handle_batch(docs: list[dict], deps=None) -> list[dict]:
 
 
 async def poll(deps, match_id: str | None = None, interval_s: float = 1.0, once: bool = False) -> dict[str, int]:
-    """Local stand-in for the change feed: read new moments every `interval_s` and process each once."""
+    """Local stand-in for the change feeds: read new moments every `interval_s` and process each once; when a
+    match's final state says full time, run its recap once (agents.md §7)."""
+    from workflow import process_recap
     seen: set[str] = set()
+    matches: set[str] = {match_id} if match_id else set()
+    recapped: set[str] = set()
     since_ts = 0
     totals: dict[str, int] = {}
     while True:
@@ -69,7 +71,14 @@ async def poll(deps, match_id: str | None = None, interval_s: float = 1.0, once:
             totals[result["status"]] = totals.get(result["status"], 0) + 1
         for d in docs:
             seen.add(d["id"])
+            matches.add(d["match_id"])
             since_ts = max(since_ts, d.get("_ts", 0))
+        for m in sorted(matches - recapped):
+            result = await process_recap(m, deps)
+            if result["status"] != "not_full_time":
+                recapped.add(m)
+                log.info("recap %s: %s", m, result["status"])
+                totals[f"recap_{result['status']}"] = totals.get(f"recap_{result['status']}", 0) + 1
         if once:
             return totals
         await asyncio.sleep(interval_s)

@@ -42,6 +42,17 @@ ENV = {
     "OVERLAP_TRANSLATOR_REGION": "translator_region",
     "OVERLAP_LANGUAGES": "languages",
     "OVERLAP_MODES": "modes",
+    "OVERLAP_SPOTTER_RANK": "spotter_rank",
+    "OVERLAP_MAX_MODEL_JOBS_PER_MATCH": "max_model_jobs_per_match",
+    "OVERLAP_HIGH_PRIORITY_RESERVE": "high_priority_reserve",
+    "OVERLAP_MAX_REWRITES": "max_rewrites",
+    "OVERLAP_MAX_PLAYER_LINES": "max_player_lines",
+    "OVERLAP_MCP_PYTHON": "mcp_python",
+    "OVERLAP_MCP_SOURCE": "mcp_source",
+    "OVERLAP_MCP_FIXTURE_DIR": "mcp_fixture_dir",
+    "OVERLAP_MCP_TIMEOUT_S": "mcp_timeout_s",
+    "OVERLAP_TAG_TOP_SPEED_KMH": "tag_top_speed_kmh",
+    "OVERLAP_TAG_DISTANCE_KM": "tag_distance_km",
 }
 
 
@@ -70,6 +81,18 @@ class Settings:
     translator_region: str = ""
     languages: tuple[str, ...] = LANGUAGES
     modes: tuple[str, ...] = MODES
+    # agents (agents.md §1–§7)
+    spotter_rank: bool = True                  # small-model ranking of normal moments, when a model is on
+    max_model_jobs_per_match: int = 12         # moments that may use model calls (workflow.md §3); the recap is extra
+    high_priority_reserve: int = 3             # model-job slots kept for goals, red cards and penalties
+    max_rewrites: int = 2
+    max_player_lines: int = 3                  # player-mode lines per moment (first players in `player_ids`)
+    mcp_python: str = ""                       # the MCP server's Python; default: mcp_server/.venv
+    mcp_source: str = "cosmos"                 # cosmos (local emulator or Azure) or fixture
+    mcp_fixture_dir: str = ""
+    mcp_timeout_s: float = 2.0
+    tag_top_speed_kmh: float = 33.0            # player tags (§10.6): first crossing of either threshold
+    tag_distance_km: float = 10.0
 
     @classmethod
     def from_env(cls, env: Mapping[str, str] | None = None) -> Settings:
@@ -83,7 +106,11 @@ class Settings:
             raw = raw.strip()
             kind = kinds[name]
             try:
-                if kind == "int":
+                if kind == "bool":
+                    if raw.lower() not in ("1", "0", "true", "false", "yes", "no", "on", "off"):
+                        raise ValueError(raw)
+                    values[name] = raw.lower() in ("1", "true", "yes", "on")
+                elif kind == "int":
                     values[name] = int(raw)
                 elif kind == "float":
                     values[name] = float(raw)
@@ -120,11 +147,22 @@ class Settings:
             raise SettingsError(f"OVERLAP_LANGUAGES must include en and use only {', '.join(LANGUAGES)}")
         if not self.modes or not set(self.modes) <= set(MODES):
             raise SettingsError(f"OVERLAP_MODES must use only {', '.join(MODES)}")
-        for name in ("request_timeout_s", "moment_deadline_s"):
+        if self.mcp_source not in ("cosmos", "fixture"):
+            raise SettingsError("OVERLAP_MCP_SOURCE must be cosmos or fixture")
+        if self.mcp_source == "fixture" and not self.mcp_fixture_dir:
+            raise SettingsError("OVERLAP_MCP_FIXTURE_DIR is required for the fixture source")
+        if not 0 <= self.high_priority_reserve < self.max_model_jobs_per_match:
+            raise SettingsError("OVERLAP_HIGH_PRIORITY_RESERVE must be below OVERLAP_MAX_MODEL_JOBS_PER_MATCH")
+        if not 0 <= self.max_rewrites <= 2:
+            raise SettingsError("OVERLAP_MAX_REWRITES must be 0, 1 or 2")
+        if self.max_player_lines < 0:
+            raise SettingsError("OVERLAP_MAX_PLAYER_LINES must not be negative")
+        for name in ("request_timeout_s", "moment_deadline_s", "mcp_timeout_s", "tag_top_speed_kmh",
+                     "tag_distance_km"):
             if getattr(self, name) <= 0:
                 raise SettingsError(f"{name} must be positive")
         for name in ("max_calls_per_moment", "max_calls_per_match", "max_tokens_per_match", "max_input_tokens",
-                     "max_output_tokens"):
+                     "max_output_tokens", "max_model_jobs_per_match"):
             if getattr(self, name) < 1:
                 raise SettingsError(f"{name} must be at least 1")
 

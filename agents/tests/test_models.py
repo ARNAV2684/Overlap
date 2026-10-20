@@ -1,12 +1,25 @@
 """Client factory and model gate, with no model or network calls. Spec: agents/specs/agents.md §8,
 agents/specs/workflow.md §3."""
 import asyncio
+import json
 from types import SimpleNamespace
+from typing import ClassVar
 
 import pytest
+from pydantic import BaseModel
 
 from config import Settings
-from models import Budget, BudgetExceeded, ModelDisabled, ModelGate, ModelTimeout, chat_client, used_tokens
+from models import (
+    Budget,
+    BudgetExceeded,
+    ModelDisabled,
+    ModelFailed,
+    ModelGate,
+    Models,
+    ModelTimeout,
+    chat_client,
+    used_tokens,
+)
 
 LOCAL = Settings(provider="local", local_base_url="http://localhost:5273/v1", local_model="small-model")
 AZURE = Settings(provider="azure", azure_endpoint="https://example.openai.azure.com", azure_deployment="mini")
@@ -98,3 +111,79 @@ def test_error_keeps_the_reservation_and_reraises():
 def test_used_tokens_reads_only_reported_totals():
     assert used_tokens(SimpleNamespace(usage_details={"total_token_count": 42})) == 42
     assert used_tokens(object()) is None
+
+
+# --- structured calls (Models.ask) --------------------------------------------------------------------------------
+
+class Reply:
+    def __init__(self, text):
+        self.text, self.usage_details = text, None
+
+
+class ScriptedAgent:
+    replies: ClassVar[list] = []
+    seen: ClassVar[list] = []
+
+    def __init__(self, client, instructions, name=None):
+        self.instructions = instructions
+
+    async def run(self, messages, **kwargs):
+        ScriptedAgent.seen.append((messages, kwargs))
+        return Reply(ScriptedAgent.replies.pop(0))
+
+
+class Out(BaseModel):
+    decision: str
+
+
+def models_with(monkeypatch, *replies, provider="local", clock=lambda: 0.0):
+    import agent_framework
+    monkeypatch.setattr(agent_framework, "Agent", ScriptedAgent)
+    ScriptedAgent.replies, ScriptedAgent.seen = list(replies), []
+    s = Settings(provider=provider, local_base_url="http://localhost:1", local_model="m",
+                 azure_endpoint="https://x.example", azure_deployment="d")
+    return Models(s, ModelGate(s), client=object(), clock=clock)
+
+
+def ask(m, deadline=100.0, payload=None):
+    return asyncio.run(m.ask("spotter", "rules", payload or {"x": 1}, Out, match_id="M", moment_id="MO",
+                             deadline_utc=deadline))
+
+
+def test_ask_parses_a_fenced_reply(monkeypatch):
+    m = models_with(monkeypatch, '```json\n{"decision": "admit"}\n```')
+    assert ask(m).decision == "admit"
+    messages, kwargs = ScriptedAgent.seen[0]
+    assert json.loads(messages) == {"x": 1} and "response_format" not in kwargs["options"]
+
+
+def test_ask_uses_structured_outputs_on_azure(monkeypatch):
+    m = models_with(monkeypatch, '{"decision": "admit"}', provider="azure")
+    ask(m)
+    assert ScriptedAgent.seen[0][1]["options"]["response_format"] is Out
+
+
+@pytest.mark.parametrize("text", ["", "not json", '{"other": 1}', "[1, 2]"])
+def test_ask_refuses_unusable_replies(monkeypatch, text):
+    with pytest.raises(ModelFailed) as e:
+        ask(models_with(monkeypatch, text))
+    assert e.value.reason == "invalid_output"
+
+
+def test_ask_respects_the_deadline_without_calling(monkeypatch):
+    m = models_with(monkeypatch, '{"decision": "admit"}', clock=lambda: 99.0)
+    with pytest.raises(ModelFailed) as e:
+        ask(m, deadline=100.0)                       # one second left is the template's reserve
+    assert e.value.reason == "deadline" and ScriptedAgent.seen == []
+
+
+def test_ask_never_truncates_a_large_input(monkeypatch):
+    with pytest.raises(ModelFailed) as e:
+        ask(models_with(monkeypatch, '{"decision": "admit"}'), payload={"facts": "x" * 20_000})
+    assert e.value.reason == "input_too_large" and ScriptedAgent.seen == []
+
+
+def test_ask_is_off_without_a_provider():
+    with pytest.raises(ModelFailed) as e:
+        asyncio.run(Models(Settings()).ask("spotter", "r", {}, Out, match_id="M", moment_id="MO", deadline_utc=1e12))
+    assert e.value.reason == "off"
