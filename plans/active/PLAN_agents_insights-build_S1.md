@@ -6,7 +6,7 @@
 | Parent plan | [`PLAN_agents_insights-build.md`](PLAN_agents_insights-build.md) · v0.1 |
 | Milestone in parent plan | M1 · AC-01 |
 | Author / owner | Arnav |
-| Status | In progress |
+| Status | Done, in review |
 | Reviewed branch and commit | main · 67bf962 |
 | Planned branch | `agents/model-switch` |
 
@@ -26,7 +26,7 @@
 |---|---|---|
 | Agreed specs: `agents/specs/agents.md` §8, `workflow.md` §3 | #61 | Yes |
 | Agent Framework packages | PyPI: `agent-framework-core` 1.22.0 (checked 20 Oct) | Yes |
-| Foundry Local and a small model on the laptop | Arnav's approval for the download | **No** — blocks only the live smoke (AC-01 part 1); code and unit tests proceed |
+| Foundry Local and a small model on the laptop | Arnav approved phi-4-mini (20 Oct) | Yes: Foundry Local 0.11.0, `phi-4-mini-instruct-openvino-gpu:2` |
 
 ## 3. Files
 
@@ -80,4 +80,13 @@ Scanned at `67bf962` on 2026-10-20: no open PRs; no branch touches `agents/`, `i
 
 ## 9. Handover
 
-**Pending implementation.**
+**Done (20 Oct 2026, branch `agents/model-switch`).**
+
+| AC | Result |
+|---|---|
+| AC-01a | **Passed.** Foundry Local 0.11.0 (`winget install Microsoft.FoundryLocal`), model `phi-4-mini-instruct-openvino-gpu:2` (2.2 GB) loaded with `foundry model load phi-4-mini`; endpoint from `foundry server status` (`http://127.0.0.1:<port>`). `smoke.py` with `OVERLAP_MODEL_PROVIDER=local`, `OVERLAP_LOCAL_MODEL_URL=http://127.0.0.1:<port>/v1`: reply `Ready` in 0.6 s, PASS |
+| AC-01b | Passed: provider `off` refuses every call (smoke prints the reason, exit 1); a non-local URL and missing Azure endpoint or deployment fail with the variable named; no fallback between providers |
+| AC-01c | Passed: 36 unit tests, no model or network calls; the gate enforces per-moment, per-match and token budgets and the timeout, and keeps the reservation when usage is unknown |
+
+- **Differences from the plan:** `models.py`, `translation.py` and `smoke.py` were added beside `config.py` (in the file map). The Foundry Local port is chosen by the service, so it is read from `foundry server status`, not fixed.
+- **Follow-ups:** the durable per-match budget in Cosmos (M3); the Azure path is unit-tested only until the switch (M7).

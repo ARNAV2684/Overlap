@@ -16,7 +16,7 @@ and tests stay the same.
 | Cosmos DB | Microsoft Cosmos DB emulator, Linux (Docker) | 8081 | Check before relying on it: create, upsert, query by partition key, ETag conditions |
 | Azure Functions | Functions Core Tools (`func start`) | 7071 | If its Event Hubs trigger can't use the emulator, `functions/relay_runner.py` runs the same core |
 | Web PubSub | `infra/local/webpubsub_standin/` (ours; Microsoft has no emulator), run on the host with `uv run standin` | 8787 | Same service send API, `/negotiate` and browser protocol `json.webpubsub.azure.v1` |
-| Microsoft Foundry (models) | Foundry Local: Microsoft's on-device runtime with an OpenAI-compatible endpoint (`OVERLAP_MODEL_PROVIDER=local`) | shown by `foundry service status` | Small model for plumbing only; prompt quality is judged on the Azure model after the switch (`agents/specs/agents.md` §8). Licence and download need Arnav's approval |
+| Microsoft Foundry (models) | Foundry Local: Microsoft's on-device runtime with an OpenAI-compatible endpoint (`OVERLAP_MODEL_PROVIDER=local`) | shown by `foundry server status` | Small model for plumbing only; prompt quality is judged on the Azure model after the switch (`agents/specs/agents.md` §8). Licence and download need Arnav's approval |
 | Azure AI Translator | Local fake (`OVERLAP_TRANSLATOR=fake`): returns the English text marked with the language | — | Proves plumbing, not translation |
 
 Microsoft's emulators each need their licence accepted once per developer (`ACCEPT_EULA=Y`), and Docker Desktop.
