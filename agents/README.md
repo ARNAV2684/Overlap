@@ -16,6 +16,7 @@ uv run python -m evals.bench --matches ../data/generated/bench --out <dir>/match
 uv run python -m evals.report --bench <dir>/matches --out evals/results/round-1     # recall, accuracy, faults, latency
 uv run python -m evals.review_sheet --results <dir>/matches --out evals/review/round-1   # Azeem's sheets
 uv run python -m evals.gold import --sheets evals/review/round-1 --out evals/gold/round-1.json   # his answers
+uv run python -m evals.live_run --match <id> --out evals/results/live-<id>   # after a local live run
 ```
 
 **Evaluation (`evals/`):** generated matches (each storyline and a control) go through the stats replay and the
