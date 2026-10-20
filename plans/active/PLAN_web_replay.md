@@ -9,8 +9,8 @@
 | Collaborators and responsibilities | None yet |
 | Review coordinator | Arnav |
 | Affected component owners | Arnav (archiver: producer of the stored match, `CONTRACTS.md` §4.1, `archiver/specs/storage.md`; Azure resources and roles, A3 / S4; Pranav helping). Azeem (stats engine: its panels are archived and replayed unchanged). Docs and scripts: unassigned (Arnav decides) |
-| Proposal version and date | v0.1 · 2026-10-20 |
-| Status | Ready for review |
+| Proposal version and date | v0.2 · 2026-10-20 (v0.1 same day; see the change note in §12) |
+| Status | In progress · Phase 1 (specs) written; spec PR not opened yet |
 | Plan tier and file | Full · `plans/active/PLAN_web_replay.md` |
 | Repository | [ARNAV2684/Overlap](https://github.com/ARNAV2684/Overlap) |
 | Reviewed branch and commit | main · 36f5d00 |
@@ -38,7 +38,7 @@
 |---|---|---|
 | Placeholder files | main · 36f5d00 · `web/src/app/api/replay/[id]/route.ts`, `web/src/app/replay/[id]/page.tsx` | Build-safe stubs: the route returns `501`, the page renders nothing. Both headers say "write and agree the spec first" |
 | Governing specs | `web/specs/realtime.md` §5 (replay), `web/specs/screens.md` §1 (replay page) | **Not started** on `main`. Spec gate not met: M1 writes them |
-| Stored match | `CONTRACTS.md` §4.1; `archiver/specs/storage.md` §1–§3 (status line still "draft for review") | Cosmos `live` / `matches`, `events`, `stats`, partition `/match_id`; Blob `tracking/<match_id>/p<period>/m<MMM>.ndjson.gz`; read order; repeated frames possible |
+| Stored match | `CONTRACTS.md` §4.1; `archiver/specs/storage.md` §1–§3 (agreed, `339b14a`) | Cosmos `live` / `matches`, `events`, `stats`, partition `/match_id`; Blob `tracking/<match_id>/p<period>/m<MMM>.ndjson.gz`; read order; repeated frames possible |
 | Archiver reader | `archiver/reader.py`, `event_store.py`, `tracking_chunks.py` | Python reader for the read-back check. Its docstring says the web app's replay route turns the stored match into §7 envelopes. Settings: `OVERLAP_COSMOS_ENDPOINT`, `OVERLAP_COSMOS_KEY` (emulator only), `OVERLAP_COSMOS_DATABASE`, `OVERLAP_ARCHIVE_STORAGE` (local), `OVERLAP_ARCHIVE_BLOB_ENDPOINT` (Azure) |
 | Envelope and status rules | `CONTRACTS.md` §7, §7.2; `functions/screen_relay.py` | How `status` envelopes follow `PeriodStart`, goal `Shot` and `PeriodEnd`; `positions` bundles of 1–5 frames from one period |
 | Live screen | `web/src/lib/store.ts`, `store-hooks.ts`, `contracts.ts`; `web/src/components/live/*` | The store is independent of the socket (`MatchStoreContext`), so a different provider can feed it. `LiveMatchFrame` hard-codes the intro's source card ("Mock WebSocket"), and `Workspace` is not exported |
@@ -47,8 +47,8 @@
 **Differences between references:**
 - The route placeholder says it returns "archived envelopes and stored overlays". Overlays aren't produced or stored
   yet (`CONTRACTS.md` §10 is a proposal), so this plan replays envelopes only.
-- `archiver/specs/storage.md` still reads "draft for review", though its format is in `CONTRACTS.md` §4.1 and Vedant
-  approved it on 20 Oct. Setting it to agreed is Arnav's (R-04).
+- `archiver/specs/storage.md` read "draft for review" when this plan was written; it was marked agreed on `main` in
+  `339b14a` (R-04 resolved).
 
 ## 3. Scope and boundaries
 
@@ -72,7 +72,7 @@
 | Dependency or shared area | Owner to coordinate with | What is needed / supplied | Status and needed-by milestone | How work can continue meanwhile |
 |---|---|---|---|---|
 | Web specs agreed | Arnav (reviewer) | Review and merge of the M1 spec PR | Pending · M1 | Not applicable; code waits for it |
-| Stored match format | Arnav (archiver) | `CONTRACTS.md` §4.1 and `storage.md` unchanged | Format on `main`; Vedant approved 20 Oct; `storage.md` status line not yet set to agreed (R-04) | Build to §4.1 |
+| Stored match format | Arnav (archiver) | `CONTRACTS.md` §4.1 and `storage.md` unchanged | Agreed: `storage.md` marked agreed on `main` (`339b14a`), after Vedant's approval on 20 Oct | Build to §4.1 |
 | Local archive with a finished match | Arnav (archiver runner), Azeem (generator) | `archiver/main.py` beside the local stack while `generator/cli.py live` plays a match | Available · M2 | Unit tests with hand-made stored data |
 | Read access on Azure | Arnav (A3 / S4); web app hosting: unassigned (Arnav decides) | An identity for the web app with read-only data roles on Cosmos `matches`, `events`, `stats` and Blob `tracking`; the two endpoints as settings | Not started · after M3 | Local emulators only; the Azure path stays unproven |
 | Lockfile policy | Arnav (R-03 of the live screen plan) | Three new dependencies in `web/package.json` | Unresolved; lockfile still gitignored | Follow the current policy |
@@ -137,7 +137,7 @@ Blob tracking/<id>/p<P>/m<MMM> ──┴─▶ GET /api/replay/<id>            (
 
 | Interface | Producer → consumer | Contract / example link | Change proposed? | Affected owners and agreement |
 |---|---|---|---|---|
-| Stored match (Cosmos `matches`, `events`, `stats`; Blob `tracking`) | Archiver → replay route | `CONTRACTS.md` §4.1; `archiver/specs/storage.md` §1–§3 | No (read-only consumer) | Arnav · format approved by Vedant 20 Oct; spec status line pending (R-04) |
+| Stored match (Cosmos `matches`, `events`, `stats`; Blob `tracking`) | Archiver → replay route | `CONTRACTS.md` §4.1; `archiver/specs/storage.md` §1–§3 | No (read-only consumer) | Arnav · agreed: approved by Vedant 20 Oct, `storage.md` marked agreed (`339b14a`) |
 | Stat panel inside stored `stats` documents | Stats engine → archiver → replay route | `CONTRACTS.md` §7.4 | No; forwarded unchanged without the Cosmos `id` and system fields | Azeem, Arnav · no change |
 | Envelopes to the browser | Replay route → replay page | `CONTRACTS.md` §7, §7.2 | No; replay uses the same shape (§4.1 says so) | Vedant (both sides) |
 | Replay manifest and chunk responses | Replay route → replay page | `web/specs/realtime.md` §5 (M1) | New, web-internal (the web app's own route) | Vedant |
@@ -170,8 +170,10 @@ route's own responses.
 | `web/src/app/api/replay/[id]/route.ts` | Modify (M2) | Manifest and chunk handler, error codes | `realtime.md` §5 | Vedant |
 | `web/src/lib/replay-client.ts` | Add (M3) | Browser fetch of manifest and chunks, with timeouts and retries | `realtime.md` §5 | Vedant |
 | `web/src/lib/replay-player.ts` | Add (M3) | Playhead, speed, pause, prefetch, end of match | `realtime.md` §5 | Vedant |
-| `web/src/components/replay/{ReplayProvider,ReplayMatchView,ReplayControls}.tsx` | Add (M3) | Store and player lifetime; screen composition; play/pause and speed controls | `screens.md` §1 | Vedant |
+| `web/src/components/replay/{ReplayProvider,ReplayMatchView,ReplayControls,ReplayIntro}.tsx` | Add (M3) | Store and player lifetime; screen composition; play/pause, speed and progress; replay intro and source card | `screens.md` §1 | Vedant |
 | `web/src/components/live/LiveMatchView.tsx` | Modify (M3) | Optional `intro` on `LiveMatchFrame`; export `Workspace`. Live screen unchanged | `screens.md` §1 | Vedant |
+| `web/src/components/layout/AppHeader.tsx` | Modify (M3) | Optional `section` text on `AppHeaderView` (default "Live stream"), for "/ Replay". Live screen unchanged | `screens.md` §1 | Vedant |
+| `web/src/lib/stream-source.ts`, `web/src/components/timeline/cells/ArrivalCell.tsx` | Add / modify (M3) | A stream-source context (default live) so replay rows read "Replay · archive" instead of "Live WebSocket". Live screen unchanged | `realtime.md` §5.2 | Vedant |
 | `web/src/app/replay/[id]/page.tsx` | Modify (M3) | Route: id check, not-found, render the replay view | `screens.md` §1 | Vedant |
 | `web/src/lib/__tests__/{replay-envelopes,replay-route,replay-player,replay-view}.test.ts(x)`, `replay.qa.test.ts` | Add (M2, M3) | Unit tests; the `qa` test is opt-in and reads the local archive | `realtime.md` §6 | Vedant |
 | `web/README.md` | Modify (M3) | How to archive a match locally and open its replay | — | Vedant |
@@ -246,6 +248,54 @@ the charts work lands. CI does not run `npm test` (R-06 of the live screen plan)
 | M3 — Replay page | `/replay/<id>` plays a finished match at 1×, 5×, 20× | Vedant | M2 | AC-05, AC-06, AC-07, AC-08 | 1 day · 23 Oct (estimate) |
 | M4 — Optional: find and jump | `/replay` lists finished matches; jump to a minute | Vedant | M3 | Its own tests (added to §11 if kept) | ½ day · 24 Oct, only if M1–M3 are done |
 
+**Implementation phases** (v0.2, at Vedant's request: the milestones above split into five phases; ticked as each task
+is done):
+
+**Phase 1 — Specs (M1)**
+- [x] Split the plan into five phases; plan v0.2, status In progress (20 Oct)
+- [x] `realtime.md` §5 written: route, manifest and chunk shapes, chunk contents, order and `seq`, validation, errors,
+      caching, settings (§5.1); player, playhead, speed, pause, prefetch, retries, badge, row source (§5.2); status
+      line updated (20 Oct)
+- [x] `screens.md` §1 replay screen written: header, intro, controls, notices, error states, accessibility; status
+      line updated (20 Oct)
+- [x] File map updated for three small additive changes found while writing the specs: `AppHeader.tsx` (`section`
+      text), `ArrivalCell.tsx` with a new `stream-source.ts` (row source), and `ReplayIntro.tsx` (20 Oct)
+- [ ] Spec PR opened on `web/replay-spec` (waits for Vedant's OK to commit and push)
+- [ ] Spec PR reviewed and merged (AC-01) · Arnav. Code in phases 2–5 can be written meanwhile, but not merged before it
+
+**Phase 2 — Server read path (M2, first half)**
+- [ ] `web/package.json`: add `@azure/cosmos`, `@azure/storage-blob`, `@azure/identity`
+- [ ] `web/.env.example`: server-only variable names with local defaults, no key value
+- [ ] `src/lib/server/archive-env.ts` and its test: settings read, missing names listed, `replay_unavailable`
+- [ ] `src/lib/server/archive-store.ts`: match document, a minute's events and panels, a tracking file, 10 s timeout
+- [ ] Assumptions checked against the local emulators: multi-member gzip files read, `ORDER BY c.seq` works
+
+**Phase 3 — Envelope builder and route (M2, second half)**
+- [ ] `src/lib/replay-envelopes.ts`: manifest, chunk list, status building, bundles, order, `seq`, Cosmos fields
+      stripped, validation
+- [ ] `replay-envelopes.test.ts` (AC-03)
+- [ ] `src/app/api/replay/[id]/route.ts` and `replay-route.test.ts` with a fake store (AC-04)
+- [ ] `replay.qa.test.ts`, opt-in, against a match archived on the local stack (AC-02)
+
+**Phase 4 — Player and page (M3, first half)**
+- [ ] `src/lib/replay-client.ts` and `src/lib/replay-player.ts`; `replay-player.test.ts` (AC-05)
+- [ ] `stream-source.ts` and `ArrivalCell.tsx`; `AppHeaderView` `section`; `LiveMatchFrame` `intro` and exported
+      `Workspace`
+- [ ] `components/replay/*` and `src/app/replay/[id]/page.tsx`; `replay-view.test.tsx`
+- [ ] Lint, typecheck, build and every test pass, the live screen's included (AC-08)
+
+**Phase 5 — End-to-end checks and handover (M3, second half; M4 only if time allows)**
+- [ ] Manual 20× replay of an archived match to full time; screenshots at 375 and 1440 px; keyboard pass (AC-06)
+- [ ] Chrome Performance trace during 20× playback (AC-07)
+- [ ] `web/README.md` replay section; `docs/knowledge/frontend.md` and ARCH-01 in its own commit (Pranav told)
+- [ ] Validation report and the handover in §15
+- [ ] Optional M4: list of archived matches and jump to a minute
+
+**Change note v0.1 → v0.2 (20 Oct):** added the five phases above. Writing the specs found that the live screen's
+header text and the timeline's arrival label are hard-coded, so the file map gains `AppHeader.tsx`, `ArrivalCell.tsx`,
+a new `stream-source.ts` and `ReplayIntro.tsx`; all are additive, and the live screen keeps its current text. Every
+other decision is unchanged.
+
 - **Project calendar check:** M1–M3 end on 23 Oct, before "every required feature by 24 Oct". This competes with the
   stat charts and insight cards, which still need their own plans (R-05 of the live screen plan). If those come
   first, M3 slips to 24 Oct with no room left for M4.
@@ -300,7 +350,7 @@ the charts work lands. CI does not run `npm test` (R-06 of the live screen plan)
 | R-01 | The web app reads the archiver's containers directly instead of going through an archiver service | Two readers of one format to keep in step (`reader.py` and the route) | Arnav | Accept: §4.1 is the contract both follow; AC-02 compares against the archive | M2 |
 | R-02 | No Azure identity, roles or hosting for the web app yet | Replay works locally only for the demo | Arnav (A3 / S4); hosting unassigned (Arnav decides) | Add read roles for the web app to A3; until then, local replay | Azure run only |
 | R-03 | A minute of positions is too large to fetch ahead at 20× | Stutter at minute boundaries | Vedant | Measure in AC-07; if needed, a smaller chunk (30 s) or fewer frames per bundle, in a spec update | M3 |
-| R-04 | `storage.md` still says "draft for review" | The format could still change under the route | Arnav | Set it to agreed, or tell Vedant before any change | M2 |
+| R-04 | `storage.md` still says "draft for review" | The format could still change under the route | Arnav | **Resolved:** marked agreed on `main` (`339b14a`) | None |
 | R-05 | Calendar: replay competes with stat charts and insight cards for 21–24 Oct | One of them slips past 24 Oct | Vedant, Arnav | Agree the order; cut list in §12 | Calendar |
 
 **Decisions requested from Arnav or affected owners:**
@@ -309,7 +359,7 @@ the charts work lands. CI does not run `npm test` (R-06 of the live screen plan)
    `reader.py`. It keeps one deployable and needs no change in `archiver/`.
 2. **R-02:** include read-only roles for the web app (`matches`, `events`, `stats`, `tracking`) in A3, and decide
    where the web app is hosted on Azure.
-3. **R-04:** set `archiver/specs/storage.md` to agreed.
+3. ~~**R-04:** set `archiver/specs/storage.md` to agreed.~~ Done (`339b14a`).
 4. **R-05:** the order of replay, stat charts and insight cards before 24 Oct. Recommendation: replay M1–M3 first,
    because its only dependency (the local archive) exists today.
 
@@ -333,10 +383,9 @@ the charts work lands. CI does not run `npm test` (R-06 of the live screen plan)
 |---|---|---|---|---|
 | Arnav | v0.1 | — | Pending | — |
 
-**Implementation readiness:** blocked by M1 (spec agreement) for all code.
-**Relevant specification agreement:** pending (the M1 spec PR).
-**Next action and owner:** after go, write `realtime.md` §5 and the replay page in `screens.md` §1 on
-`web/replay-spec` · Vedant.
+**Implementation readiness:** go given by Vedant on 20 Oct. Phase 1 specs written; code merges wait for the spec PR.
+**Relevant specification agreement:** pending (the M1 spec PR, not opened yet).
+**Next action and owner:** commit and open the spec PR on `web/replay-spec` · Vedant; review · Arnav.
 
 ### Handover after implementation
 
