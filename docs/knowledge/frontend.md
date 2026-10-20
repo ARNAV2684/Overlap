@@ -1,6 +1,6 @@
 # Frontend
 
-Last verified: 2026-10-19 · source main `a61166b` · source inspection, not fresh runtime certification.
+Last verified: 2026-10-20 · source main `36f5d00` · source inspection, not fresh runtime certification.
 
 ## Purpose
 
@@ -22,7 +22,7 @@ Specifications: [`web/specs/realtime.md`](../../web/specs/realtime.md), [`web/sp
 
 ## Status and evidence
 
-Partial implementation: redirect, live page, stream provider, socket/store/API client exist. The app-owned negotiate route is still a 501 stub on this main revision. README descriptions of an empty app are stale; inspect source.
+Partial implementation: redirect, live page, stream provider, socket/store/API client exist. PR [#48](https://github.com/ARNAV2684/Overlap/pull/48) (merged 19 Oct) added the live pitch, scoreboard, event timeline, message inspector and metric cards. The app-owned negotiate route is still a 501 stub on this main revision, so the browser negotiates with the local stand-in. Insight cards and viewer modes are not built. README descriptions of an empty app are stale; inspect source.
 
 Evidence / checks to inspect: [`web/src/lib`](../../web/src/lib), [`web/IMPLEMENTATION_PLAN.md`](../../web/IMPLEMENTATION_PLAN.md), [`plans/active/PLAN_web_live-match-viewer.md`](../../plans/active/PLAN_web_live-match-viewer.md). Existing recorded tests are attributed to their handover; no runtime suite was re-run for these notes.
 
@@ -36,7 +36,7 @@ Connections include planned dependencies; status above determines whether a conn
 
 ## Next work
 
-PR [#48](https://github.com/ARNAV2684/Overlap/pull/48), branch `web/live-api` at `0ef55ee`, is open and unmerged at the 19 October scan; it is not main behaviour. Validate real relay/browser and API integration before claiming completion.
+PR #48 is merged. Next: the app's own negotiate route, stat panels from the stats engine (CONTRACTS §7.4, live since #53), insight cards (§10.3) and viewer modes. Validate real relay/browser and API integration before claiming completion.
 
 ## Work and coordination record
 
@@ -44,17 +44,17 @@ Verified 19 October 2026 against main `a61166b`. This describes recorded respons
 
 | Responsible person / basis | Recorded work | Governing reference | Current integration boundary |
 |---|---|---|---|
-| Vedant; see Ownership above | Live UI/client code is partial on main; PR #48 contains unmerged API work. | [Specification](../../web/specs/realtime.md) | See Inputs and outputs and Status above; implementation and review are distinct. |
+| Vedant; see Ownership above | Live UI/client code is partial on main; PR #48 merged the live screen components. | [Specification](../../web/specs/realtime.md) | See Inputs and outputs and Status above; implementation and review are distinct. |
 
 ### WEB-01
 
 | Field | Value |
 |---|---|
 | Review/input needed from | Arnav / Pranav |
-| Request | Review PR #48 API changes against actual relay/PubSub snapshot and negotiation services. |
+| Request | Check the merged #48 screen against the real relay/PubSub snapshot and negotiation services. |
 | Connected component | [screen-relay](screen-relay.md) |
 | Why it matters | A mismatch here can block the connected component; do not create a private contract to work around it. |
-| Done when | A scoped review on PR #48 plus real integration evidence; merge alone is not a live test. |
+| Done when | A browser run through the relay on the local stack (screen task SC4) plus real integration evidence; merge alone is not a live test. |
 | Status | Proposed coordination item; no notification sent and no fresh reviewer acceptance recorded. |
 | Decision evidence / due date | Not recorded / no deadline agreed. Record the review URL and affected revision here when available. |
 
