@@ -1,0 +1,2457 @@
+[
+ {
+  "context": {
+   "phase": "live",
+   "players": [
+    {
+     "name": "Malte Zimmermann",
+     "player_id": "KES-10",
+     "pos": "CM"
+    },
+    {
+     "name": "Igor Petrović",
+     "player_id": "KES-07",
+     "pos": "RW"
+    }
+   ],
+   "score": {
+    "away": 0,
+    "home": 1
+   },
+   "teams": {
+    "away": {
+     "name": "Orrinford Albion",
+     "team_id": "ORR"
+    },
+    "home": {
+     "name": "Kestlebury United",
+     "team_id": "KES"
+    }
+   }
+  },
+  "evidence": {
+   "clock": "0:16",
+   "event_ids": [
+    "SYN-1017-00002",
+    "SYN-1017-00005",
+    "SYN-1017-00006",
+    "SYN-1017-00008",
+    "SYN-1017-00011"
+   ],
+   "facts": [
+    {
+     "decimals": 2,
+     "key": "shot_xg",
+     "label": "Expected goals of Malte Zimmermann's shot",
+     "unit": "xG",
+     "value": 0.15
+    },
+    {
+     "decimals": 0,
+     "key": "shot_distance_m",
+     "label": "Distance of the shot from the goal centre",
+     "unit": "m",
+     "value": 12
+    },
+    {
+     "decimals": 0,
+     "key": "team_goals_match",
+     "label": "Kestlebury United goals so far",
+     "value": 1
+    },
+    {
+     "decimals": 0,
+     "key": "opponent_goals_match",
+     "label": "Orrinford Albion goals so far",
+     "value": 0
+    },
+    {
+     "decimals": 0,
+     "key": "player_goals_match",
+     "label": "Malte Zimmermann's goals in this match",
+     "value": 1
+    },
+    {
+     "decimals": 0,
+     "key": "team_shots_match",
+     "label": "Kestlebury United shots so far",
+     "value": 1
+    },
+    {
+     "decimals": 0,
+     "key": "shot_is_penalty",
+     "label": "Whether the goal was a penalty (1) or not (0)",
+     "value": 0
+    }
+   ],
+   "match_id": "SYN-1017",
+   "match_ms": 16400,
+   "moment_id": "MO-1017-0001",
+   "period": 1,
+   "player_ids": [
+    "KES-10",
+    "KES-07"
+   ],
+   "team_id": "KES",
+   "trigger": "goal",
+   "window": {
+    "from_ms": 0,
+    "to_ms": 16400
+   }
+  },
+  "evidence_version": 1,
+  "id": "MO-1017-0001",
+  "kind": "moment",
+  "match_id": "SYN-1017",
+  "moment_id": "MO-1017-0001",
+  "schema_version": 1,
+  "source": {
+   "event_seq": 11,
+   "match_ms": 16400,
+   "period": 1
+  }
+ },
+ {
+  "context": {
+   "phase": "live",
+   "players": [
+    {
+     "name": "Kwame Kone",
+     "player_id": "KES-09",
+     "pos": "ST"
+    },
+    {
+     "name": "Jakub Mazur",
+     "player_id": "KES-08",
+     "pos": "CM"
+    }
+   ],
+   "score": {
+    "away": 0,
+    "home": 2
+   },
+   "teams": {
+    "away": {
+     "name": "Orrinford Albion",
+     "team_id": "ORR"
+    },
+    "home": {
+     "name": "Kestlebury United",
+     "team_id": "KES"
+    }
+   }
+  },
+  "evidence": {
+   "clock": "13:12",
+   "event_ids": [
+    "SYN-1017-00314",
+    "SYN-1017-00315",
+    "SYN-1017-00316",
+    "SYN-1017-00320",
+    "SYN-1017-00326",
+    "SYN-1017-00327",
+    "SYN-1017-00328",
+    "SYN-1017-00330",
+    "SYN-1017-00331",
+    "SYN-1017-00335"
+   ],
+   "facts": [
+    {
+     "decimals": 2,
+     "key": "shot_xg",
+     "label": "Expected goals of Kwame Kone's shot",
+     "unit": "xG",
+     "value": 0.49
+    },
+    {
+     "decimals": 0,
+     "key": "shot_distance_m",
+     "label": "Distance of the shot from the goal centre",
+     "unit": "m",
+     "value": 4
+    },
+    {
+     "decimals": 0,
+     "key": "team_goals_match",
+     "label": "Kestlebury United goals so far",
+     "value": 2
+    },
+    {
+     "decimals": 0,
+     "key": "opponent_goals_match",
+     "label": "Orrinford Albion goals so far",
+     "value": 0
+    },
+    {
+     "decimals": 0,
+     "key": "player_goals_match",
+     "label": "Kwame Kone's goals in this match",
+     "value": 1
+    },
+    {
+     "decimals": 0,
+     "key": "team_shots_match",
+     "label": "Kestlebury United shots so far",
+     "value": 5
+    },
+    {
+     "decimals": 0,
+     "key": "shot_is_penalty",
+     "label": "Whether the goal was a penalty (1) or not (0)",
+     "value": 0
+    }
+   ],
+   "match_id": "SYN-1017",
+   "match_ms": 792600,
+   "moment_id": "MO-1017-0002",
+   "period": 1,
+   "player_ids": [
+    "KES-09",
+    "KES-08"
+   ],
+   "team_id": "KES",
+   "trigger": "goal",
+   "window": {
+    "from_ms": 750400,
+    "to_ms": 792600
+   }
+  },
+  "evidence_version": 1,
+  "id": "MO-1017-0002",
+  "kind": "moment",
+  "match_id": "SYN-1017",
+  "moment_id": "MO-1017-0002",
+  "schema_version": 1,
+  "source": {
+   "event_seq": 335,
+   "match_ms": 792600,
+   "period": 1
+  }
+ },
+ {
+  "context": {
+   "phase": "live",
+   "players": [
+    {
+     "name": "Kwame Kone",
+     "player_id": "KES-09",
+     "pos": "ST"
+    }
+   ],
+   "score": {
+    "away": 0,
+    "home": 2
+   },
+   "teams": {
+    "away": {
+     "name": "Orrinford Albion",
+     "team_id": "ORR"
+    },
+    "home": {
+     "name": "Kestlebury United",
+     "team_id": "KES"
+    }
+   }
+  },
+  "evidence": {
+   "clock": "16:39",
+   "event_ids": [
+    "SYN-1017-00335",
+    "SYN-1017-00370"
+   ],
+   "facts": [
+    {
+     "decimals": 0,
+     "key": "momentum_share_last_5min_pct",
+     "label": "Kestlebury United share of weighted attacking actions in the last 5 minutes",
+     "unit": "%",
+     "value": 100
+    },
+    {
+     "decimals": 0,
+     "key": "momentum_share_previous_10min_pct",
+     "label": "Kestlebury United share in the 10 minutes before that",
+     "unit": "%",
+     "value": 49
+    },
+    {
+     "decimals": 0,
+     "key": "team_shots_last_5min",
+     "label": "Kestlebury United shots in the last 5 minutes",
+     "value": 1
+    },
+    {
+     "decimals": 0,
+     "key": "window_duration_min",
+     "label": "Duration of the recent window in minutes",
+     "unit": "min",
+     "value": 5
+    }
+   ],
+   "match_id": "SYN-1017",
+   "match_ms": 999200,
+   "moment_id": "MO-1017-0003",
+   "period": 1,
+   "player_ids": [
+    "KES-09"
+   ],
+   "team_id": "KES",
+   "trigger": "momentum_swing",
+   "window": {
+    "from_ms": 699200,
+    "to_ms": 999200
+   }
+  },
+  "evidence_version": 1,
+  "id": "MO-1017-0003",
+  "kind": "moment",
+  "match_id": "SYN-1017",
+  "moment_id": "MO-1017-0003",
+  "schema_version": 1,
+  "source": {
+   "event_seq": 370,
+   "match_ms": 999200,
+   "period": 1
+  }
+ },
+ {
+  "context": {
+   "phase": "live",
+   "players": [
+    {
+     "name": "Yannick Koch",
+     "player_id": "KES-04",
+     "pos": "CB"
+    },
+    {
+     "name": "Sem Visser",
+     "player_id": "KES-03",
+     "pos": "LB"
+    },
+    {
+     "name": "Jens Hellmann",
+     "player_id": "KES-02",
+     "pos": "RB"
+    },
+    {
+     "name": "Dan Rawcliffe",
+     "player_id": "KES-05",
+     "pos": "CB"
+    },
+    {
+     "name": "Kwame Kone",
+     "player_id": "KES-09",
+     "pos": "ST"
+    },
+    {
+     "name": "Amir Kaya",
+     "player_id": "KES-06",
+     "pos": "DM"
+    }
+   ],
+   "score": {
+    "away": 0,
+    "home": 2
+   },
+   "teams": {
+    "away": {
+     "name": "Orrinford Albion",
+     "team_id": "ORR"
+    },
+    "home": {
+     "name": "Kestlebury United",
+     "team_id": "KES"
+    }
+   }
+  },
+  "evidence": {
+   "clock": "16:56",
+   "event_ids": [
+    "SYN-1017-00303",
+    "SYN-1017-00305",
+    "SYN-1017-00308",
+    "SYN-1017-00310",
+    "SYN-1017-00311",
+    "SYN-1017-00337",
+    "SYN-1017-00338",
+    "SYN-1017-00342",
+    "SYN-1017-00344",
+    "SYN-1017-00345",
+    "SYN-1017-00374"
+   ],
+   "facts": [
+    {
+     "decimals": 2,
+     "key": "pressures_per_opp_pass_last_5min",
+     "label": "Kestlebury United pressures per opponent pass in the last 5 minutes (pressing less)",
+     "value": 0.55
+    },
+    {
+     "decimals": 2,
+     "key": "pressures_per_opp_pass_previous_10min",
+     "label": "Kestlebury United pressures per opponent pass in the 10 minutes before that",
+     "value": 1.07
+    },
+    {
+     "decimals": 0,
+     "key": "team_pressures_last_5min",
+     "label": "Kestlebury United pressures in the last 5 minutes",
+     "value": 11
+    },
+    {
+     "decimals": 0,
+     "key": "team_high_regains_last_5min",
+     "label": "Kestlebury United ball wins in the opponent's half in the last 5 minutes",
+     "value": 0
+    },
+    {
+     "decimals": 0,
+     "key": "window_duration_min",
+     "label": "Duration of the recent window in minutes",
+     "unit": "min",
+     "value": 5
+    },
+    {
+     "decimals": 0,
+     "key": "press_height_last_5min_m",
+     "label": "Kestlebury United average height of defensive actions in the last 5 minutes",
+     "unit": "m",
+     "value": 27
+    }
+   ],
+   "match_id": "SYN-1017",
+   "match_ms": 1016400,
+   "moment_id": "MO-1017-0004",
+   "period": 1,
+   "player_ids": [
+    "KES-04",
+    "KES-03",
+    "KES-02",
+    "KES-05",
+    "KES-09",
+    "KES-06"
+   ],
+   "team_id": "KES",
+   "trigger": "press_change",
+   "window": {
+    "from_ms": 716400,
+    "to_ms": 1016400
+   }
+  },
+  "evidence_version": 1,
+  "id": "MO-1017-0004",
+  "kind": "moment",
+  "match_id": "SYN-1017",
+  "moment_id": "MO-1017-0004",
+  "schema_version": 1,
+  "source": {
+   "event_seq": 374,
+   "match_ms": 1016400,
+   "period": 1
+  }
+ },
+ {
+  "context": {
+   "phase": "live",
+   "players": [
+    {
+     "name": "Filip Šimek",
+     "player_id": "ORR-06",
+     "pos": "DM"
+    },
+    {
+     "name": "Kwabena Nwosu",
+     "player_id": "ORR-05",
+     "pos": "CB"
+    },
+    {
+     "name": "Lukas Zieliński",
+     "player_id": "ORR-04",
+     "pos": "CB"
+    },
+    {
+     "name": "Ousmane Sanogo",
+     "player_id": "ORR-10",
+     "pos": "CM"
+    },
+    {
+     "name": "Amadou Bamba",
+     "player_id": "ORR-03",
+     "pos": "LB"
+    },
+    {
+     "name": "Marek Popescu",
+     "player_id": "ORR-02",
+     "pos": "RB"
+    },
+    {
+     "name": "Nils Fjeld",
+     "player_id": "ORR-11",
+     "pos": "LM"
+    }
+   ],
+   "score": {
+    "away": 0,
+    "home": 2
+   },
+   "teams": {
+    "away": {
+     "name": "Orrinford Albion",
+     "team_id": "ORR"
+    },
+    "home": {
+     "name": "Kestlebury United",
+     "team_id": "KES"
+    }
+   }
+  },
+  "evidence": {
+   "clock": "20:11",
+   "event_ids": [
+    "SYN-1017-00377",
+    "SYN-1017-00379",
+    "SYN-1017-00380",
+    "SYN-1017-00387",
+    "SYN-1017-00390",
+    "SYN-1017-00391",
+    "SYN-1017-00394",
+    "SYN-1017-00398",
+    "SYN-1017-00401",
+    "SYN-1017-00406",
+    "SYN-1017-00443",
+    "SYN-1017-00444",
+    "SYN-1017-00446",
+    "SYN-1017-00447",
+    "SYN-1017-00451",
+    "SYN-1017-00456",
+    "SYN-1017-00458",
+    "SYN-1017-00459",
+    "SYN-1017-00460",
+    "SYN-1017-00461"
+   ],
+   "facts": [
+    {
+     "decimals": 2,
+     "key": "pressures_per_opp_pass_last_5min",
+     "label": "Orrinford Albion pressures per opponent pass in the last 5 minutes (pressing more)",
+     "value": 1.04
+    },
+    {
+     "decimals": 2,
+     "key": "pressures_per_opp_pass_previous_10min",
+     "label": "Orrinford Albion pressures per opponent pass in the 10 minutes before that",
+     "value": 0.68
+    },
+    {
+     "decimals": 0,
+     "key": "team_pressures_last_5min",
+     "label": "Orrinford Albion pressures in the last 5 minutes",
+     "value": 25
+    },
+    {
+     "decimals": 0,
+     "key": "team_high_regains_last_5min",
+     "label": "Orrinford Albion ball wins in the opponent's half in the last 5 minutes",
+     "value": 0
+    },
+    {
+     "decimals": 0,
+     "key": "window_duration_min",
+     "label": "Duration of the recent window in minutes",
+     "unit": "min",
+     "value": 5
+    },
+    {
+     "decimals": 0,
+     "key": "press_height_last_5min_m",
+     "label": "Orrinford Albion average height of defensive actions in the last 5 minutes",
+     "unit": "m",
+     "value": 35
+    }
+   ],
+   "match_id": "SYN-1017",
+   "match_ms": 1211400,
+   "moment_id": "MO-1017-0005",
+   "period": 1,
+   "player_ids": [
+    "ORR-06",
+    "ORR-05",
+    "ORR-04",
+    "ORR-10",
+    "ORR-03",
+    "ORR-02",
+    "ORR-11"
+   ],
+   "team_id": "ORR",
+   "trigger": "press_change",
+   "window": {
+    "from_ms": 911400,
+    "to_ms": 1211400
+   }
+  },
+  "evidence_version": 1,
+  "id": "MO-1017-0005",
+  "kind": "moment",
+  "match_id": "SYN-1017",
+  "moment_id": "MO-1017-0005",
+  "schema_version": 1,
+  "source": {
+   "event_seq": 461,
+   "match_ms": 1211400,
+   "period": 1
+  }
+ },
+ {
+  "context": {
+   "phase": "live",
+   "players": [
+    {
+     "name": "Nils Fjeld",
+     "player_id": "ORR-11",
+     "pos": "LM"
+    },
+    {
+     "name": "Bogdan Wójcik",
+     "player_id": "ORR-09",
+     "pos": "ST"
+    }
+   ],
+   "score": {
+    "away": 0,
+    "home": 2
+   },
+   "teams": {
+    "away": {
+     "name": "Orrinford Albion",
+     "team_id": "ORR"
+    },
+    "home": {
+     "name": "Kestlebury United",
+     "team_id": "KES"
+    }
+   }
+  },
+  "evidence": {
+   "clock": "24:15",
+   "event_ids": [
+    "SYN-1017-00525",
+    "SYN-1017-00527",
+    "SYN-1017-00538"
+   ],
+   "facts": [
+    {
+     "decimals": 0,
+     "key": "momentum_share_last_5min_pct",
+     "label": "Orrinford Albion share of weighted attacking actions in the last 5 minutes",
+     "unit": "%",
+     "value": 83
+    },
+    {
+     "decimals": 0,
+     "key": "momentum_share_previous_10min_pct",
+     "label": "Orrinford Albion share in the 10 minutes before that",
+     "unit": "%",
+     "value": 26
+    },
+    {
+     "decimals": 0,
+     "key": "team_shots_last_5min",
+     "label": "Orrinford Albion shots in the last 5 minutes",
+     "value": 1
+    },
+    {
+     "decimals": 0,
+     "key": "window_duration_min",
+     "label": "Duration of the recent window in minutes",
+     "unit": "min",
+     "value": 5
+    }
+   ],
+   "match_id": "SYN-1017",
+   "match_ms": 1455000,
+   "moment_id": "MO-1017-0006",
+   "period": 1,
+   "player_ids": [
+    "ORR-11",
+    "ORR-09"
+   ],
+   "team_id": "ORR",
+   "trigger": "momentum_swing",
+   "window": {
+    "from_ms": 1155000,
+    "to_ms": 1455000
+   }
+  },
+  "evidence_version": 1,
+  "id": "MO-1017-0006",
+  "kind": "moment",
+  "match_id": "SYN-1017",
+  "moment_id": "MO-1017-0006",
+  "schema_version": 1,
+  "source": {
+   "event_seq": 538,
+   "match_ms": 1455000,
+   "period": 1
+  }
+ },
+ {
+  "context": {
+   "phase": "live",
+   "players": [
+    {
+     "name": "Malte Zimmermann",
+     "player_id": "KES-10",
+     "pos": "CM"
+    },
+    {
+     "name": "Jens Hellmann",
+     "player_id": "KES-02",
+     "pos": "RB"
+    }
+   ],
+   "score": {
+    "away": 0,
+    "home": 2
+   },
+   "teams": {
+    "away": {
+     "name": "Orrinford Albion",
+     "team_id": "ORR"
+    },
+    "home": {
+     "name": "Kestlebury United",
+     "team_id": "KES"
+    }
+   }
+  },
+  "evidence": {
+   "clock": "33:37",
+   "event_ids": [
+    "SYN-1017-00736",
+    "SYN-1017-00784"
+   ],
+   "facts": [
+    {
+     "decimals": 0,
+     "key": "momentum_share_last_5min_pct",
+     "label": "Kestlebury United share of weighted attacking actions in the last 5 minutes",
+     "unit": "%",
+     "value": 100
+    },
+    {
+     "decimals": 0,
+     "key": "momentum_share_previous_10min_pct",
+     "label": "Kestlebury United share in the 10 minutes before that",
+     "unit": "%",
+     "value": 14
+    },
+    {
+     "decimals": 0,
+     "key": "team_shots_last_5min",
+     "label": "Kestlebury United shots in the last 5 minutes",
+     "value": 1
+    },
+    {
+     "decimals": 0,
+     "key": "window_duration_min",
+     "label": "Duration of the recent window in minutes",
+     "unit": "min",
+     "value": 5
+    }
+   ],
+   "match_id": "SYN-1017",
+   "match_ms": 2017200,
+   "moment_id": "MO-1017-0007",
+   "period": 1,
+   "player_ids": [
+    "KES-10",
+    "KES-02"
+   ],
+   "team_id": "KES",
+   "trigger": "momentum_swing",
+   "window": {
+    "from_ms": 1717200,
+    "to_ms": 2017200
+   }
+  },
+  "evidence_version": 1,
+  "id": "MO-1017-0007",
+  "kind": "moment",
+  "match_id": "SYN-1017",
+  "moment_id": "MO-1017-0007",
+  "schema_version": 1,
+  "source": {
+   "event_seq": 784,
+   "match_ms": 2017200,
+   "period": 1
+  }
+ },
+ {
+  "context": {
+   "phase": "live",
+   "players": [
+    {
+     "name": "Bogdan Wójcik",
+     "player_id": "ORR-09",
+     "pos": "ST"
+    },
+    {
+     "name": "Ousmane Sanogo",
+     "player_id": "ORR-10",
+     "pos": "CM"
+    },
+    {
+     "name": "Filip Šimek",
+     "player_id": "ORR-06",
+     "pos": "DM"
+    },
+    {
+     "name": "Kwabena Nwosu",
+     "player_id": "ORR-05",
+     "pos": "CB"
+    },
+    {
+     "name": "Amadou Bamba",
+     "player_id": "ORR-03",
+     "pos": "LB"
+    },
+    {
+     "name": "Lukas Zieliński",
+     "player_id": "ORR-04",
+     "pos": "CB"
+    },
+    {
+     "name": "Marek Popescu",
+     "player_id": "ORR-02",
+     "pos": "RB"
+    },
+    {
+     "name": "Kamil Vasić",
+     "player_id": "ORR-08",
+     "pos": "CM"
+    },
+    {
+     "name": "Nils Fjeld",
+     "player_id": "ORR-11",
+     "pos": "LM"
+    }
+   ],
+   "score": {
+    "away": 0,
+    "home": 2
+   },
+   "teams": {
+    "away": {
+     "name": "Orrinford Albion",
+     "team_id": "ORR"
+    },
+    "home": {
+     "name": "Kestlebury United",
+     "team_id": "KES"
+    }
+   }
+  },
+  "evidence": {
+   "clock": "45+0:05",
+   "event_ids": [
+    "SYN-1017-00884",
+    "SYN-1017-00925",
+    "SYN-1017-00929",
+    "SYN-1017-00931",
+    "SYN-1017-00941",
+    "SYN-1017-00942",
+    "SYN-1017-00944",
+    "SYN-1017-00945",
+    "SYN-1017-00949",
+    "SYN-1017-00957",
+    "SYN-1017-00966",
+    "SYN-1017-00967",
+    "SYN-1017-00969",
+    "SYN-1017-00973",
+    "SYN-1017-00974",
+    "SYN-1017-00979"
+   ],
+   "facts": [
+    {
+     "decimals": 2,
+     "key": "pressures_per_opp_pass_last_5min",
+     "label": "Orrinford Albion pressures per opponent pass in the last 5 minutes (pressing more)",
+     "value": 0.8
+    },
+    {
+     "decimals": 2,
+     "key": "pressures_per_opp_pass_previous_10min",
+     "label": "Orrinford Albion pressures per opponent pass in the 10 minutes before that",
+     "value": 0.47
+    },
+    {
+     "decimals": 0,
+     "key": "team_pressures_last_5min",
+     "label": "Orrinford Albion pressures in the last 5 minutes",
+     "value": 16
+    },
+    {
+     "decimals": 0,
+     "key": "team_high_regains_last_5min",
+     "label": "Orrinford Albion ball wins in the opponent's half in the last 5 minutes",
+     "value": 0
+    },
+    {
+     "decimals": 0,
+     "key": "window_duration_min",
+     "label": "Duration of the recent window in minutes",
+     "unit": "min",
+     "value": 5
+    },
+    {
+     "decimals": 0,
+     "key": "press_height_last_5min_m",
+     "label": "Orrinford Albion average height of defensive actions in the last 5 minutes",
+     "unit": "m",
+     "value": 50
+    }
+   ],
+   "match_id": "SYN-1017",
+   "match_ms": 2705800,
+   "moment_id": "MO-1017-0008",
+   "period": 1,
+   "player_ids": [
+    "ORR-09",
+    "ORR-10",
+    "ORR-06",
+    "ORR-05",
+    "ORR-03",
+    "ORR-04",
+    "ORR-02",
+    "ORR-08",
+    "ORR-11"
+   ],
+   "team_id": "ORR",
+   "trigger": "press_change",
+   "window": {
+    "from_ms": 2405800,
+    "to_ms": 2705800
+   }
+  },
+  "evidence_version": 1,
+  "id": "MO-1017-0008",
+  "kind": "moment",
+  "match_id": "SYN-1017",
+  "moment_id": "MO-1017-0008",
+  "schema_version": 1,
+  "source": {
+   "event_seq": 979,
+   "match_ms": 2705800,
+   "period": 1
+  }
+ },
+ {
+  "context": {
+   "phase": "live",
+   "players": [
+    {
+     "name": "Amadou Bamba",
+     "player_id": "ORR-03",
+     "pos": "LB"
+    },
+    {
+     "name": "Lukas Zieliński",
+     "player_id": "ORR-04",
+     "pos": "CB"
+    },
+    {
+     "name": "Kwabena Nwosu",
+     "player_id": "ORR-05",
+     "pos": "CB"
+    },
+    {
+     "name": "Marek Popescu",
+     "player_id": "ORR-02",
+     "pos": "RB"
+    },
+    {
+     "name": "Kamil Vasić",
+     "player_id": "ORR-08",
+     "pos": "CM"
+    },
+    {
+     "name": "Mateusz Stanković",
+     "player_id": "ORR-19",
+     "pos": "CM"
+    }
+   ],
+   "score": {
+    "away": 0,
+    "home": 2
+   },
+   "teams": {
+    "away": {
+     "name": "Orrinford Albion",
+     "team_id": "ORR"
+    },
+    "home": {
+     "name": "Kestlebury United",
+     "team_id": "KES"
+    }
+   }
+  },
+  "evidence": {
+   "clock": "63:40",
+   "event_ids": [
+    "SYN-1017-01414",
+    "SYN-1017-01430",
+    "SYN-1017-01439",
+    "SYN-1017-01467",
+    "SYN-1017-01472",
+    "SYN-1017-01473",
+    "SYN-1017-01476",
+    "SYN-1017-01493",
+    "SYN-1017-01498",
+    "SYN-1017-01499",
+    "SYN-1017-01508",
+    "SYN-1017-01511",
+    "SYN-1017-01513",
+    "SYN-1017-01516",
+    "SYN-1017-01518",
+    "SYN-1017-01524",
+    "SYN-1017-01527"
+   ],
+   "facts": [
+    {
+     "decimals": 2,
+     "key": "pressures_per_opp_pass_last_5min",
+     "label": "Orrinford Albion pressures per opponent pass in the last 5 minutes (pressing less)",
+     "value": 0.5
+    },
+    {
+     "decimals": 2,
+     "key": "pressures_per_opp_pass_previous_10min",
+     "label": "Orrinford Albion pressures per opponent pass in the 10 minutes before that",
+     "value": 0.77
+    },
+    {
+     "decimals": 0,
+     "key": "team_pressures_last_5min",
+     "label": "Orrinford Albion pressures in the last 5 minutes",
+     "value": 17
+    },
+    {
+     "decimals": 0,
+     "key": "team_high_regains_last_5min",
+     "label": "Orrinford Albion ball wins in the opponent's half in the last 5 minutes",
+     "value": 3
+    },
+    {
+     "decimals": 0,
+     "key": "window_duration_min",
+     "label": "Duration of the recent window in minutes",
+     "unit": "min",
+     "value": 5
+    },
+    {
+     "decimals": 0,
+     "key": "press_height_last_5min_m",
+     "label": "Orrinford Albion average height of defensive actions in the last 5 minutes",
+     "unit": "m",
+     "value": 32
+    }
+   ],
+   "match_id": "SYN-1017",
+   "match_ms": 4060600,
+   "moment_id": "MO-1017-0009",
+   "period": 2,
+   "player_ids": [
+    "ORR-03",
+    "ORR-04",
+    "ORR-05",
+    "ORR-02",
+    "ORR-08",
+    "ORR-19"
+   ],
+   "team_id": "ORR",
+   "trigger": "press_change",
+   "window": {
+    "from_ms": 3760600,
+    "to_ms": 4060600
+   }
+  },
+  "evidence_version": 1,
+  "id": "MO-1017-0009",
+  "kind": "moment",
+  "match_id": "SYN-1017",
+  "moment_id": "MO-1017-0009",
+  "schema_version": 1,
+  "source": {
+   "event_seq": 1527,
+   "match_ms": 4060600,
+   "period": 2
+  }
+ },
+ {
+  "context": {
+   "phase": "live",
+   "players": [
+    {
+     "name": "Jakub Mazur",
+     "player_id": "KES-08",
+     "pos": "CM"
+    },
+    {
+     "name": "Navid Aziz",
+     "player_id": "KES-11",
+     "pos": "LW"
+    },
+    {
+     "name": "Igor Petrović",
+     "player_id": "KES-07",
+     "pos": "RW"
+    },
+    {
+     "name": "Malte Zimmermann",
+     "player_id": "KES-10",
+     "pos": "CM"
+    }
+   ],
+   "score": {
+    "away": 0,
+    "home": 2
+   },
+   "teams": {
+    "away": {
+     "name": "Orrinford Albion",
+     "team_id": "ORR"
+    },
+    "home": {
+     "name": "Kestlebury United",
+     "team_id": "KES"
+    }
+   }
+  },
+  "evidence": {
+   "clock": "64:01",
+   "event_ids": [
+    "SYN-1017-01468",
+    "SYN-1017-01477",
+    "SYN-1017-01534",
+    "SYN-1017-01539"
+   ],
+   "facts": [
+    {
+     "decimals": 0,
+     "key": "momentum_share_last_5min_pct",
+     "label": "Kestlebury United share of weighted attacking actions in the last 5 minutes",
+     "unit": "%",
+     "value": 100
+    },
+    {
+     "decimals": 0,
+     "key": "momentum_share_previous_10min_pct",
+     "label": "Kestlebury United share in the 10 minutes before that",
+     "unit": "%",
+     "value": 33
+    },
+    {
+     "decimals": 0,
+     "key": "team_shots_last_5min",
+     "label": "Kestlebury United shots in the last 5 minutes",
+     "value": 1
+    },
+    {
+     "decimals": 0,
+     "key": "window_duration_min",
+     "label": "Duration of the recent window in minutes",
+     "unit": "min",
+     "value": 5
+    }
+   ],
+   "match_id": "SYN-1017",
+   "match_ms": 4081800,
+   "moment_id": "MO-1017-0010",
+   "period": 2,
+   "player_ids": [
+    "KES-08",
+    "KES-11",
+    "KES-07",
+    "KES-10"
+   ],
+   "team_id": "KES",
+   "trigger": "momentum_swing",
+   "window": {
+    "from_ms": 3781800,
+    "to_ms": 4081800
+   }
+  },
+  "evidence_version": 1,
+  "id": "MO-1017-0010",
+  "kind": "moment",
+  "match_id": "SYN-1017",
+  "moment_id": "MO-1017-0010",
+  "schema_version": 1,
+  "source": {
+   "event_seq": 1539,
+   "match_ms": 4081800,
+   "period": 2
+  }
+ },
+ {
+  "context": {
+   "phase": "live",
+   "players": [
+    {
+     "name": "Yannick Koch",
+     "player_id": "KES-04",
+     "pos": "CB"
+    },
+    {
+     "name": "Dan Rawcliffe",
+     "player_id": "KES-05",
+     "pos": "CB"
+    },
+    {
+     "name": "Dennis Bakker",
+     "player_id": "KES-15",
+     "pos": "CB"
+    },
+    {
+     "name": "Amir Kaya",
+     "player_id": "KES-06",
+     "pos": "DM"
+    },
+    {
+     "name": "Jakub Mazur",
+     "player_id": "KES-08",
+     "pos": "CM"
+    },
+    {
+     "name": "Federico Cattaneo",
+     "player_id": "KES-14",
+     "pos": "RB"
+    },
+    {
+     "name": "Kwame Kone",
+     "player_id": "KES-09",
+     "pos": "ST"
+    }
+   ],
+   "score": {
+    "away": 0,
+    "home": 2
+   },
+   "teams": {
+    "away": {
+     "name": "Orrinford Albion",
+     "team_id": "ORR"
+    },
+    "home": {
+     "name": "Kestlebury United",
+     "team_id": "KES"
+    }
+   }
+  },
+  "evidence": {
+   "clock": "64:32",
+   "event_ids": [
+    "SYN-1017-01448",
+    "SYN-1017-01449",
+    "SYN-1017-01452",
+    "SYN-1017-01457",
+    "SYN-1017-01458",
+    "SYN-1017-01460",
+    "SYN-1017-01482",
+    "SYN-1017-01483",
+    "SYN-1017-01486",
+    "SYN-1017-01487",
+    "SYN-1017-01489",
+    "SYN-1017-01490",
+    "SYN-1017-01496",
+    "SYN-1017-01502",
+    "SYN-1017-01544",
+    "SYN-1017-01546",
+    "SYN-1017-01550",
+    "SYN-1017-01552",
+    "SYN-1017-01555",
+    "SYN-1017-01559"
+   ],
+   "facts": [
+    {
+     "decimals": 2,
+     "key": "pressures_per_opp_pass_last_5min",
+     "label": "Kestlebury United pressures per opponent pass in the last 5 minutes (pressing more)",
+     "value": 1.1
+    },
+    {
+     "decimals": 2,
+     "key": "pressures_per_opp_pass_previous_10min",
+     "label": "Kestlebury United pressures per opponent pass in the 10 minutes before that",
+     "value": 0.71
+    },
+    {
+     "decimals": 0,
+     "key": "team_pressures_last_5min",
+     "label": "Kestlebury United pressures in the last 5 minutes",
+     "value": 22
+    },
+    {
+     "decimals": 0,
+     "key": "team_high_regains_last_5min",
+     "label": "Kestlebury United ball wins in the opponent's half in the last 5 minutes",
+     "value": 2
+    },
+    {
+     "decimals": 0,
+     "key": "window_duration_min",
+     "label": "Duration of the recent window in minutes",
+     "unit": "min",
+     "value": 5
+    },
+    {
+     "decimals": 0,
+     "key": "press_height_last_5min_m",
+     "label": "Kestlebury United average height of defensive actions in the last 5 minutes",
+     "unit": "m",
+     "value": 41
+    }
+   ],
+   "match_id": "SYN-1017",
+   "match_ms": 4112400,
+   "moment_id": "MO-1017-0011",
+   "period": 2,
+   "player_ids": [
+    "KES-04",
+    "KES-05",
+    "KES-15",
+    "KES-06",
+    "KES-08",
+    "KES-14",
+    "KES-09"
+   ],
+   "team_id": "KES",
+   "trigger": "press_change",
+   "window": {
+    "from_ms": 3812400,
+    "to_ms": 4112400
+   }
+  },
+  "evidence_version": 1,
+  "id": "MO-1017-0011",
+  "kind": "moment",
+  "match_id": "SYN-1017",
+  "moment_id": "MO-1017-0011",
+  "schema_version": 1,
+  "source": {
+   "event_seq": 1559,
+   "match_ms": 4112400,
+   "period": 2
+  }
+ },
+ {
+  "context": {
+   "phase": "live",
+   "players": [
+    {
+     "name": "Igor Petrović",
+     "player_id": "KES-07",
+     "pos": "RW"
+    },
+    {
+     "name": "Kwame Kone",
+     "player_id": "KES-09",
+     "pos": "ST"
+    }
+   ],
+   "score": {
+    "away": 0,
+    "home": 3
+   },
+   "teams": {
+    "away": {
+     "name": "Orrinford Albion",
+     "team_id": "ORR"
+    },
+    "home": {
+     "name": "Kestlebury United",
+     "team_id": "KES"
+    }
+   }
+  },
+  "evidence": {
+   "clock": "65:34",
+   "event_ids": [
+    "SYN-1017-01584",
+    "SYN-1017-01586",
+    "SYN-1017-01587",
+    "SYN-1017-01589",
+    "SYN-1017-01592"
+   ],
+   "facts": [
+    {
+     "decimals": 2,
+     "key": "shot_xg",
+     "label": "Expected goals of Igor Petrović's shot",
+     "unit": "xG",
+     "value": 0.03
+    },
+    {
+     "decimals": 0,
+     "key": "shot_distance_m",
+     "label": "Distance of the shot from the goal centre",
+     "unit": "m",
+     "value": 20
+    },
+    {
+     "decimals": 0,
+     "key": "team_goals_match",
+     "label": "Kestlebury United goals so far",
+     "value": 3
+    },
+    {
+     "decimals": 0,
+     "key": "opponent_goals_match",
+     "label": "Orrinford Albion goals so far",
+     "value": 0
+    },
+    {
+     "decimals": 0,
+     "key": "player_goals_match",
+     "label": "Igor Petrović's goals in this match",
+     "value": 1
+    },
+    {
+     "decimals": 0,
+     "key": "team_shots_match",
+     "label": "Kestlebury United shots so far",
+     "value": 11
+    },
+    {
+     "decimals": 0,
+     "key": "shot_is_penalty",
+     "label": "Whether the goal was a penalty (1) or not (0)",
+     "value": 0
+    }
+   ],
+   "match_id": "SYN-1017",
+   "match_ms": 4174400,
+   "moment_id": "MO-1017-0012",
+   "period": 2,
+   "player_ids": [
+    "KES-07",
+    "KES-09"
+   ],
+   "team_id": "KES",
+   "trigger": "goal",
+   "window": {
+    "from_ms": 4158600,
+    "to_ms": 4174400
+   }
+  },
+  "evidence_version": 1,
+  "id": "MO-1017-0012",
+  "kind": "moment",
+  "match_id": "SYN-1017",
+  "moment_id": "MO-1017-0012",
+  "schema_version": 1,
+  "source": {
+   "event_seq": 1592,
+   "match_ms": 4174400,
+   "period": 2
+  }
+ },
+ {
+  "context": {
+   "phase": "live",
+   "players": [
+    {
+     "name": "Navid Aziz",
+     "player_id": "KES-11",
+     "pos": "LW"
+    },
+    {
+     "name": "Malte Zimmermann",
+     "player_id": "KES-10",
+     "pos": "CM"
+    },
+    {
+     "name": "Igor Petrović",
+     "player_id": "KES-07",
+     "pos": "RW"
+    }
+   ],
+   "score": {
+    "away": 0,
+    "home": 3
+   },
+   "teams": {
+    "away": {
+     "name": "Orrinford Albion",
+     "team_id": "ORR"
+    },
+    "home": {
+     "name": "Kestlebury United",
+     "team_id": "KES"
+    }
+   }
+  },
+  "evidence": {
+   "clock": "65:34",
+   "event_ids": [
+    "SYN-1017-01477",
+    "SYN-1017-01542",
+    "SYN-1017-01592"
+   ],
+   "facts": [
+    {
+     "decimals": 0,
+     "key": "shots_last_5min",
+     "label": "Kestlebury United shots in this five-minute window",
+     "value": 3
+    },
+    {
+     "decimals": 0,
+     "key": "window_duration_min",
+     "label": "Duration of the evidence window in minutes",
+     "unit": "min",
+     "value": 5
+    }
+   ],
+   "match_id": "SYN-1017",
+   "match_ms": 4174400,
+   "moment_id": "MO-1017-0013",
+   "period": 2,
+   "player_ids": [
+    "KES-11",
+    "KES-10",
+    "KES-07"
+   ],
+   "team_id": "KES",
+   "trigger": "shot_cluster",
+   "window": {
+    "from_ms": 3874400,
+    "to_ms": 4174400
+   }
+  },
+  "evidence_version": 1,
+  "id": "MO-1017-0013",
+  "kind": "moment",
+  "match_id": "SYN-1017",
+  "moment_id": "MO-1017-0013",
+  "schema_version": 1,
+  "source": {
+   "event_seq": 1592,
+   "match_ms": 4174400,
+   "period": 2
+  }
+ },
+ {
+  "context": {
+   "phase": "live",
+   "players": [
+    {
+     "name": "Marek Popescu",
+     "player_id": "ORR-02",
+     "pos": "RB"
+    }
+   ],
+   "score": {
+    "away": 0,
+    "home": 3
+   },
+   "teams": {
+    "away": {
+     "name": "Orrinford Albion",
+     "team_id": "ORR"
+    },
+    "home": {
+     "name": "Kestlebury United",
+     "team_id": "KES"
+    }
+   }
+  },
+  "evidence": {
+   "clock": "68:03",
+   "event_ids": [
+    "SYN-1017-01641",
+    "SYN-1017-01642"
+   ],
+   "facts": [
+    {
+     "decimals": 0,
+     "key": "team_players_on_pitch",
+     "label": "Orrinford Albion players left on the pitch",
+     "value": 10
+    },
+    {
+     "decimals": 0,
+     "key": "team_fouls_match",
+     "label": "Orrinford Albion fouls so far",
+     "value": 13
+    },
+    {
+     "decimals": 0,
+     "key": "team_cards_match",
+     "label": "Orrinford Albion cards so far",
+     "value": 4
+    }
+   ],
+   "match_id": "SYN-1017",
+   "match_ms": 4323800,
+   "moment_id": "MO-1017-0014",
+   "period": 2,
+   "player_ids": [
+    "ORR-02"
+   ],
+   "team_id": "ORR",
+   "trigger": "red_card",
+   "window": {
+    "from_ms": 4323800,
+    "to_ms": 4323800
+   }
+  },
+  "evidence_version": 1,
+  "id": "MO-1017-0014",
+  "kind": "moment",
+  "match_id": "SYN-1017",
+  "moment_id": "MO-1017-0014",
+  "schema_version": 1,
+  "source": {
+   "event_seq": 1642,
+   "match_ms": 4323800,
+   "period": 2
+  }
+ },
+ {
+  "context": {
+   "phase": "live",
+   "players": [
+    {
+     "name": "Kwabena Nwosu",
+     "player_id": "ORR-05",
+     "pos": "CB"
+    },
+    {
+     "name": "Igor Ionescu",
+     "player_id": "ORR-18",
+     "pos": "DM"
+    },
+    {
+     "name": "Lukas Zieliński",
+     "player_id": "ORR-04",
+     "pos": "CB"
+    },
+    {
+     "name": "Omar Qureshi",
+     "player_id": "ORR-07",
+     "pos": "RM"
+    },
+    {
+     "name": "Nils Fjeld",
+     "player_id": "ORR-11",
+     "pos": "LM"
+    },
+    {
+     "name": "Mateusz Stanković",
+     "player_id": "ORR-19",
+     "pos": "CM"
+    },
+    {
+     "name": "Kamil Vasić",
+     "player_id": "ORR-08",
+     "pos": "CM"
+    },
+    {
+     "name": "Nikola Szabó",
+     "player_id": "ORR-14",
+     "pos": "CB"
+    }
+   ],
+   "score": {
+    "away": 0,
+    "home": 3
+   },
+   "teams": {
+    "away": {
+     "name": "Orrinford Albion",
+     "team_id": "ORR"
+    },
+    "home": {
+     "name": "Kestlebury United",
+     "team_id": "KES"
+    }
+   }
+  },
+  "evidence": {
+   "clock": "74:32",
+   "event_ids": [
+    "SYN-1017-01728",
+    "SYN-1017-01729",
+    "SYN-1017-01731",
+    "SYN-1017-01734",
+    "SYN-1017-01735",
+    "SYN-1017-01748",
+    "SYN-1017-01749",
+    "SYN-1017-01753",
+    "SYN-1017-01763",
+    "SYN-1017-01767",
+    "SYN-1017-01769",
+    "SYN-1017-01770",
+    "SYN-1017-01774",
+    "SYN-1017-01776",
+    "SYN-1017-01778",
+    "SYN-1017-01780",
+    "SYN-1017-01786",
+    "SYN-1017-01787",
+    "SYN-1017-01798",
+    "SYN-1017-01801"
+   ],
+   "facts": [
+    {
+     "decimals": 2,
+     "key": "pressures_per_opp_pass_last_5min",
+     "label": "Orrinford Albion pressures per opponent pass in the last 5 minutes (pressing more)",
+     "value": 0.91
+    },
+    {
+     "decimals": 2,
+     "key": "pressures_per_opp_pass_previous_10min",
+     "label": "Orrinford Albion pressures per opponent pass in the 10 minutes before that",
+     "value": 0.58
+    },
+    {
+     "decimals": 0,
+     "key": "team_pressures_last_5min",
+     "label": "Orrinford Albion pressures in the last 5 minutes",
+     "value": 29
+    },
+    {
+     "decimals": 0,
+     "key": "team_high_regains_last_5min",
+     "label": "Orrinford Albion ball wins in the opponent's half in the last 5 minutes",
+     "value": 3
+    },
+    {
+     "decimals": 0,
+     "key": "window_duration_min",
+     "label": "Duration of the recent window in minutes",
+     "unit": "min",
+     "value": 5
+    },
+    {
+     "decimals": 0,
+     "key": "press_height_last_5min_m",
+     "label": "Orrinford Albion average height of defensive actions in the last 5 minutes",
+     "unit": "m",
+     "value": 39
+    }
+   ],
+   "match_id": "SYN-1017",
+   "match_ms": 4712600,
+   "moment_id": "MO-1017-0015",
+   "period": 2,
+   "player_ids": [
+    "ORR-05",
+    "ORR-18",
+    "ORR-04",
+    "ORR-07",
+    "ORR-11",
+    "ORR-19",
+    "ORR-08",
+    "ORR-14"
+   ],
+   "team_id": "ORR",
+   "trigger": "press_change",
+   "window": {
+    "from_ms": 4412600,
+    "to_ms": 4712600
+   }
+  },
+  "evidence_version": 1,
+  "id": "MO-1017-0015",
+  "kind": "moment",
+  "match_id": "SYN-1017",
+  "moment_id": "MO-1017-0015",
+  "schema_version": 1,
+  "source": {
+   "event_seq": 1801,
+   "match_ms": 4712600,
+   "period": 2
+  }
+ },
+ {
+  "context": {
+   "phase": "live",
+   "players": [
+    {
+     "name": "Igor Ionescu",
+     "player_id": "ORR-18",
+     "pos": "DM"
+    },
+    {
+     "name": "Joel Vik",
+     "player_id": "ORR-24",
+     "pos": "ST"
+    },
+    {
+     "name": "Kamil Vasić",
+     "player_id": "ORR-08",
+     "pos": "CM"
+    }
+   ],
+   "score": {
+    "away": 0,
+    "home": 3
+   },
+   "teams": {
+    "away": {
+     "name": "Orrinford Albion",
+     "team_id": "ORR"
+    },
+    "home": {
+     "name": "Kestlebury United",
+     "team_id": "KES"
+    }
+   }
+  },
+  "evidence": {
+   "clock": "79:41",
+   "event_ids": [
+    "SYN-1017-01894",
+    "SYN-1017-01907",
+    "SYN-1017-01954"
+   ],
+   "facts": [
+    {
+     "decimals": 0,
+     "key": "momentum_share_last_5min_pct",
+     "label": "Orrinford Albion share of weighted attacking actions in the last 5 minutes",
+     "unit": "%",
+     "value": 85
+    },
+    {
+     "decimals": 0,
+     "key": "momentum_share_previous_10min_pct",
+     "label": "Orrinford Albion share in the 10 minutes before that",
+     "unit": "%",
+     "value": 20
+    },
+    {
+     "decimals": 0,
+     "key": "team_shots_last_5min",
+     "label": "Orrinford Albion shots in the last 5 minutes",
+     "value": 1
+    },
+    {
+     "decimals": 0,
+     "key": "window_duration_min",
+     "label": "Duration of the recent window in minutes",
+     "unit": "min",
+     "value": 5
+    }
+   ],
+   "match_id": "SYN-1017",
+   "match_ms": 5022000,
+   "moment_id": "MO-1017-0016",
+   "period": 2,
+   "player_ids": [
+    "ORR-18",
+    "ORR-24",
+    "ORR-08"
+   ],
+   "team_id": "ORR",
+   "trigger": "momentum_swing",
+   "window": {
+    "from_ms": 4722000,
+    "to_ms": 5022000
+   }
+  },
+  "evidence_version": 1,
+  "id": "MO-1017-0016",
+  "kind": "moment",
+  "match_id": "SYN-1017",
+  "moment_id": "MO-1017-0016",
+  "schema_version": 1,
+  "source": {
+   "event_seq": 1954,
+   "match_ms": 5022000,
+   "period": 2
+  }
+ },
+ {
+  "context": {
+   "phase": "live",
+   "players": [
+    {
+     "name": "Tobias Kaiser",
+     "player_id": "KES-18",
+     "pos": "CM"
+    },
+    {
+     "name": "Amir Kaya",
+     "player_id": "KES-06",
+     "pos": "DM"
+    }
+   ],
+   "score": {
+    "away": 0,
+    "home": 3
+   },
+   "teams": {
+    "away": {
+     "name": "Orrinford Albion",
+     "team_id": "ORR"
+    },
+    "home": {
+     "name": "Kestlebury United",
+     "team_id": "KES"
+    }
+   }
+  },
+  "evidence": {
+   "clock": "85:30",
+   "event_ids": [
+    "SYN-1017-02037",
+    "SYN-1017-02104"
+   ],
+   "facts": [
+    {
+     "decimals": 0,
+     "key": "momentum_share_last_5min_pct",
+     "label": "Kestlebury United share of weighted attacking actions in the last 5 minutes",
+     "unit": "%",
+     "value": 80
+    },
+    {
+     "decimals": 0,
+     "key": "momentum_share_previous_10min_pct",
+     "label": "Kestlebury United share in the 10 minutes before that",
+     "unit": "%",
+     "value": 11
+    },
+    {
+     "decimals": 0,
+     "key": "team_shots_last_5min",
+     "label": "Kestlebury United shots in the last 5 minutes",
+     "value": 1
+    },
+    {
+     "decimals": 0,
+     "key": "window_duration_min",
+     "label": "Duration of the recent window in minutes",
+     "unit": "min",
+     "value": 5
+    }
+   ],
+   "match_id": "SYN-1017",
+   "match_ms": 5370400,
+   "moment_id": "MO-1017-0017",
+   "period": 2,
+   "player_ids": [
+    "KES-18",
+    "KES-06"
+   ],
+   "team_id": "KES",
+   "trigger": "momentum_swing",
+   "window": {
+    "from_ms": 5070400,
+    "to_ms": 5370400
+   }
+  },
+  "evidence_version": 1,
+  "id": "MO-1017-0017",
+  "kind": "moment",
+  "match_id": "SYN-1017",
+  "moment_id": "MO-1017-0017",
+  "schema_version": 1,
+  "source": {
+   "event_seq": 2104,
+   "match_ms": 5370400,
+   "period": 2
+  }
+ },
+ {
+  "context": {
+   "phase": "live",
+   "players": [
+    {
+     "name": "Malte Zimmermann",
+     "player_id": "KES-10",
+     "pos": "CM"
+    },
+    {
+     "name": "Jakub Mazur",
+     "player_id": "KES-08",
+     "pos": "CM"
+    },
+    {
+     "name": "Dennis Bakker",
+     "player_id": "KES-15",
+     "pos": "CB"
+    },
+    {
+     "name": "Yannick Koch",
+     "player_id": "KES-04",
+     "pos": "CB"
+    },
+    {
+     "name": "Dan Rawcliffe",
+     "player_id": "KES-05",
+     "pos": "CB"
+    },
+    {
+     "name": "Sergio Montero",
+     "player_id": "KES-20",
+     "pos": "DM"
+    },
+    {
+     "name": "Federico Cattaneo",
+     "player_id": "KES-14",
+     "pos": "RB"
+    },
+    {
+     "name": "Amir Kaya",
+     "player_id": "KES-06",
+     "pos": "DM"
+    }
+   ],
+   "score": {
+    "away": 0,
+    "home": 3
+   },
+   "teams": {
+    "away": {
+     "name": "Orrinford Albion",
+     "team_id": "ORR"
+    },
+    "home": {
+     "name": "Kestlebury United",
+     "team_id": "KES"
+    }
+   }
+  },
+  "evidence": {
+   "clock": "88:42",
+   "event_ids": [
+    "SYN-1017-02090",
+    "SYN-1017-02092",
+    "SYN-1017-02097",
+    "SYN-1017-02098",
+    "SYN-1017-02116",
+    "SYN-1017-02118",
+    "SYN-1017-02130",
+    "SYN-1017-02132",
+    "SYN-1017-02143",
+    "SYN-1017-02147",
+    "SYN-1017-02164",
+    "SYN-1017-02167",
+    "SYN-1017-02169",
+    "SYN-1017-02170",
+    "SYN-1017-02181"
+   ],
+   "facts": [
+    {
+     "decimals": 2,
+     "key": "pressures_per_opp_pass_last_5min",
+     "label": "Kestlebury United pressures per opponent pass in the last 5 minutes (pressing less)",
+     "value": 0.71
+    },
+    {
+     "decimals": 2,
+     "key": "pressures_per_opp_pass_previous_10min",
+     "label": "Kestlebury United pressures per opponent pass in the 10 minutes before that",
+     "value": 1.11
+    },
+    {
+     "decimals": 0,
+     "key": "team_pressures_last_5min",
+     "label": "Kestlebury United pressures in the last 5 minutes",
+     "value": 15
+    },
+    {
+     "decimals": 0,
+     "key": "team_high_regains_last_5min",
+     "label": "Kestlebury United ball wins in the opponent's half in the last 5 minutes",
+     "value": 3
+    },
+    {
+     "decimals": 0,
+     "key": "window_duration_min",
+     "label": "Duration of the recent window in minutes",
+     "unit": "min",
+     "value": 5
+    },
+    {
+     "decimals": 0,
+     "key": "press_height_last_5min_m",
+     "label": "Kestlebury United average height of defensive actions in the last 5 minutes",
+     "unit": "m",
+     "value": 39
+    }
+   ],
+   "match_id": "SYN-1017",
+   "match_ms": 5562400,
+   "moment_id": "MO-1017-0018",
+   "period": 2,
+   "player_ids": [
+    "KES-10",
+    "KES-08",
+    "KES-15",
+    "KES-04",
+    "KES-05",
+    "KES-20",
+    "KES-14",
+    "KES-06"
+   ],
+   "team_id": "KES",
+   "trigger": "press_change",
+   "window": {
+    "from_ms": 5262400,
+    "to_ms": 5562400
+   }
+  },
+  "evidence_version": 1,
+  "id": "MO-1017-0018",
+  "kind": "moment",
+  "match_id": "SYN-1017",
+  "moment_id": "MO-1017-0018",
+  "schema_version": 1,
+  "source": {
+   "event_seq": 2181,
+   "match_ms": 5562400,
+   "period": 2
+  }
+ },
+ {
+  "context": {
+   "phase": "live",
+   "players": [
+    {
+     "name": "Igor Ionescu",
+     "player_id": "ORR-18",
+     "pos": "DM"
+    },
+    {
+     "name": "Joel Vik",
+     "player_id": "ORR-24",
+     "pos": "ST"
+    },
+    {
+     "name": "Kamil Vasić",
+     "player_id": "ORR-08",
+     "pos": "CM"
+    }
+   ],
+   "score": {
+    "away": 0,
+    "home": 3
+   },
+   "teams": {
+    "away": {
+     "name": "Orrinford Albion",
+     "team_id": "ORR"
+    },
+    "home": {
+     "name": "Kestlebury United",
+     "team_id": "KES"
+    }
+   }
+  },
+  "evidence": {
+   "clock": "89:01",
+   "event_ids": [
+    "SYN-1017-02070",
+    "SYN-1017-02135",
+    "SYN-1017-02193"
+   ],
+   "facts": [
+    {
+     "decimals": 0,
+     "key": "shots_last_5min",
+     "label": "Orrinford Albion shots in this five-minute window",
+     "value": 3
+    },
+    {
+     "decimals": 0,
+     "key": "window_duration_min",
+     "label": "Duration of the evidence window in minutes",
+     "unit": "min",
+     "value": 5
+    }
+   ],
+   "match_id": "SYN-1017",
+   "match_ms": 5582000,
+   "moment_id": "MO-1017-0019",
+   "period": 2,
+   "player_ids": [
+    "ORR-18",
+    "ORR-24",
+    "ORR-08"
+   ],
+   "team_id": "ORR",
+   "trigger": "shot_cluster",
+   "window": {
+    "from_ms": 5282000,
+    "to_ms": 5582000
+   }
+  },
+  "evidence_version": 1,
+  "id": "MO-1017-0019",
+  "kind": "moment",
+  "match_id": "SYN-1017",
+  "moment_id": "MO-1017-0019",
+  "schema_version": 1,
+  "source": {
+   "event_seq": 2193,
+   "match_ms": 5582000,
+   "period": 2
+  }
+ },
+ {
+  "context": {
+   "phase": "live",
+   "players": [
+    {
+     "name": "Joel Vik",
+     "player_id": "ORR-24",
+     "pos": "ST"
+    },
+    {
+     "name": "Kamil Vasić",
+     "player_id": "ORR-08",
+     "pos": "CM"
+    },
+    {
+     "name": "Nils Fjeld",
+     "player_id": "ORR-11",
+     "pos": "LM"
+    }
+   ],
+   "score": {
+    "away": 0,
+    "home": 3
+   },
+   "teams": {
+    "away": {
+     "name": "Orrinford Albion",
+     "team_id": "ORR"
+    },
+    "home": {
+     "name": "Kestlebury United",
+     "team_id": "KES"
+    }
+   }
+  },
+  "evidence": {
+   "clock": "90+0:43",
+   "event_ids": [
+    "SYN-1017-02135",
+    "SYN-1017-02193",
+    "SYN-1017-02207",
+    "SYN-1017-02229"
+   ],
+   "facts": [
+    {
+     "decimals": 0,
+     "key": "momentum_share_last_5min_pct",
+     "label": "Orrinford Albion share of weighted attacking actions in the last 5 minutes",
+     "unit": "%",
+     "value": 100
+    },
+    {
+     "decimals": 0,
+     "key": "momentum_share_previous_10min_pct",
+     "label": "Orrinford Albion share in the 10 minutes before that",
+     "unit": "%",
+     "value": 57
+    },
+    {
+     "decimals": 0,
+     "key": "team_shots_last_5min",
+     "label": "Orrinford Albion shots in the last 5 minutes",
+     "value": 2
+    },
+    {
+     "decimals": 0,
+     "key": "window_duration_min",
+     "label": "Duration of the recent window in minutes",
+     "unit": "min",
+     "value": 5
+    }
+   ],
+   "match_id": "SYN-1017",
+   "match_ms": 5683200,
+   "moment_id": "MO-1017-0020",
+   "period": 2,
+   "player_ids": [
+    "ORR-24",
+    "ORR-08",
+    "ORR-11"
+   ],
+   "team_id": "ORR",
+   "trigger": "momentum_swing",
+   "window": {
+    "from_ms": 5383200,
+    "to_ms": 5683200
+   }
+  },
+  "evidence_version": 1,
+  "id": "MO-1017-0020",
+  "kind": "moment",
+  "match_id": "SYN-1017",
+  "moment_id": "MO-1017-0020",
+  "schema_version": 1,
+  "source": {
+   "event_seq": 2229,
+   "match_ms": 5683200,
+   "period": 2
+  }
+ },
+ {
+  "context": {
+   "phase": "live",
+   "players": [
+    {
+     "name": "Nikola Szabó",
+     "player_id": "ORR-14",
+     "pos": "CB"
+    },
+    {
+     "name": "Kwabena Nwosu",
+     "player_id": "ORR-05",
+     "pos": "CB"
+    },
+    {
+     "name": "Joel Vik",
+     "player_id": "ORR-24",
+     "pos": "ST"
+    },
+    {
+     "name": "Lukas Zieliński",
+     "player_id": "ORR-04",
+     "pos": "CB"
+    },
+    {
+     "name": "Bogdan Dvořák",
+     "player_id": "ORR-16",
+     "pos": "CB"
+    },
+    {
+     "name": "Igor Ionescu",
+     "player_id": "ORR-18",
+     "pos": "DM"
+    },
+    {
+     "name": "Nils Fjeld",
+     "player_id": "ORR-11",
+     "pos": "LM"
+    }
+   ],
+   "score": {
+    "away": 0,
+    "home": 3
+   },
+   "teams": {
+    "away": {
+     "name": "Orrinford Albion",
+     "team_id": "ORR"
+    },
+    "home": {
+     "name": "Kestlebury United",
+     "team_id": "KES"
+    }
+   }
+  },
+  "evidence": {
+   "clock": "90+5:46",
+   "event_ids": [
+    "SYN-1017-02285",
+    "SYN-1017-02287",
+    "SYN-1017-02288",
+    "SYN-1017-02320",
+    "SYN-1017-02322",
+    "SYN-1017-02323",
+    "SYN-1017-02326",
+    "SYN-1017-02328",
+    "SYN-1017-02329",
+    "SYN-1017-02331",
+    "SYN-1017-02332",
+    "SYN-1017-02344",
+    "SYN-1017-02346",
+    "SYN-1017-02348",
+    "SYN-1017-02349",
+    "SYN-1017-02352",
+    "SYN-1017-02355",
+    "SYN-1017-02357",
+    "SYN-1017-02384",
+    "SYN-1017-02388"
+   ],
+   "facts": [
+    {
+     "decimals": 2,
+     "key": "pressures_per_opp_pass_last_5min",
+     "label": "Orrinford Albion pressures per opponent pass in the last 5 minutes (pressing more)",
+     "value": 1.35
+    },
+    {
+     "decimals": 2,
+     "key": "pressures_per_opp_pass_previous_10min",
+     "label": "Orrinford Albion pressures per opponent pass in the 10 minutes before that",
+     "value": 0.77
+    },
+    {
+     "decimals": 0,
+     "key": "team_pressures_last_5min",
+     "label": "Orrinford Albion pressures in the last 5 minutes",
+     "value": 27
+    },
+    {
+     "decimals": 0,
+     "key": "team_high_regains_last_5min",
+     "label": "Orrinford Albion ball wins in the opponent's half in the last 5 minutes",
+     "value": 5
+    },
+    {
+     "decimals": 0,
+     "key": "window_duration_min",
+     "label": "Duration of the recent window in minutes",
+     "unit": "min",
+     "value": 5
+    },
+    {
+     "decimals": 0,
+     "key": "press_height_last_5min_m",
+     "label": "Orrinford Albion average height of defensive actions in the last 5 minutes",
+     "unit": "m",
+     "value": 41
+    }
+   ],
+   "match_id": "SYN-1017",
+   "match_ms": 5986800,
+   "moment_id": "MO-1017-0021",
+   "period": 2,
+   "player_ids": [
+    "ORR-14",
+    "ORR-05",
+    "ORR-24",
+    "ORR-04",
+    "ORR-16",
+    "ORR-18",
+    "ORR-11"
+   ],
+   "team_id": "ORR",
+   "trigger": "press_change",
+   "window": {
+    "from_ms": 5686800,
+    "to_ms": 5986800
+   }
+  },
+  "evidence_version": 1,
+  "id": "MO-1017-0021",
+  "kind": "moment",
+  "match_id": "SYN-1017",
+  "moment_id": "MO-1017-0021",
+  "schema_version": 1,
+  "source": {
+   "event_seq": 2388,
+   "match_ms": 5986800,
+   "period": 2
+  }
+ }
+]
