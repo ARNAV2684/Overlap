@@ -16,7 +16,7 @@ Relay persists recoverable screen state in [storage](storage.md). Local relay ha
 
 ## Insight path
 
-[Event Hubs](event-hubs.md) → [Stats engine](stats-engine.md) (numbers and panels built; moments in review) → moments in [storage](storage.md) → [AI workflow](ai-insights.md) (placeholder), using [MCP](mcp.md) (local first tool implemented) → [PubSub](web-pubsub.md) → [Frontend](frontend.md) (future verified cards).
+[Event Hubs](event-hubs.md) → [Stats engine](stats-engine.md) (numbers and panels built; moments in review) → moments in [storage](storage.md) → [AI workflow](ai-insights.md) (specs updated, build planned in #61), using [MCP](mcp.md) (local first tool implemented) → [PubSub](web-pubsub.md) → [Frontend](frontend.md) (future verified cards).
 
 Only evidence facts may supply narrated numbers. The seeded MCP example does not prove a working stats publisher, model or overlay.
 

@@ -1,6 +1,6 @@
 # AI insights workflow
 
-Last verified: 2026-10-19 · source main `a61166b` · source inspection, not fresh runtime certification.
+Last verified: 2026-10-20 · main `a1cef33` plus open PRs #58–#62 (labelled) · source inspection; F2 live run recorded.
 
 ## Purpose
 
@@ -8,7 +8,7 @@ Turns a selected moment into a grounded explanation and eventually a verified ca
 
 ## Ownership
 
-Registry: Unassigned (Arnav decides). See [registry](../../plans/REGISTRY.md). Team-reported: User reports Pranav owns insights; registry has not recorded it.
+Registry: Arnav from 20 Oct (registry PR #60, open). See [registry](../../plans/REGISTRY.md). Pranav wrote the first-slice specs (#44) and the local MCP reader (#45).
 
 ## Inputs and outputs
 
@@ -22,7 +22,7 @@ Specifications: [`agents/specs/workflow.md`](../../agents/specs/workflow.md), [`
 
 ## Status and evidence
 
-Agreed design exists; workflow, moment trigger and agent runtime files remain placeholders. No hosted model integration, narration, fact-check execution or live card path is proven by local MCP.
+Build plan: [`PLAN_agents_insights-build`](../../plans/active/PLAN_agents_insights-build.md) (PR #61, open): seven agents (spotter, analyst, narrator, fact-checker, translator, director, recap writer), all eight triggers, modes casual/analyst/player/club, languages en/es/hi/fr, local first (Foundry Local) then Azure by settings. Specs updated in the same PR; contract extensions in `CONTRACTS.md` §10.6 (PR #62, needs Azeem and Vedant). Workflow, moment trigger and agent runtime files are still placeholders. Producer side is ready: moments are written live to Cosmos exactly as in replay (F2, SYN-0507, 24 moments identical, 20 Oct).
 
 Evidence / checks to inspect: [`plans/active/PLAN_agents_ai-insights-mcp.md`](../../plans/active/PLAN_agents_ai-insights-mcp.md), [`plans/active/PLAN_agents_ai-insights-mcp_S2.md`](../../plans/active/PLAN_agents_ai-insights-mcp_S2.md). Existing recorded tests are attributed to their handover; no runtime suite was re-run for these notes.
 

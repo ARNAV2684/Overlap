@@ -1,6 +1,6 @@
 # Cosmos DB and blob storage
 
-Last verified: 2026-10-19 · source main `a61166b` · source inspection, not fresh runtime certification.
+Last verified: 2026-10-20 · main `a1cef33` plus open PRs #58–#62 (labelled) · source inspection; F2 live run recorded.
 
 ## Purpose
 
@@ -12,7 +12,7 @@ Registry: Arnav (Pranav helping) for Cosmos; other infrastructure unassigned. Se
 
 ## Inputs and outputs
 
-Relay writes screen; archiver writes matches/events/stats and Blob tracking; planned stats writes moments/match_state. MCP reads moments only for its first tool. Contract §§4.1, 7.3, 10.2. See [shared contracts](../../CONTRACTS.md).
+Relay writes screen; archiver writes matches/events/stats and Blob tracking; the stats engine writes moments (create-once) and match_state. Layer 5 will add job/outbox/budget documents in `moments` (filtered by `kind`) and overlays. MCP reads moments for its first tool. Contract §§4.1, 7.3, 10.2. See [shared contracts](../../CONTRACTS.md).
 
 ## Implementation and specifications
 
@@ -22,7 +22,7 @@ Specifications: [`archiver/specs/storage.md`](../../archiver/specs/storage.md), 
 
 ## Status and evidence
 
-Local emulators and relay/archive stores exist. MCP can read a seeded moment. Cloud composition is placeholder; not all planned containers have working producers.
+Local emulators and relay/archive stores exist. Stats moments land in Cosmos `moments` live exactly as in replay (F2, SYN-0507, 20 Oct). The storage spec is marked agreed in PR #59 (open). The local Cosmos emulator can corrupt its data if killed under memory pressure; recreate the container (`docker compose up -d --force-recreate cosmos` in `infra/local/`): it holds no persistent volume. Cloud composition is placeholder; `overlays`, `season` and `viewer_profiles` have no working producer yet.
 
 Evidence / checks to inspect: [`archiver/tests/test_archiver.py`](../../archiver/tests/test_archiver.py), [`mcp_server/tests/test_cosmos.py`](../../mcp_server/tests/test_cosmos.py). Existing recorded tests are attributed to their handover; no runtime suite was re-run for these notes.
 
