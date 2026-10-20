@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Insights viewer (dev)</title>
+<!--
+  viewer.html — Insights viewer for local development only (served by the Web PubSub stand-in at /insights/viewer).
+  Purpose: render what one audience receives — cards, player tags, recap — using the browser protocol and the
+           insights snapshot, so a local live run can be checked in a real browser. Not the product UI: the web app
+           (Vedant) renders cards for viewers.
+  Spec:    CONTRACTS.md §7, §10.4, §10.6
+  Query:   ?match=SYN-0001&mode=casual|analyst|club|player&lang=en|es|hi|fr(&club=<teamId>|&player=<playerId>)
+  All text is inserted with textContent (never as HTML).
+-->
+<style>
+  :root { --bg:#0f1720; --card:#17212c; --ink:#e8eef4; --mut:#93a4b5; --line:#263444; --ok:#2fbf71; --tpl:#d9a441;
+          --tag:#4fa3e3; }
+  body { margin:0; font:15px/1.45 system-ui, sans-serif; background:var(--bg); color:var(--ink); }
+  header { padding:14px 18px; border-bottom:1px solid var(--line); display:flex; gap:14px; align-items:baseline;
+           flex-wrap:wrap; }
+  h1 { font-size:16px; margin:0; }
+  .mut { color:var(--mut); font-size:13px; }
+  #score { font-weight:600; }
+  main { max-width:760px; margin:0 auto; padding:16px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:12px 14px;
+          margin:0 0 10px; }
+  .card.recap { border-color:var(--ok); }
+  .card.tag { border-color:var(--tag); }
+  .meta { display:flex; gap:8px; align-items:center; font-size:12px; color:var(--mut); margin-bottom:6px;
+          flex-wrap:wrap; }
+  .badge { padding:1px 7px; border-radius:9px; font-size:11px; font-weight:600; }
+  .verified { background:rgba(47,191,113,.15); color:var(--ok); }
+  .template { background:rgba(217,164,65,.15); color:var(--tpl); }
+  .live { background:rgba(79,163,227,.15); color:var(--tag); }
+  .text { font-size:16px; }
+  #empty { color:var(--mut); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Insights viewer <span class="mut">(local dev)</span></h1>
+  <span id="group" class="mut"></span>
+  <span id="score"></span>
+  <span id="conn" class="mut">connecting…</span>
+</header>
+<main>
+  <p id="empty">No cards yet.</p>
+  <div id="cards"></div>
+</main>
+<script>
+const q = new URLSearchParams(location.search);
+const match = q.get("match") || "SYN-0001", mode = q.get("mode") || "casual", lang = q.get("lang") || "en";
+const target = mode === "club" ? q.get("club") : mode === "player" ? q.get("player") : null;
+const group = target ? `match-${match}-${mode}-${target}-${lang}` : `match-${match}-${mode}-${lang}`;
+const tagGroup = mode === "player" ? group : null;
+const seen = new Set();                         // seq per group already shown (dedupe after catch-up)
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls;
+                                  if (text !== undefined) e.textContent = text; return e; };
+document.getElementById("group").textContent = group;
+
+function render(env, source) {
+  const key = `${group}:${env.seq}`;
+  if (seen.has(key)) return;
+  seen.add(key);
+  const d = env.data || {};
+  const card = el("div", "card " + (env.kind === "recap" ? "recap" : env.kind === "player_tag" ? "tag" : ""));
+  const meta = el("div", "meta");
+  meta.append(el("span", null, `#${env.seq}`), el("span", null, env.clock || ""));
+  let text = "";
+  if (env.kind === "overlay") {
+    text = ((d.modes || {})[d.mode] || {})[d.lang] || "";
+    meta.append(el("span", null, d.visual ? d.visual.component : ""),
+                el("span", "badge " + (d.verified ? "verified" : "template"), d.verified ? "verified" : "template"));
+  } else if (env.kind === "recap") {
+    text = (d.lines || []).map(l => l.text).join(" ");
+    meta.append(el("span", null, "full-time recap"),
+                el("span", "badge " + (d.verified ? "verified" : "template"), d.verified ? "verified" : "template"));
+  } else if (env.kind === "player_tag") {
+    text = `${d.name}: ${d.metric === "top_speed_kmh" ? "top speed" : "distance"} ${d.value} ${d.unit}`;
+    meta.append(el("span", "badge live", "player tag"));
+  } else {
+    return;
+  }
+  if (source === "snapshot") meta.append(el("span", null, "caught up"));
+  card.append(meta, el("div", "text", text));
+  document.getElementById("cards").prepend(card);
+  document.getElementById("empty").style.display = "none";
+}
+
+function status(env) {
+  const d = env.data || {};
+  if (d.score) document.getElementById("score").textContent =
+    `${d.phase} · ${env.clock} · ${d.score.home}–${d.score.away}`;
+}
+
+async function start() {
+  const r = await fetch(`/negotiate?hub=live`);
+  const { url } = await r.json();
+  const ws = new WebSocket(url, "json.webpubsub.azure.v1");
+  ws.onopen = async () => {
+    let ack = 1;
+    for (const g of [group, `match-${match}`]) ws.send(JSON.stringify({ type: "joinGroup", group: g, ackId: ack++ }));
+    document.getElementById("conn").textContent = "connected";
+    const params = new URLSearchParams({ mode, lang });
+    if (target) params.set(mode, target);
+    const snap = await fetch(`/api/match/${match}/insights/snapshot?${params}`);
+    if (snap.ok) (await snap.json()).envelopes.forEach(e => render(e, "snapshot"));
+    else document.getElementById("conn").textContent = `connected · snapshot ${snap.status}`;
+  };
+  ws.onmessage = ev => {
+    const m = JSON.parse(ev.data);
+    if (m.type !== "message") return;
+    if (m.group === group || m.group === tagGroup) render(m.data, "live");
+    else if (m.group === `match-${match}` && m.data && m.data.kind === "status") status(m.data);
+  };
+  ws.onclose = () => { document.getElementById("conn").textContent = "disconnected — retrying";
+                       setTimeout(start, 3000); };
+}
+start();
+</script>
+</body>
+</html>

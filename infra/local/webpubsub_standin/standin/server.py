@@ -11,6 +11,7 @@ What it serves, matching the real service so the same code works locally and on 
 - Browser connection: ws://localhost:8787/client/hubs/{hub}?access_token=...
     subprotocols json.webpubsub.azure.v1 and json.reliable.webpubsub.azure.v1: `connected`, joinGroup/leaveGroup with
     acks, group messages as {"type":"message","from":"group","group":...,"dataType":"json","data":...}
+- GET /insights/viewer?match=&mode=&lang=  dev page rendering one audience's cards (local only)
 - GET /negotiate?groups=match-<id>   {baseUrl, url, token}, what the web app's negotiate route returns on Azure
 - GET /api/match/{match_id}/snapshot  CONTRACTS.md §7.3, read from the Cosmos container the relay writes
 - GET /api/match/{match_id}/insights/snapshot?mode=&lang=(&club=|&player=)  CONTRACTS.md §10.4/§10.6, read from
@@ -28,6 +29,7 @@ import logging
 import os
 import sys
 import uuid
+from pathlib import Path
 
 from aiohttp import WSMsgType, web
 
@@ -35,6 +37,7 @@ from .insights import InsightsReader, group_for
 from .snapshot import SnapshotReader
 
 log = logging.getLogger("standin")
+VIEWER = Path(__file__).with_name("viewer.html")
 SUBPROTOCOLS = ("json.reliable.webpubsub.azure.v1", "json.webpubsub.azure.v1")
 LOCAL_ORIGINS = ("http://localhost:", "http://127.0.0.1:")
 
@@ -90,6 +93,7 @@ class StandIn:
         r.add_get("/client/hubs/{hub}", self._client)
         r.add_get("/api/match/{match_id}/snapshot", self._snapshot)
         r.add_get("/api/match/{match_id}/insights/snapshot", self._insights)
+        r.add_get("/insights/viewer", self._viewer)
         r.add_route("OPTIONS", "/{tail:.*}", self._preflight)
         return app
 
@@ -120,6 +124,7 @@ class StandIn:
             f"send:      POST {base}/api/hubs/live/groups/<group>/:send",
             f"snapshot:  {base}/api/match/<match_id>/snapshot",
             f"insights:  {base}/api/match/<match_id>/insights/snapshot?mode=casual&lang=en",
+            f"viewer:    {base}/insights/viewer?match=<match_id>&mode=casual&lang=en  (dev page)",
         ]))
 
     async def _health(self, request):
@@ -220,6 +225,10 @@ class StandIn:
         status, body = await asyncio.to_thread(self.snapshots.read, match_id)
         return web.json_response(body, status=status, headers={"Cache-Control": "no-store"})
 
+
+    async def _viewer(self, request):
+        """A dev page that renders one audience's cards in a browser (not the product UI)."""
+        return web.FileResponse(VIEWER, headers={"Cache-Control": "no-store"})
 
     async def _insights(self, request):
         if self.insights is None:
