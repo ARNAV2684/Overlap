@@ -12,8 +12,8 @@ This file is maintained by Arnav. AI assistants read it but never add or change 
 | 2 · Event Hubs consumers: screen relay | `functions/screen_relay.py`, `functions/relay_store.py`, `functions/relay_runner.py`, `functions/function_app.py`, `functions/host.json`, `functions/requirements.txt`, `functions/pyproject.toml`, `functions/.gitignore`, `functions/tests/`, `functions/README.md`, `functions/specs/screen-relay.md` | Arnav (Pranav helping) |
 | 3 · Stats engine | `stats/` | Azeem |
 | 4 · Cosmos DB | `infra/modules/cosmos.bicep` | Arnav (Pranav helping) |
-| 5 · Agents | `agents/`, `functions/moment_trigger.py` | Unassigned (Arnav decides) |
-| 5 · MCP server | `mcp_server/` | Unassigned (Arnav decides) |
+| 5 · Agents | `agents/`, `functions/moment_trigger.py` | Arnav |
+| 5 · MCP server | `mcp_server/` | Arnav |
 | 6 · Web PubSub | `infra/modules/web-pubsub.bicep` | Arnav (Pranav helping) |
 | Local development stack | `infra/local/`, `infra/specs/local-development.md` | Arnav (Pranav helping) |
 | 7 · Web app | `web/` | Vedant |
