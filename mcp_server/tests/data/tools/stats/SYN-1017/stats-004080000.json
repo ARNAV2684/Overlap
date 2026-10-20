@@ -1,0 +1,814 @@
+{
+ "match_id": "SYN-1017",
+ "match_ms": 4080000,
+ "clock": "63:59",
+ "period": 2,
+ "source_seq": 1538,
+ "score": {
+  "home": 2,
+  "away": 0
+ },
+ "teams": {
+  "home": {
+   "team_id": "KES",
+   "possession_pct": 57,
+   "shots": 9,
+   "shots_on_target": 5,
+   "xg": 0.97,
+   "passes": 353,
+   "pass_completion_pct": 86,
+   "ppda_last_10min": 3.7,
+   "pressures_per_opp_pass_last_10min": 0.95,
+   "momentum_share_last_10min_pct": null,
+   "press_height_last_10min_m": 53
+  },
+  "away": {
+   "team_id": "ORR",
+   "possession_pct": 43,
+   "shots": 4,
+   "shots_on_target": 3,
+   "xg": 0.12,
+   "passes": 267,
+   "pass_completion_pct": 81,
+   "ppda_last_10min": null,
+   "pressures_per_opp_pass_last_10min": 0.67,
+   "momentum_share_last_10min_pct": null,
+   "press_height_last_10min_m": 28
+  }
+ },
+ "momentum": {
+  "period": 2,
+  "bucket": 3,
+  "home": 5.5,
+  "away": 0.0
+ },
+ "low_sample": [
+  "teams.home.momentum_share_last_10min_pct",
+  "teams.away.ppda_last_10min",
+  "teams.away.momentum_share_last_10min_pct"
+ ],
+ "heavy": {
+  "momentum_buckets": [
+   {
+    "period": 1,
+    "bucket": 0,
+    "home": 16.0,
+    "away": 5.0
+   },
+   {
+    "period": 1,
+    "bucket": 1,
+    "home": 6.5,
+    "away": 7.0
+   },
+   {
+    "period": 1,
+    "bucket": 2,
+    "home": 7.0,
+    "away": 4.0
+   },
+   {
+    "period": 1,
+    "bucket": 3,
+    "home": 2.0,
+    "away": 1.0
+   },
+   {
+    "period": 1,
+    "bucket": 4,
+    "home": 1.0,
+    "away": 5.0
+   },
+   {
+    "period": 1,
+    "bucket": 5,
+    "home": 0.0,
+    "away": 0.0
+   },
+   {
+    "period": 1,
+    "bucket": 6,
+    "home": 6.0,
+    "away": 0.0
+   },
+   {
+    "period": 1,
+    "bucket": 7,
+    "home": 5.0,
+    "away": 1.5
+   },
+   {
+    "period": 1,
+    "bucket": 8,
+    "home": 0.0,
+    "away": 1.0
+   },
+   {
+    "period": 1,
+    "bucket": 9,
+    "home": 6.0,
+    "away": 2.0
+   },
+   {
+    "period": 2,
+    "bucket": 0,
+    "home": 5.0,
+    "away": 2.0
+   },
+   {
+    "period": 2,
+    "bucket": 1,
+    "home": 1.0,
+    "away": 2.0
+   },
+   {
+    "period": 2,
+    "bucket": 2,
+    "home": 0.0,
+    "away": 0.0
+   },
+   {
+    "period": 2,
+    "bucket": 3,
+    "home": 5.5,
+    "away": 0.0
+   }
+  ],
+  "pass_network": {
+   "home": {
+    "nodes": [
+     {
+      "player_id": "KES-01",
+      "x": 4.8,
+      "y": 48.6,
+      "passes": 14
+     },
+     {
+      "player_id": "KES-02",
+      "x": 47.3,
+      "y": 85.1,
+      "passes": 21
+     },
+     {
+      "player_id": "KES-03",
+      "x": 55.9,
+      "y": 12.5,
+      "passes": 20
+     },
+     {
+      "player_id": "KES-04",
+      "x": 21.7,
+      "y": 60.5,
+      "passes": 15
+     },
+     {
+      "player_id": "KES-05",
+      "x": 21.3,
+      "y": 42.6,
+      "passes": 10
+     },
+     {
+      "player_id": "KES-06",
+      "x": 48.2,
+      "y": 50.8,
+      "passes": 28
+     },
+     {
+      "player_id": "KES-07",
+      "x": 77.7,
+      "y": 75.2,
+      "passes": 25
+     },
+     {
+      "player_id": "KES-08",
+      "x": 71.8,
+      "y": 68.5,
+      "passes": 40
+     },
+     {
+      "player_id": "KES-09",
+      "x": 75.6,
+      "y": 50.8,
+      "passes": 25
+     },
+     {
+      "player_id": "KES-10",
+      "x": 70.9,
+      "y": 34.1,
+      "passes": 54
+     },
+     {
+      "player_id": "KES-11",
+      "x": 81.1,
+      "y": 26.7,
+      "passes": 25
+     }
+    ],
+    "links": [
+     {
+      "from": "KES-02",
+      "to": "KES-06",
+      "count": 3
+     },
+     {
+      "from": "KES-02",
+      "to": "KES-07",
+      "count": 5
+     },
+     {
+      "from": "KES-02",
+      "to": "KES-08",
+      "count": 5
+     },
+     {
+      "from": "KES-03",
+      "to": "KES-06",
+      "count": 3
+     },
+     {
+      "from": "KES-03",
+      "to": "KES-10",
+      "count": 7
+     },
+     {
+      "from": "KES-04",
+      "to": "KES-05",
+      "count": 4
+     },
+     {
+      "from": "KES-04",
+      "to": "KES-06",
+      "count": 5
+     },
+     {
+      "from": "KES-05",
+      "to": "KES-06",
+      "count": 3
+     },
+     {
+      "from": "KES-06",
+      "to": "KES-07",
+      "count": 3
+     },
+     {
+      "from": "KES-06",
+      "to": "KES-08",
+      "count": 3
+     },
+     {
+      "from": "KES-06",
+      "to": "KES-09",
+      "count": 3
+     },
+     {
+      "from": "KES-06",
+      "to": "KES-10",
+      "count": 9
+     },
+     {
+      "from": "KES-06",
+      "to": "KES-11",
+      "count": 5
+     },
+     {
+      "from": "KES-07",
+      "to": "KES-02",
+      "count": 5
+     },
+     {
+      "from": "KES-07",
+      "to": "KES-08",
+      "count": 5
+     },
+     {
+      "from": "KES-07",
+      "to": "KES-09",
+      "count": 5
+     },
+     {
+      "from": "KES-07",
+      "to": "KES-10",
+      "count": 4
+     },
+     {
+      "from": "KES-08",
+      "to": "KES-02",
+      "count": 5
+     },
+     {
+      "from": "KES-08",
+      "to": "KES-09",
+      "count": 3
+     },
+     {
+      "from": "KES-08",
+      "to": "KES-10",
+      "count": 16
+     },
+     {
+      "from": "KES-08",
+      "to": "KES-11",
+      "count": 5
+     },
+     {
+      "from": "KES-09",
+      "to": "KES-07",
+      "count": 6
+     },
+     {
+      "from": "KES-09",
+      "to": "KES-10",
+      "count": 4
+     },
+     {
+      "from": "KES-09",
+      "to": "KES-11",
+      "count": 5
+     },
+     {
+      "from": "KES-10",
+      "to": "KES-03",
+      "count": 10
+     },
+     {
+      "from": "KES-10",
+      "to": "KES-06",
+      "count": 3
+     },
+     {
+      "from": "KES-10",
+      "to": "KES-07",
+      "count": 10
+     },
+     {
+      "from": "KES-10",
+      "to": "KES-08",
+      "count": 13
+     },
+     {
+      "from": "KES-10",
+      "to": "KES-09",
+      "count": 4
+     },
+     {
+      "from": "KES-11",
+      "to": "KES-03",
+      "count": 4
+     },
+     {
+      "from": "KES-11",
+      "to": "KES-07",
+      "count": 3
+     },
+     {
+      "from": "KES-11",
+      "to": "KES-08",
+      "count": 4
+     },
+     {
+      "from": "KES-11",
+      "to": "KES-09",
+      "count": 3
+     },
+     {
+      "from": "KES-11",
+      "to": "KES-10",
+      "count": 8
+     }
+    ]
+   },
+   "away": {
+    "nodes": [
+     {
+      "player_id": "ORR-01",
+      "x": 4.8,
+      "y": 50.3,
+      "passes": 8
+     },
+     {
+      "player_id": "ORR-02",
+      "x": 41.6,
+      "y": 66.7,
+      "passes": 26
+     },
+     {
+      "player_id": "ORR-03",
+      "x": 37.1,
+      "y": 29.3,
+      "passes": 16
+     },
+     {
+      "player_id": "ORR-04",
+      "x": 23.6,
+      "y": 62.7,
+      "passes": 7
+     },
+     {
+      "player_id": "ORR-05",
+      "x": 24.0,
+      "y": 34.3,
+      "passes": 12
+     },
+     {
+      "player_id": "ORR-06",
+      "x": 42.8,
+      "y": 49.4,
+      "passes": 18
+     },
+     {
+      "player_id": "ORR-07",
+      "x": 71.0,
+      "y": 77.3,
+      "passes": 25
+     },
+     {
+      "player_id": "ORR-08",
+      "x": 72.4,
+      "y": 64.7,
+      "passes": 40
+     },
+     {
+      "player_id": "ORR-09",
+      "x": 68.6,
+      "y": 49.6,
+      "passes": 36
+     },
+     {
+      "player_id": "ORR-10",
+      "x": 73.1,
+      "y": 35.1,
+      "passes": 43
+     },
+     {
+      "player_id": "ORR-11",
+      "x": 74.2,
+      "y": 24.6,
+      "passes": 20
+     }
+    ],
+    "links": [
+     {
+      "from": "ORR-01",
+      "to": "ORR-09",
+      "count": 4
+     },
+     {
+      "from": "ORR-02",
+      "to": "ORR-06",
+      "count": 4
+     },
+     {
+      "from": "ORR-02",
+      "to": "ORR-07",
+      "count": 7
+     },
+     {
+      "from": "ORR-02",
+      "to": "ORR-08",
+      "count": 5
+     },
+     {
+      "from": "ORR-03",
+      "to": "ORR-06",
+      "count": 3
+     },
+     {
+      "from": "ORR-03",
+      "to": "ORR-10",
+      "count": 4
+     },
+     {
+      "from": "ORR-04",
+      "to": "ORR-06",
+      "count": 3
+     },
+     {
+      "from": "ORR-05",
+      "to": "ORR-06",
+      "count": 3
+     },
+     {
+      "from": "ORR-06",
+      "to": "ORR-08",
+      "count": 6
+     },
+     {
+      "from": "ORR-06",
+      "to": "ORR-10",
+      "count": 3
+     },
+     {
+      "from": "ORR-07",
+      "to": "ORR-02",
+      "count": 5
+     },
+     {
+      "from": "ORR-07",
+      "to": "ORR-08",
+      "count": 4
+     },
+     {
+      "from": "ORR-07",
+      "to": "ORR-09",
+      "count": 4
+     },
+     {
+      "from": "ORR-07",
+      "to": "ORR-10",
+      "count": 6
+     },
+     {
+      "from": "ORR-08",
+      "to": "ORR-07",
+      "count": 6
+     },
+     {
+      "from": "ORR-08",
+      "to": "ORR-09",
+      "count": 3
+     },
+     {
+      "from": "ORR-08",
+      "to": "ORR-10",
+      "count": 15
+     },
+     {
+      "from": "ORR-08",
+      "to": "ORR-11",
+      "count": 6
+     },
+     {
+      "from": "ORR-09",
+      "to": "ORR-02",
+      "count": 3
+     },
+     {
+      "from": "ORR-09",
+      "to": "ORR-03",
+      "count": 5
+     },
+     {
+      "from": "ORR-09",
+      "to": "ORR-06",
+      "count": 3
+     },
+     {
+      "from": "ORR-09",
+      "to": "ORR-07",
+      "count": 4
+     },
+     {
+      "from": "ORR-09",
+      "to": "ORR-08",
+      "count": 5
+     },
+     {
+      "from": "ORR-09",
+      "to": "ORR-10",
+      "count": 6
+     },
+     {
+      "from": "ORR-10",
+      "to": "ORR-02",
+      "count": 3
+     },
+     {
+      "from": "ORR-10",
+      "to": "ORR-07",
+      "count": 3
+     },
+     {
+      "from": "ORR-10",
+      "to": "ORR-08",
+      "count": 10
+     },
+     {
+      "from": "ORR-10",
+      "to": "ORR-09",
+      "count": 8
+     },
+     {
+      "from": "ORR-10",
+      "to": "ORR-11",
+      "count": 8
+     },
+     {
+      "from": "ORR-11",
+      "to": "ORR-08",
+      "count": 7
+     },
+     {
+      "from": "ORR-11",
+      "to": "ORR-09",
+      "count": 4
+     }
+    ]
+   }
+  },
+  "pressing_grid": {
+   "home": [
+    [
+     0,
+     2,
+     1,
+     8,
+     0,
+     0
+    ],
+    [
+     0,
+     10,
+     12,
+     11,
+     14,
+     0
+    ],
+    [
+     1,
+     15,
+     28,
+     39,
+     17,
+     4
+    ],
+    [
+     2,
+     2,
+     7,
+     7,
+     5,
+     1
+    ],
+    [
+     0,
+     0,
+     6,
+     11,
+     2,
+     0
+    ],
+    [
+     3,
+     2,
+     9,
+     2,
+     4,
+     2
+    ],
+    [
+     0,
+     0,
+     4,
+     6,
+     4,
+     1
+    ],
+    [
+     0,
+     0,
+     0,
+     0,
+     2,
+     0
+    ],
+    [
+     0,
+     2,
+     4,
+     3,
+     2,
+     0
+    ]
+   ],
+   "away": [
+    [
+     0,
+     8,
+     18,
+     11,
+     13,
+     0
+    ],
+    [
+     0,
+     11,
+     9,
+     8,
+     5,
+     0
+    ],
+    [
+     1,
+     11,
+     16,
+     18,
+     16,
+     2
+    ],
+    [
+     3,
+     3,
+     7,
+     7,
+     11,
+     2
+    ],
+    [
+     2,
+     0,
+     6,
+     3,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     10,
+     3,
+     1,
+     0
+    ],
+    [
+     0,
+     5,
+     2,
+     4,
+     0,
+     0
+    ],
+    [
+     0,
+     3,
+     2,
+     3,
+     0,
+     0
+    ],
+    [
+     0,
+     1,
+     3,
+     6,
+     2,
+     0
+    ]
+   ]
+  },
+  "zones": {
+   "home": [
+    [
+     16,
+     20,
+     8,
+     46,
+     45,
+     37
+    ],
+    [
+     73,
+     121,
+     55,
+     51,
+     99,
+     59
+    ],
+    [
+     7,
+     47,
+     12,
+     47,
+     59,
+     22
+    ]
+   ],
+   "away": [
+    [
+     26,
+     32,
+     19,
+     22,
+     39,
+     15
+    ],
+    [
+     73,
+     70,
+     54,
+     70,
+     113,
+     51
+    ],
+    [
+     21,
+     27,
+     21,
+     21,
+     18,
+     19
+    ]
+   ]
+  }
+ },
+ "id": "stats-004080000"
+}

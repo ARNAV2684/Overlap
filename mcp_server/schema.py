@@ -316,3 +316,55 @@ def parse_moment(doc: dict) -> Moment:
 def projection(moment: Moment, source: Literal["fixture", "cosmos"]) -> Reply:
     return Reply(**moment.identity.model_dump(), status="ok", as_of=moment.source,
                  state=moment.context, provenance=Provenance(source=source, document_id=moment.id))
+
+
+# --- Analyst tools (M2). Spec: mcp_server/specs/tools.md §2b ------------------------------------------------------
+# These return context for the analyst, never narration evidence: narrated numbers come only from evidence.facts.
+
+ToolStatus = Literal["ok", "unavailable", "denied"]
+Number = int | float
+
+
+class PlayerRequest(Identity):
+    player_id: PlayerId
+
+
+class TeamRequest(Identity):
+    team_id: TeamId
+
+
+class AsOf(StrictModel):
+    event_seq: Annotated[int, Field(ge=0, le=99999)]
+    match_ms: NonNegative
+
+
+class ToolProvenance(StrictModel):
+    source: Literal["fixture", "cosmos"]
+    container: Literal["match_state", "stats"]
+    document_id: Annotated[str, Field(pattern=r"^(state|stats-[0-9]{9})$")]
+
+
+class ToolReply(Identity):
+    """Common envelope for the analyst tools: status, cursor, provenance and one data object."""
+    tool: Literal["get_live_state", "get_player_context", "get_team_pressing", "get_pass_network", "compare_periods"]
+    status: ToolStatus
+    as_of: AsOf | None = None
+    after_moment: bool | None = None
+    provenance: ToolProvenance | None = None
+    data: dict | None = None
+    reason: Reason | None = None
+
+    @model_validator(mode="after")
+    def consistent(self):
+        if self.status == "ok":
+            if self.reason is not None or None in (self.as_of, self.provenance, self.data, self.after_moment):
+                raise ValueError("Success requires data, cursor and provenance")
+        else:
+            if self.reason is None or any(x is not None for x in (self.as_of, self.provenance, self.data)):
+                raise ValueError("Failure must not contain data")
+            if (self.status == "denied") != (self.reason == "outside_scope"):
+                raise ValueError("Invalid failure reason")
+        return self
+
+    def payload(self) -> dict:
+        return self.model_dump(exclude_none=True)

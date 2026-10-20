@@ -32,7 +32,9 @@ from .schema import (
     projection,
     read_json,
 )
-from .server import SAMPLE_DIR, TOOL_NAME
+from .server import ANALYST_TOOLS, SAMPLE_DIR, TOOL_NAME
+
+ADVERTISED = {TOOL_NAME, *(t.name for t in ANALYST_TOOLS)}
 
 
 def server_parameters(identity: Identity, source: str, directory: Path) -> StdioServerParameters:
@@ -88,10 +90,11 @@ async def check(source: str, expected_path: Path, directory: Path) -> dict:
     if clean_document(actual_raw) != clean_document(expected_raw):
         raise ValueError("Stored sample does not match the expected source")
     async with session_for(actual.identity, source, directory) as session:
-        discovered = (await session.list_tools()).tools
-        if len(discovered) != 1 or discovered[0].name != TOOL_NAME:
-            raise ValueError("Only the implemented context tool may be advertised")
-        tool = discovered[0]
+        discovered = {t.name: t for t in (await session.list_tools()).tools}
+        if set(discovered) != ADVERTISED or not all(t.annotations and t.annotations.readOnlyHint
+                                                    for t in discovered.values()):
+            raise ValueError("Only the implemented read-only tools may be advertised")
+        tool = discovered[TOOL_NAME]
         if not tool.outputSchema:
             raise ValueError("Tool is missing its output schema")
         jsonschema.validate(actual.identity.model_dump(), tool.inputSchema)
