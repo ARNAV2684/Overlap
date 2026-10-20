@@ -5,6 +5,8 @@
 > user-reported decisions, not newly obtained review comments. Owner: Pranav; registry update remains Arnav's task.
 > Governs the files mapped in [S2](../../plans/active/PLAN_agents_ai-insights-mcp_S2.md).
 > Source contract: [§10.2](../../CONTRACTS.md#102-immutable-moment-and-context). Later cloud/model delivery gates remain.
+> **20 Oct 2026 (D-02, stats S3 #54):** the reader accepts every moment the stats engine writes (§2a). Layer 5 is
+> owned by Arnav from 20 Oct ([`PLAN_agents_insights-build`](../../plans/active/PLAN_agents_insights-build.md)).
 
 
 ## 1. Tool list
@@ -44,7 +46,7 @@ Every result has `status`, `match_id`, `moment_id`, `evidence_version`. No unkno
 
 | Result | Additional fields / meaning |
 |---|---|
-| `status=ok` | `as_of:{event_seq,period,match_ms}`; `state` is exactly the context in contracts §10.2; `provenance:{source,document_id}` where source is `fixture` or `cosmos` |
+| `status=ok` | `as_of:{event_seq,period,match_ms}`; `state` is exactly the context in contracts §10.2 (with `players` when the moment has them); `provenance:{source,document_id}` where source is `fixture` or `cosmos` |
 | `status=unavailable` | `reason`: `not_found`, `version_mismatch`, `source_not_ready`, `context_mismatch`, `source_timeout`, `response_too_large`, `source_error`; no state |
 | `status=denied` | `reason=outside_scope`; no state or indication whether another match exists |
 
@@ -58,6 +60,34 @@ Transport result uses MCP `structuredContent` plus an equivalent JSON text conte
 Declare input/output schemas at discovery. A domain `unavailable` is an expected result, not a fabricated answer.
 Malformed arguments / unknown tools are protocol errors; execution failures may use `isError`, which the client
 must handle as failure regardless of text. A library returning normally must not turn a failed tool into success.
+
+## 2a. Accepted moment documents (D-02)
+
+The reader validates the whole stored moment before projecting its context. It accepts exactly what the stats
+engine writes ([`stats/agents-guide.md`](../../stats/agents-guide.md) §2–§5,
+[`stats/specs/evidence-packs.md`](../../stats/specs/evidence-packs.md)) and rejects everything else.
+
+- **Triggers:** `goal`, `red_card`, `penalty`, `big_chance`, `shot_cluster`, `momentum_swing`, `press_change`,
+  `milestone`. `sprint` is not accepted until the stats engine produces it (deferred, stats D-01).
+- **Facts:** 2–7 per pack, unique keys, exactly the trigger's required keys plus its optional ones (only
+  `press_height_last_5min_m` for `press_change`). Each key has a fixed unit (`xG`, `m`, `min`, `%`, or none — then
+  the `unit` field is absent) and fixed `decimals` (0 or 2). Values are finite, non-negative and already at their
+  decimals; whole-number facts are integers; `%` ≤ 100; `xG` ≤ 1; `shot_is_penalty` is 0 or 1;
+  `shots_last_5min` ≥ 3; `window_duration_min` = 5.
+- **Events:** 1–500 `event_ids` of the same match, strictly ascending by `seq`, ending with the triggering event
+  (`source.event_seq`).
+- **Players:** `player_ids` are distinct and of the moment's team; at least one for `goal`, `red_card`, `penalty`,
+  `big_chance`, `shot_cluster` and `milestone` (comparison triggers may have none). `context.players` is optional
+  (the constructed sample predates it); when present its entries are `{player_id, name, pos}`, distinct, each one of
+  `player_ids`, `pos` one of the generator's positions.
+- **Window:** `to_ms` equals the moment's `match_ms` and `from_ms ≤ to_ms`; exactly five minutes for
+  `shot_cluster`, `momentum_swing` and `press_change`.
+- **Shot cluster** keeps §10.1 exactly: the shot count equals the number of events, and shooters ≤ shots.
+- **Ids:** the engine numbers moments in processing order across all triggers, so the fixture's KES cluster is
+  `MO-1017-0013`. `samples/MO-1017-0001.json` is a constructed sample from before stats S3 and stays valid.
+
+Evidence: `tests/test_real_moments.py` parses all 21 moments the engine writes for its fixture match
+(`tests/data/SYN-1017-moments.json`) and rejects broken variants.
 
 ## 3. Data access and time boundary
 
