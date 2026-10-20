@@ -454,7 +454,7 @@ Numbers come from code. These definitions are shared so the agents, charts and t
 - [ ] Confirm the hero moment's chart for the demo video (currently `shot_map` for every mode).
 - [ ] Decide which language the shared models are written in, and where they live.
 
-## 10. Proposed first insight handoffs (M1 review only)
+## 10. Insight handoffs (stats → agents → screens)
 
 > **Stats owner's agreement:** Azeem (stats owner) agrees §10.1 and §10.2 as written, in the stats spec PR for
 > [`PLAN_stats_engine`](plans/active/PLAN_stats_engine.md). §10.2's document is used for **every** trigger type (§5),
@@ -462,10 +462,10 @@ Numbers come from code. These definitions are shared so the agents, charts and t
 > ([`stats/specs/evidence-packs.md`](stats/specs/evidence-packs.md) §3), which is no more citable than the rest of
 > `context`. §10.3–§10.4 are unchanged and remain for Pranav, Arnav and Vedant.
 >
-> **Status: proposed, not agreed.** This section is the shared-contract proposal for
-> [insights S1](plans/active/PLAN_agents_ai-insights-mcp_S1.md). Existing §§1–9 and running services are unchanged.
-> Stats owner (unassigned; Arnav decides), Pranav, Arnav and Vedant must agree their handoffs before dependent code.
-> Azeem reviews source-event meaning. No owner approval, service implementation or resource creation is implied.
+> **Status:** §10.1–§10.2 agreed by the stats owner (above). §10.3–§10.4, with the build extensions in §10.6, are
+> agreed by Arnav (layer 5 owner; [`PLAN_agents_insights-build`](plans/active/PLAN_agents_insights-build.md)) on
+> 20 Oct 2026 and merged before Azeem's (producer) and Vedant's (consumer) review. They are asked to confirm;
+> any change they need follows as an amendment to this section. Existing §§1–9 and running services are unchanged.
 
 ### 10.1 Shot-cluster evidence
 
@@ -555,7 +555,8 @@ Proposed first-slice values:
 - Suppress live delivery when current base-stream play time is more than 300,000 match ms past `show_at_ms`,
   the period changed, or the match ended. Do not relabel late analysis as current. Preserve its terminal reason
   for evaluation; recap/replay use is a future feature. If the current playhead cannot be established, do not send
-  a live card. Reading the latest `screen` for this expiry check is allowed; it is not model context.
+  a live card. The playhead is defined in §10.6 (not the relay's private `screen` documents); it is not model
+  context.
 - Frontend eligibility requires a base playhead in the same period, between `show_at_ms` and `show_at_ms+300000`.
   Period comes from the overlay's proposed `period` field, not guessed from the clock label. At most one card is
   visible; keep at most
@@ -616,3 +617,44 @@ The numeric evidence and transport shapes above are review proposals. D1–D4/D6
 sprint, not inferred from this document's existence. Promotion requires explicit shared review and matching stats,
 storage and frontend specifications/implementation plans. No current consumer must start accepting §10 by
 accident. Model access/spending (D5) is a separate M3 gate; M1 and local MCP tests require no model calls.
+
+### 10.6 Build extensions (seven agents, all triggers, modes and languages)
+
+These extend §10.3–§10.4 for the layer-5 build. Where they differ from §10.3–§10.4, this section wins.
+
+- **Triggers.** Every trigger the stats engine writes uses the §10.2 document (with `context.players`):
+  `goal`, `red_card`, `penalty`, `big_chance`, `shot_cluster`, `momentum_swing`, `press_change`, `milestone`
+  ([`stats/specs/triggers.md`](stats/specs/triggers.md), [`stats/specs/evidence-packs.md`](stats/specs/evidence-packs.md)).
+  `sprint` joins when the stats engine produces it. Priority (`high` for goal, red card, penalty; `normal` otherwise)
+  is fixed by trigger, not stored in the document.
+- **Modes.** `casual`, `analyst`, `player` (lines centred on one followed player; written only when that player is
+  in `evidence.player_ids`), `club` (the same facts told from one club's side; written for each of the two teams).
+- **Languages.** `en`, `es`, `hi`, `fr`. Numbers, claims and names are identical in every language (re-checked after
+  translation); a language that fails its check gets the translated template or no card.
+- **Overlay.** The §6 overlay body gains `period` (1 or 2, from the evidence), `mode` and `lang` as above, and
+  `club` (the team id) for `club` mode or `player` (the player id) for `player` mode. One `overlay_id` per moment
+  per audience. `visual.component` per trigger: goal, big chance, penalty → `shot_map` (or `key_events` until it
+  exists); shot cluster → `key_events`; momentum swing → `momentum_tide` (highlight the team); press change →
+  `pressing_zones`; red card → `stat_bars` or `key_events`; milestone → `key_events` with a player tag. The highlight
+  is the last `event_id` (the triggering event) except for `momentum_swing`.
+- **Groups** (Web PubSub hub `live`; one sender per group, the insights publisher; `seq` per group):
+
+  | Group | Carries |
+  |---|---|
+  | `match-<id>-casual-<lang>`, `match-<id>-analyst-<lang>` | Overlays for that mode and language |
+  | `match-<id>-club-<teamId>-<lang>` | Club-mode overlays for one team |
+  | `match-<id>-player-<playerId>-<lang>` | Player-mode overlays and `player_tag` envelopes for one player |
+
+  This replaces §7's `match-<id>-player-<playerId>` (no service sends to it yet). The relay remains the only sender
+  on `match-<id>`.
+- **Player tags.** `kind = "player_tag"` envelopes, `data = {player_id, name, metric, value, unit, threshold}`, sent
+  when a followed player's speed or distance in `match_state` (§4.2) first crosses a threshold. Values come from
+  `match_state`, never from a model.
+- **Playhead for expiry.** The base playhead is `match_state.source.match_ms` (§4.2, written at least every 5 match
+  seconds). A card is live-eligible while that playhead is in the same period, between `show_at_ms` and
+  `show_at_ms + 300000`. Unknown playhead → no live card.
+- **Insights snapshot.** `GET /api/match/<id>/insights/snapshot?mode=<mode>&lang=<lang>` (plus `&club=<teamId>` or
+  `&player=<playerId>` for those modes), same response shape as §10.4. Served by the Web PubSub stand-in locally and
+  by the web app's route on Azure.
+- **Recap.** At full time, one `kind = "recap"` envelope per audience group; `data` is a set of §5.1 lines built from
+  the match's moments and final `match_state`, checked like any overlay.
