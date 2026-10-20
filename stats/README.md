@@ -36,8 +36,10 @@ Starting definitions are in [`CONTRACTS.md` §8](../CONTRACTS.md#8-metric-defini
 
 ## Status
 
-- **Built (stats S1):** ordering, match state, xG, pass difficulty, speeds and sprints, whole-match totals, the replay runner and the hub consumer.
-- **Next:** windows, stat panels and `match_state` (S2); triggers, evidence and moments (S3). `rolling.py`, `publish.py`, `triggers.py` and `evidence.py` are still placeholders.
+- **Built:**
+  - S1: ordering, match state, xG, pass difficulty, speeds and sprints, whole-match totals, the replay runner and the hub consumer.
+  - S2: rolling windows, stat panels every match second (heavy block every minute), `match_state`, and live mode.
+- **Next:** triggers, evidence and moments (S3). `triggers.py` and `evidence.py` are still placeholders.
 - **Plan:** [`PLAN_stats_engine`](../plans/active/PLAN_stats_engine.md).
 
 ## Run
@@ -49,6 +51,14 @@ uv sync
 uv run pytest
 uv run python main.py replay tests/fixtures/SYN-1017          # one match: its numbers as JSON
 uv run python main.py replay ../data/seasons/S1 --out s1.json # a whole generated season
+uv run python main.py replay tests/fixtures/SYN-1017 --panels # the stat panels it would send
+```
+
+**Live**, beside the local stack (`infra/specs/local-development.md` §5), with the settings from `infra/local/env.example`:
+
+```bash
+uv run python main.py live                                  # both hubs in; panels and match_state out
+uv run python tests/e2e_local.py --seed 505 --match 505     # the end-to-end check (add --restart-after 120)
 ```
 
 A match folder holds `setup.json` and `events.ndjson` (or `.gz`), and optionally `tracking.ndjson.gz` for speeds, distance and sprints. The generator writes these with `cli.py play` or `cli.py season`.
