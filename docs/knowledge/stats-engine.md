@@ -8,7 +8,7 @@ Calculates deterministic metrics and spots moments for explanation.
 
 ## Ownership
 
-Registry: Unassigned (Arnav decides). See [registry](../../plans/REGISTRY.md). Azeem owns stats by his own report and in [`PLAN_stats_engine`](../../plans/active/PLAN_stats_engine.md) (D-07 asks Arnav to record it); the registry has not recorded it yet.
+Registry: Azeem (recorded in PR #52). See [registry](../../plans/REGISTRY.md) and [`PLAN_stats_engine`](../../plans/active/PLAN_stats_engine.md).
 
 ## Inputs and outputs
 
