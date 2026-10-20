@@ -57,6 +57,7 @@ class Store(Protocol):
     async def moments(self, match_id: str | None = None, since_ts: int = 0) -> list[dict]: ...
     async def of_kind(self, match_id: str, kind: str) -> list[dict]: ...      # one partition, one document kind
     async def match_state(self, match_id: str) -> dict | None: ...           # live/match_state `state` (§4.2)
+    async def batch(self, match_id: str, ops: list[tuple]) -> None: ...      # all or nothing; PreconditionFailed
 
 
 class MemoryStore:
@@ -94,6 +95,18 @@ class MemoryStore:
         self.docs[key] = (json.loads(json.dumps({**doc, "_ts": self.version})), new)
         return new
 
+    async def batch(self, match_id: str, ops: list[tuple]) -> None:
+        """One partition, all or nothing: ("create", doc) fails if the id exists, ("replace", doc, etag) if the
+        ETag moved (Cosmos transactional batch)."""
+        for op in ops:
+            key = (match_id, op[1]["id"])
+            if (op[0] == "create" and key in self.docs) or (op[0] == "replace" and (
+                    key not in self.docs or self.docs[key][1] != op[2])):
+                raise PreconditionFailed(op[1]["id"])
+        for op in ops:
+            self.docs[(match_id, op[1]["id"])] = (json.loads(json.dumps({**op[1], "_ts": self.version})),
+                                                  self._etag())
+
     async def moments(self, match_id: str | None = None, since_ts: int = 0) -> list[dict]:
         return [json.loads(json.dumps(d)) for (m, _), (d, _) in sorted(self.docs.items())
                 if d.get("kind") == "moment" and (match_id is None or m == match_id) and d.get("_ts", 0) >= since_ts]
@@ -116,7 +129,7 @@ class CosmosStore:
         self._closers = closers
 
     @classmethod
-    def from_env(cls, env: dict | None = None) -> CosmosStore:
+    def from_env(cls, env: dict | None = None, container: str = "moments") -> CosmosStore:
         import os
 
         from azure.cosmos.aio import CosmosClient
@@ -129,7 +142,16 @@ class CosmosStore:
             credential = DefaultAzureCredential()
             client, closers = CosmosClient(endpoint, credential=credential), (credential,)
         db = client.get_database_client(env.get("OVERLAP_COSMOS_DATABASE", "live"))
-        return cls(db.get_container_client("moments"), (client, *closers), db.get_container_client("match_state"))
+        store = cls(db.get_container_client(container), (client, *closers), db.get_container_client("match_state"))
+        store.database, store.local = db, bool(key)
+        return store
+
+    async def create_if_local(self) -> None:
+        """Local emulator only (key auth): create this container as Bicep does on Azure (partition /match_id)."""
+        if getattr(self, "local", False):
+            from azure.cosmos import PartitionKey
+            await self.database.create_container_if_not_exists(self.container.id,
+                                                               partition_key=PartitionKey("/match_id"))
 
     async def close(self) -> None:
         """Close the client (and credential) this store opened."""
@@ -168,6 +190,15 @@ class CosmosStore:
         items = self.container.query_items(query, parameters=params, partition_key=match_id) if match_id \
             else self.container.query_items(query, parameters=params)
         return [d async for d in items]
+
+    async def batch(self, match_id: str, ops: list[tuple]) -> None:
+        from azure.cosmos.exceptions import CosmosBatchOperationError
+        cosmos_ops = [("create", (op[1],)) if op[0] == "create" else
+                      ("replace", (op[1]["id"], clean(op[1])), {"if_match_etag": op[2]}) for op in ops]
+        try:
+            await self.container.execute_item_batch(cosmos_ops, partition_key=match_id)
+        except CosmosBatchOperationError as e:
+            raise PreconditionFailed(ops[0][1]["id"]) from e
 
     async def of_kind(self, match_id: str, kind: str) -> list[dict]:
         items = self.container.query_items("SELECT * FROM c WHERE c.kind = @kind",

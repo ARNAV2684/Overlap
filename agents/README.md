@@ -11,8 +11,15 @@ uv run python smoke.py     # one call through the configured provider; settings 
 uv run python ../functions/moment_trigger.py --match SYN-0508 --once   # run a played match's moments from Cosmos
 uv run python run_match.py --match SYN-0508 --report out.json        # one match through the agents, re-checked
 uv run python run_match.py --fixture                                 # the same on the stats fixture SYN-1017
+uv run python check_delivery.py --match <id> --club <teamId> --player <playerId>   # two viewers during a live match
 ```
 
+**Delivery:** `publisher.py` is the single sender on every audience group. For each outbox it checks the card
+against the playhead (`match_state`), reserves the group's next `seq` together with the delivery document in one
+Cosmos transaction (`overlays`), then sends it through Web PubSub (the stand-in locally) and marks it sent; late
+cards expire without a number. Recaps go out at full time, player tags when a player first crosses a speed or
+distance threshold. The stand-in serves the insights snapshot for late joiners. The local poller runs it after the
+agents.
 
 **The seven agents:** the **spotter** applies code rules (fixed priority; moments of the same event merge into the
 highest-priority one; comparison moments thinned when the model budget is tight; model-job slots per match) and,
@@ -58,6 +65,8 @@ goes through `models.ModelGate`: per-moment and per-match budgets and a timeout.
 | `context.py` | The MCP server as the analyst's tool (Agent Framework `MCPStdioTool`) |
 | `prompts.py` | Loads `prompts/*.md` and their versions |
 | `run_match.py` | One match through the agents with a report and an independent re-check |
+| `publisher.py` | Sends cards, recaps and player tags to audience groups; seq per group, save before send, expiry |
+| `check_delivery.py` | Two viewers on the local stack: live cards and late catch-up |
 | `state.py` | Job, budget and outbox documents in Cosmos `moments` (or in memory): claim, lease, resume |
 | `validate.py` | Checks a moment with the MCP reader's schema (one source of truth) |
 | `spotter.py` | Is this worth saying? Code rules, then optional small-model ranking |
