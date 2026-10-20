@@ -30,5 +30,25 @@ Starting definitions are in [`CONTRACTS.md` §8](../CONTRACTS.md#8-metric-defini
 | `triggers.py` | Flags moments worth explaining |
 | `evidence.py` | Builds each moment's evidence pack |
 | `publish.py` | Writes snapshots and moments; sends stat panels |
-| `main.py` | Runs the service |
-| `tests/` | Metrics, triggers, dedupe |
+| `main.py` | Routes messages to each match (`Pipeline`); `replay` for recorded matches |
+| `consumer.py` | Both hubs as consumer group `stats`, with checkpoints that only move past finished matches |
+| `tests/` | Ordering, metrics, consumer, and a replay of a generated match (`tests/fixtures/SYN-1017`) |
+
+## Status
+
+- **Built (stats S1):** ordering, match state, xG, pass difficulty, speeds and sprints, whole-match totals, the replay runner and the hub consumer.
+- **Next:** windows, stat panels and `match_state` (S2); triggers, evidence and moments (S3). `rolling.py`, `publish.py`, `triggers.py` and `evidence.py` are still placeholders.
+- **Plan:** [`PLAN_stats_engine`](../plans/active/PLAN_stats_engine.md).
+
+## Run
+
+From `stats/`:
+
+```bash
+uv sync
+uv run pytest
+uv run python main.py replay tests/fixtures/SYN-1017          # one match: its numbers as JSON
+uv run python main.py replay ../data/seasons/S1 --out s1.json # a whole generated season
+```
+
+A match folder holds `setup.json` and `events.ndjson` (or `.gz`), and optionally `tracking.ndjson.gz` for speeds, distance and sprints. The generator writes these with `cli.py play` or `cli.py season`.

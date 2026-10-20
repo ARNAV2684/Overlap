@@ -1,0 +1,616 @@
+{
+  "match_id": "SYN-1017",
+  "seed": 1017,
+  "competition": "Synthetic League · Season 1 · Matchweek 1",
+  "season_id": "S1",
+  "venue": {
+    "name": "Hollin Lane",
+    "city": "Kestlebury"
+  },
+  "kickoff_utc": "2026-10-24T19:00:00Z",
+  "conditions": {
+    "temperature_c": 10.8,
+    "precipitation": "none",
+    "wind_ms": 8.1,
+    "attendance": 34793
+  },
+  "storylines": [],
+  "teams": {
+    "home": {
+      "team_id": "KES",
+      "name": "Kestlebury United",
+      "colours": {
+        "primary": "#1F6B3A",
+        "secondary": "#F4F4F4"
+      },
+      "formation": "4-3-3",
+      "style": {
+        "press_intensity": 0.85,
+        "directness": 0.45,
+        "width": 0.7
+      },
+      "lineup": [
+        {
+          "player_id": "KES-01",
+          "name": "Aaron Tolan",
+          "pos": "GK",
+          "shirt": 1,
+          "attr": {
+            "pace": 57,
+            "passing": 95,
+            "dribbling": 42,
+            "finishing": 17,
+            "tackling": 36,
+            "stamina": 68
+          }
+        },
+        {
+          "player_id": "KES-02",
+          "name": "Jens Hellmann",
+          "pos": "RB",
+          "shirt": 2,
+          "attr": {
+            "pace": 89,
+            "passing": 76,
+            "dribbling": 63,
+            "finishing": 56,
+            "tackling": 69,
+            "stamina": 73
+          }
+        },
+        {
+          "player_id": "KES-04",
+          "name": "Yannick Koch",
+          "pos": "CB",
+          "shirt": 4,
+          "attr": {
+            "pace": 81,
+            "passing": 65,
+            "dribbling": 56,
+            "finishing": 54,
+            "tackling": 84,
+            "stamina": 76
+          }
+        },
+        {
+          "player_id": "KES-05",
+          "name": "Dan Rawcliffe",
+          "pos": "CB",
+          "shirt": 5,
+          "attr": {
+            "pace": 56,
+            "passing": 78,
+            "dribbling": 52,
+            "finishing": 50,
+            "tackling": 77,
+            "stamina": 72
+          }
+        },
+        {
+          "player_id": "KES-03",
+          "name": "Sem Visser",
+          "pos": "LB",
+          "shirt": 3,
+          "attr": {
+            "pace": 78,
+            "passing": 75,
+            "dribbling": 79,
+            "finishing": 47,
+            "tackling": 70,
+            "stamina": 80
+          }
+        },
+        {
+          "player_id": "KES-06",
+          "name": "Amir Kaya",
+          "pos": "DM",
+          "shirt": 6,
+          "attr": {
+            "pace": 63,
+            "passing": 76,
+            "dribbling": 72,
+            "finishing": 59,
+            "tackling": 80,
+            "stamina": 81
+          }
+        },
+        {
+          "player_id": "KES-08",
+          "name": "Jakub Mazur",
+          "pos": "CM",
+          "shirt": 8,
+          "attr": {
+            "pace": 77,
+            "passing": 93,
+            "dribbling": 64,
+            "finishing": 62,
+            "tackling": 69,
+            "stamina": 67
+          }
+        },
+        {
+          "player_id": "KES-10",
+          "name": "Malte Zimmermann",
+          "pos": "CM",
+          "shirt": 10,
+          "attr": {
+            "pace": 66,
+            "passing": 89,
+            "dribbling": 80,
+            "finishing": 67,
+            "tackling": 65,
+            "stamina": 82
+          }
+        },
+        {
+          "player_id": "KES-07",
+          "name": "Igor Petrović",
+          "pos": "RW",
+          "shirt": 7,
+          "attr": {
+            "pace": 93,
+            "passing": 65,
+            "dribbling": 85,
+            "finishing": 76,
+            "tackling": 41,
+            "stamina": 81
+          }
+        },
+        {
+          "player_id": "KES-09",
+          "name": "Kwame Kone",
+          "pos": "ST",
+          "shirt": 9,
+          "attr": {
+            "pace": 89,
+            "passing": 70,
+            "dribbling": 75,
+            "finishing": 81,
+            "tackling": 57,
+            "stamina": 72
+          }
+        },
+        {
+          "player_id": "KES-11",
+          "name": "Navid Aziz",
+          "pos": "LW",
+          "shirt": 11,
+          "attr": {
+            "pace": 89,
+            "passing": 73,
+            "dribbling": 78,
+            "finishing": 71,
+            "tackling": 52,
+            "stamina": 77
+          }
+        }
+      ],
+      "bench": [
+        {
+          "player_id": "KES-12",
+          "name": "Jasper Bosman",
+          "pos": "GK",
+          "shirt": 12,
+          "attr": {
+            "pace": 48,
+            "passing": 59,
+            "dribbling": 37,
+            "finishing": 2,
+            "tackling": 30,
+            "stamina": 60
+          }
+        },
+        {
+          "player_id": "KES-15",
+          "name": "Dennis Bakker",
+          "pos": "CB",
+          "shirt": 15,
+          "attr": {
+            "pace": 64,
+            "passing": 70,
+            "dribbling": 60,
+            "finishing": 44,
+            "tackling": 78,
+            "stamina": 73
+          }
+        },
+        {
+          "player_id": "KES-14",
+          "name": "Federico Cattaneo",
+          "pos": "RB",
+          "shirt": 14,
+          "attr": {
+            "pace": 81,
+            "passing": 75,
+            "dribbling": 70,
+            "finishing": 50,
+            "tackling": 74,
+            "stamina": 74
+          }
+        },
+        {
+          "player_id": "KES-18",
+          "name": "Tobias Kaiser",
+          "pos": "CM",
+          "shirt": 18,
+          "attr": {
+            "pace": 68,
+            "passing": 80,
+            "dribbling": 75,
+            "finishing": 59,
+            "tackling": 72,
+            "stamina": 79
+          }
+        },
+        {
+          "player_id": "KES-19",
+          "name": "Florian Krüger",
+          "pos": "CM",
+          "shirt": 19,
+          "attr": {
+            "pace": 62,
+            "passing": 76,
+            "dribbling": 62,
+            "finishing": 63,
+            "tackling": 59,
+            "stamina": 89
+          }
+        },
+        {
+          "player_id": "KES-24",
+          "name": "Florian Keller",
+          "pos": "LW",
+          "shirt": 24,
+          "attr": {
+            "pace": 84,
+            "passing": 61,
+            "dribbling": 71,
+            "finishing": 60,
+            "tackling": 54,
+            "stamina": 67
+          }
+        },
+        {
+          "player_id": "KES-22",
+          "name": "Rahim Jaber",
+          "pos": "ST",
+          "shirt": 22,
+          "attr": {
+            "pace": 78,
+            "passing": 45,
+            "dribbling": 62,
+            "finishing": 77,
+            "tackling": 45,
+            "stamina": 66
+          }
+        },
+        {
+          "player_id": "KES-23",
+          "name": "Liam Quinlan",
+          "pos": "ST",
+          "shirt": 23,
+          "attr": {
+            "pace": 82,
+            "passing": 71,
+            "dribbling": 73,
+            "finishing": 76,
+            "tackling": 52,
+            "stamina": 80
+          }
+        },
+        {
+          "player_id": "KES-20",
+          "name": "Sergio Montero",
+          "pos": "DM",
+          "shirt": 20,
+          "attr": {
+            "pace": 72,
+            "passing": 72,
+            "dribbling": 71,
+            "finishing": 46,
+            "tackling": 76,
+            "stamina": 82
+          }
+        }
+      ]
+    },
+    "away": {
+      "team_id": "ORR",
+      "name": "Orrinford Albion",
+      "colours": {
+        "primary": "#1B2A4A",
+        "secondary": "#F28C28"
+      },
+      "formation": "4-1-4-1",
+      "style": {
+        "press_intensity": 0.8,
+        "directness": 0.3,
+        "width": 0.7
+      },
+      "lineup": [
+        {
+          "player_id": "ORR-01",
+          "name": "Matej Sobczak",
+          "pos": "GK",
+          "shirt": 1,
+          "attr": {
+            "pace": 47,
+            "passing": 80,
+            "dribbling": 39,
+            "finishing": 26,
+            "tackling": 13,
+            "stamina": 60
+          }
+        },
+        {
+          "player_id": "ORR-02",
+          "name": "Marek Popescu",
+          "pos": "RB",
+          "shirt": 2,
+          "attr": {
+            "pace": 77,
+            "passing": 89,
+            "dribbling": 70,
+            "finishing": 52,
+            "tackling": 73,
+            "stamina": 84
+          }
+        },
+        {
+          "player_id": "ORR-04",
+          "name": "Lukas Zieliński",
+          "pos": "CB",
+          "shirt": 4,
+          "attr": {
+            "pace": 71,
+            "passing": 56,
+            "dribbling": 43,
+            "finishing": 36,
+            "tackling": 81,
+            "stamina": 76
+          }
+        },
+        {
+          "player_id": "ORR-05",
+          "name": "Kwabena Nwosu",
+          "pos": "CB",
+          "shirt": 5,
+          "attr": {
+            "pace": 81,
+            "passing": 68,
+            "dribbling": 48,
+            "finishing": 41,
+            "tackling": 74,
+            "stamina": 86
+          }
+        },
+        {
+          "player_id": "ORR-03",
+          "name": "Amadou Bamba",
+          "pos": "LB",
+          "shirt": 3,
+          "attr": {
+            "pace": 79,
+            "passing": 92,
+            "dribbling": 62,
+            "finishing": 52,
+            "tackling": 82,
+            "stamina": 70
+          }
+        },
+        {
+          "player_id": "ORR-06",
+          "name": "Filip Šimek",
+          "pos": "DM",
+          "shirt": 6,
+          "attr": {
+            "pace": 65,
+            "passing": 68,
+            "dribbling": 76,
+            "finishing": 49,
+            "tackling": 76,
+            "stamina": 80
+          }
+        },
+        {
+          "player_id": "ORR-07",
+          "name": "Omar Qureshi",
+          "pos": "RM",
+          "shirt": 7,
+          "attr": {
+            "pace": 76,
+            "passing": 72,
+            "dribbling": 79,
+            "finishing": 75,
+            "tackling": 67,
+            "stamina": 74
+          }
+        },
+        {
+          "player_id": "ORR-08",
+          "name": "Kamil Vasić",
+          "pos": "CM",
+          "shirt": 8,
+          "attr": {
+            "pace": 76,
+            "passing": 70,
+            "dribbling": 70,
+            "finishing": 77,
+            "tackling": 70,
+            "stamina": 81
+          }
+        },
+        {
+          "player_id": "ORR-10",
+          "name": "Ousmane Sanogo",
+          "pos": "CM",
+          "shirt": 10,
+          "attr": {
+            "pace": 65,
+            "passing": 80,
+            "dribbling": 73,
+            "finishing": 53,
+            "tackling": 58,
+            "stamina": 72
+          }
+        },
+        {
+          "player_id": "ORR-11",
+          "name": "Nils Fjeld",
+          "pos": "LM",
+          "shirt": 11,
+          "attr": {
+            "pace": 82,
+            "passing": 69,
+            "dribbling": 82,
+            "finishing": 72,
+            "tackling": 74,
+            "stamina": 84
+          }
+        },
+        {
+          "player_id": "ORR-09",
+          "name": "Bogdan Wójcik",
+          "pos": "ST",
+          "shirt": 9,
+          "attr": {
+            "pace": 70,
+            "passing": 66,
+            "dribbling": 65,
+            "finishing": 82,
+            "tackling": 44,
+            "stamina": 58
+          }
+        }
+      ],
+      "bench": [
+        {
+          "player_id": "ORR-12",
+          "name": "Luuk Fischer",
+          "pos": "GK",
+          "shirt": 12,
+          "attr": {
+            "pace": 58,
+            "passing": 68,
+            "dribbling": 30,
+            "finishing": 17,
+            "tackling": 13,
+            "stamina": 68
+          }
+        },
+        {
+          "player_id": "ORR-14",
+          "name": "Nikola Szabó",
+          "pos": "CB",
+          "shirt": 14,
+          "attr": {
+            "pace": 67,
+            "passing": 72,
+            "dribbling": 67,
+            "finishing": 25,
+            "tackling": 84,
+            "stamina": 66
+          }
+        },
+        {
+          "player_id": "ORR-15",
+          "name": "Milan Radu",
+          "pos": "LB",
+          "shirt": 15,
+          "attr": {
+            "pace": 72,
+            "passing": 77,
+            "dribbling": 62,
+            "finishing": 57,
+            "tackling": 66,
+            "stamina": 81
+          }
+        },
+        {
+          "player_id": "ORR-18",
+          "name": "Igor Ionescu",
+          "pos": "DM",
+          "shirt": 18,
+          "attr": {
+            "pace": 67,
+            "passing": 82,
+            "dribbling": 58,
+            "finishing": 56,
+            "tackling": 77,
+            "stamina": 71
+          }
+        },
+        {
+          "player_id": "ORR-19",
+          "name": "Mateusz Stanković",
+          "pos": "CM",
+          "shirt": 19,
+          "attr": {
+            "pace": 68,
+            "passing": 76,
+            "dribbling": 76,
+            "finishing": 62,
+            "tackling": 67,
+            "stamina": 68
+          }
+        },
+        {
+          "player_id": "ORR-21",
+          "name": "Antoine Carpentier",
+          "pos": "RM",
+          "shirt": 21,
+          "attr": {
+            "pace": 75,
+            "passing": 71,
+            "dribbling": 69,
+            "finishing": 65,
+            "tackling": 60,
+            "stamina": 86
+          }
+        },
+        {
+          "player_id": "ORR-24",
+          "name": "Joel Vik",
+          "pos": "ST",
+          "shirt": 24,
+          "attr": {
+            "pace": 82,
+            "passing": 66,
+            "dribbling": 67,
+            "finishing": 74,
+            "tackling": 49,
+            "stamina": 68
+          }
+        },
+        {
+          "player_id": "ORR-20",
+          "name": "Anders Solvik",
+          "pos": "CM",
+          "shirt": 20,
+          "attr": {
+            "pace": 63,
+            "passing": 81,
+            "dribbling": 69,
+            "finishing": 68,
+            "tackling": 58,
+            "stamina": 76
+          }
+        },
+        {
+          "player_id": "ORR-16",
+          "name": "Bogdan Dvořák",
+          "pos": "CB",
+          "shirt": 16,
+          "attr": {
+            "pace": 77,
+            "passing": 58,
+            "dribbling": 61,
+            "finishing": 47,
+            "tackling": 73,
+            "stamina": 73
+          }
+        }
+      ]
+    }
+  }
+}

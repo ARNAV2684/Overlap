@@ -1,6 +1,6 @@
 # Stats engine
 
-Last verified: 2026-10-19 · branch `stats/specs` (from main `5ef36be`) · specifications written; runtime not started.
+Last verified: 2026-10-20 · branch `stats/numbers` (from main `7bda05a`) · specs agreed (#50); stats S1 runtime: replay only.
 
 ## Purpose
 
@@ -29,7 +29,16 @@ Specifications: [`stats/specs/metrics.md`](../../stats/specs/metrics.md), [`stat
 
 ## Status and evidence
 
-Unavailable runtime: stats entrypoints and calculations remain placeholder headers. All five specifications are answered in the stats spec PR. The xG and pass-difficulty models were fitted and checked on generated league seasons; the trigger volumes were measured on 90 generated matches. Do not infer implementation from README file lists.
+Specifications agreed in #50.
+
+**Built in stats S1:** ordering, match state, xG, pass difficulty, speeds, sprints and whole-match totals, the `main.py replay` runner, and the hub consumer (unit-tested with a fake client). 27 tests pass.
+
+**Cross-checks on generated data:**
+- **xG:** goals ÷ engine xG is 1.08 over 180 league matches.
+- **PPDA:** equals the generator's answer key.
+- **Possession:** 0.03 from the generator's internal ball-time, a definition difference.
+
+**Not running yet:** no live service, panels, `match_state` or moments; `rolling.py`, `publish.py`, `triggers.py` and `evidence.py` are placeholders. Do not infer more from README file lists.
 
 Evidence / checks to inspect: [`stats/tests`](../../stats/tests), [`CONTRACTS.md`](../../CONTRACTS.md). Existing recorded tests are attributed to their handover; no runtime suite was re-run for these notes.
 
@@ -43,9 +52,8 @@ Connections include planned dependencies; status above determines whether a conn
 
 ## Next work
 
-Once the spec PR merges:
+Next:
 
-- **S1:** numbers from a recorded match.
 - **S2:** live panels through the relay and archiver.
 - **S3:** moments, starting with `shot_cluster` exactly as Pranav's KES–ORR fixture (seed 1017) expects. That fixture still matches the current generator.
 
