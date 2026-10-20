@@ -360,7 +360,7 @@ or `CONTRACTS.md`) · hot files ✓ (`CONTRACTS.md`: Arnav, Pranav, Vedant to be
 |---|---|---|---|---|
 | Arnav | v0.1 | — | Pending | — |
 | Pranav | v0.1 | — | Pending | — |
-| Vedant | v0.1 | — | Pending | — |
+| Vedant | v0.1 (as merged in #50) | D-01 and D-02 approved, with two changes for S2. **1. Per-shot xG.** The shot map (one of the seven charts, and the hero moment's chart in §9) needs each shot's xG, but no panel carries it, and the web app never computes numbers. Proposed: `heavy.shots`, every shot so far as `{event_id, xg}` (about 25 a match); the browser joins position and outcome from the event by `event_id`. **2. `stats` in the snapshot.** §7.3 includes every `stats` envelope sent so far, about 5,700 a match (about 6 MB, plus a Cosmos write each in the relay's `screen` log). A late joiner needs only the latest panel and the latest one with `heavy`, because the heavy fields are cumulative. Proposed: the relay keeps those two, the way it keeps `positions-latest` (a §7.3 and `functions/relay_store.py` change, Arnav). The browser then gets its stats from the snapshot, so `match_state` (§4.2) serves MCP only and "a late-joining browser" comes out of its readers | Approved with changes | 20 Oct |
 
 **Implementation readiness:** blocked by M1 (spec agreement) for all code.
 **Relevant specification agreement:** pending (the M1 spec PR).

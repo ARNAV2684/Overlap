@@ -154,6 +154,7 @@ Not applicable — no code, resources, cost, data or AI behaviour change.
 | Reviewer | Proposal version | Finding / required change | Outcome | Date and reference |
 |---|---|---|---|---|
 | Azeem | 1.0 | — | Pending | — |
+| Vedant | 1.0 | Nothing changes for the web side: the browser never reads Event Hubs, only the relay's §7 envelopes | Approved | 20 Oct |
 
 **Implementation readiness:** ready for the stated scope.  
 **Relevant specification agreement:** `generator/specs/live-and-batch.md` §1, PR #18.  

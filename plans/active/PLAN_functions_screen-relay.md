@@ -290,7 +290,7 @@ Scanned at `6f2f459` on 2026-10-17. Sources checked: plans ✓ · PRs ✓ (#26, 
 | Reviewer | Proposal version | Finding / required change | Outcome | Date and reference |
 |---|---|---|---|---|
 | Arnav | v1.1 | D-01 to D-08 decided | Decisions recorded; waiting for go | 17 Oct · this session |
-| Vedant (§7 contract) | v1 | — | Pending | — |
+| Vedant (§7 contract) | v1 | No change needed. The web app validates §7–§7.3 strictly (`web/src/lib/contracts.ts`, `api.ts`): `status`, `positions`, snapshot and per-group `seq`. A run against the stand-in parsed every envelope of `SYN-9001`–`SYN-9003` with 0 rejected (#48). One follow-up on `stats` envelopes in the snapshot is in `PLAN_stats_engine.md`'s review record | Approved | 20 Oct · #48 |
 
 **Implementation readiness:** ready for go on S1; S2–S4 follow its agreements.
 **Next action and owner:** go · Arnav; review the §7 PR · Vedant; confirm the viewer change · Pranav.
