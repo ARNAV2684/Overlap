@@ -89,6 +89,8 @@ as written: D-01 panel shape and rate, D-02 `match_state`, D-03 `context.players
 |---|---|---|---|---|
 | `stats/` | — | — | No other plan, PR or branch touches it | Agreed |
 | `docs/knowledge/stats-engine.md` | `PLAN_docs_graphify-knowledge-map.md`, `PLAN_docs_knowledge-sharing.md` | Pranav | Updated in this PR, as the knowledge-sharing rule asks | Agreed |
+| `plans/active/PLAN_stats_engine*.md` | `PLAN_agents_ai-insights-mcp_S1.md` (#51's scope report) | Pranav | That plan reads the stats plans as its producer's plan; it doesn't edit them. Nothing here changes the agreed handoffs | Agreed (no shared edit) |
+| `plans/active/` | `PLAN_plans_housekeeping.md` | Arnav | Its edits merged in PR #26. This PR only adds a sprint plan and updates its own parent's status | Agreed (no shared edit) |
 
 **Scanned at `7bda05a` on 2026-10-20.** Sources checked: plans ✓ · PRs ✓ (none open) · branches ✓ · hot files ✓
 (none touched).
