@@ -145,3 +145,30 @@ def test_translations_are_rechecked(moments, lang, text, ok):
 def test_locale_normalisation():
     assert normalise("71 % y 0,15", "es") == "71% y 0.15"
     assert normalise("७१ %", "hi") == "71%"
+
+
+def test_names_must_belong_to_the_moment(moments):
+    cluster = by_id(moments, CLUSTER)
+    claims = [("shots_last_5min", 3), ("window_duration_min", 5)]
+    ok = ["Kestlebury United have taken 3 shots in the last 5 minutes.",
+          "Another push from Kestlebury: 3 shots in the last 5 minutes.",
+          "Orrinford Albion have faced 3 shots in the last 5 minutes.",
+          "Navid Aziz and Kestlebury's attack: 3 shots in the last 5 minutes."]
+    for text in ok:
+        assert numeric_check(line(text, claims), cluster) == [], text
+    for text, word in [("Calverholme Athletic have taken 3 shots in the last 5 minutes.", "Calverholme"),
+                       ("Kestlebury United, like Harrow, took 3 shots in the last 5 minutes.", "Harrow"),
+                       ("Kestlebury United have taken 3 shots in the last 5 minutes, says Pep.", "Pep")]:
+        assert f"unknown_name:{word}" in numeric_check(line(text, claims), cluster), text
+
+
+def test_a_recap_copied_from_another_match_is_rejected(moments):
+    import json
+    from pathlib import Path
+
+    from recap_writer import recap_moment
+    state = json.loads((Path(__file__).resolve().parents[2] /
+                        "mcp_server/tests/data/tools/match_state/SYN-1017/state.json").read_text(encoding="utf-8"))
+    recap = recap_moment(state, moments)
+    copied = line("Full time: Kestlebury United 3–0 Dunmarrow Town.", [("home_goals", 3), ("away_goals", 0)])
+    assert "unknown_name:Dunmarrow" in numeric_check(copied, recap)

@@ -82,6 +82,13 @@ UP_WORDS = re.compile(r"\b(?:harder|more|up from|increas|intensif|rais|ramp)", r
 DOWN_WORDS = re.compile(r"\b(?:less|fewer|down from|decreas|eas(?:ed|ing)|drop|dropp|reduc|ease off)", re.IGNORECASE)
 DOWN_TO = re.compile(r"down to\s+(\d+)", re.IGNORECASE)
 
+# Names: in an English line every capitalised word must belong to this moment's team or player names (or the recap's
+# story); a sentence may also open with one of these ordinary words. Anything else (another club, a real person, a
+# name copied from a prompt example) fails the line.
+STARTERS = frozenset(["a", "an", "the", "and", "but", "after", "again", "another", "as", "at", "big", "both", "by", "early", "even", "for", "from", "full", "goal", "goals", "he", "her", "his", "in", "it", "its", "late", "now", "off", "on", "penalty", "plenty", "red", "shots", "so", "still", "that", "their", "them", "then", "there", "they", "this", "time", "what", "when", "where", "while", "with", "yet"])
+CAPITAL = re.compile(r"(?<![\w'’-])[A-Z][\w'’-]*")
+SENTENCE_START = re.compile(r"(?:^|[.!?:]\s+)$")
+
 
 # --- tokens -------------------------------------------------------------------------------------------------------
 
@@ -150,6 +157,8 @@ def numeric_check(line: dict, moment: dict, *, english: dict | None = None, name
     team_ids = [moment["context"]["teams"][s]["team_id"] for s in ("home", "away")]
     if any(re.search(rf"\b{t}\b", text) for t in team_ids):
         problems.append("internal_id")
+    if lang == "en":
+        problems += unknown_names(text, moment)
     words = NUMBER_WORDS.get(lang)
     if words:
         bare = PERIOD_PHRASE.sub("", norm) if lang == "en" else norm
@@ -280,8 +289,22 @@ def evidence_view(moment: dict) -> dict:
 
 def names_of(moment: dict) -> list[str]:
     ctx = moment["context"]
+    story = [n for s in moment.get("story") or [] for n in (s.get("team"), s.get("player")) if n]
     return [ctx["teams"][s]["name"] for s in ("home", "away")] + [
-        player_name(moment, p["player_id"]) for p in ctx.get("players") or []]
+        player_name(moment, p["player_id"]) for p in ctx.get("players") or []] + story
+
+
+def unknown_names(text: str, moment: dict) -> list[str]:
+    """The first capitalised word that is neither part of a permitted name nor an ordinary sentence opener."""
+    allowed = {w for name in names_of(moment) if name for w in re.findall(r"[\w'’-]+", name)}
+    for m in CAPITAL.finditer(text):
+        word = re.sub(r"['’]s$", "", m.group())
+        if word in allowed or word == "xG":
+            continue
+        if SENTENCE_START.search(text[:m.start()]) and word.lower() in STARTERS:
+            continue
+        return [f"unknown_name:{word}"]
+    return []
 
 
 def core(line: dict) -> dict:

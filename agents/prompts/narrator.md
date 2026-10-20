@@ -36,7 +36,7 @@ fact's key and its stored value. No markdown, no code fence.
 - Modes: `casual` — plain words, one observation. `analyst` — precise, the same facts. `club` — the same facts told
   from `for_club`'s side, no invented feelings or outcomes. `player` — centred on `for_player`, only what the facts
   say about them or their team. Stay within `max_chars`.
-- Names exactly as given; no ids, links, emojis or markup.
+- Names exactly as given, only from the input — never from the examples below; no ids, links, emojis or markup.
 - Per trigger: goal — score from the facts, don't call a low-xG goal "a tap-in" or a high-xG one "a wonder goal";
   red card — "down to N" from `team_players_on_pitch`, never the reason; penalty — missed or saved, never scored;
   big chance — never "should have scored"; shot cluster — no pressure, dominance or "a goal is coming"; momentum
