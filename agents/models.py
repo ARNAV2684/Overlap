@@ -8,12 +8,13 @@
 #
 # One client class serves both providers: Agent Framework's OpenAIChatCompletionClient talks to Foundry Local
 # through its OpenAI-compatible endpoint, and to Azure OpenAI in Foundry with a managed-identity credential. There is
-# no silent fallback from one provider to another. The budget here is per process; the workflow (M3) keeps the
-# durable per-match budget document in Cosmos and reserves through the same interface.
+# no silent fallback from one provider to another. `Budget` here is per process; `state.DurableBudget` keeps the
+# per-match budget document in Cosmos with the same interface (async), and the gate accepts either.
 
 from __future__ import annotations
 
 import asyncio
+import inspect
 import threading
 from dataclasses import dataclass, field
 from typing import Any, Protocol
@@ -116,7 +117,7 @@ def used_tokens(response: Any) -> int | None:
 class ModelGate:
     """Every model call goes through here: provider check, budget reservation, timeout, usage."""
 
-    def __init__(self, settings: Settings, budget: Budget | None = None):
+    def __init__(self, settings: Settings, budget: Any = None):
         self.settings = settings
         self.budget = budget or Budget.from_settings(settings)
 
@@ -124,15 +125,20 @@ class ModelGate:
                   timeout_s: float | None = None, **kwargs: Any) -> Any:
         if self.settings.provider == "off":
             raise ModelDisabled("model calls are off (OVERLAP_MODEL_PROVIDER=off)")
-        reservation = self.budget.reserve(match_id, moment_id)
+        reservation = await _maybe(self.budget.reserve(match_id, moment_id))
         try:
             response = await asyncio.wait_for(agent.run(messages, **kwargs),
                                               timeout_s or self.settings.request_timeout_s)
         except TimeoutError as e:
-            self.budget.settle(reservation, None)
+            await _maybe(self.budget.settle(reservation, None))
             raise ModelTimeout(f"{moment_id}: model call timed out") from e
         except BaseException:
-            self.budget.settle(reservation, None)
+            await _maybe(self.budget.settle(reservation, None))
             raise
-        self.budget.settle(reservation, used_tokens(response))
+        await _maybe(self.budget.settle(reservation, used_tokens(response)))
         return response
+
+
+async def _maybe(value: Any) -> Any:
+    """Await a durable (async) budget call; pass an in-process one straight through."""
+    return await value if inspect.isawaitable(value) else value

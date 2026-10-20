@@ -8,7 +8,15 @@ A Microsoft Agent Framework workflow on Microsoft Foundry. It runs only on flagg
 uv sync                    # Python 3.12; Microsoft Agent Framework core 1.22.0 + OpenAI client 1.17.0
 uv run pytest              # no model or network calls
 uv run python smoke.py     # one call through the configured provider; settings in infra/local/env.example
+uv run python ../functions/moment_trigger.py --match SYN-0508 --once   # run a played match's moments from Cosmos
 ```
+
+**Jobs (one per moment):** the moment trigger (`functions/moment_trigger.py`; locally a poller on Cosmos `moments`,
+on Azure the `moment_trigger` change-feed Function) validates each moment and claims `job:<moment_id>` once, with a
+lease, so a duplicate notification or a second worker never runs it twice and a crashed run resumes from its last
+saved stage. The seven stages run as an Agent Framework workflow and save their output on the job; the director's
+result goes to `outbox:<moment_id>` before anything is sent. Model calls are reserved on `budget:<match_id>`. With
+provider `off` every stage uses labelled templates (`fallbacks.py`), so the chain already produces checked lines.
 
 **Model switch (settings only):** `OVERLAP_MODEL_PROVIDER=off` (default: every call refused, templates only),
 `local` (Foundry Local on this machine: `OVERLAP_LOCAL_MODEL_URL`, `OVERLAP_LOCAL_MODEL`) or `azure` (Azure OpenAI in
@@ -30,8 +38,9 @@ goes through `models.ModelGate`: per-moment and per-match budgets and a timeout.
 
 | File | Job |
 |---|---|
-| `workflow.py` | Runs the chain for one moment, with timeouts, retries and fallbacks |
-| `state.py` | Reads and writes each agent's output on the moment document |
+| `workflow.py` | Runs the seven stages for one moment as an Agent Framework workflow, saving each stage on the job |
+| `state.py` | Job, budget and outbox documents in Cosmos `moments` (or in memory): claim, lease, resume |
+| `validate.py` | Checks a moment with the MCP reader's schema (one source of truth) |
 | `spotter.py` | Is this worth saying? Classify and prioritise |
 | `analyst.py` | Explain *why*, using the MCP stats tools |
 | `narrator.py` | One line per viewer mode, with a claim for every number |

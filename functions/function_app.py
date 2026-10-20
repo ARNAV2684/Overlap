@@ -127,3 +127,18 @@ def archive_events(events: list[func.EventHubEvent]) -> None:
                                consumer_group="%OVERLAP_ARCHIVER_CONSUMER_GROUP%", cardinality=func.Cardinality.MANY)
 def archive_tracking(events: list[func.EventHubEvent]) -> None:
     _archive(R.TRACKING_HUB, events)
+
+
+# --- Insight agents (layer 5): a new moment starts the workflow. The agents' code is imported only inside this
+# function, so a missing agents dependency can only affect this trigger, never the relay or the archiver above.
+
+@app.function_name("moment_trigger")
+@app.cosmos_db_trigger(arg_name="docs", connection="COSMOS", database_name="%OVERLAP_COSMOS_DATABASE%",
+                       container_name="moments", lease_container_name="leases",
+                       create_lease_container_if_not_exists=True)
+def moment_trigger(docs: func.DocumentList) -> None:
+    import asyncio
+
+    import moment_trigger as insights
+    results = asyncio.run(insights.handle_batch([d.to_dict() for d in docs]))
+    log.info("moment trigger: %d moments, %s", len(results), [r.get("status") for r in results])
