@@ -1,14 +1,14 @@
 # Moment trigger spec
 
-> **Status: draft for review.** First shot-cluster slice; governs future `moment_trigger.py`.
-> Pranav proposes the insight adapter; Arnav reviews shared Functions/storage integration.
-> [S1](../../plans/active/PLAN_agents_ai-insights-mcp_S1.md) · [workflow](../../agents/specs/workflow.md).
+> **Status: agreed for the build** (Arnav, layer 5 owner, 20 Oct 2026). Governs `moment_trigger.py`. Plan:
+> [`PLAN_agents_insights-build`](../../plans/active/PLAN_agents_insights-build.md) ·
+> [workflow](../../agents/specs/workflow.md). Extends the first slice (#44) to every trigger.
 
 ## 1. Trigger and local/Azure adapters
 
 Proposed source is the immutable `kind=moment` document in `live/moments`, contracts §10.2, not a raw Event Hub
-event, finished archive or model-generated record. Only supported schema/evidence version and `shot_cluster`
-proceed. All `insight_job`, `insight_outbox`, budget and counter records are ignored as new-moment triggers.
+event, finished archive or model-generated record. Only the supported schema/evidence version and the eight
+triggers the stats engine writes (`stats/agents-guide.md` §3) proceed; `sprint` is ignored until it exists. All `insight_job`, `insight_outbox`, budget and counter records are ignored as new-moment triggers.
 
 Local M2 fixture tests invoke the same validated handler explicitly. Later local integration uses an explicit
 runner polling `kind=moment` for the configured match every 1 wall second, with bounded pages (100) and full

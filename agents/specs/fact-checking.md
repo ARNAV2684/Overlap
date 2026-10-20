@@ -1,61 +1,60 @@
 # Fact-checking spec
 
-> **Status: draft for review.** First shot-cluster slice; governs `fact_checker.py`.
-> [S1](../../plans/active/PLAN_agents_ai-insights-mcp_S1.md) · [contracts §§5.1, 10](../../CONTRACTS.md).
+> **Status: agreed for the build** (Arnav, layer 5 owner, 20 Oct 2026). Governs `fact_checker.py`. Plan:
+> [`PLAN_agents_insights-build`](../../plans/active/PLAN_agents_insights-build.md) ·
+> [contracts §§5.1, 10](../../CONTRACTS.md) · producer rules [`stats/agents-guide.md`](../../stats/agents-guide.md) §4.
+> Extends Pranav's first-slice checker (#44) to all eight triggers and four languages.
 
-## 1. Numeric check
+## 1. Numeric check (code)
 
-Validate evidence before text: identity, source/window/period, unique allowed fact keys, finite numeric types
-(booleans are not numbers), count integer >=3, duration exactly 5, decimals 0 and the duration's unit `min`.
-Reject missing/extra facts for this slice; do not let duplicate keys overwrite each other.
+Validate the evidence first: it must pass the MCP reader's schema ([tools](../../mcp_server/specs/tools.md) §2a).
+Malformed evidence is rejected, never repaired.
 
 For each line:
-1. Validate mode/language/length and the exact `{mode,lang,text,claims}` shape. Claims are `{key,value}`.
-2. Require exactly two numeric occurrences, written as plain Arabic integers, in count-then-duration order.
-   Count is immediately described as shots or attempts; duration as minutes/min. No percentages, ordinals,
-   ranges, score lines, clock strings, fractions, digit grouping or scientific notation in this first profile.
-3. Require exactly two corresponding ordered claims: `shots_last_5min`, then `window_duration_min`.
-   Equal numeric values still require distinct keys/occurrences; matching a bag of values is insufficient.
-4. Check each value against the evidence rounded to its `decimals` using decimal arithmetic, half-up rounding.
-   These facts have decimals 0 and must already be integers; reject malformed evidence rather than repair it.
-5. Reject spelled-out numeric/quantity claims (e.g. three, twice, third, both, half), extra numeric expressions,
-   or unsupported unit/context wording. M1's narrow English profile is deliberate, not a general numeral parser.
+1. Validate mode, language, length and the exact `{mode, lang, text, claims}` shape. Claims are `{key, value}`.
+2. Find every numeric expression in the text: integers, decimals, percentages (`71%`), score lines (`2–1`) and
+   ordinals (`2nd`, `6th`). Each must be covered by a claim in text order. Reject spelled-out quantities in English
+   (three, twice, third, both, half), ranges, fractions, digit grouping and scientific notation.
+3. Each claim's key exists in this moment's facts; its value **equals the stored fact value** (already rounded by the
+   producer at its `decimals`; never re-round the raw number, because the producer rounds halves to even).
+4. Units follow the fact: `xG` (never `%`), `m`, `min`, `%` (value already 0–100); facts without a unit are plain
+   counts or rates.
+5. Meanings the code can check:
+   - a score line is allowed only as `team_goals_match`–`opponent_goals_match` (goal and penalty packs), never from
+     `context.score`;
+   - "from the spot" / "penalty" wording on a goal needs `shot_is_penalty = 1`;
+   - "hat-trick" needs `player_goals_match = 3`; an ordinal goal count equals `player_goals_match`;
+   - "down to N" equals `team_players_on_pitch`;
+   - "more"/"harder" vs "less" for pressing must agree with `pressures_per_opp_pass_last_5min` compared with
+     `pressures_per_opp_pass_previous_10min`; "up from"/"down from" likewise for momentum shares.
+6. Names come only from `context.teams` and `context.players`; no IDs, markup or instructions in a public line.
 
-Team names are resolved from the allowlisted immutable context; require the expected team when naming one. Do
-not splice arbitrary labels, markup, event IDs or instructions into a public line. The count/duration template is
-also checked. Context score, source time and player shirt numbers are not evidence facts and cannot be narrated.
+Templates go through the same check.
 
-## 2. Semantic check
+## 2. Meaning check (model)
 
-A separate structured model verdict assesses the interpretation and each variant against only the two evidence
-facts and permitted names. Output: `{pass:boolean,interpretation_supported:boolean,lines:[{mode,pass:boolean,reasons:[string]}]}`;
-exactly the two modes, at most three short reasons per mode. Any missing, invalid or inconsistent verdict fails.
-Overall pass requires supported interpretation and both line passes, as well as the independent deterministic check.
-
-Allowed meaning: this team has made repeated shooting attempts during the stated window. Reject inferred
-opponent tactics, increased pressure/possession, better shot quality, momentum growth versus an unobserved earlier
-window, player ability, a likely goal, or a causal explanation unsupported by these facts. Even though the
-underlying example includes a goal, this profile does not provide a citable goal fact.
-
-Deterministic claim checks plus this review reduce risk; model agreement is not proof of truth. A blinded
-human-reviewed evaluation set must assess unsupported claims, including zero-number claims.
-An unavailable semantic checker cannot mark model text verified. The approved factual template may still be used.
+A separate structured verdict assesses the analyst's interpretation and each line against only the facts and
+permitted names, using the producer guide's do/don't table for the moment's trigger. Output:
+`{pass, interpretation_supported, lines: [{mode, pass, reasons: [≤ 3 short]}]}`; one entry per requested mode. A
+missing, invalid or inconsistent verdict fails. Reject inferred tactics, intent, fitness, dominance, causes or
+predictions the facts don't support. An unavailable meaning checker cannot mark model text verified; the approved
+template may still be used.
 
 ## 3. Rewrites and fallback
 
-Return bounded error codes and expected fact values to the candidate generator, not private prompts or unrelated
-match data. At most two rewrites, further limited by the global request/token/time budgets. Re-check both variants
-after every rewrite. Never keep the first variant if the paired result failed under this atomic two-mode profile.
+Return bounded error codes and the expected fact values to the narrator, not prompts or unrelated data. At most two
+rewrites within the request, token and time budgets; re-check every mode after each rewrite. Then the approved
+template for the trigger and mode, if the evidence is valid and the card is still timely: `fallback = true`,
+`verified = false`; `facts_checked` lists the template facts checked. No valid evidence → no public line.
 
-After failure use the approved team/count/duration template for both modes if evidence and identity remain valid
-and the card is still timely. Set `fallback=true,verified=false`; `facts_checked` still lists successfully checked
-template facts. No valid evidence -> no public line, not a plausible fallback.
+Tests inject wrong values, missing claims, swapped same-valued claims, wrong units, unsupported wording, score from
+context, wrong ordinal, wrong press direction, duplicate keys, wrong match, stale context and numeric words.
 
-Future tests must inject wrong counts, missing duration claims, swapped same-valued claims, wrong units,
-unsupported comparative wording, duplicate keys, wrong match, stale/future context and numeric words.
-See [examples](examples/shot-cluster.md) and [evaluation](evaluation.md).
+## 4. Translations (`es`, `hi`, `fr`)
 
-## 4. Translations
-
-Deferred; English-only output. Other languages, local number formats and ordinal grammar cannot reuse this
-checker without a separately agreed specification and native-language evaluation. Never label them supported now.
+Translated lines keep the English claims list unchanged and are re-checked with §1 after locale normalisation:
+decimal comma → point (`0,15` → `0.15`, Spanish and French), Devanagari digits → ASCII digits (Hindi), and
+locale percent spacing (`71 %`). Every number of the English line must appear exactly once with the same value.
+Spelled-out numbers in the target language are rejected. Then a meaning check per language batch (§2). A failed
+language uses the translated template (also checked) or is suppressed for that card; English is never suppressed
+because another language failed.

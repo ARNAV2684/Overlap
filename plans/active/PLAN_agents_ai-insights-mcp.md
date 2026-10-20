@@ -8,7 +8,7 @@
 | Review coordinator | Arnav |
 | Affected owners | Azeem: generator and stats (Pranav reports agreement); Vedant: frontend; Arnav: storage, relay and delivery |
 | Version and date | 1.3 · 18 October 2026 · local M2 evidence |
-| Status | #41 and #44 merged; local M2 implemented and verified in S2; Foundry and live integration pending |
+| Status | #41 and #44 merged; local M2 implemented and verified in S2. **From 20 Oct, M3–M5 are superseded by [`PLAN_agents_insights-build`](PLAN_agents_insights-build.md)** (Arnav owns layer 5: seven agents, all triggers, four modes, four languages, local first) |
 | Tier | Full · Layer 5, with explicit upstream and downstream dependencies |
 | Branch | `agents/insights-plan` |
 | Reviewed baseline | [main at 103a5267e2846b7b1f5d0872816518b0a110d33f](https://github.com/ARNAV2684/Overlap/commit/103a5267e2846b7b1f5d0872816518b0a110d33f) |
