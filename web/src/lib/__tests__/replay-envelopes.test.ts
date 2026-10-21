@@ -5,6 +5,7 @@ import {
   buildReplayIndex,
   cleanStoredDoc,
   findGaps,
+  panelRange,
   replayClock,
   SEQ_PER_CHUNK,
   type ReplayIndex,
@@ -175,6 +176,16 @@ describe("buildReplayChunk", () => {
     expect(text).toMatch(/unreadable lines/);
     expect(text).toMatch(/another match or period/);
     expect(text).toMatch(/goal by unknown team XYZ/);
+  });
+});
+
+describe("panelRange", () => {
+  it("matches the chunk, but runs a period's last chunk on to take the panel stamped just after the whistle", () => {
+    const { manifest } = index();
+    expect(panelRange(manifest, manifest.chunks[1])).toEqual([60_000, 120_000]);
+    expect(panelRange(manifest, manifest.chunks[2])).toEqual([120_000, P1_END + 1000]);
+    expect(panelRange(manifest, manifest.chunks[3])).toEqual([P1_END, P1_END + 60_000]);
+    expect(panelRange(manifest, manifest.chunks[4])).toEqual([P1_END + 60_000, P1_END + P2_END + 1000]);
   });
 });
 

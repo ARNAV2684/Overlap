@@ -147,6 +147,33 @@ describe("replay player: start and playback (AC-05)", () => {
     expect(ingested.map((e) => e.seq)).toEqual(CHUNKS.flatMap((c) => c.envelopes.map((e) => e.seq)));
   });
 
+  it("plays each half's last panel, stamped after the whistle, and still finishes", async () => {
+    // Chunks 2 and 4 end their halves; give each the panel the stats engine stamps just after the whistle
+    const panelAfter = (chunk: ReplayChunkData, matchMs: number, clock: string): ReplayChunkData => ({
+      ...chunk,
+      envelopes: [
+        ...chunk.envelopes,
+        { seq: chunk.envelopes[chunk.envelopes.length - 1].seq + 1, kind: "stats", match_id: "SYN-0042", match_ms: matchMs, clock, data: {} },
+      ],
+    });
+    const chunks = [...CHUNKS];
+    chunks[2] = panelAfter(CHUNKS[2], P1_END + 600, "2:05");
+    chunks[4] = panelAfter(CHUNKS[4], P1_END + P2_END + 400, "46:01");
+    const client = fakeClient();
+    client.chunk = vi.fn((_id: string, index: number) => Promise.resolve(chunks[index]));
+
+    const p = play(client);
+    await at(0);
+    await at((P1_END + P2_END) / 20 + 1000);
+    expect(p.getState().status).toBe("finished");
+    const panels = ingested.filter((e) => e.kind === "stats").map((e) => e.match_ms);
+    expect(panels).toEqual([P1_END + 600, P1_END + P2_END + 400]);
+    // The first half's last panel comes before the second half starts
+    const halfTimePanel = ingested.findIndex((e) => e.kind === "stats");
+    const secondHalf = ingested.findIndex((e) => e.kind === "event" && e.data.type === "PeriodStart" && e.data.period === 2);
+    expect(halfTimePanel).toBeLessThan(secondHalf);
+  });
+
   it("plays again from kick-off after the end, with a cleared store", async () => {
     const p = play(fakeClient());
     await at(0);

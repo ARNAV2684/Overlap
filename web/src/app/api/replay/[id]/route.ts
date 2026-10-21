@@ -9,7 +9,13 @@
 // response or a log line; storage errors are logged by operation only.
 
 import { isMatchId } from "@/lib/contracts";
-import { buildReplayChunk, buildReplayIndex, type IndexError, type ReplayIndex } from "@/lib/replay-envelopes";
+import {
+  buildReplayChunk,
+  buildReplayIndex,
+  panelRange,
+  type IndexError,
+  type ReplayIndex,
+} from "@/lib/replay-envelopes";
 import { describeArchiveEnvProblems, readArchiveEnv } from "@/lib/server/archive-env";
 import { ArchiveStoreError, createArchiveStore, type ArchiveStore } from "@/lib/server/archive-store";
 
@@ -110,9 +116,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
     const chunk = index.manifest.chunks[Number(chunkParam)];
     if (!chunk) return fail("bad_chunk");
+    const [panelsFrom, panelsTo] = panelRange(index.manifest, chunk);
     const [events, panels, tracking] = await Promise.all([
       store.events(id, chunk.period, chunk.minute * 60_000, (chunk.minute + 1) * 60_000),
-      store.panels(id, chunk.period, chunk.from_ms, chunk.to_ms),
+      store.panels(id, chunk.period, panelsFrom, panelsTo),
       store.trackingFile(id, chunk.period, chunk.minute),
     ]);
     const body = buildReplayChunk(index, chunk, { events, panels, tracking });

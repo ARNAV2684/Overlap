@@ -201,6 +201,17 @@ function scoreBefore(index: ReplayIndex, chunk: ReplayChunk): Score {
   return score;
 }
 
+/**
+ * The `match_ms` range of a chunk's stat panels, `[from, to)`. The same as the chunk's, except that a period's last
+ * chunk also takes the panel sent for its PeriodEnd: the stats engine stamps that one with the next whole second, up
+ * to 999 ms after the whistle, and it carries the half-time or full-time totals (realtime.md §5.1).
+ */
+export function panelRange(manifest: ReplayManifest, chunk: ReplayChunk): [number, number] {
+  const next = manifest.chunks[chunk.index + 1];
+  const lastOfPeriod = next === undefined || next.period !== chunk.period;
+  return [chunk.from_ms, lastOfPeriod ? chunk.to_ms + 999 : chunk.to_ms];
+}
+
 // ---------------------------------------------------------------------------------------------------------------
 // One chunk
 // ---------------------------------------------------------------------------------------------------------------

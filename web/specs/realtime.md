@@ -181,7 +181,10 @@ browser releases them at the chosen speed.
     and its `clock` comes from that frame's period and `period_ms`, as the relay does. A minute without a file has no
     frames;
   - **stat panels** of period `p` whose `match_ms − start_ms` falls in the range, each as a `stats` envelope with the
-    §7.4 panel unchanged.
+    §7.4 panel unchanged. A period's **last** chunk also takes the panel sent for its `PeriodEnd`: the stats engine
+    stamps it with the next whole second, up to 999 ms after the whistle, so its range ends at `to_ms + 999`. That
+    panel carries the half-time or full-time totals. (Found on the first run against a real archive: `SYN-0501`'s
+    panels at 2,907,000 and 6,124,000 came after whistles at 2,906,400 and 6,123,600.)
   - **Chunk 0 starts with** a `pre_match` status carrying the setup, at `match_ms` 0 and clock `0:00`, as the relay's
     first status does.
 - **Cosmos fields** (`id`, and every field that starts with `_`) are removed from stored documents before anything
@@ -228,7 +231,8 @@ browser releases them at the chosen speed.
   envelope at or before it, with `receivedAt` set to the browser's time, so rows count and the goal flash and
   announcement work as they do live. The playhead never passes data that hasn't loaded: it waits, with the notice
   "Buffering…", and goes on when the chunk arrives. Half-time is not part of `match_ms`, so period 2 follows straight
-  on.
+  on. When the playhead reaches a chunk's end (`to_ms − 1`), whatever is left in that chunk is ingested too: the
+  `PeriodEnd` panel can be stamped after the whistle, and at full time the playhead stops at `duration_ms`.
 - **Speed:** 1×, 5× or 20×, default 20×. Changing speed doesn't refetch.
 - **Pause** stops the playhead, and resume continues from it. This is not the timeline's "pause feed" button, which
   keeps working as it does live (it freezes the display while the scoreboard follows the playhead).

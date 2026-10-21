@@ -70,6 +70,12 @@ describe.skipIf(!ENABLED)("replay against the local match archive", () => {
       }
     }
 
+    // Stat panels as stored, whatever their time: each half's last one is stamped after its whistle
+    let storedPanels = 0;
+    for (const period of manifest.periods) {
+      storedPanels += (await store.panels(MATCH, period.period, 0, Number.MAX_SAFE_INTEGER)).length;
+    }
+
     const events = envelopes.filter((e) => e.kind === "event");
     const frames = envelopes.flatMap((e) => (e.kind === "positions" ? e.data.frames : []));
     const statuses = envelopes.filter((e) => e.kind === "status");
@@ -87,6 +93,7 @@ describe.skipIf(!ENABLED)("replay against the local match archive", () => {
     expect(events.length).toBe(manifest.result.events);
     expect(new Set(events.map((e) => (e.kind === "event" ? e.data.seq : -1))).size).toBe(events.length);
     expect(frames.length).toBe(storedFrames.size);
+    expect(envelopes.filter((e) => e.kind === "stats").length).toBe(storedPanels);
     expect(statuses[0]).toMatchObject({ data: { phase: "pre_match" } });
     expect(last).toMatchObject({ data: { phase: "full_time", score: manifest.result.score } });
   }, RUN_LIMIT_MS);

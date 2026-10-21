@@ -218,7 +218,10 @@ export function createReplayPlayer(
         buffering = true;
         break;
       }
-      while (cursor < envelopes.length && envelopes[cursor].match_ms <= playhead) {
+      // Once the playhead reaches a chunk's end, what is left in it goes in too: the panel sent for a PeriodEnd is
+      // stamped up to a second after the whistle, past the playhead's stop at full time (realtime.md §5.2)
+      const ended = playhead >= manifest.chunks[current].to_ms - 1;
+      while (cursor < envelopes.length && (ended || envelopes[cursor].match_ms <= playhead)) {
         store.ingest(envelopes[cursor], wall);
         cursor++;
       }

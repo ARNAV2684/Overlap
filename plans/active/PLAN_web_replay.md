@@ -10,7 +10,7 @@
 | Review coordinator | Arnav |
 | Affected component owners | Arnav (archiver: producer of the stored match, `CONTRACTS.md` §4.1, `archiver/specs/storage.md`; Azure resources and roles, A3 / S4; Pranav helping). Azeem (stats engine: its panels are archived and replayed unchanged). Docs and scripts: unassigned (Arnav decides) |
 | Proposal version and date | v0.2 · 2026-10-20 (v0.1 same day; see the change note in §12) |
-| Status | In progress · Phase 1 (specs) pushed, spec PR not opened yet; Phases 2–4 (read path, route, player and page) done except the run against a real local archive (no Docker here); Phase 5 next |
+| Status | In progress · Phase 1 (specs) pushed, spec PR not opened yet; Phases 2–4 done, AC-02 passed against a real local archive (22 Oct); Phase 5 (browser checks, docs, handover) next |
 | Plan tier and file | Full · `plans/active/PLAN_web_replay.md` |
 | Repository | [ARNAV2684/Overlap](https://github.com/ARNAV2684/Overlap) |
 | Reviewed branch and commit | main · 36f5d00 |
@@ -276,9 +276,8 @@ is done):
       10 s timeout; failures become `ArchiveStoreError` naming the operation only (21 Oct)
 - [x] Multi-member gzip checked: Node's `gunzipSync` reads every member, including a file written by Python's `gzip`
       as the archiver does (21 Oct)
-- [ ] Checked against the local emulators: `ORDER BY c.seq` and range queries, a real tracking file, the emulator over
-      `http` with endpoint discovery off. **Not run:** Docker isn't installed on this machine, so the emulators can't
-      start here. Moved to Phase 3's AC-02 run
+- [x] Checked against the local emulators in Phase 3's AC-02 run: `ORDER BY c.seq` and range queries, the Cosmos
+      emulator over `http` with endpoint discovery off, and 103 real tracking files from Azurite (22 Oct)
 - [x] Lint, typecheck, all tests (392 passed, 1 opt-in skipped) and build pass (21 Oct). The build doesn't yet load
       the Azure SDKs: no route imports `archive-store.ts` until Phase 3
 
@@ -299,9 +298,18 @@ is done):
 - [x] `replay.qa.test.ts` written: opt-in (`QA_REPLAY=1`, `QA_REPLAY_MATCH`), reads the `OVERLAP_*` settings from
       the shell or `.env.local`. Wiring checked against a closed port: the real route and SDKs answer
       `502 storage_error`, logging the operation only (22 Oct)
-- [ ] **AC-02 run against a match archived on the local stack: not run.** Docker isn't installed on this machine.
-      Needs a machine with the local stack, `archiver/main.py` and a finished generator match. Also covers Phase 2's
-      open emulator check
+- [x] **AC-02 passed against a real local archive** (22 Oct). Local stack in Docker (Event Hubs, Azurite, Cosmos
+      emulators), `archiver/main.py` and `stats/main.py live`, then `generator/cli.py live --hubs emulator --speed 20
+      --record --first-match 501`: `SYN-0501` CAL v DTN, 6–0, 32,983 messages. The archiver stored 2,363 events,
+      30,619 frames and 6,125 panels, 0 invalid. `replay.qa.test.ts`: **103 chunks, 2,363 events, 30,619 frames,
+      6,125 panels, 0 rejected, no gaps, `seq` rising, ends `full_time` 6–0**, as archived
+- [x] **Fixed, found by that run:** the first run replayed 6,123 of 6,125 panels. The stats engine stamps each
+      `PeriodEnd` panel with the next whole second (2,907,000 and 6,124,000 after whistles at 2,906,400 and
+      6,123,600), past the chunk's range, so the half-time and full-time panels were dropped; and the player, which
+      stops at `duration_ms`, would never have reached the full-time one. Now `panelRange()` runs a period's last
+      chunk 999 ms past the whistle, and the player ingests what is left in a chunk once the playhead reaches its end.
+      `realtime.md` §5.1 and §5.2 say so; new tests in `replay-envelopes`, `replay-route` and `replay-player`; the
+      opt-in test now also checks the panel count against the archive (22 Oct)
 - [x] Lint, typecheck, all tests (414 passed, 2 opt-in skipped) and build pass; the build now bundles the Azure
       SDKs into `/api/replay/[id]` (dynamic). Smoke run with `next start`: a bad id → 400 `bad_match_id`, a bad chunk
       → 400 `bad_chunk`, an unreachable archive → 502 `storage_error`, all `no-store`, with one server log line naming

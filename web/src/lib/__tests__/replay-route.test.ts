@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ArchiveEnvResult } from "@/lib/server/archive-env";
 import type { ArchiveStore } from "@/lib/server/archive-store";
-import { fakeArchiveStore, frameAt, STORED_MATCH } from "./replay-fixtures";
+import { fakeArchiveStore, frameAt, P1_END, P2_END, STORED_MATCH, storedPanel } from "./replay-fixtures";
 
 // The route reads its settings and storage through these two modules; the tests swap in fakes
 const fakes = vi.hoisted(() => ({
@@ -77,6 +77,16 @@ describe("GET /api/replay/<id>: manifest and chunks", () => {
     expect(body.rejected).toEqual({ count: 0, samples: [] });
     expect(body.envelopes.map((e: { kind: string }) => e.kind)).toEqual(["positions", "event", "status"]);
     expect(logs.at(-1)).toMatch(/^replay SYN-0042 chunk 1: 1 events, 2 frames, 0 panels, 0 rejected, \d+ ms$/);
+  });
+
+  it("serves each half's last panel, stamped just after the whistle, in that half's last chunk", async () => {
+    // As the stats engine sends them: the next whole second after each PeriodEnd
+    fakes.store = fakeArchiveStore({ panels: [storedPanel(1, 120_000), storedPanel(1, P1_END + 600), storedPanel(2, P2_END + 400)] });
+    const { get } = await load();
+    const kinds = async (chunk: number) =>
+      (await get("SYN-0042", `?chunk=${chunk}`)).body.envelopes.map((e: { kind: string; match_ms: number }) => `${e.kind}@${e.match_ms}`);
+    expect(await kinds(2)).toEqual(["stats@120000", "event@125000", "status@125000", `stats@${P1_END + 600}`]);
+    expect((await kinds(4)).at(-1)).toBe(`stats@${P1_END + P2_END + 400}`);
   });
 
   it("reads a match's index once, then serves its chunks from memory", async () => {
