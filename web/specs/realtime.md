@@ -237,7 +237,8 @@ browser releases them at the chosen speed.
 - **Fetches:** 10 s timeout. A failed chunk is retried 3 times, after 1 s, 2 s and 4 s; then the player pauses and
   shows "Replay data unavailable." with a Retry button. A failed manifest shows the error state of `screens.md` §1.
 - **Status and badge:** the player sets `connecting`, `live` while playing or paused, and `finished` after the last
-  envelope (notice "Replay finished."). It never calls `tick()`, so a paused replay never turns `stale`.
+  envelope (notice "Replay finished."). It never calls `tick()`, so a paused replay never turns `stale`. While playing
+  the notice is "Replaying from the match archive."; if the manifest fails it is "This replay can't be shown.".
 - **Replay again:** after the end, `reset()` the store and start from `match_ms` 0.
 - **Rows** say where they came from: the timeline's arrival cell reads "Replay · archive" (and "Replay · bundled
   frame" for tracking) instead of "Live WebSocket", through a stream-source setting that defaults to live.

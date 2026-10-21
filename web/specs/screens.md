@@ -109,8 +109,10 @@ Plan: [`PLAN_web_replay`](../../plans/active/PLAN_web_replay.md); data and playb
      - **Progress:** the playhead's clock and the full-time clock ("62:14 / 90+5:31") in `numeric` text, and a
        read-only progress bar (`role="progressbar"`, value in percent of `duration_ms`). It is not a seek control.
      - Touch targets about 44 px on phones; the toolbar wraps below 680 px.
-  4. **Notice line** messages: "Loading the replay…", "Buffering…", "Replay data unavailable." (with a Retry button),
-     "Replay finished.", plus the live screen's paused and resumed messages for the timeline's "pause feed" button.
+  4. **Notice line** messages: "Loading the replay…", "Replaying from the match archive." (while playing),
+     "Buffering…", "Replay data unavailable." (with a Retry button in the toolbar), "Replay finished.", "This replay
+     can't be shown." (with the message card below), plus the live screen's paused and resumed messages for the
+     timeline's "pause feed" button.
   5. **Scoreboard, counters, timeline, pitch and inspector** as on the live screen, fed by the replay player. Timeline
      rows read "Replay · archive" (or "Replay · bundled frame") in the arrival column. The goal flash and announcement
      fire when the playhead reaches a goal.

@@ -171,11 +171,11 @@ route's own responses.
 | `web/src/lib/replay-client.ts` | Add (M3) | Browser fetch of manifest and chunks, with timeouts and retries | `realtime.md` §5 | Vedant |
 | `web/src/lib/replay-player.ts` | Add (M3) | Playhead, speed, pause, prefetch, end of match | `realtime.md` §5 | Vedant |
 | `web/src/components/replay/{ReplayProvider,ReplayMatchView,ReplayControls,ReplayIntro}.tsx` | Add (M3) | Store and player lifetime; screen composition; play/pause, speed and progress; replay intro and source card | `screens.md` §1 | Vedant |
-| `web/src/components/live/LiveMatchView.tsx` | Modify (M3) | Optional `intro` on `LiveMatchFrame`; export `Workspace`. Live screen unchanged | `screens.md` §1 | Vedant |
+| `web/src/components/live/LiveMatchView.tsx` | Modify (M3) | Optional `intro` on `LiveMatchFrame`; export `Workspace`; optional `header`/`notice`/`intro`/`lead` on `LiveMatchFallback` for the replay fallback. Live screen unchanged | `screens.md` §1 | Vedant |
 | `web/src/components/layout/AppHeader.tsx` | Modify (M3) | Optional `section` text on `AppHeaderView` (default "Live stream"), for "/ Replay". Live screen unchanged | `screens.md` §1 | Vedant |
 | `web/src/lib/stream-source.ts`, `web/src/components/timeline/cells/ArrivalCell.tsx` | Add / modify (M3) | A stream-source context (default live) so replay rows read "Replay · archive" instead of "Live WebSocket". Live screen unchanged | `realtime.md` §5.2 | Vedant |
 | `web/src/app/replay/[id]/page.tsx` | Modify (M3) | Route: id check, not-found, render the replay view | `screens.md` §1 | Vedant |
-| `web/src/lib/__tests__/{archive-env,archive-store,replay-envelopes,replay-route,replay-player,replay-view}.test.ts(x)`, `replay.qa.test.ts`, `replay-fixtures.ts` | Add (M2, M3) | Unit tests; the `qa` test is opt-in and reads the local archive | `realtime.md` §6 | Vedant |
+| `web/src/lib/__tests__/{archive-env,archive-store,replay-envelopes,replay-route,replay-client,replay-player,replay-view}.test.ts`, `replay.qa.test.ts`, `replay-fixtures.ts` | Add (M2, M3) | Unit tests; the `qa` test is opt-in and reads the local archive | `realtime.md` §6 | Vedant |
 | `web/README.md` | Modify (M3) | How to archive a match locally and open its replay | — | Vedant |
 | `docs/knowledge/frontend.md`, `docs/knowledge/archiver.md` (ARCH-01 status only) | Modify (M3, own commit) | Record the replay boundary and the ARCH-01 result | Knowledge-sharing spec | Docs: unassigned (Arnav decides); Pranav told |
 | Optional (M4): `web/src/app/api/replay/route.ts`, `web/src/app/replay/page.tsx`, the match picker's link | Add / modify | List finished archived matches | `screens.md` §1 (to be added in M1 if kept) | Vedant |
@@ -307,11 +307,23 @@ is done):
       → 400 `bad_chunk`, an unreachable archive → 502 `storage_error`, all `no-store`, with one server log line naming
       the operation only (22 Oct)
 
-**Phase 4 — Player and page (M3, first half)**
-- [ ] `src/lib/replay-client.ts` and `src/lib/replay-player.ts`; `replay-player.test.ts` (AC-05)
-- [ ] `stream-source.ts` and `ArrivalCell.tsx`; `AppHeaderView` `section`; `LiveMatchFrame` `intro` and exported
-      `Workspace`
-- [ ] `components/replay/*` and `src/app/replay/[id]/page.tsx`; `replay-view.test.tsx`
+**Phase 4 — Player and page (M3, first half)** · branch `web/replay-page`, stacked on `web/replay-route`
+- [x] `src/lib/replay-client.ts`: same-origin manifest and chunk requests, 10 s timeout, network / timeout /
+      aborted / http (with the route's code) / invalid-response errors, every envelope checked again in the browser;
+      `replay-client.test.ts`, 7 tests (22 Oct)
+- [x] `src/lib/replay-player.ts`: playhead in `match_ms` at 1×/5×/20× (default 20×) on a 100 ms timer; chunks
+      ingested in index order; 2 chunks loaded ahead; waits at an unloaded chunk ("Buffering…"); retries a failed
+      chunk after 1, 2 and 4 s, then pauses with "Replay data unavailable." until Retry; pause, resume, speed change,
+      replay again; never calls `tick()`; generation guard. `replay-player.test.ts`, 11 tests with fake timers
+      (AC-05) (22 Oct)
+- [x] `stream-source.ts` and `ArrivalCell.tsx` ("Replay · archive"); `AppHeaderView` `section`; `LiveMatchFrame`
+      `intro`, exported `Workspace`, and optional `header`/`notice`/`intro`/`lead` on `LiveMatchFallback` so the
+      replay fallback reuses it. The live screen's output is unchanged (22 Oct)
+- [x] `components/replay/{ReplayProvider,ReplayMatchView,ReplayControls,ReplayIntro}.tsx` and
+      `src/app/replay/[id]/page.tsx`: header "/ Replay" with the badge, intro with the final score, toolbar, failure
+      cards, Suspense fallback that matches the first render. `replay-view.test.ts`, 10 tests (22 Oct)
+- [x] Specs updated in the same change: the playing and can't-be-shown notices (`realtime.md` §5.2,
+      `screens.md` §1) (22 Oct)
 - [ ] Lint, typecheck, build and every test pass, the live screen's included (AC-08)
 
 **Phase 5 — End-to-end checks and handover (M3, second half; M4 only if time allows)**
