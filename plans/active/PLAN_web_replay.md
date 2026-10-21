@@ -10,7 +10,7 @@
 | Review coordinator | Arnav |
 | Affected component owners | Arnav (archiver: producer of the stored match, `CONTRACTS.md` §4.1, `archiver/specs/storage.md`; Azure resources and roles, A3 / S4; Pranav helping). Azeem (stats engine: its panels are archived and replayed unchanged). Docs and scripts: unassigned (Arnav decides) |
 | Proposal version and date | v0.2 · 2026-10-20 (v0.1 same day; see the change note in §12) |
-| Status | In progress · Phase 1 (specs) pushed, spec PR not opened yet; Phase 2 (server read path) done except the emulator check |
+| Status | In progress · Phase 1 (specs) pushed, spec PR not opened yet; Phases 2 and 3 (read path, builder, route) done except the run against a real local archive (no Docker here) |
 | Plan tier and file | Full · `plans/active/PLAN_web_replay.md` |
 | Repository | [ARNAV2684/Overlap](https://github.com/ARNAV2684/Overlap) |
 | Reviewed branch and commit | main · 36f5d00 |
@@ -175,7 +175,7 @@ route's own responses.
 | `web/src/components/layout/AppHeader.tsx` | Modify (M3) | Optional `section` text on `AppHeaderView` (default "Live stream"), for "/ Replay". Live screen unchanged | `screens.md` §1 | Vedant |
 | `web/src/lib/stream-source.ts`, `web/src/components/timeline/cells/ArrivalCell.tsx` | Add / modify (M3) | A stream-source context (default live) so replay rows read "Replay · archive" instead of "Live WebSocket". Live screen unchanged | `realtime.md` §5.2 | Vedant |
 | `web/src/app/replay/[id]/page.tsx` | Modify (M3) | Route: id check, not-found, render the replay view | `screens.md` §1 | Vedant |
-| `web/src/lib/__tests__/{archive-env,archive-store,replay-envelopes,replay-route,replay-player,replay-view}.test.ts(x)`, `replay.qa.test.ts` | Add (M2, M3) | Unit tests; the `qa` test is opt-in and reads the local archive | `realtime.md` §6 | Vedant |
+| `web/src/lib/__tests__/{archive-env,archive-store,replay-envelopes,replay-route,replay-player,replay-view}.test.ts(x)`, `replay.qa.test.ts`, `replay-fixtures.ts` | Add (M2, M3) | Unit tests; the `qa` test is opt-in and reads the local archive | `realtime.md` §6 | Vedant |
 | `web/README.md` | Modify (M3) | How to archive a match locally and open its replay | — | Vedant |
 | `docs/knowledge/frontend.md`, `docs/knowledge/archiver.md` (ARCH-01 status only) | Modify (M3, own commit) | Record the replay boundary and the ARCH-01 result | Knowledge-sharing spec | Docs: unassigned (Arnav decides); Pranav told |
 | Optional (M4): `web/src/app/api/replay/route.ts`, `web/src/app/replay/page.tsx`, the match picker's link | Add / modify | List finished archived matches | `screens.md` §1 (to be added in M1 if kept) | Vedant |
@@ -282,12 +282,30 @@ is done):
 - [x] Lint, typecheck, all tests (392 passed, 1 opt-in skipped) and build pass (21 Oct). The build doesn't yet load
       the Azure SDKs: no route imports `archive-store.ts` until Phase 3
 
-**Phase 3 — Envelope builder and route (M2, second half)**
-- [ ] `src/lib/replay-envelopes.ts`: manifest, chunk list, status building, bundles, order, `seq`, Cosmos fields
-      stripped, validation
-- [ ] `replay-envelopes.test.ts` (AC-03)
-- [ ] `src/app/api/replay/[id]/route.ts` and `replay-route.test.ts` with a fake store (AC-04)
-- [ ] `replay.qa.test.ts`, opt-in, against a match archived on the local stack (AC-02)
+**Phase 3 — Envelope builder and route (M2, second half)** · branch `web/replay-route`
+- [x] `src/lib/replay-envelopes.ts`: manifest and chunk list from the period markers; status after `PeriodStart`,
+      goal `Shot` and `PeriodEnd` with the score carried across chunks; frames checked, first kept per `match_ms`,
+      bundled by 5; order event (with its status), stats, positions; `seq` `(index + 1) × 100000 + position`;
+      Cosmos fields stripped; every envelope checked with `parseEnvelope`, failures counted with up to 5 samples.
+      Pure: the same stored match always gives the same envelopes (22 Oct)
+- [x] `replay-envelopes.test.ts`, 12 tests on a hand-made stored match (AC-03), with the shared
+      `replay-fixtures.ts` (22 Oct)
+- [x] `src/app/api/replay/[id]/route.ts`: manifest and `?chunk=`, every error code, index cached per match (20,
+      least recently used out), `Cache-Control`, one log line per request, settings never logged (22 Oct)
+- [x] `replay-route.test.ts`, 10 tests with a fake store and stubbed Azure SDKs: manifest, chunk, caching, and 400,
+      404, 503, 409, 500, 503, 502 and 500 answers without settings in a body or log (AC-04) (22 Oct)
+- [x] Spec updated in the same change: `realtime.md` §5.1 gains `archive_invalid` and `internal_error`, and says
+      replay covers halves only, as the relay does (22 Oct)
+- [x] `replay.qa.test.ts` written: opt-in (`QA_REPLAY=1`, `QA_REPLAY_MATCH`), reads the `OVERLAP_*` settings from
+      the shell or `.env.local`. Wiring checked against a closed port: the real route and SDKs answer
+      `502 storage_error`, logging the operation only (22 Oct)
+- [ ] **AC-02 run against a match archived on the local stack: not run.** Docker isn't installed on this machine.
+      Needs a machine with the local stack, `archiver/main.py` and a finished generator match. Also covers Phase 2's
+      open emulator check
+- [x] Lint, typecheck, all tests (414 passed, 2 opt-in skipped) and build pass; the build now bundles the Azure
+      SDKs into `/api/replay/[id]` (dynamic). Smoke run with `next start`: a bad id → 400 `bad_match_id`, a bad chunk
+      → 400 `bad_chunk`, an unreachable archive → 502 `storage_error`, all `no-store`, with one server log line naming
+      the operation only (22 Oct)
 
 **Phase 4 — Player and page (M3, first half)**
 - [ ] `src/lib/replay-client.ts` and `src/lib/replay-player.ts`; `replay-player.test.ts` (AC-05)
