@@ -216,7 +216,10 @@ describe("replay player: waiting and failures (AC-05)", () => {
       const p = play(fakeClient({ manifest: () => Promise.reject(error) }));
       await at(0);
       expect(p.getState()).toMatchObject({ status: "failed", failure });
+      expect(view().notice).toEqual({ text: replayNotices.failed, tone: "warning" });
     }
+    // Only the store's own publish timer was left, and it has fired: the player keeps nothing running
+    await at(300);
     expect(vi.getTimerCount()).toBe(0);
   });
 

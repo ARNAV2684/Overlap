@@ -41,6 +41,7 @@ export const replayNotices = {
   buffering: "Buffering…",
   unavailable: "Replay data unavailable.",
   finished: "Replay finished.",
+  failed: "This replay can't be shown.",
 } as const;
 
 /** Why a replay can't start, from the manifest request (realtime.md §5.1 codes; anything else is "unreachable"). */
@@ -275,6 +276,7 @@ export function createReplayPlayer(
           if (run !== generation || (error instanceof ReplayError && error.kind === "aborted")) return;
           stopTimers();
           set({ status: "failed", failure: failureOf(error) });
+          store.setNotice(replayNotices.failed, "warning");
         },
       );
     },
