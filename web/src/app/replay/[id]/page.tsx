@@ -8,6 +8,7 @@
 // With Cache Components, params is only known at request time, so it is read inside <Suspense>. The fallback is the
 // same screen in its "Loading" state, which Next prerenders as the static shell.
 
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { ReplayFallback, ReplayMatchView } from "@/components/replay/ReplayMatchView";
@@ -15,6 +16,9 @@ import { ReplayProvider } from "@/components/replay/ReplayProvider";
 import { isMatchId } from "@/lib/contracts";
 
 type ReplayPageProps = { params: Promise<{ id: string }> };
+
+/** The root layout's title says "Live stream"; a replay must not. */
+export const metadata: Metadata = { title: "Overlap · Replay" };
 
 export default function ReplayPage({ params }: ReplayPageProps) {
   return (

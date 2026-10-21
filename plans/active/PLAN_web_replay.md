@@ -10,7 +10,7 @@
 | Review coordinator | Arnav |
 | Affected component owners | Arnav (archiver: producer of the stored match, `CONTRACTS.md` §4.1, `archiver/specs/storage.md`; Azure resources and roles, A3 / S4; Pranav helping). Azeem (stats engine: its panels are archived and replayed unchanged). Docs and scripts: unassigned (Arnav decides) |
 | Proposal version and date | v0.2 · 2026-10-20 (v0.1 same day; see the change note in §12) |
-| Status | In progress · Phase 1 (specs) pushed, spec PR not opened yet; Phases 2 and 3 (read path, builder, route) done except the run against a real local archive (no Docker here) |
+| Status | In progress · Phase 1 (specs) pushed, spec PR not opened yet; Phases 2–4 (read path, route, player and page) done except the run against a real local archive (no Docker here); Phase 5 next |
 | Plan tier and file | Full · `plans/active/PLAN_web_replay.md` |
 | Repository | [ARNAV2684/Overlap](https://github.com/ARNAV2684/Overlap) |
 | Reviewed branch and commit | main · 36f5d00 |
@@ -324,7 +324,12 @@ is done):
       cards, Suspense fallback that matches the first render. `replay-view.test.ts`, 10 tests (22 Oct)
 - [x] Specs updated in the same change: the playing and can't-be-shown notices (`realtime.md` §5.2,
       `screens.md` §1) (22 Oct)
-- [ ] Lint, typecheck, build and every test pass, the live screen's included (AC-08)
+- [x] Lint, typecheck, build and every test pass, the live screen's included: 442 passed, 2 opt-in skipped (AC-08)
+      (22 Oct)
+- [x] Smoke run of the built app: `/replay/SYN-0042` serves the replay shell (intro, loading notice, toolbar) with the
+      tab title "Overlap · Replay"; a bad id gets the not-found page with `noindex`, as `/match/` does; with no storage
+      settings `/api/replay` answers 503 and logs the missing names. Playback in a browser waits for Phase 5 (needs
+      an archived match) (22 Oct)
 
 **Phase 5 — End-to-end checks and handover (M3, second half; M4 only if time allows)**
 - [ ] Manual 20× replay of an archived match to full time; screenshots at 375 and 1440 px; keyboard pass (AC-06)
