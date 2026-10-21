@@ -203,6 +203,11 @@ browser releases them at the chosen speed.
   | 409 | `not_finished` | `status` is not `finished` |
   | 503 | `replay_unavailable` | A storage setting is missing; one server log line names the missing variables |
   | 502 | `storage_error` | Cosmos or Blob failed or took longer than 10 s |
+  | 500 | `archive_invalid` | The stored setup or result fails its contract, a half has no `PeriodStart` and `PeriodEnd`, or the match has periods other than 1 and 2; the log line gives the reason |
+  | 500 | `internal_error` | Anything else; the log line names only the error's type |
+
+- **Halves only:** periods 1 and 2, as the screen relay supports (`functions/screen_relay.py`). Extra time waits
+  until the relay and the clock handle it.
 
 - **Caching:** a finished match never changes, so the route keeps each match's periods and goals in memory (at most
   20 matches) and answers with `Cache-Control: private, max-age=3600`.
