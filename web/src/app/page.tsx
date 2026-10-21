@@ -2,14 +2,13 @@
 
 // page.tsx — Match picker
 //
-// Purpose: the entry point: the matches the stream server is playing, each with its phase, score and clock and a link to
-//          its live screen. Refreshes every 5 s
-// Inputs:  listMatches() (src/lib/api.ts: GET /mock/matches on NEXT_PUBLIC_STREAM_BASE_URL), NEXT_PUBLIC_DEFAULT_MATCH_ID
-// Outputs: a page. If the server cannot be reached or plays nothing, it says so and still links to the default match
-// Spec:    web/specs/screens.md §1 (match picker). web/IMPLEMENTATION_PLAN.md Phase 10 step 5
+// Purpose: the entry point: the matches in the match archive, each with its clubs, phase, score and clock, linking a
+//          live match to its live screen and a finished one to its replay. Refreshes every 5 s
+// Inputs:  listMatches() (src/lib/api.ts: this app's GET /api/matches), NEXT_PUBLIC_DEFAULT_MATCH_ID
+// Outputs: a page. If the list can't be read or is empty, it says why and still links to the default match
+// Spec:    web/specs/screens.md §1 (match picker); web/specs/realtime.md §5.3. Plan: plans/active/PLAN_web_match-list.md
 //
-// The list endpoint belongs to the mock (provisional shape, see api.ts); the screen relay and real Azure do not have one
-// yet. A page may only export its component, so the parts below stay private to this file.
+// A page may only export its component, so the parts below stay private to this file.
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -20,17 +19,19 @@ import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { ApiError, listMatches, type MatchSummary } from "@/lib/api";
+import { ApiError, listMatches } from "@/lib/api";
 import { env } from "@/lib/env";
 import { formatPhase } from "@/lib/format";
+import type { MatchListItem } from "@/lib/match-list";
 
 /** How often the list is read again, so phases, scores and clocks stay current. */
 const REFRESH_MS = 5000;
 
 type ListState =
   | { kind: "loading" }
-  | { kind: "ready"; matches: MatchSummary[] }
-  | { kind: "error"; message: string };
+  | { kind: "ready"; matches: MatchListItem[] }
+  /** `unconfigured`: the route answered 503 matches_unavailable (no archive settings). */
+  | { kind: "error"; unconfigured: boolean };
 
 function useMatchList(): ListState {
   const [state, setState] = useState<ListState>({ kind: "loading" });
@@ -45,7 +46,7 @@ function useMatchList(): ListState {
         setState({ kind: "ready", matches });
       } catch (error) {
         if (error instanceof ApiError && error.kind === "aborted") return;
-        setState({ kind: "error", message: error instanceof Error ? error.message : String(error) });
+        setState({ kind: "error", unconfigured: error instanceof ApiError && error.status === 503 });
       }
       if (!controller.signal.aborted) timer = setTimeout(load, REFRESH_MS);
     }
@@ -68,26 +69,40 @@ function DefaultMatchLink() {
   );
 }
 
-function MatchCard({ match }: { match: MatchSummary }) {
+/** "Northbridge FC 1, Harbour Athletic 0, SYN-0505, live, 62:14. Watch live" (screens.md §1). */
+function cardLabel(match: MatchListItem, action: string): string {
+  const teams = match.score
+    ? `${match.home.name} ${match.score.home}, ${match.away.name} ${match.score.away}`
+    : `${match.home.name} against ${match.away.name}`;
+  const phase = match.phase ? formatPhase(match.phase).toLowerCase() : "waiting";
+  return `${teams}, ${match.match_id}, ${phase}${match.clock ? `, ${match.clock}` : ""}. ${action}`;
+}
+
+function MatchCard({ match }: { match: MatchListItem }) {
+  const finished = match.status === "finished";
+  const action = finished ? "Watch replay" : "Watch live";
   const score = match.score ? `${match.score.home} : ${match.score.away}` : "– : –";
   return (
     <li>
       <Link
-        href={`/match/${match.match_id}`}
+        href={finished ? `/replay/${match.match_id}` : `/match/${match.match_id}`}
         className="block rounded-panel focus-visible:outline-offset-2"
-        aria-label={`${match.match_id}, ${match.phase ? formatPhase(match.phase) : "waiting"}, ${score.replace(" : ", " to ")}${match.clock ? `, ${match.clock}` : ""}. Watch live`}
+        aria-label={cardLabel(match, action)}
       >
-        <Card className="flex items-center justify-between gap-4 transition-colors hover:border-line-strong hover:bg-surface-raised motion-reduce:transition-none">
-          <div className="min-w-0">
-            <p className="font-mono text-label text-ink-muted">{match.match_id}</p>
+        <Card className="flex flex-wrap items-center justify-between gap-4 transition-colors hover:border-line-strong hover:bg-surface-raised motion-reduce:transition-none">
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-body font-medium text-ink">
+              {match.home.name} <span className="text-ink-muted">vs</span> {match.away.name}
+            </p>
+            <p className="mt-1 font-mono text-label text-ink-muted">{match.match_id}</p>
             <p className="mt-1 text-eyebrow uppercase text-accent-text">{match.phase ? formatPhase(match.phase) : "Waiting"}</p>
           </div>
           <div className="text-center">
             <p className="text-metric numeric">{score}</p>
-            <p className="font-mono text-caption numeric text-ink-muted">{match.clock ?? "–:–"}</p>
+            {finished ? null : <p className="font-mono text-caption numeric text-ink-muted">{match.clock ?? "–:–"}</p>}
           </div>
           <span className="text-body-sm font-medium text-secondary-text">
-            Watch live <span aria-hidden="true">→</span>
+            {action} <span aria-hidden="true">→</span>
           </span>
         </Card>
       </Link>
@@ -98,17 +113,17 @@ function MatchCard({ match }: { match: MatchSummary }) {
 export default function MatchPickerPage() {
   const state = useMatchList();
   const status = state.kind === "loading" ? "connecting" : state.kind === "ready" ? "live" : "reconnecting";
-  const label = state.kind === "ready" ? "Stream online" : state.kind === "error" ? "Stream offline" : undefined;
+  const label = state.kind === "ready" ? "Archive online" : state.kind === "error" ? "Archive offline" : undefined;
 
   return (
     <AppShell>
-      <AppHeaderView status={status} statusLabel={label} />
+      <AppHeaderView status={status} statusLabel={label} section="Matches" />
       <main className="flex flex-1 flex-col gap-5 py-8">
         <div>
           <Eyebrow>Local match observatory</Eyebrow>
-          <h1 className="mt-2 text-display text-ink">Matches on the stream</h1>
+          <h1 className="mt-2 text-display text-ink">Matches</h1>
           <p className="mt-2 text-body text-ink-muted">
-            Synthetic matches from {env.streamBaseUrl}. Pick one to watch it live.
+            Synthetic matches from the match archive. Watch a live one as it plays, or replay a finished one.
           </p>
         </div>
 
@@ -116,7 +131,7 @@ export default function MatchPickerPage() {
           <ul aria-hidden="true" className="space-y-3">
             {[0, 1, 2].map((i) => (
               <li key={i}>
-                <Skeleton className="h-[86px] w-full rounded-panel" />
+                <Skeleton className="h-28 w-full rounded-panel" />
               </li>
             ))}
           </ul>
@@ -125,7 +140,11 @@ export default function MatchPickerPage() {
         {state.kind === "error" ? (
           <Card>
             <EmptyState
-              title={`Cannot reach the stream server at ${env.streamBaseUrl}. Is it running?`}
+              title={
+                state.unconfigured
+                  ? "The match list isn't set up: add the archive settings to web/.env.local (see web/.env.example)."
+                  : "Can't read the match archive. Is the local stack running?"
+              }
               hint={<DefaultMatchLink />}
             />
           </Card>
@@ -133,7 +152,7 @@ export default function MatchPickerPage() {
 
         {state.kind === "ready" && state.matches.length === 0 ? (
           <Card>
-            <EmptyState title="The stream server is not playing any match right now." hint={<DefaultMatchLink />} />
+            <EmptyState title="No match in the archive yet. Start one with the generator." hint={<DefaultMatchLink />} />
           </Card>
         ) : null}
 

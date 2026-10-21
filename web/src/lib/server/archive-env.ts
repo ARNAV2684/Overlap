@@ -91,8 +91,8 @@ export function readArchiveEnv(source: Source = process.env): ArchiveEnvResult {
   };
 }
 
-/** One log line naming each problem. Names only: a value never appears. */
-export function describeArchiveEnvProblems(problems: ArchiveEnvProblem[]): string {
+/** One log line naming each problem. Names only: a value never appears. `feature` names what is switched off. */
+export function describeArchiveEnvProblems(problems: ArchiveEnvProblem[], feature = "Replay"): string {
   const list = problems.map(({ name, problem }) => `${name} (${problem})`).join(", ");
-  return `Replay is unavailable: set ${list}. See web/.env.example.`;
+  return `${feature} is unavailable: set ${list}. See web/.env.example.`;
 }
