@@ -93,6 +93,13 @@ async def _read_context(run: RunState) -> tuple[list[dict], dict]:
             except ContextUnavailable as err:
                 tools.append({"tool": tool, "status": "unavailable", "reason": str(err)})
                 continue
+            except ContextRejected as err:
+                if not str(err).endswith(":context_mismatch"):
+                    raise                                    # denied scope or another version: reject the job
+                # An optional tool that can't read its document consistently is skipped; its data is never used.
+                # (The frozen context above is the identity check; a mismatch there still rejects.)
+                tools.append({"tool": tool, "status": "inconsistent"})
+                continue
             if reply.get("after_moment"):
                 tools.append({"tool": tool, "status": "after_moment"})   # never explain a moment with later numbers
                 continue

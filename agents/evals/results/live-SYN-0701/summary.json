@@ -1,0 +1,65 @@
+{
+ "match_id": "SYN-0701",
+ "final_phase": "full_time",
+ "final_score": {
+  "home": 2,
+  "away": 0
+ },
+ "moments": 17,
+ "moments_by_trigger": {
+  "press_change": 4,
+  "goal": 2,
+  "momentum_swing": 7,
+  "shot_cluster": 3,
+  "big_chance": 1
+ },
+ "jobs_by_state": {
+  "published": 9,
+  "expired": 5,
+  "suppressed": 4
+ },
+ "terminal_reasons": {
+  "thinned": 3,
+  "merge_into": 1
+ },
+ "model_jobs": 10,
+ "deliveries": {
+  "player_tag:sent": 20,
+  "overlay:sent": 200,
+  "overlay:expired": 132,
+  "recap:sent": 24
+ },
+ "sent_cards": {
+  "template": 200
+ },
+ "player_tags": 5,
+ "model_calls": {
+  "analyst:provider_error": 9,
+  "analyst:timeout": 1,
+  "narrator:provider_error": 9,
+  "narrator:timeout": 1,
+  "recap_writer:timeout": 1,
+  "spotter:provider_error": 6,
+  "spotter:timeout": 2
+ },
+ "latency_moment_to_send_s": {
+  "all": {
+   "n": 8,
+   "p50": 7,
+   "p95": 14,
+   "max": 14
+  },
+  "model": {
+   "n": 5,
+   "p50": 11,
+   "p95": 14,
+   "max": 14
+  },
+  "template": {
+   "n": 3,
+   "p50": 1,
+   "p95": 1,
+   "max": 1
+  }
+ }
+}

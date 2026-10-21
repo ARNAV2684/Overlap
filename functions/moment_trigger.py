@@ -113,6 +113,7 @@ async def run(match_id: str | None, interval_s: float, once: bool, publish: bool
     try:
         return await poll(deps, match_id, interval_s, once, publisher)
     finally:
+        await deps.models.close()
         await deps.store.close()
         for c in closers:
             await c.close()

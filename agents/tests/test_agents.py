@@ -444,3 +444,18 @@ def test_the_independent_recheck_accepts_template_translations_of_verified_lines
     assert recheck(intent, cluster) == []
     fr["line"]["text"] = fr["line"]["text"].replace(" 3 ", " 4 ")                    # a real wrong number
     assert recheck(intent, cluster)
+
+
+def test_an_optional_tool_that_reads_inconsistently_is_skipped_not_fatal(moments, clock):
+    from context import ContextRejected
+    store = MemoryStore()
+    d = deps(store, clock, replies={"get_live_state": ContextRejected("get_live_state:context_mismatch")})
+    assert process(by_id(moments, "MO-1017-0013"), d)["status"] == "delivery_pending"
+    tools = job(store, "MO-1017-0013")["stage_outputs"]["analyst"]["tools"]
+    assert {"tool": "get_live_state", "status": "inconsistent"} in tools
+
+
+def test_an_optional_tool_outside_scope_still_rejects(moments, clock):
+    from context import ContextRejected
+    d = deps(MemoryStore(), clock, replies={"get_live_state": ContextRejected("get_live_state:outside_scope")})
+    assert process(by_id(moments, "MO-1017-0013"), d)["status"] == "rejected"

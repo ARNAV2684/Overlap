@@ -62,7 +62,7 @@ local keys are Microsoft's public, documented values, not secrets; Azure never u
 
 1. `ACCEPT_EULA=Y docker compose up -d` in `infra/local/` (the three emulators); wait for the health checks.
 2. Start the Web PubSub stand-in on the host: `uv run standin` in `infra/local/webpubsub_standin/`.
-3. Start the relay: `func start` in `functions/` (or `relay_runner.py`). `func start` also runs the archiver;
+3. Start the relay: `func start` in `functions/` (or `relay_runner.py`; add `--from-latest` if matches streamed while it was off). `func start` also runs the archiver;
    without it, run `uv run python main.py` in `archiver/`.
 4. Open the screen: Vedant's app or, until it exists, `mock/single-match-demo/` on 8788 (moved to the protocol).
 5. Start the stats engine: `uv run python main.py live` in `stats/` (moments, `match_state`, stat panels).
@@ -71,7 +71,9 @@ local keys are Microsoft's public, documented values, not secrets; Azure never u
    groups). Model settings are in `infra/local/env.example`; provider `off` uses templates.
 7. Send a match: `uv run python cli.py live --hubs emulator --speed 20` in `generator/`. Add `--record` to keep a
    copy for `archiver/tests/check_archive.py`.
-8. Optional: `uv run python check_delivery.py --match <id> --club <teamId> --player <playerId>` in `agents/` plays
+8. Optional: open `http://127.0.0.1:8787/insights/viewer?match=<id>&mode=casual&lang=en` to see one audience's cards
+   rendered (dev page); after the match, `uv run python -m evals.live_run --match <id> --out <dir>` in `agents/`
+   reports latency and outcomes. `uv run python check_delivery.py --match <id> --club <teamId> --player <playerId>` in `agents/` plays
    two viewers (one joins late through the insights snapshot).
 9. Stop: `docker compose down` and Ctrl+C the stand-in, relay and archiver (data is cleared; every run starts clean).
 
