@@ -1,7 +1,7 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import type { AddressInfo } from "node:net";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { ApiError, createApiClient } from "@/lib/api";
+import { ApiError, createApiClient, createMatchListClient } from "@/lib/api";
 import { envelope, makeEvent, makeFrame, makeSetup } from "./fixtures";
 
 // A small fake of the stream server (the mock). Each test sets `respond` to say what it should answer.
@@ -39,6 +39,7 @@ beforeEach(() => {
 });
 
 const client = () => createApiClient(baseUrl);
+const lists = () => createMatchListClient(baseUrl);
 const failure = async (promise: Promise<unknown>): Promise<ApiError> => {
   try {
     await promise;
@@ -68,26 +69,37 @@ describe("negotiate", () => {
   });
 });
 
-describe("listMatches", () => {
-  it("returns the matches, allowing nulls before the first message", async () => {
-    respond = (_req, res) =>
-      json(res, [
-        { match_id: "SYN-9001", group: "match-SYN-9001", phase: "live", score: { home: 1, away: 0 }, clock: "12:27" },
-        { match_id: "SYN-9002", group: "match-SYN-9002", phase: null, score: null, clock: null },
-      ]);
-    const matches = await client().listMatches();
-    expect(matches).toHaveLength(2);
-    expect(matches[1]).toMatchObject({ phase: null, score: null, clock: null });
+describe("listMatches (this app's /api/matches)", () => {
+  const teams = {
+    home: { team_id: "NBR", name: "Northbridge FC" },
+    away: { team_id: "HBA", name: "Harbour Athletic" },
+  };
+  const live = { match_id: "SYN-0505", status: "live", ...teams, phase: "live", score: { home: 1, away: 0 }, clock: "62:14" };
+  const waiting = { match_id: "SYN-0506", status: "live", ...teams, phase: null, score: null, clock: null };
+  const finished = { match_id: "SYN-0504", status: "finished", ...teams, phase: "full_time", score: { home: 2, away: 2 }, clock: null };
+
+  it("asks this app's route and returns the matches, allowing nulls before the stats engine's first numbers", async () => {
+    respond = (_req, res) => json(res, { matches: [live, waiting, finished] });
+    const matches = await lists().listMatches();
+    expect(seenUrl).toBe("/api/matches");
+    expect(matches).toEqual([live, waiting, finished]);
   });
 
   it("returns an empty list", async () => {
-    respond = (_req, res) => json(res, []);
-    expect(await client().listMatches()).toEqual([]);
+    respond = (_req, res) => json(res, { matches: [] });
+    expect(await lists().listMatches()).toEqual([]);
   });
 
-  it("rejects a body that is not a list (invalid-response)", async () => {
-    respond = (_req, res) => json(res, { matches: [] });
-    expect((await failure(client().listMatches())).kind).toBe("invalid-response");
+  it("rejects the mock's old bare list, an unknown status and an extra field (invalid-response)", async () => {
+    for (const body of [[], { matches: [{ ...live, status: "abandoned" }] }, { matches: [{ ...live, group: "match-SYN-0505" }] }]) {
+      respond = (_req, res) => json(res, body);
+      expect((await failure(lists().listMatches())).kind).toBe("invalid-response");
+    }
+  });
+
+  it("reports 503 matches_unavailable as kind http with the status, which the picker words as not set up", async () => {
+    respond = (_req, res) => json(res, { error: "matches_unavailable" }, 503);
+    expect(await failure(lists().listMatches())).toMatchObject({ kind: "http", status: 503 });
   });
 });
 
@@ -201,26 +213,34 @@ describe("failures", () => {
 
   it("reports a server error as kind http", async () => {
     respond = (_req, res) => json(res, { error: "boom" }, 500);
-    expect(await failure(client().listMatches())).toMatchObject({ kind: "http", status: 500 });
+    expect(await failure(lists().listMatches())).toMatchObject({ kind: "http", status: 500 });
   });
 
-  it("reports an unreachable server as kind network", async () => {
+  it("reports an unreachable server as kind network, naming which server", async () => {
     const dead = createServer();
     await new Promise<void>((resolve) => dead.listen(0, "127.0.0.1", resolve));
     const port = (dead.address() as AddressInfo).port;
     await new Promise<void>((resolve) => dead.close(() => resolve()));
-    expect((await failure(createApiClient(`http://127.0.0.1:${port}`, 2000).listMatches())).kind).toBe("network");
+    const deadUrl = `http://127.0.0.1:${port}`;
+    expect(await failure(createMatchListClient(deadUrl, 2000).listMatches())).toMatchObject({
+      kind: "network",
+      message: "match list: cannot reach this app's match list",
+    });
+    expect(await failure(createApiClient(deadUrl, 2000).negotiate(["g"]))).toMatchObject({
+      kind: "network",
+      message: "negotiate: cannot reach the stream server",
+    });
   });
 
   it("reports a slow server as kind timeout", async () => {
-    respond = (_req, res) => setTimeout(() => json(res, []), 400);
-    expect((await failure(createApiClient(baseUrl, 50).listMatches())).kind).toBe("timeout");
+    respond = (_req, res) => setTimeout(() => json(res, { matches: [] }), 400);
+    expect((await failure(createMatchListClient(baseUrl, 50).listMatches())).kind).toBe("timeout");
   });
 
   it("reports a cancelled call as kind aborted", async () => {
-    respond = (_req, res) => setTimeout(() => json(res, []), 400);
+    respond = (_req, res) => setTimeout(() => json(res, { matches: [] }), 400);
     const controller = new AbortController();
-    const pending = failure(client().listMatches(controller.signal));
+    const pending = failure(lists().listMatches(controller.signal));
     controller.abort();
     expect((await pending).kind).toBe("aborted");
   });
@@ -230,15 +250,15 @@ describe("failures", () => {
       res.writeHead(200, { "Content-Type": "text/plain" });
       res.end("hello");
     };
-    expect((await failure(client().listMatches())).kind).toBe("invalid-response");
+    expect((await failure(lists().listMatches())).kind).toBe("invalid-response");
   });
 });
 
 describe("CORS safety", () => {
   it("sends no custom request headers, so a browser needs no preflight", async () => {
     // The mock answers no CORS preflight, so any header that is not CORS-safelisted would block the call.
-    respond = (_req, res) => json(res, []);
-    await client().listMatches();
+    respond = (_req, res) => json(res, { baseUrl: "a", url: "b", token: "c" });
+    await client().negotiate(["g"]);
     const names = Object.keys(seenHeaders);
     expect(names).not.toContain("cache-control");
     expect(names).not.toContain("authorization");

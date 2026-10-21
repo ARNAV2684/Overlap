@@ -3,7 +3,9 @@
 > **Status: merged for review in #19 (16 Oct); not yet marked agreed.** Answers §1 for the **live match screen** and the
 > **match picker**, and adds §5 (checks for the live screen). The **replay screen** in §1 is **written for review**
 > (20 Oct) for [`PLAN_web_replay`](../../plans/active/PLAN_web_replay.md); no replay code exists yet. §1 for recap and
-> how-it-works, and §2 to §4, are **not started**. The live screen and the picker are on `main` (#48), checked with unit
+> how-it-works, and §2 to §4, are **not started**. The picker's move from the mock's list to the match archive
+> (`/api/matches`) is **written for review** (22 Oct) for
+> [`PLAN_web_match-list`](../../plans/active/PLAN_web_match-list.md). The live screen and the picker are on `main` (#48), checked with unit
 > tests and an end-to-end run against the mock (milestones M4 and M5 of
 > [`PLAN_web_live-match-viewer`](../../plans/active/PLAN_web_live-match-viewer.md)).
 
@@ -15,11 +17,20 @@ Decides every page and what each viewer mode shows.
 
 _Answer:_
 
-- **Match picker (`/`):** the matches the stream server is playing (`GET /mock/matches`, a provisional mock endpoint),
-  each as a card with its id, phase, score and clock linking to `/match/<id>`, refreshed every 5 s. The header badge says
-  "Stream online" or "Stream offline". Skeleton cards while loading. If the server cannot be reached, or plays nothing,
-  the page says so and still links to `/match/<NEXT_PUBLIC_DEFAULT_MATCH_ID>` (`SYN-9001` locally). It replaced the
-  earlier redirect.
+- **Match picker (`/`):** the matches in the match archive, live and finished (`GET /api/matches`, `realtime.md` §5.3),
+  refreshed every 5 s. Header section "Matches"; the badge says "Archive online" or "Archive offline". Each match is a
+  card with both clubs' names, its id, its phase, score and clock:
+  - a **live** match links to `/match/<id>` ("Watch live"); before the stats engine's first numbers it shows
+    "Waiting", "– : –" and "–:–";
+  - a **finished** match shows "Full time" and the archived score, no clock, and links to `/replay/<id>`
+    ("Watch replay").
+
+  The card's accessible name reads like "Northbridge FC 1, Harbour Athletic 0, SYN-0505, live, 62:14. Watch live".
+  Skeleton cards while loading. The page says why when there is no list and still links to
+  `/match/<NEXT_PUBLIC_DEFAULT_MATCH_ID>` (`SYN-9001` locally): `matches_unavailable` → "The match list isn't set up:
+  add the archive settings to web/.env.local (see web/.env.example)."; any other failure → "Can't read the match
+  archive. Is the local stack running?"; an empty archive → "No match in the archive yet. Start one with the
+  generator." It replaced the earlier redirect.
 - **Live screen (`/match/[id]`):** the id must look like `SYN-NNNN`, otherwise the not-found page shows. Top to bottom:
   1. **Header** (`<header>`, banner landmark): the Overlap logo, "/ Live stream" (hidden below 640 px) and the
      connection badge: Connecting, Live, No recent data, Reconnecting or Match finished, always as words and an icon.
