@@ -4,9 +4,10 @@
 //          source card, the notice line, the screen's content, and the footer
 // Inputs:  LiveMatchView: the store from the nearest MatchStreamProvider (read by AppHeader, NoticeBar, Scoreboard,
 //          MetricsGrid, EventTimelinePanel, LivePositionsPanel and MessageInspectorPanel)
-//          LiveMatchFrame: header, notice, children (the parts that differ between live and loading)
+//          LiveMatchFrame: header, notice, intro?, children (the parts that differ between live, loading and replay)
 // Outputs: LiveMatchView (live), LiveMatchFallback (the same frame in its starting "Connecting" state, with no store,
-//          for the route's Suspense fallback), LiveMatchFrame (the shared layout)
+//          for the route's Suspense fallback; the replay screen passes its own header, notice, intro and controls),
+//          LiveMatchFrame (the shared layout), Workspace (timeline beside pitch and inspector)
 // Spec:    web/specs/screens.md (live match screen). web/IMPLEMENTATION_PLAN.md Phase 6 (frame), Phase 7 (scoreboard,
 //          metrics), Phase 8 (timeline), Phase 9 (pitch), Phase 10 (composition)
 //
@@ -31,8 +32,8 @@ import { EventTimelinePanel, EventTimelinePanelView } from "@/components/timelin
 import { emptyCounters, emptyScoreboard, notices } from "@/lib/store";
 
 /** Timeline on the left; the right-hand column (pitch, then the inspector) beside it from 1000 px, as a complementary
- *  landmark so screen-reader users can jump to it. */
-function Workspace({ timeline, side }: { timeline: ReactNode; side: ReactNode }) {
+ *  landmark so screen-reader users can jump to it. Shared with the replay screen. */
+export function Workspace({ timeline, side }: { timeline: ReactNode; side: ReactNode }) {
   return (
     <div className="mb-[18px] grid grid-cols-1 gap-[18px] min-[1000px]:grid-cols-[minmax(0,1.65fr)_minmax(340px,1fr)]">
       {timeline}
@@ -46,15 +47,17 @@ function Workspace({ timeline, side }: { timeline: ReactNode; side: ReactNode })
 type LiveMatchFrameProps = {
   header: ReactNode;
   notice: ReactNode;
+  /** Replaces the live screen's intro and source card (the replay screen has its own). */
+  intro?: ReactNode;
   children?: ReactNode;
 };
 
-export function LiveMatchFrame({ header, notice, children }: LiveMatchFrameProps) {
+export function LiveMatchFrame({ header, notice, intro, children }: LiveMatchFrameProps) {
   return (
     <AppShell>
       {header}
       <main className="flex flex-1 flex-col">
-        <IntroHero aside={<SourceCard />} />
+        {intro ?? <IntroHero aside={<SourceCard />} />}
         {notice}
         {children}
       </main>
@@ -82,13 +85,23 @@ export function LiveMatchView() {
   );
 }
 
+type LiveMatchFallbackProps = {
+  /** The replay screen passes its own header, notice and intro, and its controls as `lead` above the scoreboard. */
+  header?: ReactNode;
+  notice?: ReactNode;
+  intro?: ReactNode;
+  lead?: ReactNode;
+};
+
 /** The screen before the match id is known and the store exists. Shows, but never announces, the starting notice. */
-export function LiveMatchFallback() {
+export function LiveMatchFallback({ header, notice, intro, lead }: LiveMatchFallbackProps = {}) {
   return (
     <LiveMatchFrame
-      header={<AppHeaderView status="connecting" />}
-      notice={<NoticeBarView notice={{ text: notices.connecting, tone: "info" }} announce={false} />}
+      header={header ?? <AppHeaderView status="connecting" />}
+      notice={notice ?? <NoticeBarView notice={{ text: notices.connecting, tone: "info" }} announce={false} />}
+      intro={intro}
     >
+      {lead}
       <ScoreboardView scoreboard={emptyScoreboard("")} matchId={null} />
       <MetricsGridView counters={emptyCounters()} />
       <Workspace

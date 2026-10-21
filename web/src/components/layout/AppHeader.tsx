@@ -4,7 +4,7 @@
 //
 // Purpose: the top bar: the Overlap logo, "/ Live stream", and the live connection badge
 // Inputs:  AppHeader: the connection status from the nearest MatchStreamProvider (useConnection())
-//          AppHeaderView: status, statusLabel? (for pages and previews without a store)
+//          AppHeaderView: status, statusLabel?, section? (for pages and previews without a store, and the replay screen)
 // Outputs: a <header> (the page's banner landmark when it sits outside <main>)
 // Spec:    web/specs/screens.md (live match screen layout). web/IMPLEMENTATION_PLAN.md Phase 6
 //
@@ -20,10 +20,12 @@ type AppHeaderViewProps = {
   status: ConnectionStatus;
   /** Replaces the badge's default word. */
   statusLabel?: string;
+  /** The page's name after the logo (default "Live stream"; "Replay" on the replay screen). */
+  section?: string;
   className?: string;
 };
 
-export function AppHeaderView({ status, statusLabel, className }: AppHeaderViewProps) {
+export function AppHeaderView({ status, statusLabel, section = "Live stream", className }: AppHeaderViewProps) {
   return (
     <header
       className={cn(
@@ -39,7 +41,7 @@ export function AppHeaderView({ status, statusLabel, className }: AppHeaderViewP
           <span aria-hidden="true" className="font-light text-line-strong">
             /
           </span>
-          Live stream
+          {section}
         </span>
       </div>
       <StatusBadge status={status} label={statusLabel} className="shrink-0" />
