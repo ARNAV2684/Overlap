@@ -6,7 +6,7 @@ import {
   parseEnvelope,
   trackingFrameSchema,
 } from "@/lib/contracts";
-import { envelope, makeEvent, makeFrame, makeSetup } from "./fixtures";
+import { envelope, makeEvent, makeFrame, makeHeavy, makePanel, makeSetup } from "./fixtures";
 
 /** A message being deliberately damaged. Loosely typed on purpose: the point is to build invalid data. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -161,6 +161,50 @@ describe("setup and tracking frames", () => {
   });
 });
 
+describe("stat panels (CONTRACTS.md §7.4)", () => {
+  const stats = (panel: unknown) => parseEnvelope(envelope("stats", panel));
+
+  it("accepts the light panel and a whole-minute panel with its heavy block", () => {
+    const light = stats(makePanel());
+    const heavy = stats(makePanel({ heavy: makeHeavy() }));
+    expect(light.ok && light.envelope.kind).toBe("stats");
+    if (heavy.ok && heavy.envelope.kind === "stats") {
+      expect(heavy.envelope.data.teams.home.xg).toBe(1.42);
+      expect(heavy.envelope.data.heavy?.pressing_grid.home[7][1]).toBe(12);
+    } else {
+      throw new Error(issuesOf(heavy).join("; "));
+    }
+  });
+
+  it("accepts null metrics listed in low_sample, and a heavy block without tracking", () => {
+    const panel = makePanel({ low_sample: ["teams.home.ppda_last_10min"] });
+    panel.teams.home.ppda_last_10min = null;
+    expect(stats(panel).ok).toBe(true);
+    expect(stats(makePanel({ heavy: makeHeavy({ players: undefined }) })).ok).toBe(true);
+  });
+
+  it("rejects a missing metric or an unknown field, naming it", () => {
+    expect(issuesOf(stats(broken(makePanel(), (p) => delete p.teams.home.xg)))[0]).toMatch(/^data\.teams\.home\.xg:/);
+    expect(issuesOf(stats(broken(makePanel(), (p) => (p.teams.away.corners = 3))))[0]).toMatch(/^data\.teams\.away/);
+    expect(stats(broken(makePanel({ heavy: makeHeavy() }), (p) => (p.heavy.shots = [])))).toMatchObject({ ok: false });
+  });
+
+  it("rejects grids of the wrong size and negative counts", () => {
+    const withHeavy = makePanel({ heavy: makeHeavy() });
+    expect(issuesOf(stats(broken(withHeavy, (p) => p.heavy.pressing_grid.home.pop())))[0]).toMatch(
+      /^data\.heavy\.pressing_grid\.home/,
+    );
+    expect(stats(broken(withHeavy, (p) => p.heavy.zones.away[0].push(0))).ok).toBe(false);
+    expect(stats(broken(withHeavy, (p) => (p.heavy.zones.home[1][2] = -1))).ok).toBe(false);
+    expect(stats(broken(withHeavy, (p) => (p.heavy.pass_network.home.links[0].count = 2.5))).ok).toBe(false);
+  });
+
+  it("rejects players keyed by anything but a player id", () => {
+    const panel = makePanel({ heavy: makeHeavy() });
+    expect(stats(broken(panel, (p) => (p.heavy.players = { nobody: p.heavy.players["NBR-11"] }))).ok).toBe(false);
+  });
+});
+
 describe("parseEnvelope", () => {
   const status = (extra: object = {}) =>
     envelope("status", { phase: "live", period: 1, score: { home: 1, away: 0 }, ...extra });
@@ -179,7 +223,7 @@ describe("parseEnvelope", () => {
     expect(parseEnvelope(status({ phase: "pre_match", period: 0, score: { home: 0, away: 0 }, setup: makeSetup() })).ok).toBe(true);
   });
 
-  it.each(["stats", "overlay", "player_tag", "recap"])("accepts a %s envelope and leaves its data alone", (kind) => {
+  it.each(["overlay", "player_tag", "recap"])("accepts a %s envelope and leaves its data alone", (kind) => {
     const result = parseEnvelope(envelope(kind, { anything: [1, 2, 3] }));
     expect(result.ok && result.envelope.data).toEqual({ anything: [1, 2, 3] });
   });
@@ -214,6 +258,10 @@ describe("parseEnvelope", () => {
       expect(() => parseEnvelope(junk)).not.toThrow();
       expect(parseEnvelope(junk).ok).toBe(false);
     }
+  });
+
+  it("rejects a stats envelope whose panel is for another match", () => {
+    expect(parseEnvelope(envelope("stats", makePanel({ match_id: "SYN-0001" }))).ok).toBe(false);
   });
 
   it("keeps the kind and seq of a rejected envelope for the log", () => {

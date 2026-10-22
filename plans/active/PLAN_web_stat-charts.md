@@ -153,7 +153,7 @@ archiver (Cosmos stats) ──▶ replay route ──stats envelope──▶ rep
 | `web/src/components/live/LiveMatchView.tsx`, `web/src/components/replay/ReplayMatchView.tsx` | Modify | Place the section (and its empty view in the fallback) | `screens.md` | Vedant |
 | `web/src/lib/__tests__/{stat-charts,stat-charts-view}.test.ts` | Add | Helper and component tests | — | Vedant |
 | `web/src/lib/__tests__/{contracts,store,fixtures}.ts` | Modify | Panel fixtures; schema and slice tests | — | Vedant |
-| `web/src/lib/__tests__/replay-fixtures.ts` | Modify | `storedPanel` becomes a complete panel, so the strict schema accepts it in the replay tests | — | Vedant |
+| `web/src/lib/__tests__/replay-fixtures.ts`, `replay-player.test.ts` | Modify | Their stat panels become complete panels, so the strict schema accepts them in the replay tests | — | Vedant |
 | `web/src/lib/__tests__/{live-match-view,replay-view}.test.ts` | Modify | Only if they assert the screen's sections | — | Vedant |
 | `web/README.md` | Modify | One line: the charts need the stats consumer running | — | Vedant |
 
