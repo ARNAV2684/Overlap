@@ -20,6 +20,13 @@ Arnav agrees the host/bindings, container creation and package boundary in its i
 durably creates/locates a job, then returns; it does not keep the change-feed callback waiting on model generation.
 No Functions registration, host settings or existing relay/archiver code is changed in S1.
 
+Agreed in the implementation (Azure readiness H4, 23 Oct): `moment_trigger` is a change-feed trigger on `moments`
+(connection `COSMOS`, lease container `leases`, created if missing, polled every 1 s); `recap_trigger` reads
+`match_state` with lease prefix `recap-` in the same container; `insights_publisher` is a 1 s timer. One package
+holds the Functions files, `archiver/`, `agents/` and `mcp_server/` on one Python (`functions/package.py`); the MCP
+server is a child process of the agents on that Python. Change-feed documents carry `_lsn`, treated as a Cosmos
+system field.
+
 ## 2. Duplicate safety (not exactly once)
 
 Notifications are at least once. Conditional create of `job:<moment_id>` in the same match partition claims a

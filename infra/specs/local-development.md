@@ -14,7 +14,7 @@ and tests stay the same.
 | Event Hubs | Microsoft Event Hubs emulator (Docker) | 5672 (AMQP), 5300 (health) | Hubs and consumer groups from `infra/local/eventhubs-config.json` |
 | Storage (Functions checkpoints, archived tracking) | Azurite (Docker) | 10000–10002 | Also used by the Event Hubs emulator; Blob container `tracking` |
 | Cosmos DB | Microsoft Cosmos DB emulator, Linux (Docker) | 8081 | Check before relying on it: create, upsert, query by partition key, ETag conditions |
-| Azure Functions | Functions Core Tools (`func start`) | 7071 | If its Event Hubs trigger can't use the emulator, `functions/relay_runner.py` runs the same core |
+| Azure Functions | Functions Core Tools 4 (`func start` in `functions/dist/`, built by `functions/package.py`) | 7071 | Runs the relay, archiver and insights against the emulators (checked 23 Oct). Without Core Tools, `relay_runner.py`, the archiver's `main.py` and the insights poller run the same code |
 | Web PubSub | `infra/local/webpubsub_standin/` (ours; Microsoft has no emulator), run on the host with `uv run standin` | 8787 | Same service send API, `/negotiate` and browser protocol `json.webpubsub.azure.v1` |
 | Microsoft Foundry (models) | Foundry Local: Microsoft's on-device runtime with an OpenAI-compatible endpoint (`OVERLAP_MODEL_PROVIDER=local`) | shown by `foundry server status` | Small model for plumbing only; prompt quality is judged on the Azure model after the switch (`agents/specs/agents.md` §8). Licence and download need Arnav's approval |
 | Azure AI Translator | Local fake (`OVERLAP_TRANSLATOR=fake`): returns the English text marked with the language | — | Proves plumbing, not translation |
@@ -63,20 +63,27 @@ local keys are Microsoft's public, documented values, not secrets; Azure never u
 1. `ACCEPT_EULA=Y docker compose up -d` in `infra/local/` (the three emulators); wait for the health checks.
    Before a run, `python infra/local/check_stack.py --model` checks every service below and the local model's port.
 2. Start the Web PubSub stand-in on the host: `uv run standin` in `infra/local/webpubsub_standin/`.
-3. Start the relay: `func start` in `functions/` (or `relay_runner.py`; add `--from-latest` if matches streamed while it was off). `func start` also runs the archiver;
-   without it, run `uv run python main.py` in `archiver/` (`--from-latest` if matches streamed while it was off).
+3. Start the relay: `func start` in `functions/dist/` (see `functions/README.md`; it also runs the archiver and step 6),
+   or `relay_runner.py` (add `--from-latest` if matches streamed while it was off) and `uv run python main.py` in
+   `archiver/` (`--from-latest` likewise).
 4. Open the screen: Vedant's app or, until it exists, `mock/single-match-demo/` on 8788 (moved to the protocol).
 5. Start the stats engine: `uv run python main.py live` in `stats/` (moments, `match_state`, stat panels).
-6. Start the insights flow: `uv run python ../functions/moment_trigger.py` in `agents/` (polls moments, runs the
+6. Start the insights flow (skip with `func start`, which runs it): `uv run python ../functions/moment_trigger.py` in `agents/` (polls moments, runs the
    agents, the recap at full time and the publisher, which sends cards and player tags to the stand-in's audience
    groups). Model settings are in `infra/local/env.example`; provider `off` uses templates.
 7. Send a match: `uv run python cli.py live --hubs emulator --speed 20` in `generator/`. Add `--record` to keep a
-   copy for `archiver/tests/check_archive.py`.
+   copy for `archiver/tests/check_archive.py`. Each run is SYN-0001 unless `--first-match <n>` says otherwise, and a
+   match id that already finished is ignored downstream as a repeat, so give every run a new number.
 8. Optional: open `http://127.0.0.1:8787/insights/viewer?match=<id>&mode=casual&lang=en` to see one audience's cards
    rendered (dev page); after the match, `uv run python -m evals.live_run --match <id> --out <dir>` in `agents/`
    reports latency and outcomes. `uv run python check_delivery.py --match <id> --club <teamId> --player <playerId>` in `agents/` plays
    two viewers (one joins late through the insights snapshot).
 9. Stop: `docker compose down` and Ctrl+C the stand-in, relay and archiver (data is cleared; every run starts clean).
+
+After Docker restarts (the laptop slept or shut down), the Event Hubs emulator starts again from sequence 0 but
+Azurite keeps every consumer's saved positions, so a consumer saved past the new end of a partition waits there and
+reads nothing. The relay and archiver have `--from-latest`; the stats engine has no such option yet (on 23 Oct its
+old positions on two partitions hid SYN-0801 and SYN-0802 until they were moved to the newest messages by hand).
 
 ## 6. What local testing does not prove
 
