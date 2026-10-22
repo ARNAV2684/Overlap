@@ -39,6 +39,20 @@ def checkpoint_store() -> BlobCheckpointStore:
     return BlobCheckpointStore.from_connection_string(conn, CHECKPOINT_CONTAINER)
 
 
+def clear_positions(group: str) -> int:
+    """Delete this consumer group's saved reading positions, so reading starts at the newest messages. For a local
+    archiver that was off while matches streamed: otherwise it reads their events without their setups first."""
+    from azure.storage.blob import BlobServiceClient
+    conn = os.environ.get("AzureWebJobsStorage", "UseDevelopmentStorage=true")
+    if conn.strip().rstrip(";") == "UseDevelopmentStorage=true":
+        conn = AZURITE
+    container = BlobServiceClient.from_connection_string(conn).get_container_client(CHECKPOINT_CONTAINER)
+    names = [b.name for b in container.list_blobs() if f"/{group}/checkpoint/" in b.name.lower()]
+    for name in names:
+        container.delete_blob(name)
+    return len(names)
+
+
 def consumer(hub: str, store: BlobCheckpointStore) -> EventHubConsumerClient:
     group = os.environ.get("OVERLAP_ARCHIVER_CONSUMER_GROUP", "archiver")
     conn = os.environ.get("OVERLAP_EVENTHUBS_CONNECTION")
@@ -51,9 +65,10 @@ def consumer(hub: str, store: BlobCheckpointStore) -> EventHubConsumerClient:
 
 
 class Runner:
-    def __init__(self, batch_size: int = 100):
+    def __init__(self, batch_size: int = 100, from_latest: bool = False):
         self.archiver = Archiver(CosmosArchive.from_env(), BlobTracking.from_env())
         self.batch_size = batch_size
+        self.start = "@latest" if from_latest else "-1"
         self.stop = threading.Event()
         self.clients: list[EventHubConsumerClient] = []
         self.lock = threading.Lock()
@@ -80,7 +95,7 @@ class Runner:
         self.clients.append(client)
         with client:
             client.receive_batch(on_event_batch=self._on_batch(hub), on_error=self._on_error,
-                                 max_batch_size=self.batch_size, max_wait_time=0.5, starting_position="-1")
+                                 max_batch_size=self.batch_size, max_wait_time=0.5, starting_position=self.start)
 
     def run(self):
         store = checkpoint_store()
@@ -104,10 +119,16 @@ class Runner:
 def main(argv=None):
     ap = argparse.ArgumentParser(prog="archiver")
     ap.add_argument("--batch-size", type=int, default=100)
+    ap.add_argument("--from-latest", action="store_true",
+                    help="start at the newest messages, clearing this archiver's saved positions (local catch-up)")
     args = ap.parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
     logging.getLogger("azure").setLevel(logging.WARNING)
-    runner = Runner(args.batch_size)
+    if args.from_latest:
+        checkpoint_store()                                   # creates the container if it's missing
+        cleared = clear_positions(os.environ.get("OVERLAP_ARCHIVER_CONSUMER_GROUP", "archiver"))
+        log.info("cleared %d saved positions; reading from the newest messages", cleared)
+    runner = Runner(args.batch_size, args.from_latest)
     signal.signal(signal.SIGINT, lambda *_: runner.stop.set())
     runner.run()
 
