@@ -317,4 +317,19 @@ Keep screenshots and the trace outside the repo (D-5); paste the results into §
 
   Also seen: the badge went stale once mid-match (not investigated); the stats engine re-sent the earlier match
   `SYN-4201`'s panels on start-up (about 60 s, two throttling retries).
-- **Not yet run:** Run 2 attempt 2 with the `stats` positions fixed; Run 1 browser checklist (AC-01, AC-02, AC-04–AC-07).
+- **Fix (Vedant approved, 23 Oct):** stats engine stopped; its `stats` positions moved to each partition's newest
+  message (only `match-events` partition 3 was past the end: 8488 against 2363); restarted, all 8 partitions claimed.
+- **Run 2 at 20×, attempt 2 (`SYN-4402`, 01:54–02:00), same stack:**
+
+  | ID | Result | Evidence |
+  |---|---|---|
+  | AC-08 | **Pass** | `stream.qa.test.ts` (348 s): 2,363 events, 6 goals, final 6–0 at 90+8:37, 0 rejected; `stat panels 6057 (104 heavy)` live; the late joiner at 1:49 got 2 panels, each equal to the live panel of the same `seq`, and its charts' stats equal the newest; a full-time reload's stats equal the live store's. Badge live → stale → live → finished |
+  | AC-03 (automated) | **Pass** | `replay.qa.test.ts`: 103 chunks, 2,363 events, 30,619 frames, 6,125 panels, 0 rejected, final 6–0. The replay's final panel (match_ms 6,124,000, with `heavy`) equals the full-time snapshot's: EQUAL |
+  | Snapshot timing | Measured | Full time: 2,376 envelopes (1 stats panel), 0 rejected, 1.27–1.58 s |
+
+  Stats engine: 6,125 panels sent, event-to-panel median 0.65 s, 95th percentile 1.46 s, no errors. Relay and
+  archiver: 0 invalid. The live client applied 6,057 of the 6,125 panels: it joined about 17 s after kickoff, and
+  the snapshot carries only the newest panels. The badge went stale once mid-match in both 20× runs (not investigated;
+  look at it during AC-05 and AC-07).
+- **Not yet run:** Run 1 browser checklist (AC-01, AC-02 by eye, AC-03 and AC-04 screenshots, AC-05–AC-07). The stack
+  is still up, with this branch on `http://localhost:3200`.
