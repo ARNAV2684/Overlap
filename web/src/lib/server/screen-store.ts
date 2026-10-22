@@ -66,6 +66,9 @@ export function createScreenStore(settings: ScreenSettings): ScreenStore {
       const { resources } = await container.items
         .query<ScreenDoc>({ query: sql, parameters: [{ name: "@match", value: matchId }] }, {
           partitionKey: matchId,
+          // As few pages as Cosmos allows (it still caps one at 4 MB): the default 100 per page made a full-time
+          // match 24 round trips, about 9 s on the local emulator, against 1 s for one page
+          maxItemCount: -1,
           abortSignal: signal,
         })
         .fetchAll();
