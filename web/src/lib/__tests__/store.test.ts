@@ -10,7 +10,7 @@ import {
   VISIBLE_ROWS,
   type MatchStore,
 } from "@/lib/store";
-import { envelope, eventEnv, makeEvent, makeSetup, MATCH, posEnv, statusEnv } from "./fixtures";
+import { envelope, eventEnv, makeEvent, makeHeavy, makePanel, makeSetup, MATCH, posEnv, statsEnv, statusEnv } from "./fixtures";
 
 const T0 = 1_000_000;
 
@@ -60,6 +60,7 @@ describe("starting state", () => {
     expect(s.counters).toEqual({ messages: 0, events: 0, frames: 0, lastAt: null, recent: 0 });
     expect(s.timeline).toEqual({ filter: "events", rows: [] });
     expect(s.latestFrame).toBeNull();
+    expect(s.stats).toEqual({ latest: null, heavy: null });
     expect(s.inspector).toEqual({ row: null, following: true });
     expect(s.controls).toEqual({ filter: "events", paused: false });
     expect(s.notice).toEqual({ text: notices.connecting, tone: "info" });
@@ -574,10 +575,70 @@ describe("validation of raw messages", () => {
   });
 });
 
+describe("stat panels", () => {
+  const heavy = makeHeavy();
+
+  it("keeps the newest panel and the newest one with a heavy block", () => {
+    live(statsEnv(1, 60_000, heavy), statsEnv(2, 61_000), statsEnv(3, 62_000));
+    expect(state().stats.latest?.match_ms).toBe(62_000);
+    expect(state().stats.heavy?.match_ms).toBe(60_000);
+    expect(state().stats.heavy?.heavy.pressing_grid.home[7][1]).toBe(12);
+  });
+
+  it("ignores an older panel that arrives late, and lets a re-sent panel for the same second replace it", () => {
+    live(statsEnv(1, 62_000), statsEnv(2, 61_000, heavy));
+    expect(state().stats.latest?.match_ms).toBe(62_000);
+    expect(state().stats.heavy?.match_ms).toBe(61_000);
+    live(statsEnv(3, 62_000, undefined, { source_seq: 1200 }));
+    expect(state().stats.latest?.source_seq).toBe(1200);
+  });
+
+  it("adds no row and counts a panel as a message, not an event or a frame", () => {
+    live(statsEnv(1));
+    expect(state().timeline.rows).toEqual([]);
+    expect(state().counters).toMatchObject({ messages: 1, events: 0, frames: 0 });
+  });
+
+  it("takes panels from the snapshot (history) too", () => {
+    history(statsEnv(1, 60_000, heavy), statsEnv(2, 61_000));
+    expect(state().stats.latest?.match_ms).toBe(61_000);
+    expect(state().stats.heavy?.match_ms).toBe(60_000);
+  });
+
+  it("keeps the same slice object until a panel changes it", () => {
+    live(statsEnv(1));
+    const before = state().stats;
+    live(eventEnv(2));
+    expect(state().stats).toBe(before);
+    live(statsEnv(3, 3000));
+    expect(state().stats).not.toBe(before);
+  });
+
+  it("freezes while paused and catches up on resume", () => {
+    live(statsEnv(1, 1000));
+    store.setPaused(true);
+    live(statsEnv(2, 2000, heavy));
+    expect(state().stats.latest?.match_ms).toBe(1000);
+    expect(state().stats.heavy).toBeNull();
+    store.setPaused(false);
+    expect(state().stats.latest?.match_ms).toBe(2000);
+    expect(state().stats.heavy?.match_ms).toBe(2000);
+  });
+
+  it("validates raw panels: a broken heavy block is rejected whole and the last good panel stays", () => {
+    expect(store.ingestRaw(envelope("stats", makePanel({ match_ms: 1000 }), { seq: 1, match_ms: 1000 }), Date.now())).toBe("applied");
+    const bad = { ...makePanel({ match_ms: 2000 }), heavy: { ...heavy, zones: { home: [], away: [] } } };
+    expect(store.ingestRaw(envelope("stats", bad, { seq: 2, match_ms: 2000 }), Date.now())).toBe("rejected");
+    store.flush();
+    expect(state().stats.latest?.match_ms).toBe(1000);
+    expect(state().connection.rejected).toBe(1);
+  });
+});
+
 describe("reset", () => {
   it("starts a new session: forgets rows, counters, setup and applied seqs", () => {
     store.setSetup(makeSetup());
-    live(eventEnv(1), posEnv(2, 2000, 5), statusEnv(3, "live", { home: 1, away: 0 }));
+    live(eventEnv(1), posEnv(2, 2000, 5), statusEnv(3, "live", { home: 1, away: 0 }), statsEnv(4, 60_000, makeHeavy()));
     store.ingestRaw({ junk: 1 }, Date.now());
     store.select("1");
     store.reset();
@@ -587,6 +648,7 @@ describe("reset", () => {
     expect(s.counters).toEqual({ messages: 0, events: 0, frames: 0, lastAt: null, recent: 0 });
     expect(s.scoreboard).toMatchObject({ setup: null, phase: null, score: null, matchMs: -1 });
     expect(s.latestFrame).toBeNull();
+    expect(s.stats).toEqual({ latest: null, heavy: null });
     expect(s.players.size).toBe(0);
     expect(s.inspector).toEqual({ row: null, following: true });
     expect(s.connection.rejected).toBe(0);
