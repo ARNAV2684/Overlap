@@ -10,7 +10,7 @@
 | Review coordinator | Arnav |
 | Affected component owners | Azeem (stats engine: producer of the stat panel, `CONTRACTS.md` §7.4, `stats/specs/publishing.md` §2). Arnav (screen relay and archiver forward and store the panels unchanged; `CONTRACTS.md`) |
 | Proposal version and date | v0.1 · 2026-10-22 |
-| Status | In progress · go given 22 Oct; building on `web/stat-charts` |
+| Status | In progress · go given 22 Oct; M1–M4 merged to `main` in PR #77 (23 Oct). M5, the local-stack run (AC-07), is still to do, so it stays in `active/` until that passes |
 | Plan tier and file | Full · `plans/active/PLAN_web_stat-charts.md` (full because it touches the hot file `web/src/lib/contracts.ts`) |
 | Repository | [ARNAV2684/Overlap](https://github.com/ARNAV2684/Overlap) |
 | Reviewed branch and commit | main · 329153d |

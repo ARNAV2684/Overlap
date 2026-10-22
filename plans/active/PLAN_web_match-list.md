@@ -5,7 +5,7 @@
 | Change | New route `GET /api/matches` lists the archived matches (live and finished) from Cosmos; the match picker at `/` reads it instead of the mock's `GET /mock/matches`, and links finished matches to their replay |
 | Why | The picker is the last part of the live screen that only works with the mock: the Web PubSub stand-in (`infra/local/webpubsub_standin`) serves negotiate and snapshot but no match list, so with the real local chain (generator → Event Hubs → relay → stand-in) the picker says the server is down |
 | Author / owner | Vedant (layer 7, `web/`) |
-| Status | In progress · built on `web/match-list` (22 Oct): code in `945341e` and `d6f5a97`; specs, tests and docs not committed yet. Not run against a real archive (no Docker here). The spec change waits for review with the replay specs |
+| Status | In progress · built on `web/match-list` (22 Oct) and merged to `main` in PR #77 (23 Oct) with its specs, tests and docs. Not run against a real archive yet, so it stays in `active/` until that run passes. The spec change waits for review with the replay specs |
 | Reviewed commit | `web/replay-page` · 837d3de (stacked: `archive-store.ts` is not on `main` yet; `main` · 14a3443) |
 | Branch | `web/match-list`, stacked on `web/replay-page`; rebased on `main` once the replay PRs merge |
 | Governing spec | `web/specs/realtime.md` §5.3 (new: match list route) and `web/specs/screens.md` §1 (match picker). Neither is agreed yet (both "merged for review in #19") |
