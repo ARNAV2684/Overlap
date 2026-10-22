@@ -26,6 +26,10 @@ TOOLS = ("get_match_state", "get_live_state", "get_player_context", "get_team_pr
          "compare_periods")
 REJECT = {"outside_scope", "version_mismatch", "context_mismatch"}
 COSMOS_ENV = ("OVERLAP_COSMOS_ENDPOINT", "OVERLAP_COSMOS_KEY", "OVERLAP_COSMOS_DATABASE")
+# The server is a child process that inherits only a minimal environment (PATH, TEMP...), so on Azure the managed
+# identity settings the host gives this process are passed on, or DefaultAzureCredential can't sign in.
+IDENTITY_ENV = ("AZURE_CLIENT_ID", "AZURE_TENANT_ID", "AZURE_FEDERATED_TOKEN_FILE", "AZURE_AUTHORITY_HOST",
+                "IDENTITY_ENDPOINT", "IDENTITY_HEADER", "MSI_ENDPOINT", "MSI_SECRET")
 
 
 class ContextUnavailable(RuntimeError):
@@ -37,10 +41,20 @@ class ContextRejected(RuntimeError):
 
 
 def mcp_python(settings: Settings) -> str:
+    """The setting; else mcp_server/.venv (local development); else this Python: the Functions package ships the
+    server beside the agents with the same packages, no second venv."""
     if settings.mcp_python:
         return settings.mcp_python
-    venv = ROOT / "mcp_server" / ".venv"
-    return str(venv / ("Scripts/python.exe" if sys.platform == "win32" else "bin/python"))
+    venv = ROOT / "mcp_server" / ".venv" / ("Scripts/python.exe" if sys.platform == "win32" else "bin/python")
+    return str(venv) if venv.exists() else sys.executable
+
+
+def mcp_env(settings: Settings, python: str) -> dict[str, str]:
+    env = {k: os.environ[k] for k in (*COSMOS_ENV, *IDENTITY_ENV) if k in os.environ} \
+        if settings.mcp_source == "cosmos" else {}
+    if python == sys.executable:
+        env["PYTHONPATH"] = str(ROOT)                    # mcp_server is a folder beside agents/, not installed
+    return env
 
 
 class McpContext:
@@ -59,8 +73,8 @@ class McpContext:
                 "--moment-id", ident["moment_id"], "--evidence-version", str(ident["evidence_version"])]
         if s.mcp_source == "fixture":
             args += ["--fixture-dir", str(Path(s.mcp_fixture_dir).resolve())]
-        env = {k: os.environ[k] for k in COSMOS_ENV if k in os.environ} if s.mcp_source == "cosmos" else {}
-        self.tool = MCPStdioTool("overlap-moment-context", mcp_python(s), args=args, env=env, load_prompts=False,
+        python = mcp_python(s)
+        self.tool = MCPStdioTool("overlap-moment-context", python, args=args, env=mcp_env(s, python), load_prompts=False,
                                  allowed_tools=TOOLS, request_timeout=max(1, round(s.mcp_timeout_s * 2)),
                                  parse_tool_results=_structured)
         try:
