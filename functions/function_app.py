@@ -22,9 +22,11 @@ from __future__ import annotations
 import json
 import logging
 import sys
+import typing
 from pathlib import Path
 
 import azure.functions as func
+
 import screen_relay as R
 from relay_store import from_env
 
@@ -36,6 +38,9 @@ if _ARCHIVER.is_dir() and str(_ARCHIVER) not in sys.path:
 import consumer as archive
 
 app = func.FunctionApp()
+# Binding annotations: the Python worker accepts typing.List but rejects the built-in list[...] ("invalid non-type
+# annotation"), and then loads no function at all.
+Events = typing.List[func.EventHubEvent]  # noqa: UP006
 log = logging.getLogger("screen_relay.function")
 _relay: R.Relay | None = None
 _archiver: archive.Archiver | None = None
@@ -49,27 +54,42 @@ def relay() -> R.Relay:
     return _relay
 
 
-def _properties(event: func.EventHubEvent) -> dict:
-    meta = event.metadata or {}
-    props = meta.get("Properties") or meta.get("properties") or {}
-    if isinstance(props, str):
+def _as_dict(value) -> dict:
+    if isinstance(value, str):
         try:
-            props = json.loads(props)
+            value = json.loads(value)
         except ValueError:
-            props = {}
-    return props if isinstance(props, dict) else {}
+            value = {}
+    return value if isinstance(value, dict) else {}
+
+
+def _properties(events: Events) -> list[dict]:
+    """Each message's application properties (`kind`, `match_id`), in order. In a batch (cardinality many) every
+    event's metadata is the whole batch's, with one entry per event in PropertiesArray; there is no Properties key,
+    so reading it would leave every message without a kind (events-hub messages are then invalid)."""
+    meta = (events[0].metadata or {}) if events else {}
+    batch = meta.get("PropertiesArray")
+    if isinstance(batch, str):
+        try:
+            batch = json.loads(batch)
+        except ValueError:
+            batch = None
+    if isinstance(batch, list) and len(batch) == len(events):
+        return [_as_dict(p) for p in batch]
+    return [_as_dict((e.metadata or {}).get("Properties") or (e.metadata or {}).get("properties")) for e in events]
 
 
 def _where(hub: str, e: func.EventHubEvent) -> str:
     meta = e.metadata or {}
-    return f"{hub}/{meta.get('PartitionContext', {}).get('PartitionId', '?')}/{meta.get('Offset', '?')}"
+    offset = e.offset if e.offset is not None else meta.get("Offset", "?")
+    return f"{hub}/{_as_dict(meta.get('PartitionContext')).get('PartitionId', '?')}/{offset}"
 
 
-def _messages(hub: str, events: list[func.EventHubEvent]) -> list[R.Message]:
-    return [R.parse(hub, e.get_body().decode("utf-8"), _properties(e), _where(hub, e)) for e in events]
+def _messages(hub: str, events: Events) -> list[R.Message]:
+    return [R.parse(hub, e.get_body().decode("utf-8"), p, _where(hub, e)) for e, p in zip(events, _properties(events))]
 
 
-def _handle(hub: str, events: list[func.EventHubEvent]):
+def _handle(hub: str, events: Events):
     totals = relay().handle(_messages(hub, events))
     log.info("relay %s: %s", hub, totals)
 
@@ -79,7 +99,7 @@ def _handle(hub: str, events: list[func.EventHubEvent]):
            maximum_interval="00:00:15")
 @app.event_hub_message_trigger(arg_name="events", event_hub_name="%OVERLAP_EVENTS_HUB%", connection="EVENTHUBS",
                                consumer_group="%OVERLAP_RELAY_CONSUMER_GROUP%", cardinality=func.Cardinality.MANY)
-def relay_events(events: list[func.EventHubEvent]) -> None:
+def relay_events(events: Events) -> None:
     _handle(R.EVENTS_HUB, events)
 
 
@@ -88,7 +108,7 @@ def relay_events(events: list[func.EventHubEvent]) -> None:
            maximum_interval="00:00:15")
 @app.event_hub_message_trigger(arg_name="events", event_hub_name="%OVERLAP_TRACKING_HUB%", connection="EVENTHUBS",
                                consumer_group="%OVERLAP_RELAY_CONSUMER_GROUP%", cardinality=func.Cardinality.MANY)
-def relay_tracking(events: list[func.EventHubEvent]) -> None:
+def relay_tracking(events: Events) -> None:
     _handle(R.TRACKING_HUB, events)
 
 
@@ -109,8 +129,9 @@ def archiver() -> archive.Archiver:
     return _archiver
 
 
-def _archive(hub: str, events: list[func.EventHubEvent]):
-    msgs = [archive.parse(hub, e.get_body().decode("utf-8"), _properties(e), _where(hub, e)) for e in events]
+def _archive(hub: str, events: Events):
+    msgs = [archive.parse(hub, e.get_body().decode("utf-8"), p, _where(hub, e))
+            for e, p in zip(events, _properties(events))]
     log.info("archive %s: %s", hub, archiver().handle(msgs))
 
 
@@ -119,7 +140,7 @@ def _archive(hub: str, events: list[func.EventHubEvent]):
            maximum_interval="00:00:15")
 @app.event_hub_message_trigger(arg_name="events", event_hub_name="%OVERLAP_EVENTS_HUB%", connection="EVENTHUBS",
                                consumer_group="%OVERLAP_ARCHIVER_CONSUMER_GROUP%", cardinality=func.Cardinality.MANY)
-def archive_events(events: list[func.EventHubEvent]) -> None:
+def archive_events(events: Events) -> None:
     _archive(R.EVENTS_HUB, events)
 
 
@@ -128,7 +149,7 @@ def archive_events(events: list[func.EventHubEvent]) -> None:
            maximum_interval="00:00:15")
 @app.event_hub_message_trigger(arg_name="events", event_hub_name="%OVERLAP_TRACKING_HUB%", connection="EVENTHUBS",
                                consumer_group="%OVERLAP_ARCHIVER_CONSUMER_GROUP%", cardinality=func.Cardinality.MANY)
-def archive_tracking(events: list[func.EventHubEvent]) -> None:
+def archive_tracking(events: Events) -> None:
     _archive(R.TRACKING_HUB, events)
 
 
