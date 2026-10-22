@@ -1,11 +1,12 @@
 # Real-time data spec
 
 > **Status: merged for review in #19 (16 Oct); not yet marked agreed.** Answers §1 (connection), §2 (store), §3
-> (catch-up) and adds §6 (testing and checks) for the live match screen. §4 (overlay scheduler) and §5 (replay) are
-> **not started** and out of scope. The code it describes is on `main` (#43); the screen built on it is
-> built on `web/live-api` and checked with unit tests and an end-to-end run against the mock; not on `main` yet. Plan: [`PLAN_web_live-match-viewer`](../../plans/active/PLAN_web_live-match-viewer.md). The `status` and `positions` payloads and the
-> snapshot, match-list and negotiate responses are **provisional**: they come from the mock (`mock/README.md`), not
-> from `CONTRACTS.md`.
+> (catch-up) and adds §6 (testing and checks) for the live match screen. §4 (overlay scheduler) is **not started**.
+> §5 (replay) is **written for review** (20 Oct) for [`PLAN_web_replay`](../../plans/active/PLAN_web_replay.md); no
+> replay code exists yet. The live screen's code is on `main` (#43, #48). Plan:
+> [`PLAN_web_live-match-viewer`](../../plans/active/PLAN_web_live-match-viewer.md). The `status` and `positions`
+> payloads and the snapshot shape are now in `CONTRACTS.md` §7.2–§7.3; the match-list and negotiate responses are still
+> **provisional**, defined by the mock (`mock/README.md`).
 
 Decides how messages reach the screen and stay in order.
 
@@ -139,7 +140,113 @@ Not started. Out of scope for the live match screen (the mock sends no overlays)
 
 _Answer:_
 
-Not started. Out of scope for the live match screen.
+Plan: [`PLAN_web_replay`](../../plans/active/PLAN_web_replay.md). Replay plays a **finished** match from the archiver's
+storage (`CONTRACTS.md` §4.1, `archiver/specs/storage.md` §3) through the same store and panels as the live screen.
+The web app's own route reads storage on the server and sends §7 envelopes, a minute at a time; a player in the
+browser releases them at the chosen speed.
+
+### 5.1 Route `GET /api/replay/<id>`
+
+- **Runtime:** a Node.js route handler, always dynamic. It only reads storage. Settings are server-only (no
+  `NEXT_PUBLIC_` prefix) and never appear in a response or a log line.
+- **Manifest** (no `chunk` parameter):
+
+  ```json
+  { "match_id": "SYN-0505", "status": "finished", "setup": { },
+    "result": { "score": { "home": 2, "away": 1 }, "events": 2171 },
+    "periods": [ { "period": 1, "start_ms": 0, "end_ms": 2820000, "end_period_ms": 2820000 },
+                 { "period": 2, "start_ms": 2820000, "end_ms": 5700000, "end_period_ms": 2880000 } ],
+    "chunks": [ { "index": 0, "period": 1, "minute": 0, "from_ms": 0, "to_ms": 60000 } ],
+    "duration_ms": 5700000,
+    "gaps": [] }
+  ```
+
+  - `setup` is the stored §2 setup and `result` the stored result, both unchanged.
+  - `periods` comes from the match's `PeriodStart` and `PeriodEnd` events: `start_ms` and `end_ms` are their
+    `match_ms`, `end_period_ms` the `PeriodEnd`'s `period_ms`.
+  - `chunks`: one per minute of each period, `minute` from 0 to `⌊end_period_ms ÷ 60000⌋`, the same numbering as
+    the tracking files (`p<period>/m<MMM>`). `from_ms` and `to_ms` are the chunk's `match_ms` range, `to_ms`
+    exclusive; the last chunk of a period ends at `end_ms + 1`. `index` counts chunks from 0 in play order.
+  - `duration_ms` is the last period's `end_ms`.
+  - `gaps` lists event `seq` values missing from storage. Replay continues without them.
+- **Chunk** (`?chunk=<index>`): `{ "match_id", "chunk": <index>, "envelopes": [ … ], "rejected": { "count", "samples" } }`,
+  the same `rejected` shape as the snapshot (`CONTRACTS.md` §7.3).
+- **What a chunk holds** (period `p`, minute `m`, so `period_ms` from `m × 60000` up to `(m + 1) × 60000`):
+  - **events** of period `p` in that range, in `seq` order, each as an `event` envelope with the §3 event unchanged;
+  - a **`status`** envelope right after each `PeriodStart` (`live`), goal `Shot` (score + 1 for that side) and
+    `PeriodEnd` (`half_time` after period 1, `full_time` after period 2), with `{ phase, period, score }` as in
+    `CONTRACTS.md` §7.2. The score counts goal shots from kick-off, including earlier chunks;
+  - **frames** from the tracking file `p<p>/m<MMM>`, the first frame kept for each `match_ms`, in `match_ms` order,
+    bundled into `positions` envelopes of at most 5 consecutive frames. The envelope's `match_ms` is the last frame's,
+    and its `clock` comes from that frame's period and `period_ms`, as the relay does. A minute without a file has no
+    frames;
+  - **stat panels** of period `p` whose `match_ms − start_ms` falls in the range, each as a `stats` envelope with the
+    §7.4 panel unchanged. A period's **last** chunk also takes the panel sent for its `PeriodEnd`: the stats engine
+    stamps it with the next whole second, up to 999 ms after the whistle, so its range ends at `to_ms + 999`. That
+    panel carries the half-time or full-time totals. (Found on the first run against a real archive: `SYN-0501`'s
+    panels at 2,907,000 and 6,124,000 came after whistles at 2,906,400 and 6,123,600.)
+  - **Chunk 0 starts with** a `pre_match` status carrying the setup, at `match_ms` 0 and clock `0:00`, as the relay's
+    first status does.
+- **Cosmos fields** (`id`, and every field that starts with `_`) are removed from stored documents before anything
+  else; the browser's schemas reject unknown fields.
+- **Order and `seq`:** envelopes are sorted by `match_ms`, then event, status, stats, positions (events with the same
+  `match_ms` keep `seq` order, and a status stays right after the event that caused it). `seq` is
+  `(index + 1) × 100000 + position in the chunk`, so it rises across the whole match and a refetched chunk gets the
+  same numbers. Replay is not a Web PubSub group, so `CONTRACTS.md` §7.1's sender rule does not apply.
+- **Validation:** every envelope the route builds goes through `parseEnvelope`. One that fails is left out, counted in
+  `rejected`, and described in `samples` (at most 5). The browser validates again on ingest.
+- **Errors** (body `{ "error": "<code>" }`):
+
+  | Status | Code | When |
+  |---|---|---|
+  | 400 | `bad_match_id` | The id does not look like `SYN-NNNN` |
+  | 400 | `bad_chunk` | `chunk` is not a whole number within `chunks` |
+  | 404 | `not_found` | No `matches` document for the id |
+  | 503 | `not_ready` | The match document has no setup yet |
+  | 409 | `not_finished` | `status` is not `finished` |
+  | 503 | `replay_unavailable` | A storage setting is missing; one server log line names the missing variables |
+  | 502 | `storage_error` | Cosmos or Blob failed or took longer than 10 s |
+  | 500 | `archive_invalid` | The stored setup or result fails its contract, a half has no `PeriodStart` and `PeriodEnd`, or the match has periods other than 1 and 2; the log line gives the reason |
+  | 500 | `internal_error` | Anything else; the log line names only the error's type |
+
+- **Halves only:** periods 1 and 2, as the screen relay supports (`functions/screen_relay.py`). Extra time waits
+  until the relay and the clock handle it.
+
+- **Caching:** a finished match never changes, so the route keeps each match's periods and goals in memory (at most
+  20 matches) and answers with `Cache-Control: private, max-age=3600`.
+- **Settings** (server-only, the archiver's names, values never written down): `OVERLAP_COSMOS_ENDPOINT`,
+  `OVERLAP_COSMOS_DATABASE` (default `live`), `OVERLAP_COSMOS_KEY` (local emulator only; without it the route uses
+  `DefaultAzureCredential`), and for Blob either `OVERLAP_ARCHIVE_STORAGE` (a connection string, local) or
+  `OVERLAP_ARCHIVE_BLOB_ENDPOINT` (Azure, with `DefaultAzureCredential`). Without them the route answers
+  `replay_unavailable`, and the rest of the app still runs.
+- **Logs:** one line per request with the match id, chunk, counts (events, frames, panels, rejected) and duration.
+
+### 5.2 Player
+
+- **`src/lib/replay-player.ts`**, outside React like the store. `ReplayProvider` creates one store and one player per
+  match id, and on unmount stops the player (timers cleared, fetches aborted) and destroys the store.
+- **Start:** status `connecting` and the notice "Loading the replay…"; read the manifest; ingest chunk 0's `pre_match`
+  status; then play.
+- **Playhead** in `match_ms`. A 100 ms timer advances it by the wall time elapsed × speed and ingests, in order, every
+  envelope at or before it, with `receivedAt` set to the browser's time, so rows count and the goal flash and
+  announcement work as they do live. The playhead never passes data that hasn't loaded: it waits, with the notice
+  "Buffering…", and goes on when the chunk arrives. Half-time is not part of `match_ms`, so period 2 follows straight
+  on. When the playhead reaches a chunk's end (`to_ms − 1`), whatever is left in that chunk is ingested too: the
+  `PeriodEnd` panel can be stamped after the whistle, and at full time the playhead stops at `duration_ms`.
+- **Speed:** 1×, 5× or 20×, default 20×. Changing speed doesn't refetch.
+- **Pause** stops the playhead, and resume continues from it. This is not the timeline's "pause feed" button, which
+  keeps working as it does live (it freezes the display while the scoreboard follows the playhead).
+- **Prefetch:** the chunk under the playhead and the next 2 are kept loaded. A chunk is dropped once its envelopes are
+  ingested.
+- **Fetches:** 10 s timeout. A failed chunk is retried 3 times, after 1 s, 2 s and 4 s; then the player pauses and
+  shows "Replay data unavailable." with a Retry button. A failed manifest shows the error state of `screens.md` §1.
+- **Status and badge:** the player sets `connecting`, `live` while playing or paused, and `finished` after the last
+  envelope (notice "Replay finished."). It never calls `tick()`, so a paused replay never turns `stale`. While playing
+  the notice is "Replaying from the match archive."; if the manifest fails it is "This replay can't be shown.".
+- **Replay again:** after the end, `reset()` the store and start from `match_ms` 0.
+- **Rows** say where they came from: the timeline's arrival cell reads "Replay · archive" (and "Replay · bundled
+  frame" for tracking) instead of "Live WebSocket", through a stream-source setting that defaults to live.
+- **Jump to a minute** is optional (plan M4) and not specified here; it will be added to this section if it is built.
 
 ## 6. Testing and checks
 

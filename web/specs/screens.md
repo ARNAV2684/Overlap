@@ -1,9 +1,11 @@
 # Screens spec
 
 > **Status: merged for review in #19 (16 Oct); not yet marked agreed.** Answers §1 for the **live match screen** and the
-> **match picker**, and adds §5 (checks for the live screen). §1 for recap, replay and how-it-works, and §2 to §4, are
-> **not started** and out of scope. Every part of the live screen and the picker is built on `web/live-api` and checked with unit tests and an end-to-end run against the mock; not on `main` yet (milestones M4 and
-> M5 of [`PLAN_web_live-match-viewer`](../../plans/active/PLAN_web_live-match-viewer.md)).
+> **match picker**, and adds §5 (checks for the live screen). The **replay screen** in §1 is **written for review**
+> (20 Oct) for [`PLAN_web_replay`](../../plans/active/PLAN_web_replay.md); no replay code exists yet. §1 for recap and
+> how-it-works, and §2 to §4, are **not started**. The live screen and the picker are on `main` (#48), checked with unit
+> tests and an end-to-end run against the mock (milestones M4 and M5 of
+> [`PLAN_web_live-match-viewer`](../../plans/active/PLAN_web_live-match-viewer.md)).
 
 Decides every page and what each viewer mode shows.
 
@@ -85,7 +87,47 @@ Four cards, values with `text-metric numeric`, not live regions (they change too
 - The pitch panel is specified in `charts.md`. The **message inspector** shows the selected (or newest) envelope as
   syntax-coloured JSON in a scrolling `<pre>`, a copy button ("Copied" announced politely), a "Follow latest" action, and a
   footer "N messages rejected by contract validation" shown only when N is above 0.
-- **Recap, replay, how-it-works:** not decided yet.
+
+### Replay screen (`/replay/[id]`)
+
+Plan: [`PLAN_web_replay`](../../plans/active/PLAN_web_replay.md); data and playback in `realtime.md` §5.
+
+- The id must look like `SYN-NNNN`, otherwise the not-found page shows.
+- **The live screen's frame and panels**, top to bottom, with these differences:
+  1. **Header:** "/ Replay" in place of "/ Live stream". The badge reads "Loading" while the manifest loads,
+     "Replay · 20×" (the current speed) while playing, "Paused" when paused, and "Replay finished" at the end, always
+     as words and an icon.
+  2. **Intro:** eyebrow "Match archive", the page's only `h1` "Replay a finished match.", one line naming the two
+     clubs and the final score once the manifest has loaded, and a **source card** "Match archive · stored by the
+     archiver" so a replay is never mistaken for a live match.
+  3. **Replay controls**, a toolbar (`role="toolbar"`, named "Replay controls") between the notice line and the
+     scoreboard:
+     - **Play / Pause:** one button whose accessible name says what it does ("Play" or "Pause"). After the end it
+       reads "Replay again".
+     - **Speed:** three buttons "1×", "5×" and "20×" with `aria-pressed`, accessible names "Speed 1×" and so on.
+       Default 20×.
+     - **Progress:** the playhead's clock and the full-time clock ("62:14 / 90+5:31") in `numeric` text, and a
+       read-only progress bar (`role="progressbar"`, value in percent of `duration_ms`). It is not a seek control.
+     - Touch targets about 44 px on phones; the toolbar wraps below 680 px.
+  4. **Notice line** messages: "Loading the replay…", "Replaying from the match archive." (while playing),
+     "Buffering…", "Replay data unavailable." (with a Retry button in the toolbar), "Replay finished.", "This replay
+     can't be shown." (with the message card below), plus the live screen's paused and resumed messages for the
+     timeline's "pause feed" button.
+  5. **Scoreboard, counters, timeline, pitch and inspector** as on the live screen, fed by the replay player. Timeline
+     rows read "Replay · archive" (or "Replay · bundled frame") in the arrival column. The goal flash and announcement
+     fire when the playhead reaches a goal.
+- **States:** before the manifest arrives, the live screen's loading fallback with the replay header and the notice
+  "Loading the replay…". If the manifest fails, the scoreboard and workspace are replaced by one message card:
+  - `not_found`: "No archived match SYN-NNNN." with a link to `/`;
+  - `not_finished`: "SYN-NNNN is still being played." with a link to `/match/<id>`;
+  - `not_ready`: "SYN-NNNN has no setup in the archive yet.";
+  - `replay_unavailable`, `storage_error` or a network error: "The match archive can't be reached." with a Retry
+    button.
+- **Layout and accessibility:** the live screen's breakpoints and landmarks. The toolbar is reachable by keyboard
+  between the notice line and the scoreboard; focus stays on Play / Pause when its name changes. Under reduced motion
+  the progress bar doesn't animate.
+- **Jump to a minute and the list of archived matches** are optional (plan M4) and will be specified here if built.
+- **Recap, how-it-works:** not decided yet.
 
 ## 2. Viewer modes
 
