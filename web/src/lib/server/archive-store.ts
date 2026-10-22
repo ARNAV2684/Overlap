@@ -1,15 +1,18 @@
 // archive-store.ts — Match archive reads (server only)
 //
 // Purpose: read a stored match the way the archiver wrote it: the match document, events, stat panels and the
-//          per-minute tracking files. Read-only; never writes or creates anything
+//          per-minute tracking files; and, for the match list, the recent match documents and each live match's
+//          match_state. Read-only; never writes or creates anything
 // Inputs:  ArchiveSettings from archive-env.ts
-// Outputs: createArchiveStore(settings): ArchiveStore. Documents come back as stored (Cosmos fields included,
-//          frames unsorted and possibly repeated); replay-envelopes.ts cleans, orders and checks them
-// Spec:    web/specs/realtime.md §5.1; CONTRACTS.md §4.1; archiver/specs/storage.md §1–§3
+// Outputs: createArchiveStore(settings): ArchiveStore, createMatchListStore(settings): MatchListStore. Documents come
+//          back as stored (Cosmos fields included, frames unsorted and possibly repeated); replay-envelopes.ts and
+//          match-list.ts clean, order and check them
+// Spec:    web/specs/realtime.md §5.1, §5.3; CONTRACTS.md §4.1, §4.2; archiver/specs/storage.md §1–§3
 //
-// Every call is scoped to one match's partition (/match_id), uses parameterised queries, and gives up after 10 s.
-// A failure or timeout becomes an ArchiveStoreError, which the route answers with 502 storage_error. Error messages
-// name the operation only, never a setting.
+// Every replay call is scoped to one match's partition (/match_id); the match list's one query reads across
+// partitions on purpose. All queries are parameterised and give up after 10 s. A failure or timeout becomes an
+// ArchiveStoreError, which the routes answer with 502 storage_error. Error messages name the operation only, never a
+// setting.
 
 import { gunzipSync } from "node:zlib";
 import { CosmosClient, type Container, type SqlParameter } from "@azure/cosmos";
@@ -54,6 +57,21 @@ export type ArchiveStore = {
   /** The tracking file for one minute of one period, or null when there is none. */
   trackingFile(matchId: string, period: number, minute: number): Promise<TrackingFile | null>;
 };
+
+/** The reads behind the match list (realtime.md §5.3). */
+export type MatchListStore = {
+  /** The most recently written `matches` documents, newest first, projected to the list's fields (see below). */
+  recentMatches(limit: number): Promise<StoredDoc[]>;
+  /** The stats engine's `match_state` document (CONTRACTS.md §4.2), or null when there is none yet. */
+  matchState(matchId: string): Promise<StoredDoc | null>;
+};
+
+/** Only what the list shows: never the full setup, which carries 36 players per match. */
+const RECENT_MATCHES_SQL =
+  "SELECT TOP @limit c.match_id, c.status, c.result, c._ts, " +
+  "c.setup.teams.home.team_id AS home_id, c.setup.teams.home.name AS home_name, " +
+  "c.setup.teams.away.team_id AS away_id, c.setup.teams.away.name AS away_name " +
+  "FROM c ORDER BY c._ts DESC";
 
 export class ArchiveStoreError extends Error {
   constructor(operation: string, options?: { cause?: unknown }) {
@@ -104,6 +122,8 @@ function cosmosContainers(settings: ArchiveSettings["cosmos"]) {
     matches: database.container("matches"),
     events: database.container("events"),
     stats: database.container("stats"),
+    // Written by the stats engine, not the archiver; same database and partition key
+    matchState: database.container("match_state"),
   };
 }
 
@@ -213,6 +233,30 @@ export function createArchiveStore(settings: ArchiveSettings): ArchiveStore {
           if (error instanceof RestError && error.statusCode === 404) return null;
           throw error;
         }
+      }),
+  };
+}
+
+/** The match list's reader. Creating it makes no network call. */
+export function createMatchListStore(settings: ArchiveSettings): MatchListStore {
+  const cosmos = cosmosContainers(settings.cosmos);
+
+  return {
+    recentMatches: (limit) =>
+      guarded("match list", async (signal) => {
+        const { resources } = await cosmos.matches.items
+          .query<StoredDoc>({ query: RECENT_MATCHES_SQL, parameters: [{ name: "@limit", value: limit }] }, {
+            abortSignal: signal,
+          })
+          .fetchAll();
+        return resources;
+      }),
+
+    matchState: (matchId) =>
+      guarded("match state", async (signal) => {
+        // A missing document (or a container the stats engine hasn't created yet) reads as 404, not an error
+        const { resource } = await cosmos.matchState.item("state", matchId).read<StoredDoc>({ abortSignal: signal });
+        return resource ?? null;
       }),
   };
 }

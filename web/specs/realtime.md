@@ -5,8 +5,9 @@
 > §5 (replay) is **written for review** (20 Oct) for [`PLAN_web_replay`](../../plans/active/PLAN_web_replay.md); no
 > replay code exists yet. The live screen's code is on `main` (#43, #48). Plan:
 > [`PLAN_web_live-match-viewer`](../../plans/active/PLAN_web_live-match-viewer.md). The `status` and `positions`
-> payloads and the snapshot shape are now in `CONTRACTS.md` §7.2–§7.3; the match-list and negotiate responses are still
-> **provisional**, defined by the mock (`mock/README.md`).
+> payloads and the snapshot shape are now in `CONTRACTS.md` §7.2–§7.3; the negotiate response is still
+> **provisional**, defined by the mock (`mock/README.md`). §5.3 (the match list, this app's own route, replacing the
+> mock's) is **written for review** (22 Oct) for [`PLAN_web_match-list`](../../plans/active/PLAN_web_match-list.md).
 
 Decides how messages reach the screen and stay in order.
 
@@ -247,6 +248,53 @@ browser releases them at the chosen speed.
 - **Rows** say where they came from: the timeline's arrival cell reads "Replay · archive" (and "Replay · bundled
   frame" for tracking) instead of "Live WebSocket", through a stream-source setting that defaults to live.
 - **Jump to a minute** is optional (plan M4) and not specified here; it will be added to this section if it is built.
+
+### 5.3 Match list `GET /api/matches`
+
+Plan: [`PLAN_web_match-list`](../../plans/active/PLAN_web_match-list.md). The list behind the match picker
+(`screens.md` §1), read from the same archive as replay. It replaces the mock's provisional `GET /mock/matches`, so the
+picker works the same with the mock, with the local stand-in (which has no list) and on Azure.
+
+- **Runtime and settings:** a Node.js route handler, always dynamic, read-only, with the settings of §5.1. Only Cosmos
+  is read, but the Blob setting is still required, so one set of settings switches the archive on or off for both
+  routes.
+- **Sources:**
+  - Cosmos `matches` (`CONTRACTS.md` §4.1), across partitions: the 50 most recently written documents
+    (`TOP 50 … ORDER BY c._ts DESC`), projected to the id, status, both teams' ids and names, and the result. The full
+    setup is never read here.
+  - For each `live` match, its `match_state` document (`CONTRACTS.md` §4.2, id `state`): phase, clock and score. One
+    point read per live match.
+- **Response** (200, `Cache-Control: no-store`):
+
+  ```json
+  { "matches": [
+      { "match_id": "SYN-0505", "status": "live",
+        "home": { "team_id": "NBR", "name": "Northbridge FC" },
+        "away": { "team_id": "HBA", "name": "Harbour Athletic" },
+        "phase": "live", "score": { "home": 1, "away": 0 }, "clock": "62:14" } ] }
+  ```
+
+  - `status` is the `matches` document's (`live` or `finished`).
+  - **Live:** `phase`, `score` and `clock` come from `match_state`. All three are `null` when there is no `match_state`
+    yet (the stats engine isn't running, or hasn't reached its first write), when it fails its check, or when its read
+    fails; the match is still listed.
+  - **Finished:** `phase` is `full_time`, `score` is the stored `result.score`, `clock` is `null`. `match_state` is not
+    read.
+  - **Order:** live matches first, then finished ones; inside each, the most recently written first.
+- **Left out:** a `matches` document without a setup, with another status, or finished without a valid result. The
+  route logs one line with how many it left out and their ids.
+- **Errors** (body `{ "error": "<code>" }`, `Cache-Control: no-store`):
+
+  | Status | Code | When |
+  |---|---|---|
+  | 503 | `matches_unavailable` | The archive settings are missing or malformed; one log line names them (names only) |
+  | 502 | `storage_error` | The `matches` query failed or took longer than 10 s |
+  | 500 | `internal_error` | Anything else; the log line names only the error's type |
+
+- **Logs:** failures and left-out documents only. The picker asks every 5 s, so a line per request would drown the log.
+- **Cost:** one cross-partition query and one point read per live match, each time an open picker refreshes.
+- **Not handled yet:** a match whose generator stopped before full time stays `live` in the archive, so it is listed as
+  live with nothing streaming. Locally every run starts clean; Azure needs a rule later.
 
 ## 6. Testing and checks
 

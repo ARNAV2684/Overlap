@@ -40,7 +40,10 @@ uv sync
 uv run python -m overlap_mock.cli play --match all --speed 20 --hubs off --web --linger-s 600
 ```
 
-- `/` lists the matches the server is playing (phase, score, clock), refreshed every 5 s. Pick one.
+- `/` lists the matches in the match archive (`/api/matches`): live ones link to their live screen, finished ones to
+  their replay; refreshed every 5 s. It needs the archive settings in `web/.env.local` (the same ones as replay, see
+  `web/.env.example`) and the local stack's Cosmos emulator with the archiver running. The mock writes no archive, so
+  with the mock alone `/` says the list isn't available; open `/match/SYN-9001` directly instead.
 - `/match/SYN-9001` is the live screen: scoreboard, four counters, event timeline, live pitch and message inspector.
   After full time the server stays up for `--linger-s` seconds; reload the page to start a new run.
 - `/dev/ui` (development only) shows every token, primitive and timeline row variant, including the red and
@@ -69,7 +72,7 @@ QA_STREAM=1 QA_MATCHES=SYN-9001,SYN-9002,SYN-9003 npx vitest run src/lib/__tests
 | Event timeline: one component per row type | `src/components/timeline/**` | timeline, controls, inspector |
 | Live pitch | `src/components/charts/LivePitch.tsx`, `src/components/charts/pitch/*`, `src/components/live/LivePositionsPanel.tsx` | latest frame, players |
 | Message inspector | `src/components/inspector/*` | inspector, connection (rejected count) |
-| Match picker | `src/app/page.tsx` | none (`listMatches()`) |
+| Match picker | `src/app/page.tsx`, `src/app/api/matches/route.ts`, `src/lib/match-list.ts` | none (`listMatches()`) |
 | Data path | `src/lib/{env,contracts,api,socket,store,store-hooks,ring-buffer}.ts`, `src/components/live/MatchStreamProvider.tsx` | — |
 
 Every panel has a store-free `…View` version, used by the route's loading fallback so the first paint does not jump.
@@ -94,7 +97,7 @@ Plan and progress: [`IMPLEMENTATION_PLAN.md`](IMPLEMENTATION_PLAN.md) and
 | `src/app/match/[id]/recap/page.tsx` | Full-time recap |
 | `src/app/replay/[id]/page.tsx` | Replay at 1×, 5×, 20× |
 | `src/app/how-it-works/page.tsx` | Architecture and agent trace for judges |
-| `src/app/api/*` | Negotiate, snapshot, replay, preferences, start-match |
+| `src/app/api/*` | Negotiate, snapshot, replay, match list, preferences, start-match |
 | `src/components/charts/*` | Live pitch, momentum tide, shot map, pass network, pressing zones, heatmap zones, stat bars, key events |
 | `src/components/*` | Moment card, agent trace, scoreboard, commentary feed, viewer controls |
 | `src/lib/*` | Store, socket, overlay scheduler, preferences, visual lookup, coordinates, contract types |
