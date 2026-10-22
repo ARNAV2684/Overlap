@@ -47,6 +47,10 @@ ENV = {
     "OVERLAP_HIGH_PRIORITY_RESERVE": "high_priority_reserve",
     "OVERLAP_MAX_REWRITES": "max_rewrites",
     "OVERLAP_MAX_PLAYER_LINES": "max_player_lines",
+    "OVERLAP_MODEL_BREAKER_FAILURES": "model_breaker_failures",
+    "OVERLAP_MODEL_BREAKER_COOLDOWN_S": "model_breaker_cooldown_s",
+    "OVERLAP_MAX_QUEUED_PER_MATCH": "max_queued_per_match",
+    "OVERLAP_SKIP_STALE": "skip_stale",
     "OVERLAP_MCP_PYTHON": "mcp_python",
     "OVERLAP_MCP_SOURCE": "mcp_source",
     "OVERLAP_MCP_FIXTURE_DIR": "mcp_fixture_dir",
@@ -87,6 +91,10 @@ class Settings:
     high_priority_reserve: int = 3             # model-job slots kept for goals, red cards and penalties
     max_rewrites: int = 2
     max_player_lines: int = 3                  # player-mode lines per moment (first players in `player_ids`)
+    model_breaker_failures: int = 3            # model failures in a row before the model is paused
+    model_breaker_cooldown_s: float = 60.0     # how long it stays paused before one probe call
+    max_queued_per_match: int = 2              # normal moments waiting behind the running one (workflow.md §3)
+    skip_stale: bool = True                    # live: suppress a moment the match has already moved past (off for replays)
     mcp_python: str = ""                       # the MCP server's Python; default: mcp_server/.venv
     mcp_source: str = "cosmos"                 # cosmos (local emulator or Azure) or fixture
     mcp_fixture_dir: str = ""
@@ -155,6 +163,12 @@ class Settings:
             raise SettingsError("OVERLAP_HIGH_PRIORITY_RESERVE must be below OVERLAP_MAX_MODEL_JOBS_PER_MATCH")
         if not 0 <= self.max_rewrites <= 2:
             raise SettingsError("OVERLAP_MAX_REWRITES must be 0, 1 or 2")
+        if self.model_breaker_failures < 1:
+            raise SettingsError("OVERLAP_MODEL_BREAKER_FAILURES must be at least 1")
+        if self.model_breaker_cooldown_s <= 0:
+            raise SettingsError("OVERLAP_MODEL_BREAKER_COOLDOWN_S must be positive")
+        if self.max_queued_per_match < 0:
+            raise SettingsError("OVERLAP_MAX_QUEUED_PER_MATCH must not be negative")
         if self.max_player_lines < 0:
             raise SettingsError("OVERLAP_MAX_PLAYER_LINES must not be negative")
         for name in ("request_timeout_s", "moment_deadline_s", "mcp_timeout_s", "tag_top_speed_kmh",
