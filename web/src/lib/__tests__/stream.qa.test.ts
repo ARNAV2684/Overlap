@@ -31,6 +31,9 @@ type Tally = {
   types: Map<string, number>;
   goals: number;
   cards: string[];
+  /** Stat panels applied, and how many of them carried the heavy block. */
+  panels: number;
+  heavyPanels: number;
   statuses: ConnectionStatus[];
   scores: (Score | null)[];
 };
@@ -38,6 +41,11 @@ type Tally = {
 /** Wraps the store's two ingest paths to tally what was applied, without changing what the store does. */
 function tallying(store: MatchStore, tally: Tally): MatchStore {
   const count = (envelope: ParsedEnvelope) => {
+    if (envelope.kind === "stats") {
+      tally.panels++;
+      if (envelope.data.heavy) tally.heavyPanels++;
+      return;
+    }
     if (envelope.kind !== "event") return;
     tally.types.set(envelope.data.type, (tally.types.get(envelope.data.type) ?? 0) + 1);
     if (envelope.data.type === "Shot" && envelope.data.shot_outcome === "goal") tally.goals++;
@@ -61,7 +69,7 @@ function tallying(store: MatchStore, tally: Tally): MatchStore {
 
 async function watchToFullTime(matchId: string) {
   const store = createMatchStore(matchId, { onReject: (m) => console.warn(m) });
-  const tally: Tally = { types: new Map(), goals: 0, cards: [], statuses: [], scores: [] };
+  const tally: Tally = { types: new Map(), goals: 0, cards: [], panels: 0, heavyPanels: 0, statuses: [], scores: [] };
   store.subscribe(() => {
     const { connection, scoreboard } = store.getState();
     if (tally.statuses.at(-1) !== connection.status) tally.statuses.push(connection.status);
@@ -101,6 +109,7 @@ describe.skipIf(!ENABLED)("against a running stream", () => {
       console.info(
         `${matchId}: ${total} events (${[...tally.types].map(([t, n]) => `${t} ${n}`).join(", ")}); ` +
           `goals ${tally.goals}; cards ${tally.cards.join(", ") || "none"}; ` +
+          `stat panels ${tally.panels} (${tally.heavyPanels} heavy); ` +
           `final ${state.scoreboard.score?.home}–${state.scoreboard.score?.away} at ${state.scoreboard.clock}; ` +
           `live counters: ${state.counters.messages} messages, ${state.counters.events} events, ${state.counters.frames} frames; ` +
           `badge ${tally.statuses.join(" → ")}`,
@@ -113,6 +122,11 @@ describe.skipIf(!ENABLED)("against a running stream", () => {
       // Each goal in the events changed the published score once (none were lost or doubled)
       expect(goalsSeen).toBeLessThanOrEqual(tally.goals);
       expect(state.scoreboard.score ? state.scoreboard.score.home + state.scoreboard.score.away : 0).toBe(tally.goals);
+      // The stats engine was running: panels arrived and the charts have something to draw
+      expect(tally.panels).toBeGreaterThan(0);
+      expect(tally.heavyPanels).toBeGreaterThan(0);
+      expect(state.stats.latest).not.toBeNull();
+      expect(state.stats.heavy).not.toBeNull();
     },
     RUN_LIMIT_MS + 30_000,
   );
