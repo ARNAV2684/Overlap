@@ -3,7 +3,7 @@
 // Purpose: compose the live match screen from the layout components: header with the connection badge, intro with the
 //          source card, the notice line, the screen's content, and the footer
 // Inputs:  LiveMatchView: the store from the nearest MatchStreamProvider (read by AppHeader, NoticeBar, Scoreboard,
-//          MetricsGrid, EventTimelinePanel, LivePositionsPanel and MessageInspectorPanel)
+//          MetricsGrid, MatchStatsSection, EventTimelinePanel, LivePositionsPanel and MessageInspectorPanel)
 //          LiveMatchFrame: header, notice, intro?, children (the parts that differ between live, loading and replay)
 // Outputs: LiveMatchView (live), LiveMatchFallback (the same frame in its starting "Connecting" state, with no store,
 //          for the route's Suspense fallback; the replay screen passes its own header, notice, intro and controls),
@@ -11,8 +11,8 @@
 // Spec:    web/specs/screens.md (live match screen). web/IMPLEMENTATION_PLAN.md Phase 6 (frame), Phase 7 (scoreboard,
 //          metrics), Phase 8 (timeline), Phase 9 (pitch), Phase 10 (composition)
 //
-// The fallback matches the live screen's first render (status Connecting, the connecting notice, an empty scoreboard
-// and zero counters, an empty timeline with its controls disabled), so the prerendered HTML does not jump when the live
+// The fallback matches the live screen's first render (status Connecting, the connecting notice, an empty scoreboard,
+// zero counters and match stats waiting for the first panel, an empty timeline with its controls disabled), so the prerendered HTML does not jump when the live
 // screen replaces it. Only the match id differs: the fallback does not know it yet and shows a skeleton of the same size.
 // The workspace is one column below 1000 px, then the timeline (about 1.65 fr) beside the right-hand column: the pitch,
 // and the message inspector below it.
@@ -25,11 +25,12 @@ import { IntroHero } from "@/components/layout/IntroHero";
 import { NoticeBar, NoticeBarView } from "@/components/layout/NoticeBar";
 import { SourceCard } from "@/components/layout/SourceCard";
 import { LivePositionsPanel, LivePositionsPanelView } from "@/components/live/LivePositionsPanel";
+import { MatchStatsSection, MatchStatsSectionView } from "@/components/live/MatchStatsSection";
 import { MessageInspectorPanel, MessageInspectorPanelView } from "@/components/inspector/MessageInspectorPanel";
 import { MetricsGrid, MetricsGridView } from "@/components/metrics/MetricsGrid";
 import { Scoreboard, ScoreboardView } from "@/components/Scoreboard";
 import { EventTimelinePanel, EventTimelinePanelView } from "@/components/timeline/EventTimelinePanel";
-import { emptyCounters, emptyScoreboard, notices } from "@/lib/store";
+import { emptyCounters, emptyScoreboard, emptyStats, notices } from "@/lib/store";
 
 /** Timeline on the left; the right-hand column (pitch, then the inspector) beside it from 1000 px, as a complementary
  *  landmark so screen-reader users can jump to it. Shared with the replay screen. */
@@ -72,6 +73,7 @@ export function LiveMatchView() {
     <LiveMatchFrame header={<AppHeader />} notice={<NoticeBar />}>
       <Scoreboard />
       <MetricsGrid />
+      <MatchStatsSection />
       <Workspace
         timeline={<EventTimelinePanel />}
         side={
@@ -104,6 +106,7 @@ export function LiveMatchFallback({ header, notice, intro, lead }: LiveMatchFall
       {lead}
       <ScoreboardView scoreboard={emptyScoreboard("")} matchId={null} />
       <MetricsGridView counters={emptyCounters()} />
+      <MatchStatsSectionView stats={emptyStats()} setup={null} />
       <Workspace
         timeline={<EventTimelinePanelView rows={[]} filter="events" paused={false} live={false} selectedKey={null} setup={null} />}
         side={

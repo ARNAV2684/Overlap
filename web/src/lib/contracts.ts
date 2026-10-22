@@ -4,7 +4,7 @@
 //          CONTRACTS.md. Unknown fields are rejected: "a typo fails loudly" (CONTRACTS.md §1.3)
 // Inputs:  raw parsed JSON from the stream (Web PubSub, snapshot, replay file)
 // Outputs: schemas, types, and parseEnvelope(), which never throws
-// Spec:    CONTRACTS.md §1–§4 and §7. web/IMPLEMENTATION_PLAN.md Phase 4.1
+// Spec:    CONTRACTS.md §1–§4 and §7 (§7.4 stat panels). web/IMPLEMENTATION_PLAN.md Phase 4.1
 //
 // This file mirrors CONTRACTS.md. Change a shape only in a PR that edits CONTRACTS.md too, with both sides agreeing.
 // Two shapes are PROVISIONAL: the status data and the positions data come from the mock (mock/README.md
@@ -274,6 +274,86 @@ export const positionsDataSchema = z.strictObject({
   frames: z.array(trackingFrameSchema).min(1),
 });
 
+// ---------------------------------------------------------------------------------------------------------------
+// Stat panel (CONTRACTS.md §7.4). The heavy block is mirrored from what the stats engine sends
+// (stats/whole_match.py; sizes in stats/specs/publishing.md §2, index order in stats/state.py)
+// ---------------------------------------------------------------------------------------------------------------
+
+/** Sent as null when its sample is too small; the field is then listed in `low_sample` (stats/specs/metrics.md §7). */
+const metric = z.number().nullable();
+const count = z.number().int().nonnegative();
+const bySide = <T extends z.ZodType>(schema: T) => z.strictObject({ home: schema, away: schema });
+/** `outer` arrays of `inner` counts each. */
+const countGrid = (outer: number, inner: number) => z.array(z.array(count).length(inner)).length(outer);
+
+/** Pressing grid: `[col][row]`, 9 columns from the team's own goal, 6 rows from its left (metrics.md §4). */
+export const PRESSING_COLS = 9;
+export const PRESSING_ROWS = 6;
+/** Touch zones: `[channel][col]`, 3 channels from the team's left, 6 columns from its own goal (metrics.md §6). */
+export const ZONE_CHANNELS = 3;
+export const ZONE_COLS = 6;
+
+export const teamPanelSchema = z.strictObject({
+  team_id: teamId,
+  possession_pct: metric,
+  shots: metric,
+  shots_on_target: metric,
+  xg: metric,
+  passes: metric,
+  pass_completion_pct: metric,
+  ppda_last_10min: metric,
+  pressures_per_opp_pass_last_10min: metric,
+  momentum_share_last_10min_pct: metric,
+  press_height_last_10min_m: metric,
+});
+
+/** One 5-minute bucket of `period_ms`: weighted momentum points per team (CONTRACTS.md §8). */
+export const momentumBucketSchema = z.strictObject({
+  period,
+  bucket: z.number().int().nonnegative(),
+  home: z.number().nonnegative(),
+  away: z.number().nonnegative(),
+});
+
+export const passNetworkSchema = z.strictObject({
+  /** Mean pass-start position in the team's own frame. */
+  nodes: z.array(z.strictObject({ player_id: playerId, x: coordinate, y: coordinate, passes: count })),
+  /** Completed passes from → to, only links with 3 or more. */
+  links: z.array(z.strictObject({ from: playerId, to: playerId, count })),
+});
+
+export const heavyBlockSchema = z.strictObject({
+  momentum_buckets: z.array(momentumBucketSchema),
+  pass_network: bySide(passNetworkSchema),
+  pressing_grid: bySide(countGrid(PRESSING_COLS, PRESSING_ROWS)),
+  zones: bySide(countGrid(ZONE_CHANNELS, ZONE_COLS)),
+  /** Only with tracking: keyed by player id. */
+  players: z
+    .record(
+      playerId,
+      z.strictObject({ distance_km: z.number().nonnegative(), top_speed_kmh: z.number().nonnegative(), sprints: count }),
+    )
+    .optional(),
+});
+
+/** `data` of a `stats` envelope: the light panel every match second, with `heavy` every whole minute and at PeriodEnd. */
+export const statPanelSchema = z.strictObject({
+  match_id: matchId,
+  /** A whole second. */
+  match_ms: ms,
+  clock,
+  period,
+  /** The last event included. */
+  source_seq: count,
+  score: z.strictObject({ home: count, away: count }),
+  teams: bySide(teamPanelSchema),
+  /** The current bucket. */
+  momentum: momentumBucketSchema,
+  /** Paths of the fields sent as null, for example "teams.home.ppda_last_10min". */
+  low_sample: z.array(z.string()),
+  heavy: heavyBlockSchema.optional(),
+});
+
 /** The outer envelope. `data` must be an object; what is inside it is checked per kind by parseEnvelope(). */
 export const envelopeSchema = z.strictObject({
   seq: z.number().int().nonnegative(),
@@ -296,6 +376,13 @@ export type EventType = (typeof EVENT_TYPES)[number];
 export type TrackingFrame = z.infer<typeof trackingFrameSchema>;
 export type StatusData = z.infer<typeof statusDataSchema>;
 export type PositionsData = z.infer<typeof positionsDataSchema>;
+export type TeamPanel = z.infer<typeof teamPanelSchema>;
+export type MomentumBucket = z.infer<typeof momentumBucketSchema>;
+export type PassNetworkData = z.infer<typeof passNetworkSchema>;
+export type HeavyBlock = z.infer<typeof heavyBlockSchema>;
+export type StatPanel = z.infer<typeof statPanelSchema>;
+/** A stat panel that carries the heavy block. */
+export type HeavyStatPanel = StatPanel & { heavy: HeavyBlock };
 export type EnvelopeKind = (typeof ENVELOPE_KINDS)[number];
 export type Phase = StatusData["phase"];
 
@@ -303,13 +390,14 @@ type EnvelopeFields = Omit<z.infer<typeof envelopeSchema>, "kind" | "data">;
 export type Envelope<K extends EnvelopeKind, D> = EnvelopeFields & { kind: K; data: D };
 
 /** Kinds this screen does not render yet. They pass validation and are ignored by consumers, not rejected. */
-export type IgnoredKind = Exclude<EnvelopeKind, "event" | "positions" | "status">;
+export type IgnoredKind = Exclude<EnvelopeKind, "event" | "positions" | "status" | "stats">;
 
 /** A validated envelope. Switch on `kind` to narrow `data`. */
 export type ParsedEnvelope =
   | Envelope<"event", MatchEvent>
   | Envelope<"positions", PositionsData>
   | Envelope<"status", StatusData>
+  | Envelope<"stats", StatPanel>
   | Envelope<IgnoredKind, Record<string, unknown>>;
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -344,7 +432,7 @@ export function describeRejection(result: Extract<ParseResult, { ok: false }>): 
 
 /**
  * Validates an envelope in two steps: the outer shape, then `data` against the schema for its kind.
- * Kinds the screen does not render (stats, overlay, player_tag, recap) pass with `data` as a plain object.
+ * Kinds the screen does not render (overlay, player_tag, recap) pass with `data` as a plain object.
  * Also checks that the match id inside `data` is the envelope's own.
  */
 export function parseEnvelope(raw: unknown): ParseResult {
@@ -384,6 +472,14 @@ export function parseEnvelope(raw: unknown): ParseResult {
       if (!inner.success) return fail(toIssues(inner.error, "data"));
       if (inner.data.setup && inner.data.setup.match_id !== rest.match_id) {
         return fail([{ path: "data.setup.match_id", message: "differs from the envelope's match_id" }]);
+      }
+      return { ok: true, envelope: { ...rest, kind, data: inner.data } };
+    }
+    case "stats": {
+      const inner = statPanelSchema.safeParse(data);
+      if (!inner.success) return fail(toIssues(inner.error, "data"));
+      if (inner.data.match_id !== rest.match_id) {
+        return fail([{ path: "data.match_id", message: "differs from the envelope's match_id" }]);
       }
       return { ok: true, envelope: { ...rest, kind, data: inner.data } };
     }

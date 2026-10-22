@@ -13,17 +13,20 @@
 //    Dedupe lasts for one session: reset() starts a new one, which a reconnect needs because a restarted server
 //    counts seq from 1 again. A snapshot's seq is not contiguous, so nothing here assumes +1.
 //  - Two kinds of slice. "Live" slices (connection, scoreboard, notice, controls, players) always update. "Display"
-//    slices (counters, timeline, latest frame, inspector) freeze while the feed is paused and catch up on resume.
+//    slices (counters, timeline, latest frame, stats, inspector) freeze while the feed is paused and catch up on resume.
+//  - Stat panels add no row: the store keeps the newest panel and the newest one with a heavy block (CONTRACTS.md §7.4).
 //  - A slice keeps the same object until its content changes, so a component re-renders only when its data did.
 //  - Time: ordering uses match_ms and arrival order, never the display clock string (CONTRACTS.md §1.2).
 
 import type {
   Envelope,
+  HeavyStatPanel,
   MatchEvent,
   MatchSetup,
   ParsedEnvelope,
   Phase,
   PositionsData,
+  StatPanel,
   StatusData,
   TrackingFrame,
 } from "@/lib/contracts";
@@ -145,6 +148,14 @@ export type Inspector = {
   following: boolean;
 };
 
+/** The stat panels the charts read. Panels are cumulative, so the newest of each is all a chart needs. */
+export type Stats = {
+  /** The panel with the greatest match_ms. */
+  latest: StatPanel | null;
+  /** The panel with the greatest match_ms among those with a heavy block (every whole minute and at PeriodEnd). */
+  heavy: HeavyStatPanel | null;
+};
+
 export type Controls = { filter: Filter; paused: boolean };
 export type Notice = { text: string; tone: "info" | "warning" };
 
@@ -159,6 +170,7 @@ export type StoreState = {
   counters: Counters;
   timeline: Timeline;
   latestFrame: TrackingFrame | null;
+  stats: Stats;
   inspector: Inspector;
 };
 
@@ -205,7 +217,7 @@ export type StoreOptions = {
 // Helpers
 // ---------------------------------------------------------------------------------------------------------------
 
-const DISPLAY_SLICES = ["counters", "timeline", "latestFrame", "inspector"] as const;
+const DISPLAY_SLICES = ["counters", "timeline", "latestFrame", "stats", "inspector"] as const;
 type Slice = keyof StoreState;
 
 function sameRows(a: readonly TimelineRow[], b: readonly TimelineRow[]): boolean {
@@ -237,6 +249,11 @@ export const emptyScoreboard = (matchId: string): Scoreboard => ({
 
 /** The counters before anything has arrived. Exported for the loading fallback. */
 export const emptyCounters = (): Counters => ({ messages: 0, events: 0, frames: 0, lastAt: null, recent: 0 });
+
+/** No stat panel yet. Exported for the loading fallback. */
+export const emptyStats = (): Stats => ({ latest: null, heavy: null });
+
+const hasHeavy = (panel: StatPanel): panel is HeavyStatPanel => panel.heavy !== undefined;
 
 function playersFrom(setup: MatchSetup | null): Map<string, PlayerInfo> {
   const map = new Map<string, PlayerInfo>();
@@ -270,6 +287,8 @@ export function createMatchStore(matchId: string, options: StoreOptions = {}): M
   let counters = emptyCounters();
   let arrivals: number[] = [];
   let latestFrame: TrackingFrame | null = null;
+  let latestPanel: StatPanel | null = null;
+  let heavyPanel: HeavyStatPanel | null = null;
   let selectedRow: TimelineRow | null = null;
   let rejected = 0;
   let loggedRejections = 0;
@@ -291,6 +310,7 @@ export function createMatchStore(matchId: string, options: StoreOptions = {}): M
     counters,
     timeline: { filter, rows: [] },
     latestFrame: null,
+    stats: emptyStats(),
     inspector: { row: null, following: true },
   };
   const listeners = new Set<() => void>();
@@ -405,6 +425,11 @@ export function createMatchStore(matchId: string, options: StoreOptions = {}): M
         case "latestFrame":
           if (state.latestFrame !== latestFrame) next.latestFrame = latestFrame;
           break;
+        case "stats":
+          if (state.stats.latest !== latestPanel || state.stats.heavy !== heavyPanel) {
+            next.stats = { latest: latestPanel, heavy: heavyPanel };
+          }
+          break;
         case "inspector": {
           const row = selectedRow ?? followedRow();
           const following = selectedRow === null;
@@ -510,7 +535,9 @@ export function createMatchStore(matchId: string, options: StoreOptions = {}): M
 
     ingest(envelope, receivedAt) {
       if (envelope.match_id !== matchId) return "wrong-match";
-      if (envelope.kind !== "event" && envelope.kind !== "positions" && envelope.kind !== "status") return "ignored";
+      if (envelope.kind !== "event" && envelope.kind !== "positions" && envelope.kind !== "status" && envelope.kind !== "stats") {
+        return "ignored";
+      }
       if (applied.has(envelope.seq)) return "duplicate";
       applied.add(envelope.seq);
 
@@ -558,6 +585,15 @@ export function createMatchStore(matchId: string, options: StoreOptions = {}): M
           mark("timeline", "latestFrame", "inspector");
           break;
         }
+        case "stats": {
+          // Envelope order is send order, so a panel can arrive after a newer one: keep the newest by match_ms.
+          // A re-sent panel for the same second replaces the one before it.
+          const panel = envelope.data;
+          if (latestPanel === null || panel.match_ms >= latestPanel.match_ms) latestPanel = panel;
+          if (hasHeavy(panel) && (heavyPanel === null || panel.match_ms >= heavyPanel.match_ms)) heavyPanel = panel;
+          mark("stats");
+          break;
+        }
       }
       return "applied";
     },
@@ -596,13 +632,15 @@ export function createMatchStore(matchId: string, options: StoreOptions = {}): M
       counters = emptyCounters();
       arrivals = [];
       latestFrame = null;
+      latestPanel = null;
+      heavyPanel = null;
       selectedRow = null;
       rejected = 0;
       loggedRejections = 0;
       lastAt = null;
       // Stay frozen if paused: anything that arrives now is newer than the cutoff and stays hidden until resume
       if (paused) cutoff = order;
-      mark("connection", "scoreboard", "players", "counters", "timeline", "latestFrame", "inspector");
+      mark("connection", "scoreboard", "players", "counters", "timeline", "latestFrame", "stats", "inspector");
       flushNow(true);
     },
 
@@ -647,7 +685,7 @@ export function createMatchStore(matchId: string, options: StoreOptions = {}): M
         paused = false;
         cutoff = null;
         notice = { text: notices.resumed, tone: "info" };
-        mark("counters", "timeline", "latestFrame", "inspector");
+        mark("counters", "timeline", "latestFrame", "stats", "inspector");
       }
       mark("controls", "notice");
       flushNow(true);
