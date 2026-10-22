@@ -7,8 +7,9 @@
 > §5 (replay) is **written for review** (20 Oct) for [`PLAN_web_replay`](../../plans/active/PLAN_web_replay.md); no
 > replay code exists yet. The live screen's code is on `main` (#43, #48). Plan:
 > [`PLAN_web_live-match-viewer`](../../plans/active/PLAN_web_live-match-viewer.md). The `status` and `positions`
-> payloads and the snapshot shape are now in `CONTRACTS.md` §7.2–§7.3; the negotiate response is still
-> **provisional**, defined by the mock (`mock/README.md`). §5.3 (the match list, this app's own route, replacing the
+> payloads and the snapshot shape are now in `CONTRACTS.md` §7.2–§7.3. The app's own negotiate and snapshot routes
+> (§1.1, §3.1) replace the stream server's and end the mock dependency: **written for review** (23 Oct, approach agreed
+> in person) for [`PLAN_web_realtime-routes`](../../plans/active/PLAN_web_realtime-routes.md). §5.3 (the match list, this app's own route, replacing the
 > mock's) is **written for review** (22 Oct) for [`PLAN_web_match-list`](../../plans/active/PLAN_web_match-list.md).
 
 Decides how messages reach the screen and stay in order.
@@ -19,21 +20,18 @@ Decides how messages reach the screen and stay in order.
 
 _Answer:_
 
-- **Transport:** the Azure Web PubSub client protocol `json.webpubsub.azure.v1`. The local mock speaks it too, so
-  moving to Azure changes only what `negotiate()` returns. Messages handled: `{type:"system", event:"connected"}` (start
+- **Transport:** the Azure Web PubSub client protocol `json.webpubsub.azure.v1`. The local Web PubSub stand-in
+  (`infra/local/webpubsub_standin`) speaks it too, so moving to Azure changes only the server's settings. Messages handled: `{type:"system", event:"connected"}` (start
   catch-up), `{type:"ack", ackId, success}` (reply to our `joinGroup`) and `{type:"message", from:"group",
   dataType:"json", data}` (an envelope, `CONTRACTS.md` §7). Anything else is ignored.
-- **Negotiate:** `GET <NEXT_PUBLIC_STREAM_BASE_URL>/negotiate?groups=match-<id>` returns `{ baseUrl, url, token }`; the
-  browser opens `url` with the subprotocol above. For the mock this is called directly from the browser. For Azure it
-  must go through this app's own `src/app/api/negotiate/route.ts` using managed identity, so the access key never
-  reaches the browser; `negotiate()` in `src/lib/api.ts` is the single place to switch. The token is never logged or
-  rendered. **Not implemented yet:** the route is a build-safe stub that answers `501`.
+- **Negotiate:** `GET /api/negotiate?groups=match-<id>` on this app's own origin (§1.1) returns
+  `{ baseUrl, url, token }`; the browser opens `url` with the subprotocol above. The token is signed on the server, so
+  no key reaches the browser, and it is never logged or rendered.
 - **Groups joined:** `match-<id>` only (events, positions, status). Audience groups (`match-<id>-<mode>-<lang>`) and
   player groups are **not joined**: this screen shows no overlays. After the connection is ready the client sends
   `{type:"joinGroup", group, ackId}` and waits up to 3 s for the ack before asking for the snapshot anyway.
-- **Request headers:** none added by us. The mock allows any origin but answers no CORS preflight, so a custom header (for
-  example `Cache-Control`) would block the call from a browser. If real Azure needs `no-store`, the app's own route sets
-  it on the response.
+- **Request headers:** none added by us. Every HTTP call goes to this app's own routes (same origin); the routes set
+  `Cache-Control: no-store` on their responses.
 - **Generation guard:** each connection attempt is one generation. Every callback checks its generation is still the
   current one, so a replaced or stopped connection can never write to the store. This also makes React StrictMode's
   double start in development harmless.
@@ -49,6 +47,31 @@ _Answer:_
   against the stat panel of `CONTRACTS.md` §7.4, heavy block included; a panel that fails is rejected as a whole. The
   other kinds in `CONTRACTS.md` §7 (`overlay`, `player_tag`, `recap`) pass the outer envelope check and are ignored,
   not rejected. An envelope for another `match_id` is dropped.
+
+### 1.1 Route `GET /api/negotiate`
+
+- **Runtime:** a Node.js route handler, always dynamic (it reads the request). Settings are server-only.
+- **Request:** `?groups=` with 1 to 4 comma-separated groups, each `match-<id>` with a valid match id
+  (`CONTRACTS.md` §1.3). Audience and player groups are not accepted yet: this screen joins none.
+- **Token:** made with the Web PubSub server SDK (`@azure/web-pubsub`) for hub `OVERLAP_WEBPUBSUB_HUB` (default
+  `live`): role `webpubsub.joinLeaveGroup.<group>` and an initial join for each requested group, **no send role**, no
+  user id, valid for 10 minutes. A connection is checked when it opens, and `socket.ts` negotiates again on every
+  reconnect, so the short lifetime never cuts a running connection.
+- **Credential:** an endpoint on `localhost` or `127.0.0.1` is the local stand-in, which accepts any token, so the
+  token is signed with a fixed, documented non-secret local key (the same rule as `functions/relay_store.py`). Any
+  other endpoint uses `DefaultAzureCredential` (managed identity on Azure; not run yet).
+- **Response** (200, `Cache-Control: no-store`): `{ "baseUrl": "ws://localhost:8787/client/hubs/live", "url":
+  "<baseUrl>?access_token=…", "token": "…" }`.
+- **Errors** (body `{ "error": "<code>" }`, `Cache-Control: no-store`):
+
+  | Status | Code | When |
+  |---|---|---|
+  | 400 | `bad_groups` | `groups` missing, more than 4, or one is not `match-<id>` |
+  | 503 | `negotiate_unavailable` | `OVERLAP_WEBPUBSUB_ENDPOINT` missing or malformed; one log line names the problem |
+  | 502 | `pubsub_error` | The service could not make a token, or took longer than 10 s |
+  | 500 | `internal_error` | Anything else; the log line names only the error's type |
+
+- **Logs:** failures only. Never the token, the URL or a setting's value.
 
 ## 2. Store
 
@@ -116,7 +139,7 @@ _Answer:_
 - **On a new connection** (first connect or reconnect): publish status `live` and the "loading history" notice, `reset()`
   the store (a new session), join the match group, then read the snapshot while holding back live messages in a buffer.
   Joining first means anything published after the join is buffered and anything before it is in the snapshot.
-- **Snapshot:** `GET /api/match/<id>/snapshot` with a 7 s timeout. The response is
+- **Snapshot:** `GET /api/match/<id>/snapshot` on this app's own origin (§3.1) with a 7 s timeout. The response is
   `{ match_id, setup, status, envelopes, rejected: { count, samples } }`. Each envelope is validated; one bad envelope is
   counted and skipped instead of discarding the whole catch-up.
 - **Merge:** snapshot entries (`received = null`) and buffered live entries are merged by `seq`; where a `seq` is in both,
@@ -133,6 +156,38 @@ _Answer:_
   `invalid-response` (contract drift).
 - **Findings from the mock:** the snapshot omits old `positions` envelopes, so its `seq` is not contiguous (one run: 635
   envelopes spanning `seq` 1 to 2212). The store must sort and dedupe, never assume +1.
+
+### 3.1 Route `GET /api/match/<id>/snapshot`
+
+- **Runtime:** a Node.js route handler, always dynamic, read-only. It reads the screen relay's Cosmos container
+  (`functions/specs/screen-relay.md` §4: `env-<seq>` envelope documents, `positions-latest` and `state`, partition key
+  `match_id`). One partition per request; nothing is cached.
+- **Settings** (server-only): `OVERLAP_COSMOS_ENDPOINT`, `OVERLAP_COSMOS_DATABASE` (default `live`),
+  `OVERLAP_COSMOS_KEY` (local emulator only; without it, `DefaultAzureCredential`) and `OVERLAP_COSMOS_CONTAINER`
+  (default `screen`): the relay's names. The archive's Blob setting is not needed.
+- **What it holds** (`CONTRACTS.md` §7.3): the setup from the relay's `state`; every `event` and `status` envelope;
+  the latest `positions` envelope; and of the `stats` envelopes only **the newest panel and the newest panel with a
+  `heavy` block**, by `match_ms`. Panels are cumulative and the store keeps only those two (§2), so a full-time
+  snapshot carries 2 panels instead of about 5,700. Envelopes are in `seq` order and `status` is the last status
+  envelope, so `seq` has gaps.
+- **Reads:** three queries in the match's partition: every `state`, `positions` and non-`stats` envelope document
+  (projected to `id`, `type`, `envelope`, `setup`); the newest `stats` envelope; the newest `stats` envelope with
+  `heavy`. Each gives up after 10 s.
+- **Validation:** each envelope must have exactly `seq`, `kind`, `match_id`, `match_ms`, `clock` and `data`, a known
+  kind, this match's id and a whole `seq` ≥ 1 (the stand-in's check). One that fails is left out and counted in
+  `rejected`, with at most 5 samples `"<document id>: <problem>"`. The browser validates every envelope again.
+- **Response:** 200 with the §7.3 body, `Cache-Control: no-store`. One log line per request: match id, envelopes,
+  rejected, milliseconds.
+- **Errors** (body `{ "error": "<code>" }`, `Cache-Control: no-store`; the first three as the stand-in answers them):
+
+  | Status | Code | When |
+  |---|---|---|
+  | 400 | `bad_match_id` | The id does not look like `SYN-NNNN` |
+  | 404 | `unknown_match` | The partition has no documents |
+  | 503 | `setup_pending` | No setup in `state` yet, or no status envelope yet |
+  | 503 | `snapshot_unavailable` | `OVERLAP_COSMOS_ENDPOINT` missing or malformed; one log line names the problem |
+  | 502 | `storage_error` | Cosmos failed or took longer than 10 s |
+  | 500 | `internal_error` | Anything else; the log line names only the error's type |
 
 ## 4. Overlay scheduler
 
@@ -259,8 +314,8 @@ browser releases them at the chosen speed.
 ### 5.3 Match list `GET /api/matches`
 
 Plan: [`PLAN_web_match-list`](../../plans/active/PLAN_web_match-list.md). The list behind the match picker
-(`screens.md` §1), read from the same archive as replay. It replaces the mock's provisional `GET /mock/matches`, so the
-picker works the same with the mock, with the local stand-in (which has no list) and on Azure.
+(`screens.md` §1), read from the same archive as replay. It replaced the mock's provisional `GET /mock/matches`, so the
+picker works the same with the local stand-in (which has no list) and on Azure.
 
 - **Runtime and settings:** a Node.js route handler, always dynamic, read-only, with the settings of §5.1. Only Cosmos
   is read, but the Blob setting is still required, so one set of settings switches the archive on or off for both
@@ -320,11 +375,10 @@ _Answer:_
   | `npm run test:watch` | `vitest` in watch mode |
 
 - **Setup for tests:** Node 22 or newer (CI uses 22), `npm install`, and `web/.env.local` copied from `web/.env.example`
-  with `NEXT_PUBLIC_STREAM_BASE_URL` and `NEXT_PUBLIC_DEFAULT_MATCH_ID` set (URLs and ids only, never secrets).
-  `vitest.config.mts` reads those variables from `.env.local` (or the shell, which wins) and stops with a clear message
-  if either is missing. The `@/` import alias matches `tsconfig.json`.
+  with `NEXT_PUBLIC_DEFAULT_MATCH_ID` set (an id, never a secret). `vitest.config.mts` reads it from `.env.local` (or
+  the shell, which wins) and stops with a clear message if it is missing. The `@/` import alias matches `tsconfig.json`.
 - **Where tests live:** `src/lib/__tests__/*.test.ts` (Vitest, Node environment, no browser). A fake stream server and a
-  fake WebSocket are used; no test needs the mock to be running.
+  fake WebSocket are used; no test needs the stream to be running.
 - **What is covered today** (16 test files, 330 tests, last run on the branch on 2026-10-16: all pass):
   `api`, `announcer`, `cn`, `contracts`, `coordinates`, `describe-event`, `env`, `format`, `layout`,
   `live-match-view`, `match-stream-provider`, `ring-buffer`, `socket`, `store`, `store-hooks`, `team-colours`.
@@ -333,15 +387,18 @@ _Answer:_
   slices and resume catches up; reconnect backoff and the generation guard; the throttled announcer; coordinate
   conversion including the `CONTRACTS.md` §4 worked example (home in period 2, team-frame (76, 10) is pitch-frame
   (24, 90)); every one of the 18 event types is described.
-- **Checks outside the test suite** (manual, recorded in the PR): a run of `SYN-9001` against the mock at 20× for the
-  scoreboard, timeline and pitch behaviour; stopping and restarting the mock for reconnect; keyboard-only use; and
+- **Checks outside the test suite** (manual, recorded in the PR): a generator match on the local stack
+  (`infra/specs/local-development.md`) at 20× for the scoreboard, timeline and pitch behaviour; stopping and restarting
+  the stand-in for reconnect; keyboard-only use; and
   screenshots at 375 px and 1440 px.
 - **CI today** (`.github/workflows/web.yml`): lint, typecheck and build, only when `web/` changed and
-  `web/package.json` exists. It sets the two public variables at job level. **CI does not run `npm test`**; adding that
+  `web/package.json` exists. It sets the public variables at job level, including `NEXT_PUBLIC_STREAM_BASE_URL`, which
+  the app no longer reads (Arnav owns `.github/`). **CI does not run `npm test`**; adding that
   step is Arnav's decision (he owns `.github/`). Until then, run `npm test` locally and say so in the PR.
-- **Not covered:** the real Azure Web PubSub and screen relay (only the mock's stand-in exists); a repeatable run over
+- **Not covered:** the real Azure Web PubSub and the managed-identity paths of §1.1 and §3.1 (only the local stand-in,
+  which accepts any token, has been run); a repeatable run over
   recorded mock matches (no recorded sample is committed to `fixtures/`); performance at 20× in a browser (Chrome
   Performance and React Profiler checks are still to do).
-- **Contract drift rule:** if a message from the mock fails validation, that is drift to report, not a reason to loosen
-  a schema silently. The fix is in `CONTRACTS.md` or the mock, in the same PR, with the producer and consumer owners
+- **Contract drift rule:** if a message from the stream fails validation, that is drift to report, not a reason to
+  loosen a schema silently. The fix is in `CONTRACTS.md` or its producer, in the same PR, with the producer and consumer owners
   agreeing.

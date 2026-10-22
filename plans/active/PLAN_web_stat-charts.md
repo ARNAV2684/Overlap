@@ -10,7 +10,7 @@
 | Review coordinator | Arnav |
 | Affected component owners | Azeem (stats engine: producer of the stat panel, `CONTRACTS.md` §7.4, `stats/specs/publishing.md` §2). Arnav (screen relay and archiver forward and store the panels unchanged; `CONTRACTS.md`) |
 | Proposal version and date | v0.1 · 2026-10-22 |
-| Status | In progress · go given 22 Oct; building on `web/stat-charts` |
+| Status | In progress · go given 22 Oct; M1–M4 merged to `main` in PR #77 (23 Oct). M5, the local-stack run (AC-07), is still to do, so it stays in `active/` until that passes |
 | Plan tier and file | Full · `plans/active/PLAN_web_stat-charts.md` (full because it touches the hot file `web/src/lib/contracts.ts`) |
 | Repository | [ARNAV2684/Overlap](https://github.com/ARNAV2684/Overlap) |
 | Reviewed branch and commit | main · 329153d |
@@ -293,11 +293,12 @@ archiver (Cosmos stats) ──▶ replay route ──stats envelope──▶ rep
 | AC-04 | Passed | `stat-charts.test.ts` (tideSeries, bucketLabel) |
 | AC-05 | Passed | `stat-charts-view.test.ts` (pitch charts, section, fallback) |
 | AC-06 | Passed | `npm run lint` clean; `tsc --noEmit` clean; `npm test` 31 files, 498 passed, 2 opt-in skipped; `npm run build` succeeded |
-| AC-07 | **Not checked** | The local-stack run with a generator match, the reload and the replay of an archived match are still to do; no screenshots yet |
+| AC-07 | **Partly** (23 Oct) | Real chain with the stats consumer, `SYN-4402` at 20× (`PLAN_web_e2e-stats-run`): 6,125 panels (104 heavy) sent, every one accepted by the strict schema (0 rejected live, in the snapshot and in replay); a mid-match and a full-time reload through the snapshot gave the same stats as the live client; the replay's final panel equals the live full-time one. **Not yet done:** watching it in the browser and the 375 and 1440 px screenshots (Run 1 checklist in that plan) |
 
 - **Setup and integration instructions:** `web/README.md` (the match stats need the stats consumer on the local stack).
 - **Differences from the agreed plan:** `replay-player.test.ts` and `charts/pitch/TeamPitch.tsx` were added to the file
   map during the work (recorded above). Before the first heavy panel the tide shows the current spell from the light
   panel instead of a waiting note (specs updated in the same commit).
-- **Known limitations and follow-up owner:** AC-07 (Vedant). Azeem to confirm the heavy shapes and index order (R-01)
-  and Arnav and Azeem to be told about `contracts.ts` in the PR. Shot map and key events not started.
+- **Known limitations and follow-up owner:** AC-07 browser check and screenshots (Vedant). Azeem to confirm the heavy
+  index order (R-01): the real panels of `SYN-4402` passed the strict schema, so the shapes match, but whether the
+  charts are transposed is only visible on screen. Arnav and Azeem to be told about `contracts.ts` in the PR. Shot map and key events not started.

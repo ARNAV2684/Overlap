@@ -6,7 +6,7 @@
 // Outputs: createMatchSocket(store): { start(), stop() }
 // Spec:    web/specs/realtime.md §1 and §3. web/IMPLEMENTATION_PLAN.md Phase 5.2
 //
-// The protocol is Azure Web PubSub's client protocol "json.webpubsub.azure.v1", which the local mock speaks too, so
+// The protocol is Azure Web PubSub's client protocol "json.webpubsub.azure.v1", which the local stand-in speaks too, so
 // going to Azure later only changes what negotiate() returns. Messages we handle:
 //   {type:"system", event:"connected"}                        the connection is ready: start the catch-up
 //   {type:"ack", ackId, success}                              the reply to our joinGroup

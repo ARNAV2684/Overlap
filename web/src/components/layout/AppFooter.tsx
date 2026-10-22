@@ -1,7 +1,7 @@
 // AppFooter.tsx — Page footer
 //
 // Purpose: the closing line: a reminder that the data is synthetic, and how it is delivered
-// Inputs:  note? (default: the local mock delivery line), className
+// Inputs:  note? (default: the local delivery line), className
 // Outputs: a <footer> (the page's contentinfo landmark when it sits outside <main>). Side by side from 680 px,
 //          stacked below
 // Spec:    web/specs/screens.md (live match screen layout). web/IMPLEMENTATION_PLAN.md Phase 6
@@ -16,7 +16,7 @@ type AppFooterProps = {
 };
 
 export function AppFooter({
-  note = "Live local delivery. No paid services. Keep the mock’s terminal running.",
+  note = "Live local delivery. No paid services. Keep the local stack running.",
   className,
 }: AppFooterProps) {
   return (

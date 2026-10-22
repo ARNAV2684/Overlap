@@ -391,8 +391,9 @@ the two by `seq` and continues live.
   "rejected": { "count": 0, "samples": [] } }
 ```
 
-- `envelopes`: every `event`, `status` and `stats` envelope sent so far plus the latest `positions` envelope, in `seq`
-  order. Older `positions` are left out, so `seq` has gaps; clients never assume +1.
+- `envelopes`: every `event` and `status` envelope sent so far, the latest `positions` envelope, and of the `stats`
+  envelopes the newest panel and the newest panel with a `heavy` block (panels are cumulative), in `seq` order. Older
+  `positions` and `stats` are left out, so `seq` has gaps; clients never assume +1.
 - `rejected`: envelopes the server could not include because they failed validation; `samples` holds up to five short
   descriptions. Always present, `count: 0` when nothing was rejected.
 - `404` for an unknown match, `503` while the match has no setup yet; error bodies are `{ "error": "<code>" }`.

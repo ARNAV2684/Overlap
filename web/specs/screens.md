@@ -37,8 +37,8 @@ _Answer:_
      connection badge: Connecting, Live, No recent data, Reconnecting or Match finished, always as words and an icon.
   2. **`<main>`**, holding:
      - the **intro**: eyebrow "Local match observatory", the page's only `h1` "Watch the data move.", one line of
-       explanation, and the **source card** ("Mock WebSocket · host:port") so the local mock is never mistaken for the
-       Azure pipeline. Side by side from 680 px, stacked below;
+       explanation, and the **source card** ("Live WebSocket · Web PubSub hub live") so the live feed is never
+       mistaken for the archive replay. Side by side from 680 px, stacked below;
      - the **notice line**: what the stream is doing (connecting, history unavailable, connection lost, paused, stale,
        full time); warnings in accent text with an icon; announced to screen readers through a live region throttled
        to at most once every 3 s, and not when only a number changes (`design-system.md` §5);
@@ -193,9 +193,9 @@ _Answer:_
   `realtime.md` §6).
 - Component checks (Vitest): the frame renders the same text before and after the store exists; a goal flash and
   announcement fire once per goal and never for history; the notice announcer is throttled.
-- A manual run of `SYN-9001` against the mock at 20×: names, kit colours, score, phase and clock match the temporary
-  `mock/single-match-demo` page for the same run; the badge goes Connecting, Live, Match finished; stopping and
-  restarting the mock shows Reconnecting and then Live with no duplicate rows.
+- A manual run of a generator match on the local stack at 20×: names, kit colours, score, phase and clock match the
+  match setup and the archived result; the badge goes Connecting, Live, Match finished; stopping and restarting the
+  Web PubSub stand-in shows Reconnecting and then Live with no duplicate rows.
 - Keyboard-only pass over header, filters, timeline, pause and inspector, with visible focus; a screen-reader pass for the
   badge, goal announcement and row labels.
 - No horizontal scroll at 375 px, 768 px and 1440 px; screenshots at 375 px and 1440 px use invented clubs only.

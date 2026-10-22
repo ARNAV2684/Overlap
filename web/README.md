@@ -28,17 +28,16 @@ npm run dev                  # http://localhost:3000
 
 Run `lint`, `typecheck`, `test` and `build` before asking for review (the CI web job runs lint, typecheck and build).
 
-### With the mock stream
+### With the local stack
 
-The app reads from the stream server at `NEXT_PUBLIC_STREAM_BASE_URL` (default `http://localhost:8787`). Start the
-temporary mock first (details in [`../mock/single-match-demo/README.md`](../mock/single-match-demo/README.md)), keep its
-terminal running, then open `http://localhost:3000`:
+The browser only talks to this app: it gets its WebSocket address from `/api/negotiate` and its catch-up history from
+`/api/match/<id>/snapshot` (`specs/realtime.md` §1.1, §3.1). Those routes need the server settings in
+`web/.env.local` (see `web/.env.example`): `OVERLAP_WEBPUBSUB_ENDPOINT` (the Web PubSub stand-in on
+`http://localhost:8787`) and the Cosmos emulator settings with `OVERLAP_COSMOS_CONTAINER=screen`.
 
-```bash
-cd mock
-uv sync
-uv run python -m overlap_mock.cli play --match all --speed 20 --hubs off --web --linger-s 600
-```
+Start the local stack in the order of [`infra/specs/local-development.md`](../infra/specs/local-development.md) §5:
+the Docker emulators, the Web PubSub stand-in, the relay (and archiver), the stats engine, then a generator match.
+Then run `npm run dev` here and open `http://localhost:3000`:
 
 - `/` lists the matches in the match archive (`/api/matches`): live ones link to their live screen, finished ones to
   their replay; refreshed every 5 s. It needs the archive settings in `web/.env.local` (the same ones as replay, see
@@ -56,12 +55,13 @@ The old viewer on `http://127.0.0.1:8788` (`mock/single-match-demo/`) is the ref
 
 ### End-to-end check against the stream
 
-`src/lib/__tests__/stream.qa.test.ts` runs the real socket and store against a running stream until full time and
-checks that nothing is rejected, every message is applied once, the badge reaches "finished" and the final score
-matches the server. It is skipped unless asked for:
+`src/lib/__tests__/stream.qa.test.ts` runs the real socket and store against the running app (`QA_APP_URL`, default
+`http://localhost:3000`) on the local stack until full time and checks that nothing is rejected, every message is
+applied once, the badge reaches "finished" and the final score matches the server. It is skipped unless asked for
+(use the generator match's id):
 
 ```bash
-QA_STREAM=1 QA_MATCHES=SYN-9001,SYN-9002,SYN-9003 npx vitest run src/lib/__tests__/stream.qa.test.ts
+QA_STREAM=1 QA_MATCHES=SYN-0042 npx vitest run src/lib/__tests__/stream.qa.test.ts
 ```
 
 ## The live screen

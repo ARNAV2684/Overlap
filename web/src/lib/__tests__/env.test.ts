@@ -11,30 +11,28 @@ afterEach(() => {
 });
 
 describe("env", () => {
-  it("reads the two public settings", async () => {
-    vi.stubEnv("NEXT_PUBLIC_STREAM_BASE_URL", "http://localhost:8787");
+  it("reads the public setting", async () => {
     vi.stubEnv("NEXT_PUBLIC_DEFAULT_MATCH_ID", "SYN-9001");
-    expect(await loadEnv()).toEqual({ streamBaseUrl: "http://localhost:8787", defaultMatchId: "SYN-9001" });
+    expect(await loadEnv()).toEqual({ defaultMatchId: "SYN-9001" });
   });
 
-  it("strips trailing slashes from the base URL", async () => {
-    vi.stubEnv("NEXT_PUBLIC_STREAM_BASE_URL", "http://localhost:8787///");
-    expect((await loadEnv()).streamBaseUrl).toBe("http://localhost:8787");
+  it("no longer needs a stream server address", async () => {
+    vi.stubEnv("NEXT_PUBLIC_STREAM_BASE_URL", undefined);
+    vi.stubEnv("NEXT_PUBLIC_DEFAULT_MATCH_ID", "SYN-9001");
+    expect(await loadEnv()).toEqual({ defaultMatchId: "SYN-9001" });
   });
 
-  it("fails loudly, naming every problem and the file to copy", async () => {
-    vi.stubEnv("NEXT_PUBLIC_STREAM_BASE_URL", "not a url");
+  it("fails loudly, naming the problem and the file to copy", async () => {
     vi.stubEnv("NEXT_PUBLIC_DEFAULT_MATCH_ID", "nope");
     const attempt = loadEnv();
     await expect(attempt).rejects.toThrow(/Invalid environment/);
     await expect(attempt).rejects.toThrow(/\.env\.example/);
-    await expect(attempt).rejects.toThrow(/NEXT_PUBLIC_STREAM_BASE_URL/);
     await expect(attempt).rejects.toThrow(/NEXT_PUBLIC_DEFAULT_MATCH_ID/);
   });
 
-  it("fails when a setting is missing", async () => {
-    vi.stubEnv("NEXT_PUBLIC_STREAM_BASE_URL", undefined);
-    await expect(loadEnv()).rejects.toThrow(/NEXT_PUBLIC_STREAM_BASE_URL/);
+  it("fails when the setting is missing", async () => {
+    vi.stubEnv("NEXT_PUBLIC_DEFAULT_MATCH_ID", undefined);
+    await expect(loadEnv()).rejects.toThrow(/NEXT_PUBLIC_DEFAULT_MATCH_ID/);
   });
 
   it("insists on the SYN-NNNN match id format", async () => {
