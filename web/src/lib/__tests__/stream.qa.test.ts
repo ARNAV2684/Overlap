@@ -16,7 +16,7 @@
 // Joining mid-match is fine: the snapshot fills in the history, and totals count history and live rows alike.
 
 import { describe, expect, it } from "vitest";
-import { goalBetween, type Score } from "@/components/scoreboard/goal";
+import { goalBetween, type Score } from "@/lib/goal";
 import { createApiClient } from "@/lib/api";
 import { parseEnvelope, type ParsedEnvelope, type StatPanel } from "@/lib/contracts";
 import { createMatchSocket } from "@/lib/socket";
