@@ -1,0 +1,22 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "FUNCTIONS_WORKER_RUNTIME": "python",
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "EVENTHUBS": "Endpoint=sb://localhost;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;",
+    "COSMOS": "AccountEndpoint=http://localhost:8081/;AccountKey=C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==;",
+    "OVERLAP_EVENTS_HUB": "match-events",
+    "OVERLAP_TRACKING_HUB": "match-tracking",
+    "OVERLAP_RELAY_CONSUMER_GROUP": "relay",
+    "OVERLAP_ARCHIVER_CONSUMER_GROUP": "archiver",
+    "OVERLAP_ARCHIVE_STORAGE": "UseDevelopmentStorage=true",
+    "OVERLAP_COSMOS_ENDPOINT": "http://localhost:8081",
+    "OVERLAP_COSMOS_KEY": "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==",
+    "OVERLAP_COSMOS_DATABASE": "live",
+    "OVERLAP_COSMOS_CONTAINER": "screen",
+    "OVERLAP_WEBPUBSUB_ENDPOINT": "http://localhost:8787",
+    "OVERLAP_WEBPUBSUB_HUB": "live",
+    "OVERLAP_MODEL_PROVIDER": "off",
+    "OVERLAP_TRANSLATOR": "fake"
+  }
+}

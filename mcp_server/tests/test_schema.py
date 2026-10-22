@@ -43,7 +43,7 @@ def test_invalid_source(document, path, value):
 
 
 def test_only_cosmos_system_fields_are_removed(document):
-    raw = {**document, "_etag": "test", "_rid": "test", "_self": "test", "_attachments": "", "_ts": 1}
+    raw = {**document, "_etag": "test", "_rid": "test", "_self": "test", "_attachments": "", "_ts": 1, "_lsn": 7}
     assert parse_moment(raw) == parse_moment(document)
     raw["_secret"] = "not allowed"
     with pytest.raises(ValueError):

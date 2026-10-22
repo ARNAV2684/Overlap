@@ -23,7 +23,7 @@ JOB, BUDGET, OUTBOX = "insight_job", "insight_budget", "insight_outbox"
 STATES = ("pending", "running", "delivery_pending", "published", "partially_expired", "expired", "rejected",
           "suppressed", "failed")
 TERMINAL = frozenset({"published", "partially_expired", "expired", "rejected", "suppressed", "failed"})
-SYSTEM_FIELDS = ("_rid", "_self", "_etag", "_attachments", "_ts")
+SYSTEM_FIELDS = ("_rid", "_self", "_etag", "_attachments", "_ts", "_lsn")    # _lsn: change-feed deliveries
 
 
 class PreconditionFailed(Exception):
@@ -58,6 +58,7 @@ class Store(Protocol):
     async def of_kind(self, match_id: str, kind: str) -> list[dict]: ...      # one partition, one document kind
     async def match_state(self, match_id: str) -> dict | None: ...           # live/match_state `state` (§4.2)
     async def batch(self, match_id: str, ops: list[tuple]) -> None: ...      # all or nothing; PreconditionFailed
+    async def matches_to_publish(self, since_ts: int) -> list[str]: ...       # see CosmosStore.matches_to_publish
 
 
 class MemoryStore:
@@ -118,6 +119,12 @@ class MemoryStore:
     async def match_state(self, match_id: str) -> dict | None:
         doc = self.states.get(match_id)
         return json.loads(json.dumps(doc)) if doc is not None else None
+
+    async def matches_to_publish(self, since_ts: int) -> list[str]:
+        pending = {m for (m, _), (d, _) in self.docs.items()
+                   if d.get("kind") == "insight_outbox" and d.get("state") != "done"}
+        live = {m for m, d in self.states.items() if d.get("_ts", 0) >= since_ts}
+        return sorted(pending | live)
 
 
 class CosmosStore:
@@ -213,6 +220,19 @@ class CosmosStore:
             return await self.states.read_item("state", partition_key=match_id)
         except CosmosResourceNotFoundError:
             return None
+
+    async def matches_to_publish(self, since_ts: int) -> list[str]:
+        """The matches the publisher visits on Azure, where no poller remembers them: any with an outbox not done,
+        and any whose match_state changed since `since_ts` (epoch seconds; live player tags and expiry)."""
+        found: set[str] = set()
+        async for m in self.container.query_items(
+                "SELECT VALUE c.match_id FROM c WHERE c.kind = 'insight_outbox' AND c.state != 'done'"):
+            found.add(m)
+        if self.states is not None:
+            async for m in self.states.query_items("SELECT VALUE c.match_id FROM c WHERE c._ts >= @since",
+                                                   parameters=[{"name": "@since", "value": since_ts}]):
+                found.add(m)
+        return sorted(found)
 
 
 # --- jobs ---------------------------------------------------------------------------------------------------------
