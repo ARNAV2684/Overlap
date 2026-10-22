@@ -6,7 +6,7 @@
 | Author / primary owner | Arnav |
 | Status | Done: H1–H5 (H2, H3, H5 in #74; H4 on `agents/functions-packaging`, 23 Oct). Next: Azure sprints A1–A7 on Arnav's go |
 | Reviewed branch and commit | main · 0f11b7d (M4–M7 merged) |
-| Planned branch | `agents/azure-readiness` |
+| Planned branch | `agents/azure-readiness` (H2, H3, H5); `agents/functions-packaging` (H4) |
 | Follows | [`PLAN_agents_insights-build`](PLAN_agents_insights-build.md) M7 (local done); precedes the Azure integration sprints A1–A7 (resources, security and costs specs first) |
 
 ## 1. Why
