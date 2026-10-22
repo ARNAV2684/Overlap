@@ -2,12 +2,15 @@
 //
 // Purpose: run the real socket and store against this app's routes on the local stack until full time,
 //          and check what the screen would have shown: nothing rejected, every message applied once, the badge reaching
-//          "finished", each goal found once, and the scoreboard ending on the server's own final score
+//          "finished", each goal found once, and the scoreboard ending on the server's own final score. With the stats
+//          engine running, also that stat panels arrived, and that a client joining mid-match or at full time through
+//          the snapshot shows the same stats as the one that watched live
 // Inputs:  QA_STREAM=1 (otherwise skipped, so `npm test` and CI never need a server), QA_MATCHES (comma-separated ids,
 //          default SYN-9001), QA_APP_URL (default http://localhost:3000). Start the local stack (generator, relay,
-//          Web PubSub stand-in; infra/specs/local-development.md) and `npm run dev` first
+//          Web PubSub stand-in, stats engine; infra/specs/local-development.md) and `npm run dev` first
 // Outputs: a pass or fail, plus one summary line per match (event types, goals, cards, substitutions)
-// Spec:    web/specs/realtime.md §6. web/IMPLEMENTATION_PLAN.md Phase 10 step 7. Plan AC-03, AC-06
+// Spec:    web/specs/realtime.md §6. web/IMPLEMENTATION_PLAN.md Phase 10 step 7. Plan AC-03, AC-06;
+//          plans/active/PLAN_web_e2e-stats-run.md AC-08
 //
 // Run:     QA_STREAM=1 npx vitest run src/lib/__tests__/stream.qa.test.ts
 // Joining mid-match is fine: the snapshot fills in the history, and totals count history and live rows alike.
