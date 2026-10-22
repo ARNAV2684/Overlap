@@ -10,7 +10,7 @@
 | Review coordinator | Arnav |
 | Affected component owners | Arnav (relay, stand-in, §7.3, local stack docs, CI, mock); Azeem (stat panels, `CONTRACTS.md` §7.4, informed only) |
 | Proposal version and date | v0.2 · 23 Oct 2026 (v0.1 was a scratch draft on 22 Oct, never shared) |
-| Status | Ready for review |
+| Status | In progress · go given 23 Oct (Vedant); building on `web/realtime-routes` |
 | Plan tier and file | Full · `plans/active/PLAN_web_realtime-routes.md` |
 | Repository | [ARNAV2684/Overlap](https://github.com/ARNAV2684/Overlap) |
 | Reviewed branch and commit | `main` · `329153d`; branch `web/realtime-routes` created from it (no commits yet) |
@@ -24,7 +24,7 @@
 | 1 | Keep a direct-to-stream-server mode for the mock? | **No.** Remove the web app's dependency on the mock: no `NEXT_PUBLIC_STREAM_BASE_URL`, no "Mock WebSocket" wording. The `mock/` folder itself is Arnav's and is not touched |
 | 2 | Spec gate for `realtime.md` §1 and §3 | **Agreed in person.** The spec text is written in M0 and the agreement noted in that PR |
 | 3 | Azure | **Local Docker stack only for now.** Azure (Web PubSub resource, hosting, identity, roles) is out of scope. The managed-identity code path is written, mirroring `archive-env.ts`, but **not run** |
-| 4 | Snapshot size at full time | Options and a recommendation are in §6 D-9 and §14. **Unresolved** until Arnav agrees the `CONTRACTS.md` §7.3 wording |
+| 4 | Snapshot size at full time | **Trim in the route (D-9 B), now.** The `CONTRACTS.md` §7.3 sentence is changed in its own commit and needs Arnav's agreement before merge |
 
 ---
 
@@ -148,7 +148,7 @@ merge by seq, continue live (unchanged)
 | D-6 | Settings | New `web/src/lib/server/stream-env.ts`: `OVERLAP_WEBPUBSUB_ENDPOINT`, `OVERLAP_WEBPUBSUB_HUB` (default `live`); `OVERLAP_COSMOS_ENDPOINT`, `OVERLAP_COSMOS_DATABASE` (default `live`), `OVERLAP_COSMOS_KEY` (emulator only), `OVERLAP_COSMOS_CONTAINER` (default `screen`). Returns problems, never throws; values never logged | Same names as the relay and stand-in; the snapshot must not need the archive's Blob setting | Reuse `readArchiveEnv`: would switch the snapshot off without Blob | Proposed |
 | D-7 | Group validation | 1–4 comma-separated groups, each `match-` + `isMatchId`; else `400 bad_groups` | Never sign a token for an arbitrary group | Allow audience patterns now: not needed yet | Proposed |
 | D-8 | Caching | `Cache-Control: no-store` on every response, errors included | Tokens and live state must never be cached | — | Proposed |
-| D-9 | Snapshot size (decision 4) | **Recommended: B, after measuring.** See below | The store keeps only two panels | A and C below | **Unresolved · Arnav** |
+| D-9 | Snapshot size (decision 4) | **B: trim in the route** (decided 23 Oct, before measuring). See below | The store keeps only two panels | A and C below | Agreed by Vedant · §7.3 line pending Arnav |
 | D-10 | Source card wording | "Live WebSocket · Web PubSub hub `live`" instead of "Mock WebSocket · localhost:8787"; `sourceHost()` removed if unused | The browser no longer knows a stream host; the card still says where data comes from | Show the negotiated `baseUrl` host: needs plumbing from `socket.ts` to the UI | Proposed |
 
 **D-9: how the snapshot size can be resolved**
@@ -316,7 +316,7 @@ any token).
 | M1: negotiate | Route, `stream-env.ts`, `pubsub-token.ts`, tests | Vedant | npm dependency | AC-01–03 | 2 h · 23 Oct |
 | M2: snapshot | Route, `screen-store.ts`, `snapshot.ts`, tests; first size measurement | Vedant | — | AC-04, 05, 08 | 2–3 h · 24 Oct |
 | M3: switch and mock removal | `api.ts` same-origin, env, UI wording, README, tests; real local run | Vedant | M1, M2 | AC-06, 07, 09 | 2 h · 24 Oct |
-| M4 (optional): stats trimming | D-9 B in the route + `CONTRACTS.md` line | Vedant | Arnav agrees §7.3; AC-08 over budget | AC-10 | 1–2 h · 24 Oct |
+| M4: stats trimming | D-9 B in the route + `CONTRACTS.md` line | Vedant | Arnav agrees §7.3 before merge | AC-10 | 1–2 h · 24 Oct |
 
 - **Project calendar check:** M0–M3 fit "every required feature by 24 Oct". M4 fits only if Arnav agrees on 24 Oct.
   Otherwise it moves after the freeze (25–26 Oct) or is dropped. The minimum result doesn't need it.
