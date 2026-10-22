@@ -279,4 +279,25 @@ archiver (Cosmos stats) ──▶ replay route ──stats envelope──▶ rep
 
 ### Handover after implementation
 
-Pending implementation.
+**Partial (22 Oct): M1–M4 built and committed on `web/stat-charts` (not pushed, no PR yet); M5 not run.**
+
+- **Implementation PR and commit:** none yet. 13 commits on `web/stat-charts` from main · 329153d, `contracts.ts` alone
+  in "Validate stat panels in the contracts mirror".
+- **Acceptance results** (local, Windows):
+
+| AC | Result | Evidence |
+|---|---|---|
+| AC-01 | Passed | `contracts.test.ts` "stat panels": light and heavy panels accepted; null metrics, missing and unknown fields, grid sizes, negative counts and player keys checked |
+| AC-02 | Passed | `store.test.ts` "stat panels": newest by `match_ms`, late and re-sent panels, history, pause and resume, reset, broken heavy rejected whole |
+| AC-03 | Passed | `stat-charts-view.test.ts` (StatBars) and `stat-charts.test.ts` (statRows) |
+| AC-04 | Passed | `stat-charts.test.ts` (tideSeries, bucketLabel) |
+| AC-05 | Passed | `stat-charts-view.test.ts` (pitch charts, section, fallback) |
+| AC-06 | Passed | `npm run lint` clean; `tsc --noEmit` clean; `npm test` 31 files, 498 passed, 2 opt-in skipped; `npm run build` succeeded |
+| AC-07 | **Not checked** | The local-stack run with a generator match, the reload and the replay of an archived match are still to do; no screenshots yet |
+
+- **Setup and integration instructions:** `web/README.md` (the match stats need the stats consumer on the local stack).
+- **Differences from the agreed plan:** `replay-player.test.ts` and `charts/pitch/TeamPitch.tsx` were added to the file
+  map during the work (recorded above). Before the first heavy panel the tide shows the current spell from the light
+  panel instead of a waiting note (specs updated in the same commit).
+- **Known limitations and follow-up owner:** AC-07 (Vedant). Azeem to confirm the heavy shapes and index order (R-01)
+  and Arnav and Azeem to be told about `contracts.ts` in the PR. Shot map and key events not started.
