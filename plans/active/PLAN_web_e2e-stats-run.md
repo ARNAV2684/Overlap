@@ -268,6 +268,7 @@ Keep screenshots and the trace outside the repo (D-5); paste the results into §
 | R-03 | 20× target missed | AC-11 of the live viewer fails | Vedant | Record numbers; separate performance plan | None |
 | R-04 | Arnav rejects the trimmed snapshot (§7.3) | Reload behaviour changes | Arnav | Re-run AC-02 after the change | None now |
 | R-05 | Existing `.venv` out of date with a lockfile | A service fails to start | Vedant | Then `uv self update` and `uv sync` (D-4 fallback) | M2 |
+| R-06 | **Happened in Run 2 (attempt 1).** The stats engine has no `--from-latest`; its saved `stats` reading positions in Azurite outlive an Event Hubs emulator reset and point past the end of the partitions, so it never reads a new match | No panels anywhere: live, snapshot and archive | Azeem (stats engine); Vedant for this run | Move the `stats` positions to the newest messages before the match, or start from a fresh Azurite; tell Azeem about the missing option | M3 |
 
 **Decisions by Vedant, 23 Oct:**
 
@@ -301,4 +302,19 @@ Keep screenshots and the trace outside the repo (D-5); paste the results into §
 
 ### Handover after implementation
 
-Pending implementation.
+**Partial (23 Oct).**
+
+- **M1 done:** stats checks in `stream.qa.test.ts`. `npm run lint` clean, `npm run typecheck` clean, `npm test` 36
+  files, 529 passed, 2 opt-in skipped.
+- **Run 2 at 20×, attempt 1 (`SYN-4401`, 01:38–01:44):** generator → emulator → relay, archiver, stats engine →
+  Cosmos + stand-in → `next start` on port 3200 (3000 and 3100 were taken by other local servers).
+
+  | ID | Result | Evidence |
+  |---|---|---|
+  | AC-08 | **Fail, cause outside `web/`** | `stream.qa.test.ts`: 2,363 events, 6 goals, final 6–0 at 90+8:37, 0 rejected, badge live → stale → live → finished, all non-stats assertions passed; then `stat panels 0 (0 heavy)` failed `expect(tally.panels).toBeGreaterThan(0)`. The stats engine never read the match (R-06) |
+  | AC-03 (automated) | Replay test passed; stats part **not checked** | `replay.qa.test.ts`: 103 chunks, 2,363 events, 30,619 frames, 0 panels, 0 rejected, final 6–0. No panels to compare |
+  | Snapshot timing | Measured | Full time: 2,375 envelopes, 0 rejected, 202–252 ms |
+
+  Also seen: the badge went stale once mid-match (not investigated); the stats engine re-sent the earlier match
+  `SYN-4201`'s panels on start-up (about 60 s, two throttling retries).
+- **Not yet run:** Run 2 attempt 2 with the `stats` positions fixed; Run 1 browser checklist (AC-01, AC-02, AC-04–AC-07).
