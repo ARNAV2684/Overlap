@@ -3,7 +3,8 @@
 > **Status: merged for review in #19 (16 Oct); not yet marked agreed.** Answers §1 for the **live match screen** and the
 > **match picker**, and adds §5 (checks for the live screen). The **replay screen** in §1 is **written for review**
 > (20 Oct) for [`PLAN_web_replay`](../../plans/active/PLAN_web_replay.md); no replay code exists yet. §1 for recap and
-> how-it-works, and §2 to §4, are **not started**. The picker's move from the mock's list to the match archive
+> how-it-works, and §2 to §4, are **not started**. The **match stats** section of the live and replay screens is
+> **written for review** (22 Oct) for [`PLAN_web_stat-charts`](../../plans/active/PLAN_web_stat-charts.md). The picker's move from the mock's list to the match archive
 > (`/api/matches`) is **written for review** (22 Oct) for
 > [`PLAN_web_match-list`](../../plans/active/PLAN_web_match-list.md). The live screen and the picker are on `main` (#48), checked with unit
 > tests and an end-to-end run against the mock (milestones M4 and M5 of
@@ -43,6 +44,7 @@ _Answer:_
        to at most once every 3 s, and not when only a number changes (`design-system.md` §5);
      - **scoreboard**: home block, centre block, away block (below);
      - **four counters**;
+     - **match stats** (below);
      - **workspace**: the event timeline on the left; the live pitch and message inspector on the right, in an
        `aside` landmark named "Positions and message inspector".
   3. **Footer** (`<footer>`, contentinfo landmark): "Synthetic data · invented clubs and players" and a delivery note.
@@ -93,6 +95,22 @@ Four cards, values with `text-metric numeric`, not live regions (they change too
   and pitch while reception and the scoreboard continue. The timeline panel is about 540 px tall (610 px from 1600 px,
   450 px at 1000 px and below).
 
+### Match stats
+
+- **A section between the counters and the workspace**, fed by the stats engine's panels (`charts.md`, "Charts fed by
+  stat panels"). Two panels side by side from 1000 px (stat bars about 1 fr, momentum tide about 1.2 fr), stacked
+  below; then a full-width pitch panel.
+- **Stat bars panel:** heading "Team stats", subtitle "Every match second" and the panel's clock in mono type.
+- **Momentum panel:** heading "Momentum", subtitle "Weighted actions per 5-minute spell".
+- **Pitch panel:** heading "Team shape", subtitle "Every match minute · starting XI for the pass network" and the
+  heavy panel's clock; a toolbar with two segmented controls, the chart ("Pass network", "Pressing", "Touches") and
+  the team (the two club names); the chart below, at most about 720 px wide, centred. Each control is a radio group
+  with its own name ("Team shape chart", "Team").
+- **States:** before any panel, every panel says "Waiting for the first stat panel."; before the first heavy panel,
+  the tide and pitch panel say "First update at the end of the first minute". `null` values read "Not enough data".
+  The section freezes with the rest of the display while the feed is paused.
+- **Replay:** the same section, fed by the replay player's archived panels.
+
 ### Live pitch and message inspector
 
 - The pitch panel is specified in `charts.md`. The **message inspector** shows the selected (or newest) envelope as
@@ -124,7 +142,7 @@ Plan: [`PLAN_web_replay`](../../plans/active/PLAN_web_replay.md); data and playb
      "Buffering…", "Replay data unavailable." (with a Retry button in the toolbar), "Replay finished.", "This replay
      can't be shown." (with the message card below), plus the live screen's paused and resumed messages for the
      timeline's "pause feed" button.
-  5. **Scoreboard, counters, timeline, pitch and inspector** as on the live screen, fed by the replay player. Timeline
+  5. **Scoreboard, counters, match stats, timeline, pitch and inspector** as on the live screen, fed by the replay player. Timeline
      rows read "Replay · archive" (or "Replay · bundled frame") in the arrival column. The goal flash and announcement
      fire when the playhead reaches a goal.
 - **States:** before the manifest arrives, the live screen's loading fallback with the replay header and the notice
