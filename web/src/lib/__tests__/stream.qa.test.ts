@@ -14,7 +14,7 @@
 
 import { describe, expect, it } from "vitest";
 import { goalBetween, type Score } from "@/components/scoreboard/goal";
-import { listMatches } from "@/lib/api";
+import { getSnapshot } from "@/lib/api";
 import { parseEnvelope, type ParsedEnvelope } from "@/lib/contracts";
 import { createMatchSocket } from "@/lib/socket";
 import { createMatchStore, type ConnectionStatus, type MatchStore } from "@/lib/store";
@@ -89,7 +89,9 @@ describe.skipIf(!ENABLED)("against a running stream", () => {
     "%s: everything accepted, applied once, finished, and the final score matches the server",
     async (matchId) => {
       const { state, tally } = await watchToFullTime(matchId);
-      const server = (await listMatches()).find((m) => m.match_id === matchId);
+      // The server's own final score is its newest status (the match list is this app's route, not the stream's)
+      const { status } = await getSnapshot(matchId);
+      const serverScore = status?.kind === "status" ? status.data.score : undefined;
       const goalsSeen = tally.scores.flatMap((s, i) => (i > 0 && goalBetween(tally.scores[i - 1], s) ? [1] : [])).length;
       const total = [...tally.types.values()].reduce((a, b) => a + b, 0);
 
@@ -104,7 +106,7 @@ describe.skipIf(!ENABLED)("against a running stream", () => {
       expect(state.connection.rejected).toBe(0);
       expect(state.scoreboard.phase).toBe("full_time");
       expect(tally.statuses.at(-1)).toBe("finished");
-      expect(state.scoreboard.score).toEqual(server?.score);
+      expect(state.scoreboard.score).toEqual(serverScore);
       // Each goal in the events changed the published score once (none were lost or doubled)
       expect(goalsSeen).toBeLessThanOrEqual(tally.goals);
       expect(state.scoreboard.score ? state.scoreboard.score.home + state.scoreboard.score.away : 0).toBe(tally.goals);
