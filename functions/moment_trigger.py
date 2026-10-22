@@ -20,7 +20,9 @@ import logging
 import sys
 from pathlib import Path
 
-AGENTS = Path(__file__).resolve().parents[1] / "agents"
+HERE = Path(__file__).resolve().parent
+# In the repository agents/ is a sibling of functions/; in the Functions package (package.py) it sits beside this file
+AGENTS = next((p for p in (HERE / "agents", HERE.parent / "agents") if p.is_dir()), HERE.parent / "agents")
 if AGENTS.is_dir() and str(AGENTS) not in sys.path:
     sys.path.insert(0, str(AGENTS))
 
@@ -88,7 +90,51 @@ async def handle_batch(docs: list[dict], deps=None) -> list[dict]:
     finally:
         if own:
             await deps.store.close()
+            await deps.models.close()
     return results
+
+
+# --- Azure Functions (function_app.py) -----------------------------------------------------------------------------
+# The host runs async functions on one event loop for its lifetime, so one set of dependencies is shared between
+# invocations: the model breaker and budget gate keep their state, and the clients are opened once.
+
+_shared: dict = {}
+
+
+def shared_deps():
+    if "deps" not in _shared:
+        _shared["deps"] = make_deps()
+    return _shared["deps"]
+
+
+async def shared_publisher():
+    if "publisher" not in _shared:
+        _shared["publisher"], _shared["closers"] = await make_publisher(shared_deps().settings)
+    return _shared["publisher"]
+
+
+async def handle_states(docs: list[dict], deps) -> list[dict]:
+    """match_state change feed: the recap for each match whose state says full time. process_recap claims one job
+    per match, so a repeated notification finds it done (agents.md §7)."""
+    from workflow import process_recap
+    matches = sorted({d["match_id"] for d in docs
+                      if isinstance(d, dict) and d.get("phase") == "full_time" and isinstance(d.get("match_id"), str)})
+    results = []
+    for m in matches:
+        result = await process_recap(m, deps)
+        log.info("recap %s: %s", m, result["status"])
+        results.append(result)
+    return results
+
+
+async def publish_pass(publisher, since_ts: int) -> dict[str, int]:
+    """One publisher pass (timer): every match with an outbox not done or a recent match_state change. Locally the
+    poller remembers its matches instead."""
+    totals: dict[str, int] = {}
+    for m in await publisher.moments.matches_to_publish(since_ts):
+        for k, v in (await publisher.run_once(m)).items():
+            totals[k] = totals.get(k, 0) + v
+    return totals
 
 
 async def poll(deps, match_id: str | None = None, interval_s: float = 1.0, once: bool = False,
