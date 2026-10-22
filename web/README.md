@@ -16,7 +16,7 @@ npm run dev                  # http://localhost:3000
 ```
 
 `.env.local` is required: `src/lib/env.ts` throws one message listing every missing or malformed value.
-`package-lock.json` is gitignored, so installs are not pinned.
+`package-lock.json` is committed (`4cb52ee`), so `npm ci` installs the pinned versions.
 
 | Script | What it does |
 |---|---|
@@ -64,6 +64,28 @@ applied once, the badge reaches "finished" and the final score matches the serve
 QA_STREAM=1 QA_MATCHES=SYN-0042 npx vitest run src/lib/__tests__/stream.qa.test.ts
 ```
 
+### Replay an archived match
+
+`/replay/<id>` plays a finished match from the archive on the live screen's panels, at 20× by default (1× and 5× too),
+with pause and resume. `/api/replay/<id>` reads Cosmos and Blob on the server and answers with a manifest, then one
+minute of §7 envelopes per `?chunk=<n>`; the browser loads two minutes ahead
+([`specs/realtime.md`](specs/realtime.md) §5, [`specs/screens.md`](specs/screens.md) §1).
+
+1. Start the local stack with the archiver and the stats engine, then play a match and wait for full time
+   ([`../infra/specs/local-development.md`](../infra/specs/local-development.md), steps 1–7). The mock writes no
+   archive.
+2. Add the archive settings from `web/.env.example` to `web/.env.local`, with the emulator values from
+   `infra/local/env.example`. They are server only and never reach the browser.
+3. `npm run dev`, then pick a finished match on `/`, or open `/replay/<id>` directly.
+
+Without the settings the page says the archive can't be reached (the route answers `503 replay_unavailable`); the live
+screen is unaffected. A match still being played links to its live screen. An opt-in test fetches a whole archived
+match through the real route and checks it against the stored result:
+
+```bash
+QA_REPLAY=1 QA_REPLAY_MATCH=SYN-0501 npx vitest run src/lib/__tests__/replay.qa.test.ts
+```
+
 ## The live screen
 
 | Part | Files | Reads from the store |
@@ -82,6 +104,19 @@ Every panel has a store-free `…View` version, used by the route's loading fall
 Plan and progress: [`IMPLEMENTATION_PLAN.md`](IMPLEMENTATION_PLAN.md) and
 [`../plans/active/PLAN_web_live-match-viewer.md`](../plans/active/PLAN_web_live-match-viewer.md).
 
+## The replay screen
+
+The same panels as the live screen, fed by a replay player instead of the socket.
+
+| Part | Files |
+|---|---|
+| Page, header "/ Replay", intro with the final score, toolbar (Play/Pause, speeds, progress), failure cards | `src/app/replay/[id]/page.tsx`, `src/components/replay/*` |
+| Player: playhead in match time, speeds, prefetch, retries | `src/lib/replay-player.ts`, `src/lib/replay-client.ts` |
+| Route: stored match → manifest and one minute of envelopes | `src/app/api/replay/[id]/route.ts`, `src/lib/replay-envelopes.ts`, `src/lib/server/archive-{env,store}.ts` |
+| Row source ("Replay · archive" on timeline rows) | `src/lib/stream-source.ts` |
+
+Plan, checks and handover: [`../plans/active/PLAN_web_replay.md`](../plans/active/PLAN_web_replay.md).
+
 ## Define before you code
 
 | # | Spec | What it decides | Governs |
@@ -98,7 +133,7 @@ Plan and progress: [`IMPLEMENTATION_PLAN.md`](IMPLEMENTATION_PLAN.md) and
 | `src/app/page.tsx` | Match picker (built) |
 | `src/app/match/[id]/page.tsx` | Live match screen (built) |
 | `src/app/match/[id]/recap/page.tsx` | Full-time recap |
-| `src/app/replay/[id]/page.tsx` | Replay at 1×, 5×, 20× |
+| `src/app/replay/[id]/page.tsx` | Replay at 1×, 5×, 20× (built) |
 | `src/app/how-it-works/page.tsx` | Architecture and agent trace for judges |
 | `src/app/api/*` | Negotiate, snapshot, replay, match list, preferences, start-match |
 | `src/components/charts/*` | Live pitch, momentum tide, shot map, pass network, pressing zones, heatmap zones, stat bars, key events |

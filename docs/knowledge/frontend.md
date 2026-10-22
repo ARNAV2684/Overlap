@@ -1,10 +1,10 @@
 # Frontend
 
-Last verified: 2026-10-20 · source main `36f5d00` · source inspection, not fresh runtime certification.
+Last verified: 2026-10-20 · source main `36f5d00` · source inspection, not fresh runtime certification. Replay parts updated 2026-10-23 against main `3353483`, with a local runtime check.
 
 ## Purpose
 
-Shows live match information, catch-up and eventually replay/insight cards.
+Shows live match information, catch-up, replay of archived matches and eventually insight cards.
 
 ## Ownership
 
@@ -12,11 +12,11 @@ Registry: Vedant. See [registry](../../plans/REGISTRY.md). Team-reported: None b
 
 ## Inputs and outputs
 
-Negotiation and snapshot client + §7 envelopes → validated store and UI. Archive reader is a planned replay dependency; verified overlays are a future insight dependency. See [shared contracts](../../CONTRACTS.md).
+Negotiation and snapshot client + §7 envelopes → validated store and UI. Replay: the server route `/api/replay/<id>` reads the stored match (§4.1: Cosmos `matches`, `events`, `stats`; Blob `tracking`) with server-only settings and turns it into §7 envelopes, one minute per request; the browser plays them into the same store. It reads the archive directly, not through `archiver/reader.py`. Verified overlays are a future insight dependency. See [shared contracts](../../CONTRACTS.md).
 
 ## Implementation and specifications
 
-Source: [`web/src/app/page.tsx`](../../web/src/app/page.tsx), [`web/src/app/match/[id]/page.tsx`](../../web/src/app/match/[id]/page.tsx), [`web/src/components/live/MatchStreamProvider.tsx`](../../web/src/components/live/MatchStreamProvider.tsx), [`web/src/lib/socket.ts`](../../web/src/lib/socket.ts), [`web/src/lib/store.ts`](../../web/src/lib/store.ts), [`web/src/lib/api.ts`](../../web/src/lib/api.ts), [`web/src/app/api/negotiate/route.ts`](../../web/src/app/api/negotiate/route.ts).
+Source: [`web/src/app/page.tsx`](../../web/src/app/page.tsx), [`web/src/app/match/[id]/page.tsx`](../../web/src/app/match/[id]/page.tsx), [`web/src/components/live/MatchStreamProvider.tsx`](../../web/src/components/live/MatchStreamProvider.tsx), [`web/src/lib/socket.ts`](../../web/src/lib/socket.ts), [`web/src/lib/store.ts`](../../web/src/lib/store.ts), [`web/src/lib/api.ts`](../../web/src/lib/api.ts), [`web/src/app/api/negotiate/route.ts`](../../web/src/app/api/negotiate/route.ts). Replay: [`web/src/app/replay/[id]/page.tsx`](../../web/src/app/replay/[id]/page.tsx), [`web/src/components/replay`](../../web/src/components/replay), [`web/src/lib/replay-player.ts`](../../web/src/lib/replay-player.ts), [`web/src/lib/replay-client.ts`](../../web/src/lib/replay-client.ts), [`web/src/app/api/replay/[id]/route.ts`](../../web/src/app/api/replay/[id]/route.ts), [`web/src/lib/replay-envelopes.ts`](../../web/src/lib/replay-envelopes.ts), [`web/src/lib/server`](../../web/src/lib/server).
 
 Specifications: [`web/specs/realtime.md`](../../web/specs/realtime.md), [`web/specs/screens.md`](../../web/specs/screens.md).
 
@@ -24,7 +24,9 @@ Specifications: [`web/specs/realtime.md`](../../web/specs/realtime.md), [`web/sp
 
 Partial implementation: redirect, live page, stream provider, socket/store/API client exist. PR [#48](https://github.com/ARNAV2684/Overlap/pull/48) (merged 19 Oct) added the live pitch, scoreboard, event timeline, message inspector and metric cards. The app-owned negotiate route is still a 501 stub on this main revision, so the browser negotiates with the local stand-in. Insight cards and viewer modes are not built. README descriptions of an empty app are stale; inspect source.
 
-Evidence / checks to inspect: [`web/src/lib`](../../web/src/lib), [`web/IMPLEMENTATION_PLAN.md`](../../web/IMPLEMENTATION_PLAN.md), [`plans/active/PLAN_web_live-match-viewer.md`](../../plans/active/PLAN_web_live-match-viewer.md). Existing recorded tests are attributed to their handover; no runtime suite was re-run for these notes.
+Replay is built and merged (specs, route and page in [#72](https://github.com/ARNAV2684/Overlap/pull/72), the half-time and full-time panels fix in [#75](https://github.com/ARNAV2684/Overlap/pull/75)). Checked on the local stack on 23 Oct against archived `SYN-0501` (6–0): the opt-in route test replays every stored event, frame and panel with 0 rejected, and Chrome plays the match at 20× to full time with the archived score at 375 and 1440 px. Local emulators only; the Azure read path (identity and roles) is not built yet.
+
+Evidence / checks to inspect: [`web/src/lib`](../../web/src/lib), [`web/IMPLEMENTATION_PLAN.md`](../../web/IMPLEMENTATION_PLAN.md), [`plans/active/PLAN_web_live-match-viewer.md`](../../plans/active/PLAN_web_live-match-viewer.md), [`plans/active/PLAN_web_replay.md`](../../plans/active/PLAN_web_replay.md) (replay validation and handover). Existing recorded tests are attributed to their handover; no runtime suite was re-run for these notes.
 
 ## Dependencies
 
@@ -36,7 +38,7 @@ Connections include planned dependencies; status above determines whether a conn
 
 ## Next work
 
-PR #48 is merged. Next: the app's own negotiate route, stat panels from the stats engine (CONTRACTS §7.4, live since #53), insight cards (§10.3) and viewer modes. Validate real relay/browser and API integration before claiming completion.
+PR #48 is merged. Next: the app's own negotiate route, stat panels from the stats engine (CONTRACTS §7.4, live since #53), insight cards (§10.3) and viewer modes. Validate real relay/browser and API integration before claiming completion. Replay next: read roles for the web app on Azure (archiver plan A3 / S4), then a run against Azure storage.
 
 ## Work and coordination record
 
