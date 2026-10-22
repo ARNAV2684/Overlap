@@ -9,8 +9,8 @@
 | Collaborators and responsibilities | None editing. Services run unchanged: Azeem (stats engine `stats/`, generator `generator/`); Arnav, Pranav helping (screen relay and archiver in `functions/` and `archiver/`, Web PubSub stand-in and emulators in `infra/local/`) |
 | Review coordinator | Arnav |
 | Affected component owners | Azeem (told the result: his panels on screen, and whether the heavy shapes passed the web's strict schema, `PLAN_web_stat-charts` R-01); Arnav (told the result for the relay, archiver and stand-in) |
-| Proposal version and date | v0.1 · 23 Oct 2026 |
-| Status | Draft |
+| Proposal version and date | v0.2 · 23 Oct 2026 (v0.1 → v0.2: Vedant's decisions D-2, D-4, D-7 and go) |
+| Status | In progress · go given 23 Oct |
 | Plan tier and file | Full · `plans/active/PLAN_web_e2e-stats-run.md` (full because the run spans layers 1–7, though only `web/` and plan files change) |
 | Repository | [ARNAV2684/Overlap](https://github.com/ARNAV2684/Overlap) |
 | Reviewed branch and commit | `main` · `3353483`. Branch `web/e2e-stats-run` created from `web/realtime-routes` · `e0f12a1` (unmerged, PR not opened), on Vedant's instruction, because the run needs its negotiate and snapshot routes |
@@ -118,10 +118,11 @@ generator live ─▶ Event Hubs emulator ─┬─▶ stats engine (group stats
 | Decision | Proposed choice | Reason | Credible alternative and tradeoff | Status / person needed |
 |---|---|---|---|---|
 | D-1 Speeds | Run 1 at 5× (≈ 19 min) for watching, reloads, restart, keyboard and screenshots; Run 2 at 20× (≈ 5 min) for the trace, the QA test and replay | 5× leaves time for manual steps mid-match; AC-11 is defined at 20× | One 20× run: too short for the manual steps | Proposed · Vedant |
-| D-2 Proving "same numbers after a reload" | Automated: `stream.qa.test.ts` joins a second client mid-match through the snapshot and checks its `stats` envelopes equal the live client's at the same `seq`, and that both stores end with equal `stats` slices at full time. Manual: two windows side by side, one open since kickoff and one reloaded, plus a reload at full time | Live numbers move every match second, so a screenshot alone can't prove equality mid-match | Screenshots only: weak evidence | Proposed · Vedant |
+| D-2 Proving "same numbers after a reload" | Automated: `stream.qa.test.ts` joins a second client mid-match through the snapshot and checks its `stats` envelopes equal the live client's at the same `seq`, and that both stores end with equal `stats` slices at full time. Run **only in Run 2 (20×)**, together with the replay check, by a separate background agent so other work continues. Manual: two windows side by side, one open since kickoff and one reloaded, plus a reload at full time | Live numbers move every match second, so a screenshot alone can't prove equality mid-match | Screenshots only: weak evidence | **Agreed** · Vedant, 23 Oct |
 | D-3 Restart target | Stop and restart the stand-in (the stream server) mid-match in Run 1; restarting `npm run dev` is optional | The stand-in is what the mock was in AC-05; the relay already tolerates it being down | Restart the Cosmos emulator: breaks the relay too | Proposed · Vedant |
-| D-4 uv version | Use the existing virtual environments (`.venv`) as on 23 Oct, without `uv sync` | No tooling change on the laptop; the environments ran the same programs yesterday | `uv self update` to ≥ 0.13.4: cleaner, changes the machine | Proposed · Vedant |
+| D-4 uv version | Use the existing virtual environments (`.venv`) as on 23 Oct, without `uv sync` | No tooling change on the laptop; the environments ran the same programs yesterday | `uv self update` to ≥ 0.13.4: cleaner, changes the machine | **Agreed** · Vedant, 23 Oct |
 | D-5 Where evidence lives | Screenshots and the trace outside the repo, attached to the PR; text results in the plans | The repo tracks no images | Commit images: bloats history | Proposed · Vedant |
+| D-7 Where the results land | Merge this branch into `web/realtime-routes` before its PR is opened, so the evidence ships in that PR | One PR with the routes and their real run; no second review | Own PR after realtime-routes merges: smaller PR, later evidence | **Agreed** · Vedant, 23 Oct |
 | D-6 When a check fails | Record the failure with evidence and stop that check; any fix becomes a separate plan | Keeps this branch to evidence and one test file | Fix inline: breaks the scope guard and mixes owners | Proposed · Vedant |
 
 **Assumptions:** the heavy panels the stats engine sends today pass the web's strict schema (checked by AC-01: the
@@ -216,16 +217,16 @@ is the only screen reader checked. The snapshot rule is the trimmed one (D-9 B) 
 
 ## 13. Integration and change management
 
-- **Proposed branch / PR boundaries:** `web/e2e-stats-run` from `web/realtime-routes` · `e0f12a1`. Commits: the QA
-  test; then one commit for all plan result edits. Open the PR only after realtime-routes merges and `main` is merged
-  in, so the diff shows only this plan's files (D-7, §14).
+- **Proposed branch / PR boundaries:** `web/e2e-stats-run` from `web/realtime-routes` · `e0f12a1`, in about 12 small
+  commits (Vedant, 23 Oct): the plan, the QA test step by step, then one commit per plan whose results change. The
+  branch is merged into `web/realtime-routes` before that PR is opened (D-7), so there is no separate PR.
 - **Shared-file coordination:** no hot file touched.
 - **Conflict scan result** (23 Oct, `main` · `3353483`; `git fetch --all`, every local, `origin` and `fork` branch
   diffed against `main` for this file map, active plans read, worktrees checked):
 
 | Overlapping file or contract | Other plan / PR / branch | Its owner | Resolution (order, split, or agreed shared edit) | Status |
 |---|---|---|---|---|
-| `web/src/lib/__tests__/stream.qa.test.ts`, `PLAN_web_realtime-routes.md`, `PLAN_web_stat-charts.md` | `web/realtime-routes` (this branch's base; unmerged, no PR) | Vedant | **Order:** realtime-routes merges first; this branch merges `main` before its PR. If realtime-routes changes these files again, merge it into this branch at once. Plan edits stay in one final commit | Agreed (same owner) |
+| `web/src/lib/__tests__/stream.qa.test.ts`, `PLAN_web_realtime-routes.md`, `PLAN_web_stat-charts.md` | `web/realtime-routes` (this branch's base; unmerged, no PR) | Vedant | **Merge into it** (D-7) before its PR opens. If realtime-routes changes these files first, merge it into this branch, then merge back | Agreed (same owner) |
 | `PLAN_web_live-match-viewer.md` | No other branch or plan changes it | Vedant | — | Clear |
 | `stats/`, `functions/`, `archiver/`, `generator/`, `infra/local/` (run, not edited) | `PLAN_stats_engine`, `PLAN_functions_screen-relay`, `PLAN_archiver_archive-flow`, `PLAN_generator_match-engine` | Azeem, Arnav | Read and run only; tell owners the results | Clear |
 | `CONTRACTS.md` §7.3 (relied on, not edited) | `PLAN_web_realtime-routes` M4 | Arnav | No edit here; AC-02 re-run if the sentence changes | Pending · Arnav |
@@ -246,19 +247,16 @@ is the only screen reader checked. The snapshot rule is the trimmed one (D-9 B) 
 | ID | Risk, assumption, or unresolved decision | Consequence if wrong or delayed | Owner / decision maker | Resolution or fallback | Blocks which work? |
 |---|---|---|---|---|---|
 | R-01 | Heavy panel shapes differ from the web schema (`PLAN_web_stat-charts` R-01, unconfirmed by Azeem) | Every heavy panel rejected; pitch charts and tide empty | Azeem | Record the path; separate fix plan (D-6) | AC-01–AC-03 pitch charts |
-| R-02 | Branch built on unmerged `web/realtime-routes` | PR shows realtime-routes' commits too | Vedant | Open the PR after it merges (D-7) | M4 PR |
+| R-02 | Branch built on unmerged `web/realtime-routes` | Two branches drift apart | Vedant | Merge into it before its PR (D-7) | M4 |
 | R-03 | 20× target missed | AC-11 of the live viewer fails | Vedant | Record numbers; separate performance plan | None |
 | R-04 | Arnav rejects the trimmed snapshot (§7.3) | Reload behaviour changes | Arnav | Re-run AC-02 after the change | None now |
 | R-05 | Existing `.venv` out of date with a lockfile | A service fails to start | Vedant | Then `uv self update` and `uv sync` (D-4 fallback) | M2 |
 
-**Decisions requested from Vedant:**
+**Decisions by Vedant, 23 Oct:**
 
-1. **D-7 Where the results land:** (A, recommended) this branch's own small PR after realtime-routes merges; or (B)
-   merge this branch into `web/realtime-routes` before its PR opens, so the evidence ships with it in one PR. B is
-   quicker but makes that PR larger.
-2. **D-2 QA test stats checks:** keep them (recommended: the only proof of equal numbers mid-match), or record manual
-   evidence only.
-3. **D-4 uv:** existing environments (recommended), or update uv first.
+1. **D-7:** merge into `web/realtime-routes` before its PR is opened. **Agreed.**
+2. **D-2:** keep the QA stats checks, run only in the 20× run with replay, by a separate background agent. **Agreed.**
+3. **D-4:** existing virtual environments. **Agreed.**
 
 ## 15. Review, agreement, and handover
 
@@ -278,11 +276,11 @@ is the only screen reader checked. The snapshot rule is the trimmed one (D-9 B) 
 
 | Reviewer | Proposal version | Finding / required change | Outcome | Date and reference |
 |---|---|---|---|---|
-| Vedant | v0.1 | — | Pending | — |
+| Vedant | v0.1 → v0.2 | Merge into realtime-routes; QA stats checks only at 20× with replay, in a background agent; existing venvs; about 12 short commits | Go given | 23 Oct · this conversation |
 
-**Implementation readiness:** waiting for go and decisions D-2, D-4, D-7.  
+**Implementation readiness:** go given 23 Oct with D-2, D-4, D-7.  
 **Relevant specification agreement:** no spec changes; relies on `web/specs/realtime.md` §6 as on `web/realtime-routes`.  
-**Next action and owner:** decide D-2, D-4, D-7 and say go · Vedant.
+**Next action and owner:** M1, then Run 2 in the background, then Run 1 at the browser · Vedant.
 
 ### Handover after implementation
 
