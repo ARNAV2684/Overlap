@@ -433,7 +433,10 @@ any token).
   - `socket.ts` and `contracts.ts` still mention the mock in comments (left out of the diff on purpose, §8).
 - **Known limitations and follow-up:**
   - Azure not run (decision 3): managed identity, real token generation and role enforcement unproven · Vedant, Arnav.
-  - The live run did not include the stats engine, so live panels were checked on stored data only (`SYN-0501`).
+  - ~~The live run did not include the stats engine~~ Closed 23 Oct by `PLAN_web_e2e-stats-run`: `SYN-4402` at 20×
+    with the stats engine through these routes, 6,125 panels, 0 rejected; the trimmed snapshot (1 panel at full time,
+    1.27–1.58 s) gave a late joiner and a full-time reload the same stats as the live client, and replay matched.
+    The stats engine had to have its saved `stats` positions moved first (it has no `--from-latest`; tell Azeem).
   - The repo pins `uv` ≥ 0.13.4; this laptop has 0.13.1, so the stand-in and relay were started from their existing
     virtual environments.
   - Snapshot responses are not compressed; worth checking on Azure hosting · Vedant.
