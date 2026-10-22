@@ -4,7 +4,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { ApiError, createApiClient, createMatchListClient } from "@/lib/api";
 import { envelope, makeEvent, makeFrame, makeSetup } from "./fixtures";
 
-// A small fake of the stream server (the mock). Each test sets `respond` to say what it should answer.
+// A small fake of this app's routes. Each test sets `respond` to say what it should answer.
 type Handler = (req: IncomingMessage, res: ServerResponse) => void;
 let respond: Handler;
 let seenHeaders: IncomingMessage["headers"] = {};
@@ -55,6 +55,7 @@ describe("negotiate", () => {
     respond = (_req, res) => json(res, { baseUrl: "ws://x/client/hubs/live", url: "ws://x/client/hubs/live?t=1", token: "tok" });
     const result = await client().negotiate(["match-SYN-0042", "match-SYN-0042-casual-en"]);
     expect(result).toEqual({ baseUrl: "ws://x/client/hubs/live", url: "ws://x/client/hubs/live?t=1", token: "tok" });
+    expect(new URL(seenUrl, baseUrl).pathname).toBe("/api/negotiate");
     expect(new URL(seenUrl, baseUrl).searchParams.get("groups")).toBe("match-SYN-0042,match-SYN-0042-casual-en");
   });
 
@@ -228,7 +229,7 @@ describe("failures", () => {
     });
     expect(await failure(createApiClient(deadUrl, 2000).negotiate(["g"]))).toMatchObject({
       kind: "network",
-      message: "negotiate: cannot reach the stream server",
+      message: "negotiate: cannot reach this app's stream routes",
     });
   });
 
@@ -256,7 +257,7 @@ describe("failures", () => {
 
 describe("CORS safety", () => {
   it("sends no custom request headers, so a browser needs no preflight", async () => {
-    // The mock answers no CORS preflight, so any header that is not CORS-safelisted would block the call.
+    // Same origin today, but a header that is not CORS-safelisted would make any cross-origin use need a preflight.
     respond = (_req, res) => json(res, { baseUrl: "a", url: "b", token: "c" });
     await client().negotiate(["g"]);
     const names = Object.keys(seenHeaders);

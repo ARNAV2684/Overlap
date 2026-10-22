@@ -40,7 +40,7 @@ describe("LiveMatchView", () => {
     const html = visible(live());
     expect(html).toContain("Connecting");
     expect(html).toContain(notices.connecting);
-    expect(html).toContain("Mock WebSocket");
+    expect(html).toContain("Live WebSocket");
   });
 
   it("throws outside a MatchStreamProvider", () => {

@@ -6,9 +6,8 @@ import { AppHeader, AppHeaderView } from "@/components/layout/AppHeader";
 import { AppShell } from "@/components/layout/AppShell";
 import { IntroHero } from "@/components/layout/IntroHero";
 import { NoticeBar, NoticeBarView } from "@/components/layout/NoticeBar";
-import { SourceCard, sourceHost } from "@/components/layout/SourceCard";
+import { SourceCard } from "@/components/layout/SourceCard";
 import { MatchStreamProvider } from "@/components/live/MatchStreamProvider";
-import { env } from "@/lib/env";
 import { notices } from "@/lib/store";
 
 const Provider = MatchStreamProvider as ComponentType<{ matchId: string; children?: ReactNode }>;
@@ -61,16 +60,17 @@ describe("IntroHero", () => {
 });
 
 describe("SourceCard", () => {
-  it("shows host and port only", () => {
-    expect(sourceHost("http://localhost:8787")).toBe("localhost:8787");
-    expect(sourceHost("https://example.webpubsub.azure.com/")).toBe("example.webpubsub.azure.com");
-    expect(sourceHost("not a url")).toBe("not a url");
+  it("defaults to the live WebSocket through Web PubSub", () => {
+    const html = render(createElement(SourceCard));
+    expect(html).toContain("Live WebSocket");
+    expect(html).toContain("Web PubSub hub live");
+    expect(html).not.toContain("Mock");
   });
 
-  it("defaults to the configured stream server", () => {
-    const html = render(createElement(SourceCard));
-    expect(html).toContain("Mock WebSocket");
-    expect(html).toContain(sourceHost(env.streamBaseUrl));
+  it("takes another label and channel", () => {
+    const html = render(createElement(SourceCard, { label: "Archive", channel: "Cosmos" }));
+    expect(html).toContain("Archive");
+    expect(html).toContain("Cosmos");
   });
 });
 

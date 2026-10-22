@@ -3,7 +3,7 @@ import { loadEnv } from "vite";
 import { defineConfig } from "vitest/config";
 
 const root = fileURLToPath(new URL(".", import.meta.url));
-const REQUIRED = ["NEXT_PUBLIC_STREAM_BASE_URL", "NEXT_PUBLIC_DEFAULT_MATCH_ID"] as const;
+const REQUIRED = ["NEXT_PUBLIC_DEFAULT_MATCH_ID"] as const;
 
 export default defineConfig(({ mode }) => {
   // The settings come from .env.local, the same file `npm run dev` reads. Vite's loader is used because Next's own

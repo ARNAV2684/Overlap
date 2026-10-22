@@ -231,7 +231,7 @@ export default function DevUiPage() {
           </Panel>
           <Panel>
             <PanelHeader title="Live positions" subtitle="Latest received tracking frame" action={<Tag>62:14.200</Tag>} />
-            <EmptyState title="Waiting for your first message…" hint="Start the mock stream to see data here." />
+            <EmptyState title="Waiting for your first message…" hint="Start the local stack to see data here." />
           </Panel>
         </div>
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">

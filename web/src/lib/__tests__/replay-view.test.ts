@@ -57,7 +57,7 @@ describe("ReplayMatchView: first render", () => {
       expect(shown).toContain(words);
     }
     expect(shown).not.toContain("Live stream");
-    expect(shown).not.toContain("Mock WebSocket");
+    expect(shown).not.toContain("Live WebSocket");
   });
 
   it("puts the replay controls between the notice line and the scoreboard, disabled until the manifest loads", () => {

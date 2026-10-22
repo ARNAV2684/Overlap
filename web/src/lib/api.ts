@@ -1,23 +1,17 @@
 // api.ts — Stream API client
 //
-// Purpose: the HTTP calls the viewer makes: negotiate and snapshot to the stream server (the mock or the local
-//          stand-in), and the match list to this app's own route. Every response is validated; every failure becomes
-//          an ApiError
-// Inputs:  the stream base URL (src/lib/env.ts), match ids, group names
+// Purpose: the HTTP calls the viewer makes, all to this app's own routes: negotiate, snapshot and the match list.
+//          Every response is validated; every failure becomes an ApiError
+// Inputs:  match ids, group names
 // Outputs: negotiate(), getSnapshot(), listMatches(), createApiClient(), createMatchListClient(), ApiError
-// Spec:    web/IMPLEMENTATION_PLAN.md Phase 4.2; web/specs/realtime.md §5.3 (match list). The negotiate response is
-//          PROVISIONAL (from the mock: mock/README.md)
+// Spec:    web/specs/realtime.md §1.1 (negotiate), §3.1 (snapshot), §5.3 (match list). Plan:
+//          plans/active/PLAN_web_realtime-routes.md
 //
-// No custom request headers on purpose: the mock allows any origin but answers no CORS preflight, and a header such
-// as Cache-Control would trigger one and block the call from the browser. The snapshot response carries no cache
-// validators, so the browser does not reuse it.
-//
-// Real Azure: negotiate must go through this app's own route (src/app/api/negotiate/route.ts, managed identity,
-// server side). negotiate() is the one place to switch. Never log the negotiate token.
+// Same origin: the base URL is empty in the browser; tests pass a fake server's address. No custom request headers,
+// so nothing here depends on CORS. The routes answer with Cache-Control: no-store. Never log the negotiate token.
 
 import axios, { isAxiosError, isCancel, type AxiosInstance } from "axios";
 import { z } from "zod";
-import { env } from "@/lib/env";
 import {
   matchSetupSchema,
   parseEnvelope,
@@ -74,11 +68,11 @@ function toApiError(error: unknown, what: string, server: string): ApiError {
 }
 
 // ---------------------------------------------------------------------------------------------------------------
-// Response shapes (negotiate is PROVISIONAL: it describes the mock's endpoint, not CONTRACTS.md; the match list's
-// shape lives in match-list.ts, shared with its route)
+// Response shapes (negotiate: realtime.md §1.1; snapshot: CONTRACTS.md §7.3; the match list's shape lives in
+// match-list.ts, shared with its route)
 // ---------------------------------------------------------------------------------------------------------------
 
-/** `GET /negotiate`: what the Web PubSub SDK returns. `url` is the WebSocket address to open; `token` is a secret. */
+/** `GET /api/negotiate`: what the Web PubSub SDK returns. `url` is the WebSocket address to open; `token` is a secret. */
 export const negotiateResponseSchema = z.strictObject({
   baseUrl: z.string().min(1),
   url: z.string().min(1),
@@ -88,8 +82,8 @@ export type NegotiateResponse = z.infer<typeof negotiateResponseSchema>;
 
 /**
  * `GET /api/match/{id}/snapshot` as sent (CONTRACTS.md §7.3). The envelopes are checked one by one afterwards, so one
- * bad message does not hide the rest. `rejected` counts envelopes the server itself left out; the relay's stand-in
- * always sends it, the mock does not.
+ * bad message does not hide the rest. `rejected` counts envelopes the server itself left out; the route always sends
+ * it, so it is optional only for older servers.
  */
 const rawSnapshotSchema = z.strictObject({
   match_id: z.string().regex(/^SYN-\d{4}$/),
@@ -167,12 +161,13 @@ function createGet(baseURL: string, timeoutMs: number, server: string): Get {
   };
 }
 
-export function createApiClient(baseURL: string, timeoutMs = 7000): ApiClient {
-  const get = createGet(baseURL, timeoutMs, "the stream server");
+/** Negotiate and snapshot from this app's own routes. `baseURL` is empty in the browser (same origin). */
+export function createApiClient(baseURL = "", timeoutMs = 7000): ApiClient {
+  const get = createGet(baseURL, timeoutMs, "this app's stream routes");
 
   return {
     negotiate: (groups, signal) =>
-      get("negotiate", "/negotiate", negotiateResponseSchema, signal, { groups: groups.join(",") }),
+      get("negotiate", "/api/negotiate", negotiateResponseSchema, signal, { groups: groups.join(",") }),
 
     async getSnapshot(matchId, signal) {
       const raw = await get(
@@ -212,10 +207,7 @@ export function createApiClient(baseURL: string, timeoutMs = 7000): ApiClient {
   };
 }
 
-/**
- * The match list comes from this app's own route, not the stream server. `baseURL` is empty in the browser (same
- * origin); tests pass a fake server's address.
- */
+/** The match list from this app's own route. `baseURL` is empty in the browser (same origin). */
 export function createMatchListClient(baseURL = "", timeoutMs = 7000): MatchListClient {
   const get = createGet(baseURL, timeoutMs, "this app's match list");
   return {
@@ -223,7 +215,7 @@ export function createMatchListClient(baseURL = "", timeoutMs = 7000): MatchList
   };
 }
 
-/** The client for the configured stream server. */
-export const api = createApiClient(env.streamBaseUrl);
+/** The clients the app uses: same origin. */
+export const api = createApiClient();
 export const { negotiate, getSnapshot } = api;
 export const { listMatches } = createMatchListClient();

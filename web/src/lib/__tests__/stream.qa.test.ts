@@ -1,11 +1,11 @@
 // stream.qa.test.ts — End-to-end check against a running stream (opt-in)
 //
-// Purpose: run the real socket and store against the stream server (the mock or the local stand-in) until full time,
+// Purpose: run the real socket and store against this app's routes on the local stack until full time,
 //          and check what the screen would have shown: nothing rejected, every message applied once, the badge reaching
 //          "finished", each goal found once, and the scoreboard ending on the server's own final score
 // Inputs:  QA_STREAM=1 (otherwise skipped, so `npm test` and CI never need a server), QA_MATCHES (comma-separated ids,
-//          default SYN-9001), NEXT_PUBLIC_STREAM_BASE_URL from .env.local. Start the stream first, for example:
-//          uv run python -m overlap_mock.cli play --match all --speed 60 --hubs off --web --linger-s 600
+//          default SYN-9001), QA_APP_URL (default http://localhost:3000). Start the local stack (generator, relay,
+//          Web PubSub stand-in; infra/specs/local-development.md) and `npm run dev` first
 // Outputs: a pass or fail, plus one summary line per match (event types, goals, cards, substitutions)
 // Spec:    web/specs/realtime.md §6. web/IMPLEMENTATION_PLAN.md Phase 10 step 7. Plan AC-03, AC-06
 //
@@ -14,13 +14,16 @@
 
 import { describe, expect, it } from "vitest";
 import { goalBetween, type Score } from "@/components/scoreboard/goal";
-import { getSnapshot } from "@/lib/api";
+import { createApiClient } from "@/lib/api";
 import { parseEnvelope, type ParsedEnvelope } from "@/lib/contracts";
 import { createMatchSocket } from "@/lib/socket";
 import { createMatchStore, type ConnectionStatus, type MatchStore } from "@/lib/store";
 
 const ENABLED = process.env.QA_STREAM === "1";
 const MATCHES = (process.env.QA_MATCHES ?? "SYN-9001").split(",").map((id) => id.trim());
+/** The running app: negotiate and snapshot are its own routes (realtime.md §1.1, §3.1). */
+const APP_URL = process.env.QA_APP_URL ?? "http://localhost:3000";
+const { negotiate, getSnapshot } = createApiClient(APP_URL);
 /** Longest a match may take: about 5 minutes at 20×, so 10 minutes leaves room for slower runs. */
 const RUN_LIMIT_MS = 10 * 60_000;
 
@@ -64,7 +67,7 @@ async function watchToFullTime(matchId: string) {
     if (tally.statuses.at(-1) !== connection.status) tally.statuses.push(connection.status);
     if (tally.scores.at(-1) !== scoreboard.score) tally.scores.push(scoreboard.score);
   });
-  const socket = createMatchSocket(tallying(store, tally));
+  const socket = createMatchSocket(tallying(store, tally), { negotiate, getSnapshot });
   socket.start();
   try {
     await new Promise<void>((resolve, reject) => {
