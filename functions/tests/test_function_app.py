@@ -2,9 +2,8 @@
 import json
 
 import azure.functions as func
-from azure.functions import meta
-
 import function_app as A
+from azure.functions import meta
 
 
 def batch(bodies: list[dict], props: list[dict]) -> list[func.EventHubEvent]:

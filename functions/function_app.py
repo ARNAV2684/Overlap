@@ -26,7 +26,6 @@ import typing
 from pathlib import Path
 
 import azure.functions as func
-
 import screen_relay as R
 from relay_store import from_env
 
