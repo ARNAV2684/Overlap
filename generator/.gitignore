@@ -4,4 +4,3 @@
 
 # Local environment
 .venv/
-uv.lock

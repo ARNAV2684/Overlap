@@ -36,3 +36,6 @@ markers = ["cosmos: opt-in local Cosmos emulator integration"]
 
 [tool.ruff]
 line-length = 110
+
+[tool.uv]
+required-version = ">=0.13.4"   # one uv for everyone: the lockfile format follows the uv version

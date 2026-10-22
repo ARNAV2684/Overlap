@@ -90,7 +90,20 @@ Adopted as each layer's code lands:
 
 | Area | Tooling |
 |---|---|
-| Python (generator, stats, archiver, agents, MCP server, Functions) | Python 3.12, `uv`, `ruff`, `pytest` |
-| Web app | Next.js (App Router), TypeScript |
+| Python (generator, stats, archiver, agents, MCP server, Functions) | Python 3.12, `uv` **0.13.4**, `ruff`, `pytest` |
+| Web app | Next.js (App Router), TypeScript, Node 22 |
 | Infrastructure | `azd` + Bicep |
 | CI | GitHub Actions on every PR (see "Checks on every PR") |
+
+### Lockfiles
+
+Every project commits its lockfile, so laptops, CI and the Azure build install exactly the versions that were
+tested: `uv.lock` in each Python project, `web/package-lock.json` for the web app.
+
+- **One `uv` for everyone:** 0.13.4 (`uv self update 0.13.4`). Each `pyproject.toml` sets `required-version`, so an
+  older `uv` refuses to run instead of rewriting a lockfile in an older format; CI pins the same version.
+- **Changing dependencies:** edit `pyproject.toml`, run `uv lock` in that project, commit both files together. CI
+  runs `uv sync --locked`, so a lockfile that doesn't match its `pyproject.toml` fails the pull request.
+- **Web:** after changing `package.json`, run `npm install` and commit `package-lock.json`; CI uses `npm ci`.
+- A lockfile written in an older format is upgraded the first time `uv lock` actually changes it; that's expected,
+  once.
