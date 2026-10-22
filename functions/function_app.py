@@ -1,5 +1,5 @@
-"""Azure Functions app (Python v2 model): the screen relay and the archiver.
-Specs: functions/specs/screen-relay.md §5, archiver/specs/storage.md §5.
+"""Azure Functions app (Python v2 model): the screen relay, the archiver and the insight agents.
+Specs: functions/specs/screen-relay.md §5, archiver/specs/storage.md §5, functions/specs/moment-trigger.md.
 
 Two Event Hubs triggers (one per hub, consumer group `relay`) feed the same core as the local runner; a timer flushes
 open frame bundles and drops messages held too long for a setup. Settings (app settings on Azure):
@@ -9,10 +9,12 @@ open frame bundles and drops messages held too long for a setup. Settings (app s
   OVERLAP_COSMOS_*, OVERLAP_WEBPUBSUB_*   see relay_store.py
   OVERLAP_ARCHIVER_CONSUMER_GROUP (archiver), OVERLAP_ARCHIVE_BLOB_ENDPOINT   see archiver/tracking_chunks.py
 
-The archiver's code lives in archiver/; the deployment package copies it next to this file. Locally it is imported
-from the repository.
+The archiver's, agents' and MCP server's code lives in archiver/, agents/ and mcp_server/; the deployment package
+(package.py) puts those folders beside this file. In the repository they are siblings of functions/.
 
-The moment trigger (functions/moment_trigger.py) is added here by the insight flow.
+Insights: a new moment starts the agents (Cosmos change feed on `moments`), a match_state at full time starts the
+recap (change feed on `match_state`), and a timer publishes cards and player tags. COSMOS is the Cosmos connection
+(locally the emulator's connection string; on Azure COSMOS__accountEndpoint with managed identity).
 """
 
 from __future__ import annotations
@@ -26,7 +28,8 @@ import azure.functions as func
 import screen_relay as R
 from relay_store import from_env
 
-_ARCHIVER = Path(__file__).resolve().parent.parent / "archiver"
+HERE = Path(__file__).resolve().parent
+_ARCHIVER = next((p for p in (HERE / "archiver", HERE.parent / "archiver") if p.is_dir()), HERE.parent / "archiver")
 if _ARCHIVER.is_dir() and str(_ARCHIVER) not in sys.path:
     sys.path.append(str(_ARCHIVER))
 
@@ -129,16 +132,38 @@ def archive_tracking(events: list[func.EventHubEvent]) -> None:
     _archive(R.TRACKING_HUB, events)
 
 
-# --- Insight agents (layer 5): a new moment starts the workflow. The agents' code is imported only inside this
-# function, so a missing agents dependency can only affect this trigger, never the relay or the archiver above.
+# --- Insight agents (layer 5). The agents' code is imported only inside these functions, so a missing agents
+# dependency can only affect them, never the relay or the archiver above. They are async: the host runs them on one
+# event loop, so they share one set of dependencies (moment_trigger.shared_deps) and the model breaker's state.
+
+PUBLISH_WINDOW_S = 600       # matches whose match_state changed this recently get player tags and expiry checks
+
 
 @app.function_name("moment_trigger")
 @app.cosmos_db_trigger(arg_name="docs", connection="COSMOS", database_name="%OVERLAP_COSMOS_DATABASE%",
                        container_name="moments", lease_container_name="leases",
                        create_lease_container_if_not_exists=True)
-def moment_trigger(docs: func.DocumentList) -> None:
-    import asyncio
+async def moment_trigger(docs: func.DocumentList) -> None:
+    import moment_trigger as insights
+    results = await insights.handle_batch([d.to_dict() for d in docs], insights.shared_deps())
+    log.info("moment trigger: %d moments, %s", len(results), [r.get("status") for r in results])
+
+
+@app.function_name("recap_trigger")
+@app.cosmos_db_trigger(arg_name="docs", connection="COSMOS", database_name="%OVERLAP_COSMOS_DATABASE%",
+                       container_name="match_state", lease_container_name="leases", lease_container_prefix="recap-",
+                       create_lease_container_if_not_exists=True)
+async def recap_trigger(docs: func.DocumentList) -> None:
+    import moment_trigger as insights
+    await insights.handle_states([d.to_dict() for d in docs], insights.shared_deps())
+
+
+@app.function_name("insights_publisher")
+@app.timer_trigger(arg_name="timer", schedule="*/1 * * * * *", run_on_startup=False)
+async def insights_publisher(timer: func.TimerRequest) -> None:
+    import time
 
     import moment_trigger as insights
-    results = asyncio.run(insights.handle_batch([d.to_dict() for d in docs]))
-    log.info("moment trigger: %d moments, %s", len(results), [r.get("status") for r in results])
+    totals = await insights.publish_pass(await insights.shared_publisher(), int(time.time()) - PUBLISH_WINDOW_S)
+    if totals:
+        log.info("insights publisher: %s", totals)
