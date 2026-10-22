@@ -4,7 +4,7 @@
 //          deserve emphasis (goals, cards, substitutions). A port of the demo's describe()
 // Inputs:  a validated MatchEvent, and a function that gives a player's name from an id
 // Outputs: { title, detail, emphasis? }
-// Spec:    web/IMPLEMENTATION_PLAN.md Phase 4.3
+// Spec:    vedant-frontend/web/IMPLEMENTATION_PLAN.md Phase 4.3
 //
 // Text only: the numbers shown here come from the event itself. Nothing is calculated.
 

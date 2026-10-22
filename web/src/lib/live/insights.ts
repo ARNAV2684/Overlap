@@ -4,7 +4,7 @@
 //          in order without duplicates, and decide which card is on screen for the current playhead
 // Inputs:  envelopes from the audience group (live) and its snapshot (catch-up)
 // Outputs: parseInsight(), createInsightFeed(), createGroupSocket()
-// Spec:    web/specs/realtime.md §6; web/specs/screens.md §4
+// Spec:    web/specs/realtime.md §4; web/specs/screens.md §4
 //
 // The relay stays the only sender on match-<id>; the publisher is the only sender on the audience groups, with its
 // own seq per group. Cards dedupe by overlay_id, so a reconnect or a snapshot never shows the same card twice.

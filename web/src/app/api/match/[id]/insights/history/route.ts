@@ -3,7 +3,7 @@
 // Purpose: every card, player tag and recap one audience group received in a match, for replays
 // Inputs:  HTTP GET ?group=match-<id>-<audience>-<lang>; Cosmos `overlays` through overlays-store.ts
 // Outputs: JSON { match_id, group, envelopes } (envelopes in seq order), or { error }
-// Spec:    web/specs/realtime.md §6
+// Spec:    web/specs/realtime.md §4
 
 import { isMatchId } from "@/lib/contracts";
 import { createOverlaysStore, type OverlaysStore } from "@/lib/server/overlays-store";

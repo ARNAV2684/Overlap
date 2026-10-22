@@ -23,6 +23,8 @@ import { FIGURE_SCALE } from "./scene/figure";
 export const SPEED_TAG_KMH = 31;
 const TAG_SHOW_MS = 2600;
 const TAG_COOLDOWN_MS = 14_000;
+/** At most this many speed tags at once, so a fast replay never fills the pitch with labels. */
+const MAX_TAGS = 2;
 
 type Label = { el: HTMLDivElement; seen: boolean };
 
@@ -104,7 +106,8 @@ export function PitchStage({ highlight = [], children }: { highlight?: readonly 
           const w = toWorld(pose.x, pose.y);
           const followed = id === p.player;
           // Speed tags
-          if (pose.speedKmh >= SPEED_TAG_KMH && now >= (tagNext.get(id) ?? 0) && sample.rate > 0) {
+          const showing = [...tagUntil.values()].filter((t) => t > now).length;
+          if (pose.speedKmh >= SPEED_TAG_KMH && now >= (tagNext.get(id) ?? 0) && sample.rate > 0 && showing < MAX_TAGS) {
             tagUntil.set(id, now + TAG_SHOW_MS);
             tagNext.set(id, now + TAG_COOLDOWN_MS);
             tagPeak.set(id, pose.speedKmh);

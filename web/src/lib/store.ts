@@ -4,7 +4,7 @@
 //          reference-stable slices of it (see store-hooks.ts)
 // Inputs:  envelopes (validated, or raw and validated here), the connection status, the viewer's controls
 // Outputs: createMatchStore(): getState(), subscribe(), and the actions below
-// Spec:    web/specs/realtime.md §2. web/IMPLEMENTATION_PLAN.md Phase 5.1
+// Spec:    web/specs/realtime.md §2. vedant-frontend/web/IMPLEMENTATION_PLAN.md Phase 5.1
 //
 // How it works
 //  - Ingesting is cheap and constant. Rows and counters change in plain mutable fields; React is told at most once

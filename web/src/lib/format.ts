@@ -3,7 +3,7 @@
 // Purpose: turn numbers and phases into the text the screen shows (match elapsed, receive time, phase, counts)
 // Inputs:  milliseconds, epoch times, a match phase, counts
 // Outputs: strings. Pure functions, no state
-// Spec:    web/IMPLEMENTATION_PLAN.md Phase 4.3
+// Spec:    vedant-frontend/web/IMPLEMENTATION_PLAN.md Phase 4.3
 //
 // Counts use a fixed locale ("en") so the server and the browser print the same text, and a mismatch cannot break
 // hydration. Wall-clock time is the viewer's own clock and is only meant for client-side rendering.

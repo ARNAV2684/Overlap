@@ -6,7 +6,7 @@
 //          OVERLAP_COSMOS_DATABASE (default live), OVERLAP_COSMOS_KEY (local emulator only), OVERLAP_COSMOS_CONTAINER
 //          (default screen). See web/.env.example
 // Outputs: readPubSubEnv(), readScreenEnv(): the settings, or the names of the problems; describeStreamEnvProblems()
-// Spec:    web/specs/realtime.md §1.1, §3.1. Plan: plans/active/PLAN_web_realtime-routes.md
+// Spec:    web/specs/realtime.md §1.1, §3.1. Plan: vedant-frontend/plans/active/PLAN_web_realtime-routes.md
 //
 // The relay's own variable names (functions/relay_store.py), so one infra/local/.env.local serves both. None has the
 // NEXT_PUBLIC_ prefix; import this file only from server code. Like archive-env.ts it returns problems instead of

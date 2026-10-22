@@ -34,6 +34,11 @@ function phaseLabel(phase: Phase | null, period: number): string {
   return period === 1 ? "1st half" : period === 2 ? "2nd half" : period >= 3 && period <= 4 ? "Extra time" : "Penalties";
 }
 
+/** The full name from tablets up; phones show the crest's three-letter code only, so names never break mid-word. */
+function TeamName({ name }: { name: string }) {
+  return <span className="hidden sm:inline">{name}</span>;
+}
+
 export function ScoreHeader() {
   const board = useScoreboard();
   const { status } = useConnection();
@@ -79,18 +84,18 @@ export function ScoreHeader() {
           <p className="ov-sub mt-1">{phaseLabel(board.phase, board.period)}</p>
         </div>
       </div>
-      <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 sm:gap-6">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 sm:gap-6">
         <div className="flex min-w-0 items-center gap-3">
           <Crest team={home} />
-          <span className="line-clamp-2 text-[15px] font-extrabold leading-tight text-ink/90 sm:text-[19px]">{home?.name ?? "Home"}</span>
+          <span className="line-clamp-2 min-w-0 text-[13px] font-extrabold leading-tight text-ink/90 sm:text-[19px]"><TeamName name={home?.name ?? "Home"} /></span>
         </div>
-        <div key={flash} className={`flex items-baseline gap-2 font-mono text-[38px] font-black leading-none tabular sm:text-[52px] ${flash ? "ov-flash-score" : ""}`}>
+        <div key={flash} className={`flex items-baseline gap-1.5 font-mono text-[34px] font-black leading-none tabular sm:gap-2 sm:text-[52px] ${flash ? "ov-flash-score" : ""}`}>
           <span>{score?.home ?? "–"}</span>
           <span className="text-ink/25">:</span>
           <span>{score?.away ?? "–"}</span>
         </div>
         <div className="flex min-w-0 items-center justify-end gap-3">
-          <span className="line-clamp-2 text-right text-[15px] font-extrabold leading-tight text-ink/90 sm:text-[19px]">{away?.name ?? "Away"}</span>
+          <span className="line-clamp-2 min-w-0 text-right text-[13px] font-extrabold leading-tight text-ink/90 sm:text-[19px]"><TeamName name={away?.name ?? "Away"} /></span>
           <Crest team={away} />
         </div>
       </div>

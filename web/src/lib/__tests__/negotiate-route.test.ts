@@ -69,7 +69,7 @@ describe("GET /api/negotiate", () => {
 
   it("answers 400 bad_groups before reading any setting", async () => {
     fakes.env = null;
-    for (const query of ["", "?groups=", "?groups=everyone", "?groups=match-SYN-0042-casual-en"]) {
+    for (const query of ["", "?groups=", "?groups=everyone", "?groups=match-SYN-0042-casual-de"]) {
       expect(await get(query)).toEqual({ status: 400, cache: "no-store", body: { error: "bad_groups" } });
     }
   });

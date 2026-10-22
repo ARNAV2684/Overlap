@@ -4,7 +4,7 @@
 //          Nobody hand-flips coordinates anywhere else (AGENTS.md rule 7)
 // Inputs:  points with x and y from 0 to 100
 // Outputs: SVG points (viewBox "0 0 105 68"), pitch-frame points, and which way a team attacks
-// Spec:    CONTRACTS.md §1.1. web/IMPLEMENTATION_PLAN.md Phase 4.3
+// Spec:    CONTRACTS.md §1.1. vedant-frontend/web/IMPLEMENTATION_PLAN.md Phase 4.3
 //
 // Two frames (CONTRACTS.md §1.1):
 //   team frame  (events):         x 0 = the acting team's own goal line, 100 = the opponent's;

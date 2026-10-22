@@ -7,7 +7,7 @@
 //          archived match id), the OVERLAP_* storage settings from the shell or web/.env.local (web/.env.example).
 //          Before running: the local stack up, archiver/main.py running, and a generator match played to full time
 // Outputs: a pass or fail, plus one summary line
-// Spec:    web/specs/realtime.md §5.1. Plan: plans/active/PLAN_web_replay.md AC-02
+// Spec:    web/specs/realtime.md §5.1. Plan: vedant-frontend/plans/active/PLAN_web_replay.md AC-02
 //
 // Run:     QA_REPLAY=1 QA_REPLAY_MATCH=SYN-0505 npx vitest run src/lib/__tests__/replay.qa.test.ts
 

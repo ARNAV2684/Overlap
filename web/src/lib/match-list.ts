@@ -4,7 +4,7 @@
 //          match picker's list, and define the list's shape, which the browser checks again
 // Inputs:  projected `matches` rows (archive-store.ts createMatchListStore), match_state documents by match id
 // Outputs: parseMatchRows(), liveMatchIds(), buildMatchList(), matchListSchema, MatchListItem, MATCH_LIST_LIMIT
-// Spec:    web/specs/realtime.md §5.3; CONTRACTS.md §4.1, §4.2. Plan: plans/active/PLAN_web_match-list.md
+// Spec:    web/specs/realtime.md §5.3; CONTRACTS.md §4.1, §4.2. Plan: vedant-frontend/plans/active/PLAN_web_match-list.md
 //
 // Pure: no I/O. Shared by the route (server) and api.ts (browser), so it imports nothing server-only. Stored rows are
 // read loosely (Cosmos adds fields); what the route sends is strict, like every other shape the browser checks.

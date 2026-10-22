@@ -82,21 +82,30 @@ const FOLLOW_MAX = 4;
  * target nudged so the near and far touchlines sit equally far from the top and bottom edges.
  */
 function fitCamera(camera: THREE.PerspectiveCamera, elevationDeg: number): { distance: number; lookZ: number } {
-  let lookZ = 0;
-  let distance = 100;
-  for (let pass = 0; pass < 4; pass++) {
-    distance = fitDistance(camera, elevationDeg, lookZ);
-    const e = (elevationDeg * Math.PI) / 180;
+  const e = (elevationDeg * Math.PI) / 180;
+  // Room above the far touchline minus room below the near one, for a camera placement
+  const imbalance = (distance: number, lookZ: number) => {
     const probe = camera.clone();
     probe.position.set(0, Math.sin(e) * distance, lookZ + Math.cos(e) * distance);
     probe.lookAt(0, 0, lookZ);
     probe.updateMatrixWorld();
     const far = new THREE.Vector3(0, 0, -(PITCH_H / 2 + MARGIN_Z)).project(probe).y;
     const near = new THREE.Vector3(0, 0, PITCH_H / 2 + MARGIN_Z).project(probe).y;
-    // Positive when there is more room above the far touchline than below the near one
-    const imbalance = (1 - far) - (near + 1);
-    if (Math.abs(imbalance) < 0.01) break;
-    lookZ += imbalance * distance * 0.12;
+    return 1 - far - (near + 1);
+  };
+  let lookZ = 0;
+  let distance = fitDistance(camera, elevationDeg, lookZ);
+  for (let pass = 0; pass < 3; pass++) {
+    // Aiming nearer the camera (larger z) moves the pitch up the picture: bisect for equal room
+    let lo = -40;
+    let hi = 40;
+    for (let i = 0; i < 24; i++) {
+      const mid = (lo + hi) / 2;
+      if (imbalance(distance, mid) > 0) lo = mid;
+      else hi = mid;
+    }
+    lookZ = (lo + hi) / 2;
+    distance = fitDistance(camera, elevationDeg, lookZ);
   }
   return { distance, lookZ };
 }
@@ -335,12 +344,12 @@ export function createStage(canvas: HTMLCanvasElement): Stage {
         for (const link of [...net.links].sort((a, b) => b.count - a.count).slice(0, 40)) {
           const a = pos(link.from);
           const b = pos(link.to);
-          if (a && b) linkSegs.push({ ax: a.x, az: a.z, bx: b.x, bz: b.z, width: 0.12 + (link.count / max) * 0.55 });
+          if (a && b) linkSegs.push({ ax: a.x, az: a.z, bx: b.x, bz: b.z, width: 0.22 + (link.count / max) * 0.9 });
         }
         const maxPasses = Math.max(1, ...net.nodes.map((n) => n.passes));
         for (const n of net.nodes) {
           const p = pos(n.player_id);
-          if (p) nodePts.push({ ...p, r: 0.9 + (n.passes / maxPasses) * 1.4 });
+          if (p) nodePts.push({ ...p, r: 1.3 + (n.passes / maxPasses) * 1.8 });
         }
       }
       if (story.channel) {
@@ -351,7 +360,7 @@ export function createStage(canvas: HTMLCanvasElement): Stage {
         const z = toWorld(0, pitchY).z;
         const x0 = toWorld(east ? 52 : 48, 0).x;
         const x1 = toWorld(east ? 100 : 0, 0).x;
-        lane.set(x0, x1, z, PITCH_H / 3 - 2, colourOf(side), u.time, 0.9);
+        lane.set(x0, x1, z, PITCH_H / 3 - 2, colourOf(side), u.time, 0.6);
         laneOn = true;
       }
     }

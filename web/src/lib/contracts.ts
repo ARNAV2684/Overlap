@@ -4,7 +4,7 @@
 //          CONTRACTS.md. Unknown fields are rejected: "a typo fails loudly" (CONTRACTS.md §1.3)
 // Inputs:  raw parsed JSON from the stream (Web PubSub, snapshot, replay file)
 // Outputs: schemas, types, and parseEnvelope(), which never throws
-// Spec:    CONTRACTS.md §1–§4 and §7 (§7.4 stat panels). web/IMPLEMENTATION_PLAN.md Phase 4.1
+// Spec:    CONTRACTS.md §1–§4 and §7 (§7.4 stat panels). vedant-frontend/web/IMPLEMENTATION_PLAN.md Phase 4.1
 //
 // This file mirrors CONTRACTS.md. Change a shape only in a PR that edits CONTRACTS.md too, with both sides agreeing.
 

@@ -4,7 +4,7 @@
 //          can show the same AI cards, player tags and recap at the moments they went out live
 // Inputs:  ScreenSettings from stream-env.ts (same database; container `overlays`); a match id and a group
 // Outputs: createOverlaysStore(): { groupEnvelopes(matchId, group) }
-// Spec:    web/specs/realtime.md §6; CONTRACTS.md §10.4 (the `overlays` container)
+// Spec:    web/specs/realtime.md §4; CONTRACTS.md §10.4 (the `overlays` container)
 //
 // Read-only. Deliveries that expired before they were numbered carry no envelope and are skipped.
 

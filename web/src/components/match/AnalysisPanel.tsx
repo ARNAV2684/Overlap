@@ -21,6 +21,7 @@ import { KeyEvents } from "@/components/charts/KeyEvents";
 import { MomentumChart } from "@/components/charts/MomentumChart";
 import { PassMap } from "@/components/charts/PassMap";
 import { PassNetwork } from "@/components/charts/PassNetwork";
+import { PressingZones } from "@/components/charts/PressingZones";
 import { ShotMap } from "@/components/charts/ShotMap";
 import { StatBars } from "@/components/charts/StatBars";
 
@@ -29,6 +30,7 @@ export const TABS = [
   { id: "stats", label: "Team stats" },
   { id: "shots", label: "Shot map" },
   { id: "network", label: "Pass network" },
+  { id: "pressing", label: "Pressing" },
   { id: "heat", label: "Heatmap" },
   { id: "passes", label: "Pass map" },
   { id: "events", label: "Key events" },
@@ -42,7 +44,7 @@ export const TAB_FOR_COMPONENT: Record<string, TabId> = {
   shot_map: "shots",
   pass_network: "network",
   heatmap_zones: "heat",
-  pressing_zones: "stats",
+  pressing_zones: "pressing",
   key_events: "events",
 };
 
@@ -86,6 +88,7 @@ export function AnalysisPanel({ focus }: { focus: Focus }) {
       panel,
       shots: team ? teamShots(events, team.team_id) : [],
       network: heavy?.heavy.pass_network[side] ?? null,
+      pressing: heavy?.heavy.pressing_grid[side] ?? null,
       heat: heatGrid(memory, heatFor, side),
       passes: team ? passLines(events, followed && followed.side === side ? { playerId: followed.id } : { teamId: team.team_id }) : [],
       keys: keyEvents(events, setup),
@@ -93,7 +96,7 @@ export function AnalysisPanel({ focus }: { focus: Focus }) {
     };
   }, [tick, memory, team, side, followed, setup]);
 
-  const perTeam = tab === "shots" || tab === "network" || tab === "heat" || tab === "passes";
+  const perTeam = tab === "shots" || tab === "network" || tab === "pressing" || tab === "heat" || tab === "passes";
   const who = followed && followed.side === side && (tab === "heat" || tab === "passes") ? followed.name : team?.name ?? "";
 
   return (
@@ -155,16 +158,49 @@ export function AnalysisPanel({ focus }: { focus: Focus }) {
             />
           </>
         )}
-        {tab === "stats" && <StatBars panel={data.panel} homeColour={colours.home} awayColour={colours.away} />}
-        {tab === "shots" && <ShotMap shots={data.shots} highlight={highlight} team={team?.name ?? ""} />}
-        {tab === "network" && (
-          <PassNetwork network={data.network} shirts={data.shirts} colour={colours[side]} label={`${team?.name ?? ""} pass network`} />
+        {tab === "stats" && (
+          <div className="mx-auto max-w-[720px]">
+            <StatBars panel={data.panel} homeColour={colours.home} awayColour={colours.away} />
+          </div>
         )}
-        {tab === "heat" && <HeatMap grid={data.heat} colour={colours[side]} label={`${who} heatmap`} />}
-        {tab === "passes" && <PassMap passes={data.passes} colour={colours[side]} label={`${who} passes`} />}
-        {tab === "events" && <KeyEvents events={data.keys} highlight={highlight} />}
+        {tab === "shots" && (
+          <div className="mx-auto max-w-[460px]">
+            <ShotMap shots={data.shots} highlight={highlight} team={team?.name ?? ""} />
+          </div>
+        )}
+        {tab === "network" && (
+          <div className="mx-auto max-w-[760px]">
+            <PassNetwork network={data.network} shirts={data.shirts} colour={colours[side]} label={`${team?.name ?? ""} pass network`} />
+          </div>
+        )}
+        {tab === "pressing" && (
+          <div className="mx-auto max-w-[760px]">
+            <PressingZones
+              grid={data.pressing}
+              colour={colours[side]}
+              label={`${team?.name ?? ""} pressing zones`}
+              ppda={data.panel?.teams[side].ppda_last_10min ?? null}
+              heightM={data.panel?.teams[side].press_height_last_10min_m ?? null}
+            />
+          </div>
+        )}
+        {tab === "heat" && (
+          <div className="mx-auto max-w-[760px]">
+            <HeatMap grid={data.heat} colour={colours[side]} label={`${who} heatmap`} />
+          </div>
+        )}
+        {tab === "passes" && (
+          <div className="mx-auto max-w-[760px]">
+            <PassMap passes={data.passes} colour={colours[side]} label={`${who} passes`} />
+          </div>
+        )}
+        {tab === "events" && (
+          <div className="mx-auto max-w-[620px]">
+            <KeyEvents events={data.keys} highlight={highlight} />
+          </div>
+        )}
         {perTeam && (
-          <p className="mt-3 text-[12px] text-ink/40">
+          <p className="mx-auto mt-3 max-w-[760px] text-[12px] text-ink/40">
             {tab === "heat" || tab === "passes"
               ? followed && followed.side === side
                 ? `Following ${followed.name}. Attacking left to right.`

@@ -9,8 +9,8 @@
 import type { MomentumPoint } from "@/lib/live/charts";
 import type { Goal } from "@/lib/live/match-memory";
 
-const W = 640;
-const H = 170;
+const W = 1100;
+const H = 210;
 const MID = H / 2;
 const PAD = 14;
 
@@ -85,7 +85,7 @@ export function MomentumChart({
               className="stroke-ink/[0.05]"
             />
           ))}
-          <text x={xOf(period, 0) - halfW / perHalf / 2 + 6} y={18} className="fill-ink/30 font-mono text-[9px] font-bold">
+          <text x={xOf(period, 0) - halfW / perHalf / 2 + 6} y={18} className="fill-ink/30 font-mono text-[11px] font-bold">
             {period === 1 ? "1ST HALF" : "2ND HALF"}
           </text>
         </g>
@@ -111,8 +111,8 @@ export function MomentumChart({
         return (
           <g key={i} aria-label={`Goal at ${g.clock}`}>
             <line x1={x} x2={x} y1={MID} y2={up ? 26 : H - 26} stroke="#ff4f38" strokeWidth="1.2" strokeDasharray="2 2" />
-            <circle cx={x} cy={up ? 22 : H - 22} r="7" fill="#ff4f38" />
-            <text x={x} y={(up ? 22 : H - 22) + 3} textAnchor="middle" className="fill-white font-mono text-[8px] font-black">
+            <circle cx={x} cy={up ? 22 : H - 22} r="9" fill="#ff4f38" />
+            <text x={x} y={(up ? 22 : H - 22) + 3} textAnchor="middle" className="fill-white font-mono text-[10px] font-black">
               G
             </text>
           </g>

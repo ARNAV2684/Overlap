@@ -15,7 +15,7 @@ import { usePreferences } from "@/providers/PreferencesProvider";
 import { PitchStage } from "@/components/pitch3d/PitchStage";
 import { AiFeed } from "./AiFeed";
 import { AnalysisPanel, TAB_FOR_COMPONENT, type Focus } from "./AnalysisPanel";
-import { PitchOverlay } from "./PitchOverlay";
+import { PitchOverlay, PitchUnderlay } from "./PitchOverlay";
 import { PlayerFocus } from "./PlayerFocus";
 import { ReplayBar } from "./ReplayBar";
 import { ScoreHeader } from "./ScoreHeader";
@@ -44,16 +44,17 @@ export function MatchScreen({ intro, initialSpeed }: { intro?: ReactNode; initia
           <div className="ov-card p-4 sm:p-5">
             <ScoreHeader />
           </div>
-          <div className="relative h-[58vh] min-h-[340px] overflow-hidden rounded-[18px] border border-ink/[0.06] sm:h-[64vh] sm:min-h-[460px] xl:h-[68vh]">
+          <div className="relative aspect-[4/3] overflow-hidden rounded-[18px] border border-ink/[0.06] sm:aspect-auto sm:h-[64vh] sm:min-h-[460px] xl:h-[68vh]">
             <PitchStage highlight={highlight}>
               <PitchOverlay />
               {source === "replay" && (
-                <div className="pointer-events-none absolute bottom-3 right-3 sm:bottom-4 sm:right-4">
+                <div className="pointer-events-none absolute bottom-2 right-2 sm:bottom-4 sm:right-4">
                   <ReplayBar initialSpeed={initialSpeed} />
                 </div>
               )}
             </PitchStage>
           </div>
+          <PitchUnderlay />
         </div>
         <aside className="flex min-w-0 flex-col gap-4">
           <ViewerBar />

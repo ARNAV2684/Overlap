@@ -148,21 +148,25 @@ export function createMotion(): Motion {
       const top = frames[frames.length - 1].match_ms;
       const dt = lastSample === null ? 0 : Math.min(250, Math.max(0, wallNow - lastSample));
       lastSample = wallNow;
-      // Frames stopped coming: let the playhead settle on the newest one and report a stop
+      // Frames stopped coming (pause, end of match, a dropped connection): play on to the newest frame, then stop
       const stalled = wallNow - lastNewArrivalWall > Math.max(1500, LAG_WALL_MS * 3);
-      const target = top - (stalled ? 0 : Math.max(200, LAG_WALL_MS * rate));
-      if (playhead === null || Math.abs(target - playhead) > SNAP_MS * Math.max(1, rate / 5)) playhead = target;
+      const target = top - Math.max(200, LAG_WALL_MS * rate);
+      if (playhead === null || Math.abs(target - playhead) > SNAP_MS * Math.max(1, rate / 5)) {
+        if (!stalled || playhead === null) playhead = target;
+      }
+      if (stalled) playhead = Math.min(top, playhead + dt * rate);
       else {
-        playhead += dt * (stalled ? 0 : rate);
+        playhead += dt * rate;
         playhead += (target - playhead) * Math.min(1, dt / 600);
       }
       playhead = Math.min(playhead, top);
       if (playhead < frames[0].match_ms) playhead = frames[0].match_ms;
+      const moving = !(stalled && playhead >= top);
 
       const i = Math.max(0, floorIndex(frames, playhead));
       const a = frames[i];
       const b = frames[Math.min(i + 1, frames.length - 1)];
-      return { ...blendFrames(a, b, playhead), rate: stalled ? 0 : rate };
+      return { ...blendFrames(a, b, playhead), rate: moving ? rate : 0 };
     },
   };
 }

@@ -15,7 +15,6 @@ import type { MatchListItem } from "@/lib/match-list";
 import { overlayText, parseInsight, type Insight, type Overlay, type RecapData } from "@/lib/live/insights";
 import { audienceGroup } from "@/lib/preferences";
 import { usePreferences } from "@/providers/PreferencesProvider";
-import { VerifiedBadge } from "./PitchOverlay";
 
 export function RecapView({ matchId }: { matchId: string }) {
   const [prefs] = usePreferences();
@@ -95,8 +94,12 @@ export function RecapView({ matchId }: { matchId: string }) {
                 <div className="ov-card p-3.5">
                   <div className="flex items-center gap-2">
                     <span className="font-mono text-[12px] font-black">{c.clock.split(":")[0]}′</span>
-                    <span className="[&_span]:!text-ink/60 dark:[&_span]:!text-[#4ade80]">
-                      <VerifiedBadge verified={c.verified} fallback={c.fallback} />
+                    <span
+                      className={`rounded-full px-1.5 py-0.5 font-mono text-[8.5px] font-black uppercase tracking-[1px] ${
+                        c.verified ? "bg-[#4ade80]/15 text-[#16a34a] dark:text-[#4ade80]" : "bg-ink/10 text-ink/55"
+                      }`}
+                    >
+                      {c.verified ? "✓ verified" : c.fallback ? "template" : "unverified"}
                     </span>
                   </div>
                   <p className="mt-1.5 text-[14px] leading-snug text-ink/85">{overlayText(c, mode, prefs.lang)}</p>

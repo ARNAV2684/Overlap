@@ -6,7 +6,7 @@
 //          the story director's current story and the viewer's insight feed, and share them with the screen
 // Inputs:  the match store from context; the viewer's preferences
 // Outputs: MatchExperienceProvider; useExperience(), useFeed()
-// Spec:    web/specs/screens.md §2; web/specs/pitch.md §3–§4; web/specs/realtime.md §6
+// Spec:    web/specs/screens.md §2; web/specs/pitch.md §3–§4; web/specs/realtime.md §4
 //
 // The 3D stage reads motion and memory directly every animation frame; React only sees the story (twice a second)
 // and the feed (when a card arrives or changes).

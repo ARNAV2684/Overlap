@@ -45,13 +45,13 @@ export function VerifiedBadge({ verified, fallback }: { verified: boolean; fallb
   );
 }
 
-function StoryCaption() {
+export function StoryCaption() {
   const { story } = useExperience();
   const { setup } = useScoreboard();
   if (!story) return null;
   const team = story.side && setup ? setup.teams[story.side] : null;
   return (
-    <div className="ov-rise pointer-events-auto max-w-[min(440px,calc(100%-24px))] rounded-[14px] border border-white/10 bg-[#0e0e10]/80 p-3.5 text-white backdrop-blur-md sm:p-4" key={`${story.kind}-${story.side}`}>
+    <div className="ov-rise pointer-events-auto w-full rounded-[14px] border border-white/10 bg-[#0e0e10]/90 p-3.5 text-white backdrop-blur-md sm:w-auto sm:max-w-[440px] sm:bg-[#0e0e10]/80 sm:p-4" key={`${story.kind}-${story.side}`}>
       <div className="flex items-center gap-2">
         <span className="font-mono text-[9.5px] font-black uppercase tracking-[2px] text-white/45">{STORY_LABEL[story.kind]}</span>
         {team && <span className="h-2 w-2 rounded-full" style={{ background: team.colours.primary, boxShadow: `0 0 0 2px ${team.colours.secondary}55` }} />}
@@ -70,14 +70,14 @@ function StoryCaption() {
   );
 }
 
-function StoryChips() {
+export function StoryChips() {
   const { pinned, setPinned, view, setView } = useExperience();
   const chip = (active: boolean) =>
-    `rounded-full px-3 py-1.5 font-mono text-[10px] font-black uppercase tracking-[1.2px] transition-colors ${
+    `whitespace-nowrap rounded-full px-3 py-1.5 font-mono text-[10px] font-black uppercase tracking-[1.2px] transition-colors ${
       active ? "bg-white text-[#0e0e10]" : "text-white/65 hover:text-white"
     }`;
   return (
-    <div className="pointer-events-auto flex flex-wrap items-center justify-end gap-2">
+    <div className="pointer-events-auto flex items-center gap-2 sm:flex-wrap sm:justify-end">
       <div className="flex rounded-full border border-white/10 bg-[#0e0e10]/70 p-1 backdrop-blur-md" role="group" aria-label="What the pitch shows">
         <button type="button" className={chip(pinned === null)} onClick={() => setPinned(null)} aria-pressed={pinned === null} title="The story director picks">
           Auto
@@ -126,18 +126,30 @@ function MomentPopup() {
   );
 }
 
+/** Over the pitch on tablets and up; on phones the chips and caption sit under the pitch (PitchUnderlay). */
 export function PitchOverlay() {
   return (
     <>
       <div className="pointer-events-none absolute inset-x-3 top-3 flex items-start justify-between gap-3 sm:inset-x-4 sm:top-4">
         <MomentPopup />
-        <div className="ml-auto">
+        <div className="ml-auto hidden sm:block">
           <StoryChips />
         </div>
       </div>
-      <div className="pointer-events-none absolute inset-x-3 bottom-3 flex items-end justify-between gap-3 sm:inset-x-4 sm:bottom-4">
+      <div className="pointer-events-none absolute inset-x-4 bottom-4 hidden items-end justify-between gap-3 sm:flex">
         <StoryCaption />
       </div>
     </>
+  );
+}
+
+export function PitchUnderlay() {
+  return (
+    <div className="flex flex-col gap-3 sm:hidden">
+      <div className="overflow-x-auto rounded-[14px] bg-[#0e0e10] p-2">
+        <StoryChips />
+      </div>
+      <StoryCaption />
+    </div>
   );
 }

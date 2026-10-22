@@ -4,7 +4,7 @@
 //          the match group, catch up from the snapshot, then stream; reconnect when the connection drops
 // Inputs:  a MatchStore. Optional dependencies, for tests
 // Outputs: createMatchSocket(store): { start(), stop() }
-// Spec:    web/specs/realtime.md §1 and §3. web/IMPLEMENTATION_PLAN.md Phase 5.2
+// Spec:    web/specs/realtime.md §1 and §3. vedant-frontend/web/IMPLEMENTATION_PLAN.md Phase 5.2
 //
 // The protocol is Azure Web PubSub's client protocol "json.webpubsub.azure.v1", which the local stand-in speaks too, so
 // going to Azure later only changes what negotiate() returns. Messages we handle:

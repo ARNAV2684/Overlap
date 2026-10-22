@@ -4,7 +4,7 @@
 //          so a viewer who joins mid-match sees the current card at once
 // Inputs:  HTTP GET ?mode=casual|analyst|club|player&lang=en|es|hi|fr(&club=TEAM|&player=TEAM-NN)
 // Outputs: the stand-in's JSON { match_id, group, cursor, envelopes, rejected } unchanged, or { error }
-// Spec:    web/specs/realtime.md §6
+// Spec:    web/specs/realtime.md §4
 //
 // Locally the Web PubSub stand-in serves this endpoint (it reads Cosmos `overlays`), so the route forwards to it.
 // On Azure there is no stand-in; until the overlays read is built here the route answers 501 and the screen shows

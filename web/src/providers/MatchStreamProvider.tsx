@@ -7,7 +7,7 @@
 //          src/lib/store-hooks.ts)
 // Inputs:  matchId, children
 // Outputs: a context provider. Renders nothing of its own
-// Spec:    web/specs/realtime.md §1. web/IMPLEMENTATION_PLAN.md Phase 5.3
+// Spec:    web/specs/realtime.md §1. vedant-frontend/web/IMPLEMENTATION_PLAN.md Phase 5.3
 //
 // Mounting connects, unmounting disconnects (the socket closes, every timer stops). A different matchId gets a fresh
 // store and a fresh connection, because the outer component keys the inner one by match. Creating a store has no side
