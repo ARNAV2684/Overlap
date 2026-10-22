@@ -175,6 +175,11 @@ describe.skipIf(!ENABLED)("against a running stream", () => {
         expect(lateJoin.stats.latest).toEqual(newest.data);
         expect(lateJoin.stats.heavy).not.toBeNull();
       }
+      // A reload at full time shows the same final numbers as the screen that watched the whole match
+      const reload = await joinLate(matchId);
+      const reloaded = reload.store.getState().stats;
+      reload.store.destroy();
+      expect(reloaded).toEqual(state.stats);
     },
     RUN_LIMIT_MS + 30_000,
   );
