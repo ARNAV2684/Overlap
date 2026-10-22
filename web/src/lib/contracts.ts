@@ -7,8 +7,6 @@
 // Spec:    CONTRACTS.md §1–§4 and §7 (§7.4 stat panels). web/IMPLEMENTATION_PLAN.md Phase 4.1
 //
 // This file mirrors CONTRACTS.md. Change a shape only in a PR that edits CONTRACTS.md too, with both sides agreeing.
-// Two shapes are PROVISIONAL: the status data and the positions data come from the mock (mock/README.md
-// "Provisional choices"), not from CONTRACTS.md. They are marked below.
 
 import { z } from "zod";
 
@@ -255,12 +253,12 @@ export const trackingFrameSchema = z.strictObject({
 });
 
 // ---------------------------------------------------------------------------------------------------------------
-// Envelope (CONTRACTS.md §7) and its provisional payloads
+// Envelope (CONTRACTS.md §7) and its payloads
 // ---------------------------------------------------------------------------------------------------------------
 
 export const ENVELOPE_KINDS = ["event", "positions", "stats", "overlay", "player_tag", "recap", "status"] as const;
 
-/** PROVISIONAL (from the mock, not CONTRACTS.md): `data` of a `status` envelope. The first one carries the setup. */
+/** `data` of a `status` envelope (CONTRACTS.md §7.2). The first one carries the setup. */
 export const statusDataSchema = z.strictObject({
   phase: z.enum(["pre_match", "live", "half_time", "full_time"]),
   /** 0 before kick-off, then 1–5. */
@@ -269,7 +267,7 @@ export const statusDataSchema = z.strictObject({
   setup: matchSetupSchema.optional(),
 });
 
-/** PROVISIONAL (from the mock, not CONTRACTS.md): `data` of a `positions` envelope, the latest ~1 s of frames. */
+/** `data` of a `positions` envelope, the latest ~1 s of frames (CONTRACTS.md §7.2). */
 export const positionsDataSchema = z.strictObject({
   frames: z.array(trackingFrameSchema).min(1),
 });
