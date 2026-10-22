@@ -10,7 +10,7 @@
 | Review coordinator | Arnav |
 | Affected component owners | Arnav (relay, stand-in, §7.3, local stack docs, CI, mock); Azeem (stat panels, `CONTRACTS.md` §7.4, informed only) |
 | Proposal version and date | v0.2 · 23 Oct 2026 (v0.1 was a scratch draft on 22 Oct, never shared) |
-| Status | In progress · go given 23 Oct (Vedant); building on `web/realtime-routes` |
+| Status | Implemented on `web/realtime-routes` (23 Oct); PR not opened. The `CONTRACTS.md` §7.3 commit waits for Arnav |
 | Plan tier and file | Full · `plans/active/PLAN_web_realtime-routes.md` |
 | Repository | [ARNAV2684/Overlap](https://github.com/ARNAV2684/Overlap) |
 | Reviewed branch and commit | `main` · `329153d`; branch `web/realtime-routes` created from it (no commits yet) |
@@ -399,10 +399,44 @@ any token).
 |---|---|---|---|---|
 | Vedant | v0.1 → v0.2 | Remove the mock; spec agreed in person; local Docker only; asked how to resolve snapshot size | Folded into v0.2 | 23 Oct · this conversation |
 
-**Implementation readiness:** ready for M0–M3. M4 is blocked on Arnav (§7.3 wording) and on the AC-08 measurement.
+**Implementation readiness:** M0–M4 implemented. Merge waits for Arnav on the §7.3 sentence (commit `cacd713`).
 **Relevant specification agreement:** in person, 23 Oct (reported by Vedant); written record pending in the PR.
-**Next action and owner:** merge the stat-charts work (or decide to go first), then **go** for M0 · Vedant.
+**Next action and owner:** open the PR (after the stat-charts merge, or merge `main` in first), ask Arnav to agree §7.3 and to update the docs listed in §13 · Vedant.
 
 ### Handover after implementation
 
-Pending implementation.
+- **Commits** on `web/realtime-routes` (not pushed by the implementation; the plan commit `e38368d` was):
+  `43ea39d` spec · `e224bf4` negotiate · `c41e363` snapshot · `cacd713` `CONTRACTS.md` §7.3 (own commit, needs
+  Arnav) · `a6ea758` same-origin switch and mock removal · `58e8d30` one-page Cosmos read.
+- **Acceptance results** (23 Oct, local Docker stack: Cosmos, Event Hubs and Azurite emulators):
+
+  | ID | Result | Evidence |
+  |---|---|---|
+  | AC-01 | Pass | `pubsub-token.test.ts` with the real SDK: `ws://localhost:8787/client/hubs/live?access_token=…` |
+  | AC-02 | Pass | Decoded token: `role` = `webpubsub.joinLeaveGroup.<group>` only, `webpubsub.group` set, 600 s lifetime, no `sub` |
+  | AC-03 | Pass | `negotiate-route.test.ts`; built app answered 400 for `groups=everyone` |
+  | AC-04 | Pass | `snapshot.test.ts` (stand-in cases plus the stats rule) |
+  | AC-05 | Pass | `snapshot-route.test.ts`; built app: `SYN-9999` → 404 `unknown_match`, `SYN-12` → 400 |
+  | AC-06 | Pass | `api.test.ts`; `git grep` finds no `NEXT_PUBLIC_STREAM_BASE_URL` / "Mock WebSocket" in `web/src`, README or `.env.example` |
+  | AC-07 | Pass, without a browser | Generator `SYN-4201` at 20× → Event Hubs emulator → `relay_runner.py` → Cosmos `screen` + stand-in → built app (`next start`) → `stream.qa.test.ts` with `QA_APP_URL`: 2,453 events, 4 goals, final 4–0 at 90+7:35, every message applied once, badge live → stale → live → finished. It joined ~10 s in, so the history came from the snapshot route. No screenshots: no browser was driven |
+  | AC-08 | Measured | `SYN-0501` at full time (8,501 stored documents, 6,125 of them panels): the stand-in's untrimmed snapshot 7.4 MB in 29.5 s; this route 0.95 MB, 2,376 envelopes, in 1.3–1.6 s (9 s before `58e8d30`). Gzip was not applied to the route's response by `next start` |
+  | AC-09 | Pass | `npm run lint`, `typecheck`, `build`, `test` (491 passed, 2 opt-in skipped) |
+  | AC-10 | Pass | `SYN-0501` snapshot holds 11 status, 2,363 event, 1 positions and 1 stats envelope (the full-time panel, which is also the newest heavy one); the browser client accepted all 2,376, 0 rejected; the negotiated URL opened on the stand-in and `joinGroup` was acked |
+
+- **Setup:** `web/.env.example` (new `OVERLAP_WEBPUBSUB_ENDPOINT`, `OVERLAP_WEBPUBSUB_HUB`, `OVERLAP_COSMOS_CONTAINER`;
+  `NEXT_PUBLIC_STREAM_BASE_URL` removed); run order in `web/README.md` "With the local stack".
+- **Differences from the agreed proposal:**
+  - D-9 B was chosen before measuring (Vedant, 23 Oct); the measurement confirmed it (AC-08).
+  - New: the Cosmos read asks for one page (`maxItemCount: -1`). With the default 100 per page a full-time snapshot
+    took ~9 s on the emulator, past the browser's 7 s timeout.
+  - The setup is passed through as stored; stripping Cosmos fields from it was not needed (they sit on the document).
+  - `socket.ts` and `contracts.ts` still mention the mock in comments (left out of the diff on purpose, §8).
+- **Known limitations and follow-up:**
+  - Azure not run (decision 3): managed identity, real token generation and role enforcement unproven · Vedant, Arnav.
+  - The live run did not include the stats engine, so live panels were checked on stored data only (`SYN-0501`).
+  - The repo pins `uv` ≥ 0.13.4; this laptop has 0.13.1, so the stand-in and relay were started from their existing
+    virtual environments.
+  - Snapshot responses are not compressed; worth checking on Azure hosting · Vedant.
+  - Tell Arnav: §7.3 sentence; `functions/specs/screen-relay.md` §4 "Snapshot" sentence; the stand-in's own snapshot
+    still sends every panel; `infra/specs/local-development.md` lines 56 and 68; CI's `NEXT_PUBLIC_STREAM_BASE_URL`;
+    `mock/README.md`.
