@@ -158,12 +158,13 @@ def archive_tracking(events: Events) -> None:
 # event loop, so they share one set of dependencies (moment_trigger.shared_deps) and the model breaker's state.
 
 PUBLISH_WINDOW_S = 600       # matches whose match_state changed this recently get player tags and expiry checks
+FEED_POLL_MS = 1000          # the change feed's default 5 s poll made moment → card p50 4 s (local poller: 1 s)
 
 
 @app.function_name("moment_trigger")
 @app.cosmos_db_trigger(arg_name="docs", connection="COSMOS", database_name="%OVERLAP_COSMOS_DATABASE%",
                        container_name="moments", lease_container_name="leases",
-                       create_lease_container_if_not_exists=True)
+                       create_lease_container_if_not_exists=True, feed_poll_delay=FEED_POLL_MS)
 async def moment_trigger(docs: func.DocumentList) -> None:
     import moment_trigger as insights
     results = await insights.handle_batch([d.to_dict() for d in docs], insights.shared_deps())
