@@ -1,6 +1,13 @@
 # Installed by the Azure Functions host. Keep in step with pyproject.toml.
 azure-functions>=1.21
-azure-cosmos>=4.7
-azure-messaging-webpubsubservice>=1.2
-azure-identity>=1.17
+azure-cosmos==4.17.1
+azure-messaging-webpubsubservice==1.3.0
+azure-identity==1.26.0
 azure-storage-blob>=12.20
+aiohttp==3.14.5
+# The insight agents and their MCP server (agents/, mcp_server/), same pins as their own projects
+agent-framework-core==1.22.0
+agent-framework-openai==1.17.0
+azure-ai-translation-text==2.0.0
+mcp==1.30.0
+pydantic==2.14.1
