@@ -1,0 +1,252 @@
+@import "tailwindcss";
+
+/* Overlap theme. Warm paper in light mode, near-black in dark (the default), one coral accent, Outfit for words and
+   Geist Mono for numbers and small labels. Components read these tokens through Tailwind (bg-surface, text-ink, …)
+   or as CSS variables; no component hard-codes a colour except team kits, which come from the match setup. */
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme inline {
+  --color-canvas: var(--ov-canvas);
+  --color-surface: var(--ov-surface);
+  --color-raised: var(--ov-raised);
+  --color-ink: var(--ov-ink);
+  --color-ink-2: var(--ov-ink-2);
+  --color-ink-3: var(--ov-ink-3);
+  --color-accent: #ff4f38;
+  --color-accent-soft: rgb(255 79 56 / 0.14);
+  --color-live: #4ade80;
+  --color-win: rgb(74 222 128 / 0.85);
+  --color-draw: rgb(160 160 170 / 0.5);
+  --color-loss: rgb(248 113 113 / 0.75);
+  --color-shot-goal: #ff4f38;
+  --color-shot-saved: #4a90d9;
+  --color-shot-missed: #7a7a92;
+  --color-shot-blocked: #e8a838;
+  --color-shot-woodwork: #d4637a;
+
+  --font-sans: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", monospace;
+
+  --radius-card: 14px;
+}
+
+:root {
+  color-scheme: light;
+  --ov-canvas: #faf8f5;
+  --ov-surface: #ffffff;
+  --ov-raised: #edeae3;
+  --ov-ink: #17151a;
+  --ov-ink-2: #6b6875;
+  --ov-ink-3: #9b98a3;
+  /* rgb triplet of the ink, for hairlines and washes at any opacity */
+  --ov-ink-rgb: 23, 21, 26;
+}
+
+.dark {
+  color-scheme: dark;
+  --ov-canvas: #141414;
+  --ov-surface: #1e1e1f;
+  --ov-raised: #2c2c2e;
+  --ov-ink: #ffffff;
+  --ov-ink-2: #a0a0b8;
+  --ov-ink-3: #66667e;
+  --ov-ink-rgb: 255, 255, 255;
+}
+
+html,
+body {
+  background: var(--ov-canvas);
+  color: var(--ov-ink);
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* A card: an almost invisible border and wash over the canvas */
+.ov-card {
+  border-radius: var(--radius-card);
+  border: 1px solid rgb(var(--ov-ink-rgb) / 0.06);
+  background: rgb(var(--ov-ink-rgb) / 0.025);
+}
+
+/* Small uppercase labels in mono, the two levels used everywhere */
+.ov-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: rgb(var(--ov-ink-rgb) / 0.42);
+}
+.ov-sub {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.6px;
+  color: rgb(var(--ov-ink-rgb) / 0.3);
+}
+
+.ov-hairline {
+  border-color: rgb(var(--ov-ink-rgb) / 0.06);
+}
+
+.ov-wash {
+  background: rgb(var(--ov-ink-rgb) / 0.04);
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes ov-pulse {
+  70% {
+    box-shadow: 0 0 0 7px rgb(74 222 128 / 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgb(74 222 128 / 0);
+  }
+}
+.ov-live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--color-live);
+  box-shadow: 0 0 0 0 rgb(74 222 128 / 0.6);
+  animation: ov-pulse 1.8s infinite;
+}
+
+@keyframes ov-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.ov-rise {
+  animation: ov-rise 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes ov-flash {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  15% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+  25% {
+    transform: scale(1);
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.ov-flash {
+  animation: ov-flash 3.2s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ov-live-dot,
+  .ov-rise,
+  .ov-flash {
+    animation: none;
+  }
+}
+
+:focus-visible {
+  outline: 2px solid #ff4f38;
+  outline-offset: 2px;
+}
+
+/* Labels floating over the 3D pitch */
+.ov-tag {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  border-radius: 999px;
+  padding: 4px 10px 4px 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  background: rgb(14 14 16 / 0.82);
+  border: 1px solid rgb(255 255 255 / 0.14);
+  backdrop-filter: blur(6px);
+  margin-top: -6px;
+  will-change: transform;
+}
+.ov-tag b {
+  font-family: var(--font-mono);
+  font-weight: 900;
+  color: #ff4f38;
+}
+/* Opacity only: the position lives in `transform`, which an animation must not touch */
+@keyframes ov-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.ov-tag[data-kind="speed"] {
+  animation: ov-fade 0.3s ease-out both;
+  border-color: rgb(74 222 128 / 0.5);
+}
+.ov-tag-speed {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 900;
+  color: #0e0e10;
+  background: #4ade80;
+  border-radius: 999px;
+  padding: 1px 7px;
+}
+.ov-marker {
+  position: absolute;
+  left: 0;
+  top: 0;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: #fff;
+  background: rgb(14 14 16 / 0.75);
+  border-radius: 6px;
+  padding: 3px 7px;
+}
+.ov-stage[data-webgl="unavailable"] .ov-stage-fallback {
+  display: grid;
+}
+
+@keyframes ov-score {
+  0% {
+    color: #ff4f38;
+    transform: scale(1.25);
+  }
+  60% {
+    color: #ff4f38;
+  }
+  100% {
+    transform: none;
+  }
+}
+.ov-flash-score {
+  animation: ov-score 1.4s cubic-bezier(0.2, 0.7, 0.2, 1);
+}

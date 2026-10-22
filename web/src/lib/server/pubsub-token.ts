@@ -42,13 +42,25 @@ export class PubSubError extends Error {
   }
 }
 
-/** "match-SYN-0042,match-SYN-0043" → the groups, or null when any is not a match group or there are too many. */
+/**
+ * The insight audience groups (CONTRACTS.md §10.6): match-<id>-casual|analyst-<lang>, match-<id>-club-<team>-<lang>
+ * and match-<id>-player-<player>-<lang>. Like the base group, the token can only receive on them.
+ */
+const AUDIENCE_GROUP = /^match-(SYN-\d{4})-(?:casual|analyst|club-[A-Z]{3}|player-[A-Z]{3}-\d{2})-(?:en|es|hi|fr)$/;
+
+/** True for a base match group or an insight audience group. */
+export function isViewerGroup(group: string): boolean {
+  if (group.startsWith("match-") && isMatchId(group.slice("match-".length))) return true;
+  const audience = AUDIENCE_GROUP.exec(group);
+  return audience !== null && isMatchId(audience[1]);
+}
+
+/** "match-SYN-0042,match-SYN-0042-casual-en" → the groups, or null when any is not a viewer group or there are too many. */
 export function parseGroups(param: string | null): string[] | null {
   if (param === null) return null;
   const groups = [...new Set(param.split(","))];
   if (groups.length === 0 || groups.length > MAX_GROUPS) return null;
-  const valid = groups.every((group) => group.startsWith("match-") && isMatchId(group.slice("match-".length)));
-  return valid ? groups : null;
+  return groups.every(isViewerGroup) ? groups : null;
 }
 
 /** The issuer for one set of settings. Creating it makes no network call. */
