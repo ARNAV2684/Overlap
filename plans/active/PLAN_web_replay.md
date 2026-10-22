@@ -9,8 +9,8 @@
 | Collaborators and responsibilities | None yet |
 | Review coordinator | Arnav |
 | Affected component owners | Arnav (archiver: producer of the stored match, `CONTRACTS.md` §4.1, `archiver/specs/storage.md`; Azure resources and roles, A3 / S4; Pranav helping). Azeem (stats engine: its panels are archived and replayed unchanged). Docs and scripts: unassigned (Arnav decides) |
-| Proposal version and date | v0.2 · 2026-10-20 (v0.1 same day; see the change note in §12) |
-| Status | In progress · Phase 1 (specs) pushed, spec PR not opened yet; Phases 2–4 done, AC-02 passed against a real local archive (22 Oct); Phase 5 (browser checks, docs, handover) next |
+| Proposal version and date | v0.3 · 2026-10-23 (v0.1 and v0.2 on 20 Oct; see the change notes in §12) |
+| Status | Implemented (M1–M3) · specs, route and page merged in #72 and #75 (22 Oct); Phase 5 checks passed on the local stack (23 Oct), handover in §15. M4 jump-to-minute cut; the archived match list came with `PLAN_web_match-list.md`. Azure run waits for A3 / S4 |
 | Plan tier and file | Full · `plans/active/PLAN_web_replay.md` |
 | Repository | [ARNAV2684/Overlap](https://github.com/ARNAV2684/Overlap) |
 | Reviewed branch and commit | main · 36f5d00 |
@@ -75,7 +75,7 @@
 | Stored match format | Arnav (archiver) | `CONTRACTS.md` §4.1 and `storage.md` unchanged | Agreed: `storage.md` marked agreed on `main` (`339b14a`), after Vedant's approval on 20 Oct | Build to §4.1 |
 | Local archive with a finished match | Arnav (archiver runner), Azeem (generator) | `archiver/main.py` beside the local stack while `generator/cli.py live` plays a match | Available · M2 | Unit tests with hand-made stored data |
 | Read access on Azure | Arnav (A3 / S4); web app hosting: unassigned (Arnav decides) | An identity for the web app with read-only data roles on Cosmos `matches`, `events`, `stats` and Blob `tracking`; the two endpoints as settings | Not started · after M3 | Local emulators only; the Azure path stays unproven |
-| Lockfile policy | Arnav (R-03 of the live screen plan) | Three new dependencies in `web/package.json` | Unresolved; lockfile still gitignored | Follow the current policy |
+| Lockfile policy | Arnav (R-03 of the live screen plan) | Three new dependencies in `web/package.json` | Resolved: every project's lockfile is committed on `main` (`4cb52ee`) | Follow the current policy |
 
 **My owned deliverables:** everything under `web/` in §8, and this plan.
 **Shared deliverables:** the ARCH-01 status and the frontend note in `docs/knowledge/` (docs: unassigned, Arnav
@@ -131,7 +131,8 @@ Blob tracking/<id>/p<P>/m<MMM> ──┴─▶ GET /api/replay/<id>            (
 - Node's gzip reader accepts the multi-member tracking files (`storage.md` §2).
 - Cosmos query `ORDER BY c.seq` works with the default indexing in the emulator.
 - A minute of positions, gzip-compressed by Next.js, is small enough to fetch ahead at 20× (one minute = 3 s of wall
-  time). Measured in AC-07.
+  time). Measured in AC-07. **Half right (23 Oct):** small enough locally, but `next start` does not compress the
+  route's JSON (pages are compressed); a chunk is about 580 KB raw, about 67 KB gzipped. See R-03.
 
 ## 7. Data contracts and compatibility
 
@@ -261,8 +262,9 @@ is done):
 - [x] File map updated for three small additive changes found while writing the specs: `AppHeader.tsx` (`section`
       text), `ArrivalCell.tsx` with a new `stream-source.ts` (row source), and `ReplayIntro.tsx` (20 Oct)
 - [x] Specs committed and pushed to `web/replay-spec` (`4edc684`, 21 Oct)
-- [ ] Spec PR opened from `web/replay-spec` (no open PR at 21 Oct; the branch's earlier PR #57, the plan, is closed)
-- [ ] Spec PR reviewed and merged (AC-01) · Arnav. Code in phases 2–5 can be written meanwhile, but not merged before it
+- [x] ~~Spec PR opened from `web/replay-spec`~~ Not opened on its own: the branch's PR #57 merged the plan only
+      (20 Oct), and the specs commit `4edc684` went to `main` with the route and page in the stacked #72 (noted 23 Oct)
+- [x] Specs reviewed and merged (AC-01) · Arnav merged #72 (22 Oct). No separate spec review is recorded
 
 **Phase 2 — Server read path (M2, first half)** · branch `web/replay-route`, stacked on `web/replay-spec`
 - [x] `web/package.json`: `@azure/cosmos` 4.10.1, `@azure/storage-blob` 12.34.0, `@azure/identity` 4.13.3, pinned
@@ -339,17 +341,26 @@ is done):
       settings `/api/replay` answers 503 and logs the missing names. Playback in a browser waits for Phase 5 (needs
       an archived match) (22 Oct)
 
-**Phase 5 — End-to-end checks and handover (M3, second half; M4 only if time allows)**
-- [ ] Manual 20× replay of an archived match to full time; screenshots at 375 and 1440 px; keyboard pass (AC-06)
-- [ ] Chrome Performance trace during 20× playback (AC-07)
-- [ ] `web/README.md` replay section; `docs/knowledge/frontend.md` and ARCH-01 in its own commit (Pranav told)
-- [ ] Validation report and the handover in §15
-- [ ] Optional M4: list of archived matches and jump to a minute
+**Phase 5 — End-to-end checks and handover (M3, second half; M4 only if time allows)** · branch `web/replay-page`,
+fast-forwarded to `main` `3353483` (the stat charts and match list included)
+- [x] 20× replay of archived `SYN-0501` to full time in Chrome 155, at 1440 and 375 px; screenshots; keyboard pass;
+      no horizontal scroll at 375, 768 and 1440 px (AC-06) (23 Oct)
+- [x] Chrome trace of 40 s of 20× playback, plus a long-task observer over the whole run, and every chunk's load time
+      against the moment the playhead reached it (AC-07) (23 Oct)
+- [x] `web/README.md` replay section; `docs/knowledge/frontend.md` and ARCH-01 in their own commit (Pranav to be told
+      with the PR) (23 Oct)
+- [x] Validation report and the handover in §15 (23 Oct)
+- [x] ~~Optional M4~~ The list of archived matches shipped with `PLAN_web_match-list.md` (#73, #77): `/` links each
+      finished match to its replay. Jump to a minute: cut
 
 **Change note v0.1 → v0.2 (20 Oct):** added the five phases above. Writing the specs found that the live screen's
 header text and the timeline's arrival label are hard-coded, so the file map gains `AppHeader.tsx`, `ArrivalCell.tsx`,
 a new `stream-source.ts` and `ReplayIntro.tsx`; all are additive, and the live screen keeps its current text. Every
 other decision is unchanged.
+
+**Change note v0.2 → v0.3 (23 Oct):** Phase 5 done; status, AC-01 (specs merged in #72, not a separate PR), M4 (list
+done by the match list plan, jump cut) and R-03 (measured; chunks uncompressed) updated; validation report and handover
+added in §15. No decision changed.
 
 - **Project calendar check:** M1–M3 end on 23 Oct, before "every required feature by 24 Oct". This competes with the
   stat charts and insight cards, which still need their own plans (R-05 of the live screen plan). If those come
@@ -384,7 +395,7 @@ other decision is unchanged.
 | `web/src/components/live/LiveMatchView.tsx` | `PLAN_web_live-match-viewer.md` (same author; its code is merged) | Vedant | Additive change only; live screen tests rerun (AC-08) | Agreed (same owner) |
 | `web/README.md`, `web/.env.example`, `web/package.json` | Branches `fork/vedant/web-app` (17 Oct) and `fork/web/live-match-ui-setup` (16 Oct) | Vedant | Old branches superseded by the merged live screen work; not merged again | Agreed (same owner) |
 | `docs/knowledge/frontend.md`, `archiver.md` | `PLAN_docs_knowledge-sharing.md`, `PLAN_docs_graphify-knowledge-map.md` | Docs: unassigned (Arnav decides); Pranav | Own small commit in PR 3, as the knowledge-sharing spec asks | Pending (Pranav told at PR 3) |
-| `web/package-lock.json` | — | Arnav (policy, R-03) | Not committed; regenerated, never hand-merged | Agreed (current policy) |
+| `web/package-lock.json` | — | Arnav (policy, R-03) | Committed on `main` since `4cb52ee`; regenerated, never hand-merged | Agreed (current policy) |
 
   **Scanned at `36f5d00` on 2026-10-20. Sources checked: plans ✓ · PRs ✓ (GitHub's public API listed no open PRs;
   `gh` is installed but not logged in) · branches ✓ (only the two old fork branches above touch `web/`; none touch
@@ -404,7 +415,7 @@ other decision is unchanged.
 |---|---|---|---|---|---|
 | R-01 | The web app reads the archiver's containers directly instead of going through an archiver service | Two readers of one format to keep in step (`reader.py` and the route) | Arnav | Accept: §4.1 is the contract both follow; AC-02 compares against the archive | M2 |
 | R-02 | No Azure identity, roles or hosting for the web app yet | Replay works locally only for the demo | Arnav (A3 / S4); hosting unassigned (Arnav decides) | Add read roles for the web app to A3; until then, local replay | Azure run only |
-| R-03 | A minute of positions is too large to fetch ahead at 20× | Stutter at minute boundaries | Vedant | Measure in AC-07; if needed, a smaller chunk (30 s) or fewer frames per bundle, in a spec update | M3 |
+| R-03 | A minute of positions is too large to fetch ahead at 20× | Stutter at minute boundaries | Vedant | **Measured locally (AC-07):** no stutter; every chunk was loaded 2.7 s or more before the playhead reached it. But chunks go out uncompressed (about 580 KB each, about 67 KB gzipped), about 1.5 Mbit/s at 20×. Before the Azure run: compress the route's response (`Accept-Encoding`), then re-measure | Azure run |
 | R-04 | `storage.md` still says "draft for review" | The format could still change under the route | Arnav | **Resolved:** marked agreed on `main` (`339b14a`) | None |
 | R-05 | Calendar: replay competes with stat charts and insight cards for 21–24 Oct | One of them slips past 24 Oct | Vedant, Arnav | Agree the order; cut list in §12 | Calendar |
 
@@ -437,11 +448,48 @@ other decision is unchanged.
 | Reviewer | Proposal version | Finding / required change | Outcome | Date and reference |
 |---|---|---|---|---|
 | Arnav | v0.1 | — | Pending | — |
+| Arnav | v0.2 | Plan merged in #57; specs, route and page merged in #72, the panels fix in #75. No written findings recorded | Merged | 20 and 22 Oct · #57, #72, #75 |
 
-**Implementation readiness:** go given by Vedant on 20 Oct. Phase 1 specs written; code merges wait for the spec PR.
-**Relevant specification agreement:** pending (the M1 spec PR, not opened yet).
-**Next action and owner:** commit and open the spec PR on `web/replay-spec` · Vedant; review · Arnav.
+**Implementation readiness:** go given by Vedant on 20 Oct; M1–M3 implemented and merged.
+**Relevant specification agreement:** `web/specs/realtime.md` §5 and `screens.md` §1 merged with #72 (Arnav, 22 Oct).
+**Next action and owner:** compress the replay route's responses before the Azure run (R-03) · Vedant; read roles for
+the web app on Azure (R-02) · Arnav; R-01 agreement recorded · Arnav.
+
+### Validation report (Phase 5, 23 Oct)
+
+Run on `web/replay-page` at `main` `3353483` (stat charts and match list included), `next build` + `next start` on the
+local stack (Cosmos emulator, Azurite), Chrome 155 headless, driven by Playwright. Match: `SYN-0501`, Calverholme
+Athletic 6–0 Dunmarrow Town, archived on 22 Oct (manifest: 103 chunks, 2,363 events, `duration_ms` 6,123,600, no
+gaps). Screenshots and the trace stayed on the tester's machine (the trace is 128 MB); none is committed.
+
+| AC | Result | Evidence |
+|---|---|---|
+| AC-01 | Pass | Specs merged in #72 by Arnav (22 Oct); see Phase 1 |
+| AC-02 | Pass (rerun) | `QA_REPLAY=1 QA_REPLAY_MATCH=SYN-0501`: 1 passed against the current `main` code; same counts as 22 Oct (2,363 events, 30,619 frames, 6,125 panels, 0 rejected, ends `full_time` 6–0) |
+| AC-03, AC-04, AC-05 | Pass | In the full suite below |
+| AC-06 | Pass | 1440 px: playing 1.3 s after navigation; badge "Replay finished", scoreboard "Full time 6 : 0", clock 90+8:37 after 308 s (6,123,600 ms ÷ 20 = 306 s). Counters at the end: 2,363 events and 30,619 frames, the archive's numbers. Timeline, counters, stats and pitch move (pitch at 19:03.8 mid-run, 102:03.6 at the end). 375 px: the same end state after 312 s. No horizontal scroll at 375, 768 and 1440 px. No console errors |
+| AC-06 keyboard | Pass | Tab order: Pause → Speed 1× → 5× → 20×, each with a visible focus ring (`:focus-visible`). Enter on Pause: badge "Paused", the button becomes "Play" and keeps focus, progress stays at 1:07 for 2 s. Space: playing again. Enter on "Speed 5×": `aria-pressed`, badge "Replay · 5×"; Space on 20× back to 20× |
+| AC-07 long tasks | Pass | Trace, 40 s of 20× playback: 23,520 main-thread tasks, none over 50 ms during playback (largest 34 ms, p99 6.8 ms, main thread 36 % busy). One 96 ms task at the instant tracing started: a `transitionend` handler of which 94 ms is `V8.InvokeApiInterruptCallbacks`, the tracer attaching, not app work; the long-task observer saw no other task over 50 ms in the whole 5-minute run |
+| AC-07 prefetch | Pass | All 103 chunks loaded; for chunks 1–102 the load finished 2.7 s (min) / 5.8 s (median) before the playhead reached them; never waited. "Buffering…" showed once, at 1.0 s, before the first chunk |
+| AC-08 | Pass | `npm run lint`, `typecheck`, `npx vitest run` (498 passed, 2 opt-in skipped, 33 files) and `npm run build` |
+
+**Findings for follow-up (not fixed here):**
+- Chunks are sent uncompressed: about 583 KB on average (275–605 KB), about 67 KB gzipped. Fine locally; on Azure it is
+  about 1.5 Mbit/s at 20×. R-03.
+- Early in a match the Momentum panel (stat charts) grows very tall at 1440 px, with an oversized "1st half" label,
+  while only a few spells exist; it settles by full time. Owner: `PLAN_web_stat-charts.md`.
+- Some live wording shows on the replay screen: counter captions ("Since this connection", "All frames received
+  live"), the "Last message" counter and the footer ("Keep the mock's terminal running"). Copy change in `screens.md`
+  §1 first.
 
 ### Handover after implementation
 
-**Pending implementation.**
+- **Built:** `/replay/<id>` plays a finished archived match at 1×, 5× and 20× with pause, resume, replay again and
+  retry, on the live screen's panels (stats included). `/api/replay/<id>` reads Cosmos and Blob with server-only
+  settings and serves a manifest and one minute of validated §7 envelopes per request. Files: §8.
+- **How to run it:** `web/README.md`, "Replay an archived match".
+- **Proven:** everything above, on the local emulators only.
+- **Not proven:** Azure storage, identity and roles (R-02, A3 / S4); replay over a slow link (R-03).
+- **Open:** R-01 agreement (Arnav); R-02; compression (R-03); the three findings above. Jump to a minute was cut.
+- **Docs:** `docs/knowledge/frontend.md` and ARCH-01 in `docs/knowledge/archiver.md` updated in their own commit;
+  Pranav to be told with the PR.
