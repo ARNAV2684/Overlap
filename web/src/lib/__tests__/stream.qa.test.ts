@@ -105,7 +105,7 @@ async function watchToFullTime(matchId: string) {
   });
   const socket = createMatchSocket(tallying(store, tally), { negotiate, getSnapshot });
   socket.start();
-  let lateJoin: Promise<LateJoin> | null = null;
+  let lateJoin = null as Promise<LateJoin> | null; // set inside the timer, so not narrowed to null below
   try {
     await new Promise<void>((resolve, reject) => {
       const deadline = setTimeout(() => reject(new Error(`${matchId} did not reach full time in time`)), RUN_LIMIT_MS);
@@ -137,7 +137,7 @@ describe.skipIf(!ENABLED)("against a running stream", () => {
   it.each(MATCHES)(
     "%s: everything accepted, applied once, finished, and the final score matches the server",
     async (matchId) => {
-      const { state, tally } = await watchToFullTime(matchId);
+      const { state, tally, lateJoin } = await watchToFullTime(matchId);
       // The server's own final score is its newest status (the match list is this app's route, not the stream's)
       const { status } = await getSnapshot(matchId);
       const serverScore = status?.kind === "status" ? status.data.score : undefined;
@@ -148,6 +148,7 @@ describe.skipIf(!ENABLED)("against a running stream", () => {
         `${matchId}: ${total} events (${[...tally.types].map(([t, n]) => `${t} ${n}`).join(", ")}); ` +
           `goals ${tally.goals}; cards ${tally.cards.join(", ") || "none"}; ` +
           `stat panels ${tally.panels} (${tally.heavyPanels} heavy); ` +
+          `late joiner at ${lateJoin?.clock ?? "never"} got ${lateJoin?.panels.length ?? 0} panels; ` +
           `final ${state.scoreboard.score?.home}–${state.scoreboard.score?.away} at ${state.scoreboard.clock}; ` +
           `live counters: ${state.counters.messages} messages, ${state.counters.events} events, ${state.counters.frames} frames; ` +
           `badge ${tally.statuses.join(" → ")}`,
@@ -165,6 +166,15 @@ describe.skipIf(!ENABLED)("against a running stream", () => {
       expect(tally.heavyPanels).toBeGreaterThan(0);
       expect(state.stats.latest).not.toBeNull();
       expect(state.stats.heavy).not.toBeNull();
+      // A reload mid-match brings back the same numbers: the snapshot's panels are the very panels that were live
+      expect(lateJoin, "the match ended before the second client joined").not.toBeNull();
+      if (lateJoin) {
+        expect(lateJoin.panels.length).toBeGreaterThan(0);
+        for (const { seq, data } of lateJoin.panels) expect(data, `snapshot panel seq ${seq}`).toEqual(tally.panelsBySeq.get(seq));
+        const newest = lateJoin.panels.reduce((a, b) => (b.data.match_ms >= a.data.match_ms ? b : a));
+        expect(lateJoin.stats.latest).toEqual(newest.data);
+        expect(lateJoin.stats.heavy).not.toBeNull();
+      }
     },
     RUN_LIMIT_MS + 30_000,
   );
