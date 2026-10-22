@@ -106,8 +106,9 @@ Four cards, values with `text-metric numeric`, not live regions (they change too
   heavy panel's clock; a toolbar with two segmented controls, the chart ("Pass network", "Pressing", "Touches") and
   the team (the two club names); the chart below, at most about 720 px wide, centred. Each control is a radio group
   with its own name ("Team shape chart", "Team").
-- **States:** before any panel, every panel says "Waiting for the first stat panel."; before the first heavy panel,
-  the tide and pitch panel say "First update at the end of the first minute". `null` values read "Not enough data".
+- **States:** before any panel, the stat bars and the tide say "Waiting for the first stat panel." and the pitch
+  panel "First update at the end of the first minute" (until the first heavy panel; the tide shows the current spell
+  meanwhile). `null` values read "Not enough data".
   The section freezes with the rest of the display while the feed is paused.
 - **Replay:** the same section, fed by the replay player's archived panels.
 

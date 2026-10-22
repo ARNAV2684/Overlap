@@ -133,7 +133,8 @@ Plan: [`PLAN_web_stat-charts`](../../plans/active/PLAN_web_stat-charts.md). Shar
 
 The "Match stats" section (`screens.md`): stat bars beside the momentum tide, then one pitch panel with tabs "Pass
 network", "Pressing" and "Touches" and a team switch (the two club names). Before the first heavy panel (the first
-match minute) the pitch panel and the tide say "First update at the end of the first minute" over the empty pitch.
+match minute) the pitch panel says "First update at the end of the first minute" over the empty pitch; the tide
+already shows the current spell from the light panel.
 
 ### Shot map, key events
 

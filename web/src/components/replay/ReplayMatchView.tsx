@@ -3,7 +3,8 @@
 // ReplayMatchView.tsx — Replay screen
 //
 // Purpose: compose the replay screen from the live screen's frame and panels: the replay header and intro, the notice
-//          line, the replay controls, then the scoreboard, counters, timeline, pitch and inspector fed by the player.
+//          line, the replay controls, then the scoreboard, counters, match stats, timeline, pitch and inspector fed by
+//          the player.
 //          If the replay can't start, one message card replaces the controls and panels
 // Inputs:  ReplayMatchView: the store and player from the nearest ReplayProvider; ReplayFallback: nothing
 // Outputs: ReplayMatchView, ReplayFallback (the same screen before the match id is known, for the route's Suspense
@@ -18,6 +19,7 @@ import { AppHeaderView } from "@/components/layout/AppHeader";
 import { NoticeBar, NoticeBarView } from "@/components/layout/NoticeBar";
 import { LiveMatchFallback, LiveMatchFrame, Workspace } from "@/components/live/LiveMatchView";
 import { LivePositionsPanel } from "@/components/live/LivePositionsPanel";
+import { MatchStatsSection } from "@/components/live/MatchStatsSection";
 import { MessageInspectorPanel } from "@/components/inspector/MessageInspectorPanel";
 import { MetricsGrid } from "@/components/metrics/MetricsGrid";
 import { ReplayControls, ReplayControlsView } from "@/components/replay/ReplayControls";
@@ -95,6 +97,7 @@ export function ReplayMatchView() {
           <ReplayControls />
           <Scoreboard />
           <MetricsGrid />
+          <MatchStatsSection />
           <Workspace
             timeline={<EventTimelinePanel />}
             side={
