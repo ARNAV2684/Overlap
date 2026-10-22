@@ -17,7 +17,7 @@ import { goalBetween, type Score } from "@/components/scoreboard/goal";
 import { createApiClient } from "@/lib/api";
 import { parseEnvelope, type ParsedEnvelope, type StatPanel } from "@/lib/contracts";
 import { createMatchSocket } from "@/lib/socket";
-import { createMatchStore, type ConnectionStatus, type MatchStore } from "@/lib/store";
+import { createMatchStore, type ConnectionStatus, type MatchStore, type StoreState } from "@/lib/store";
 
 const ENABLED = process.env.QA_STREAM === "1";
 const MATCHES = (process.env.QA_MATCHES ?? "SYN-9001").split(",").map((id) => id.trim());
@@ -26,6 +26,8 @@ const APP_URL = process.env.QA_APP_URL ?? "http://localhost:3000";
 const { negotiate, getSnapshot } = createApiClient(APP_URL);
 /** Longest a match may take: about 5 minutes at 20×, so 10 minutes leaves room for slower runs. */
 const RUN_LIMIT_MS = 10 * 60_000;
+/** A second client joins through the snapshot once this many heavy panels were live (two whole match minutes). */
+const LATE_JOIN_AFTER_HEAVY = 2;
 
 type Tally = {
   types: Map<string, number>;
@@ -70,6 +72,29 @@ function tallying(store: MatchStore, tally: Tally): MatchStore {
   };
 }
 
+type LateJoin = {
+  /** Match clock on the live screen when the second client joined. */
+  clock: string;
+  /** The snapshot's stat panels with their envelope seq, in the order sent. */
+  panels: { seq: number; data: StatPanel }[];
+  /** What the second client's charts would show after ingesting that snapshot. */
+  stats: StoreState["stats"];
+};
+
+/** A viewer who opens (or reloads) the page now: a fresh store fed only by the snapshot, as the socket does. */
+async function joinLate(matchId: string): Promise<{ store: MatchStore; panels: LateJoin["panels"] }> {
+  const snapshot = await getSnapshot(matchId);
+  const store = createMatchStore(matchId, { onReject: (m) => console.warn(m) });
+  store.setSetup(snapshot.setup);
+  const panels: LateJoin["panels"] = [];
+  for (const envelope of snapshot.envelopes) {
+    store.ingest(envelope, null);
+    if (envelope.kind === "stats") panels.push({ seq: envelope.seq, data: envelope.data });
+  }
+  store.flush();
+  return { store, panels };
+}
+
 async function watchToFullTime(matchId: string) {
   const store = createMatchStore(matchId, { onReject: (m) => console.warn(m) });
   const tally: Tally = { types: new Map(), goals: 0, cards: [], panels: 0, heavyPanels: 0, panelsBySeq: new Map(), statuses: [], scores: [] };
@@ -80,10 +105,20 @@ async function watchToFullTime(matchId: string) {
   });
   const socket = createMatchSocket(tallying(store, tally), { negotiate, getSnapshot });
   socket.start();
+  let lateJoin: Promise<LateJoin> | null = null;
   try {
     await new Promise<void>((resolve, reject) => {
       const deadline = setTimeout(() => reject(new Error(`${matchId} did not reach full time in time`)), RUN_LIMIT_MS);
       const check = setInterval(() => {
+        if (lateJoin === null && tally.heavyPanels >= LATE_JOIN_AFTER_HEAVY) {
+          const clock = store.getState().scoreboard.clock;
+          lateJoin = joinLate(matchId).then(({ store: late, panels }) => {
+            const stats = late.getState().stats;
+            late.destroy();
+            return { clock, panels, stats };
+          });
+          lateJoin.catch(() => undefined); // awaited after full time; this only stops an early "unhandled" warning
+        }
         if (store.getState().connection.status === "finished") {
           clearTimeout(deadline);
           clearInterval(check);
@@ -95,7 +130,7 @@ async function watchToFullTime(matchId: string) {
     socket.stop();
   }
   store.flush();
-  return { state: store.getState(), tally };
+  return { state: store.getState(), tally, lateJoin: lateJoin === null ? null : await lateJoin };
 }
 
 describe.skipIf(!ENABLED)("against a running stream", () => {
