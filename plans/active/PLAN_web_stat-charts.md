@@ -149,6 +149,7 @@ archiver (Cosmos stats) ──▶ replay route ──stats envelope──▶ rep
 | `web/src/lib/stat-charts.ts` | Add | Pure helpers: bar rows, tide series, grid scaling, network geometry | `charts.md` §2 | Vedant |
 | `web/src/components/charts/{StatBars,MomentumTide,PassNetwork,PressingZones,HeatmapZones}.tsx` | Modify (placeholder → component) | The five charts | `charts.md` §2 | Vedant |
 | `web/src/components/charts/pitch/GridCells.tsx` | Add | Shaded cells over the pitch, shared by pressing and touch zones | `charts.md` §2 | Vedant |
+| `web/src/components/charts/pitch/TeamPitch.tsx` | Add | The pitch frame the three team-frame charts share: surface, markings, label, empty message, "Attacking →" caption | `charts.md` §2 | Vedant |
 | `web/src/components/live/MatchStatsSection.tsx` | Add | The section: bars, tide, pitch panel with tabs; a `View` for the fallback | `screens.md` | Vedant |
 | `web/src/components/live/LiveMatchView.tsx`, `web/src/components/replay/ReplayMatchView.tsx` | Modify | Place the section (and its empty view in the fallback) | `screens.md` | Vedant |
 | `web/src/lib/__tests__/{stat-charts,stat-charts-view}.test.ts` | Add | Helper and component tests | — | Vedant |

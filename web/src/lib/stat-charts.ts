@@ -22,6 +22,8 @@ import type { PlayerInfo } from "@/lib/store";
 
 /** What a `null` (low-sample) value reads as. Never zero (CONTRACTS.md §7.4). */
 export const NOT_ENOUGH_DATA = "Not enough data";
+/** What a heavy-block chart says before the first heavy panel (the first whole match minute). */
+export const FIRST_HEAVY_NOTE = "First update at the end of the first minute";
 
 // ---------------------------------------------------------------------------------------------------------------
 // Stat bars
