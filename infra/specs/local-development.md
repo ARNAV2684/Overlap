@@ -61,9 +61,10 @@ local keys are Microsoft's public, documented values, not secrets; Azure never u
 ## 5. Run order
 
 1. `ACCEPT_EULA=Y docker compose up -d` in `infra/local/` (the three emulators); wait for the health checks.
+   Before a run, `python infra/local/check_stack.py --model` checks every service below and the local model's port.
 2. Start the Web PubSub stand-in on the host: `uv run standin` in `infra/local/webpubsub_standin/`.
 3. Start the relay: `func start` in `functions/` (or `relay_runner.py`; add `--from-latest` if matches streamed while it was off). `func start` also runs the archiver;
-   without it, run `uv run python main.py` in `archiver/`.
+   without it, run `uv run python main.py` in `archiver/` (`--from-latest` if matches streamed while it was off).
 4. Open the screen: Vedant's app or, until it exists, `mock/single-match-demo/` on 8788 (moved to the protocol).
 5. Start the stats engine: `uv run python main.py live` in `stats/` (moments, `match_state`, stat panels).
 6. Start the insights flow: `uv run python ../functions/moment_trigger.py` in `agents/` (polls moments, runs the
