@@ -16,7 +16,8 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 INPUT_LIMIT = 1024
 OUTPUT_LIMIT = 12 * 1024
 DOCUMENT_LIMIT = 64 * 1024
-SYSTEM_FIELDS = frozenset({"_rid", "_self", "_etag", "_attachments", "_ts"})
+# Cosmos system fields; a change-feed delivery (Azure Functions trigger) also carries _lsn
+SYSTEM_FIELDS = frozenset({"_rid", "_self", "_etag", "_attachments", "_ts", "_lsn"})
 MatchId = Annotated[str, Field(pattern=r"^SYN-[0-9]{4}$")]
 MomentId = Annotated[str, Field(pattern=r"^MO-[0-9]{4}-[0-9]{4}$")]
 TeamId = Annotated[str, Field(pattern=r"^[A-Z]{3}$")]

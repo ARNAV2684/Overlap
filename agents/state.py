@@ -23,7 +23,7 @@ JOB, BUDGET, OUTBOX = "insight_job", "insight_budget", "insight_outbox"
 STATES = ("pending", "running", "delivery_pending", "published", "partially_expired", "expired", "rejected",
           "suppressed", "failed")
 TERMINAL = frozenset({"published", "partially_expired", "expired", "rejected", "suppressed", "failed"})
-SYSTEM_FIELDS = ("_rid", "_self", "_etag", "_attachments", "_ts")
+SYSTEM_FIELDS = ("_rid", "_self", "_etag", "_attachments", "_ts", "_lsn")    # _lsn: change-feed deliveries
 
 
 class PreconditionFailed(Exception):

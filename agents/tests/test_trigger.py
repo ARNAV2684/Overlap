@@ -161,3 +161,13 @@ def test_mcp_runs_on_this_python_when_there_is_no_server_venv(tmp_path, monkeypa
     assert env["PYTHONPATH"] == str(tmp_path)
     assert env["IDENTITY_ENDPOINT"] and env["OVERLAP_COSMOS_ENDPOINT"] and "UNRELATED_SECRET" not in env
     assert "PYTHONPATH" not in C.mcp_env(s, "/elsewhere/python")
+
+
+def test_a_change_feed_delivery_is_the_same_moment(moments, clock):
+    """The Cosmos change feed adds _lsn (a new value on every delivery): the moment is still valid and the same
+    source, so a repeated delivery is not a conflict."""
+    store = MemoryStore()
+    first = asyncio.run(T.handle_batch([{**moments[0], "_lsn": 11}], deps(store, clock)))
+    assert first[0]["status"] == "delivery_pending"
+    again = asyncio.run(T.handle_batch([{**moments[0], "_lsn": 12}], deps(store, clock)))
+    assert again[0]["status"] != "conflict"
