@@ -101,8 +101,8 @@ describe("dedupe on seq", () => {
   });
 
   it("ignores kinds the screen does not render, without using up the seq", () => {
-    const stats = { seq: 3, kind: "stats", match_id: MATCH, match_ms: 1, clock: "0:01", data: {} } as ParsedEnvelope;
-    expect(store.ingest(stats, Date.now())).toBe("ignored");
+    const overlay = { seq: 3, kind: "overlay", match_id: MATCH, match_ms: 1, clock: "0:01", data: {} } as ParsedEnvelope;
+    expect(store.ingest(overlay, Date.now())).toBe("ignored");
     expect(store.ingest(eventEnv(3), Date.now())).toBe("applied");
   });
 });

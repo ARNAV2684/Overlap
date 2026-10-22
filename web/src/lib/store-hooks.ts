@@ -6,7 +6,7 @@
 //          changes. Also holds the context the provider (components/live/MatchStreamProvider) fills
 // Inputs:  the store from the nearest MatchStoreContext
 // Outputs: useMatchStore(), useConnection(), useScoreboard(), useCounters(), useTimelineRows(), useLatestFrame(),
-//          useSelectedRow(), useNotice(), useControls(), usePlayers()
+//          useSelectedRow(), useStats(), useNotice(), useControls(), usePlayers()
 // Spec:    web/specs/realtime.md §2. web/IMPLEMENTATION_PLAN.md Phase 5.1
 //
 // Every slice keeps the same object until its content changes (see store.ts), so the selectors below return
@@ -22,6 +22,7 @@ import type {
   Notice,
   PlayerInfo,
   Scoreboard,
+  Stats,
   StoreState,
   Timeline,
 } from "@/lib/store";
@@ -56,3 +57,4 @@ export const useCounters = (): Counters => useStoreSelector((s) => s.counters);
 export const useTimelineRows = (): Timeline => useStoreSelector((s) => s.timeline);
 export const useLatestFrame = (): TrackingFrame | null => useStoreSelector((s) => s.latestFrame);
 export const useSelectedRow = (): Inspector => useStoreSelector((s) => s.inspector);
+export const useStats = (): Stats => useStoreSelector((s) => s.stats);
