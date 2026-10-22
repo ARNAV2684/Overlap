@@ -1,4 +1,3 @@
 .venv/
 recorded/
 __pycache__/
-uv.lock

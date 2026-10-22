@@ -19,6 +19,7 @@ pythonpath = ["."]
 testpaths = ["tests"]
 
 [tool.uv]
+required-version = ">=0.13.4"   # one uv for everyone: the lockfile format follows the uv version
 package = false
 
 [tool.ruff]
