@@ -44,8 +44,10 @@ uv run python -m overlap_mock.cli play --match all --speed 20 --hubs off --web -
   their replay; refreshed every 5 s. It needs the archive settings in `web/.env.local` (the same ones as replay, see
   `web/.env.example`) and the local stack's Cosmos emulator with the archiver running. The mock writes no archive, so
   with the mock alone `/` says the list isn't available; open `/match/SYN-9001` directly instead.
-- `/match/SYN-9001` is the live screen: scoreboard, four counters, event timeline, live pitch and message inspector.
-  After full time the server stays up for `--linger-s` seconds; reload the page to start a new run.
+- `/match/SYN-9001` is the live screen: scoreboard, four counters, match stats, event timeline, live pitch and message
+  inspector. After full time the server stays up for `--linger-s` seconds; reload the page to start a new run. The
+  match stats need the stats engine's panels (`kind: stats`), so with the mock alone they wait for the first panel;
+  run the local stack with the stats consumer (`infra/specs/local-development.md`) to see them.
 - `/dev/ui` (development only) shows every token, primitive and timeline row variant, including the red and
   second-yellow cards `SYN-9001` never produces (`SYN-9002` has a red card).
 - `infra/local/webpubsub_standin/` fed by the screen relay also serves port 8787 and works the same way.
@@ -69,6 +71,7 @@ QA_STREAM=1 QA_MATCHES=SYN-9001,SYN-9002,SYN-9003 npx vitest run src/lib/__tests
 | Frame: header and badge, intro, notice, footer | `src/components/layout/*`, `src/components/live/LiveMatchView.tsx` | connection, notice |
 | Scoreboard, goal flash and announcement | `src/components/Scoreboard.tsx`, `src/components/scoreboard/*` | scoreboard (live while paused) |
 | Four counters | `src/components/metrics/*` | counters (frozen while paused) |
+| Match stats: stat bars, momentum tide, pass network, pressing and touch zones | `src/components/live/MatchStatsSection.tsx`, `src/components/charts/{StatBars,MomentumTide,PassNetwork,PressingZones,HeatmapZones}.tsx`, `src/lib/stat-charts.ts` | stats (frozen while paused), players |
 | Event timeline: one component per row type | `src/components/timeline/**` | timeline, controls, inspector |
 | Live pitch | `src/components/charts/LivePitch.tsx`, `src/components/charts/pitch/*`, `src/components/live/LivePositionsPanel.tsx` | latest frame, players |
 | Message inspector | `src/components/inspector/*` | inspector, connection (rejected count) |

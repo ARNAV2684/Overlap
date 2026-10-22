@@ -5,6 +5,7 @@ import { buildReplayChunk, buildReplayIndex, type ReplayManifest } from "@/lib/r
 import { createReplayPlayer, replayNotices, type ReplayPlayer } from "@/lib/replay-player";
 import { createMatchStore, type MatchStore } from "@/lib/store";
 import { frameAt, P1_END, P2_END, STORED_EVENTS, STORED_MATCH } from "./replay-fixtures";
+import { statsEnv } from "./fixtures";
 
 // The stored match of replay-fixtures.ts as the route would serve it: five one-minute chunks, 1–1 at full time
 const markers = STORED_EVENTS.filter((e) => e.type === "PeriodStart" || e.type === "PeriodEnd");
@@ -153,7 +154,7 @@ describe("replay player: start and playback (AC-05)", () => {
       ...chunk,
       envelopes: [
         ...chunk.envelopes,
-        { seq: chunk.envelopes[chunk.envelopes.length - 1].seq + 1, kind: "stats", match_id: "SYN-0042", match_ms: matchMs, clock, data: {} },
+        { ...statsEnv(chunk.envelopes[chunk.envelopes.length - 1].seq + 1, matchMs), clock },
       ],
     });
     const chunks = [...CHUNKS];

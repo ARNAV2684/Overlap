@@ -2,6 +2,8 @@
 
 > **Status: merged for review in #19 (16 Oct); not yet marked agreed.** Answers §1 (connection), §2 (store), §3
 > (catch-up) and adds §6 (testing and checks) for the live match screen. §4 (overlay scheduler) is **not started**.
+> `stats` envelopes and the store's `stats` slice (§1, §2) are **written for review** (22 Oct) for
+> [`PLAN_web_stat-charts`](../../plans/active/PLAN_web_stat-charts.md).
 > §5 (replay) is **written for review** (20 Oct) for [`PLAN_web_replay`](../../plans/active/PLAN_web_replay.md); no
 > replay code exists yet. The live screen's code is on `main` (#43, #48). Plan:
 > [`PLAN_web_live-match-viewer`](../../plans/active/PLAN_web_live-match-viewer.md). The `status` and `positions`
@@ -43,9 +45,10 @@ _Answer:_
   status becomes `finished` and nothing retries. Each reconnect runs the catch-up of §3 again.
 - **Connection status** (shown as a badge with text and icon): `connecting`, `live`, `stale` (connected but silent
   for 10 s), `reconnecting`, `finished`.
-- **Accepted kinds:** `event`, `positions`, `status`. The other kinds in `CONTRACTS.md` §7 (`stats`, `overlay`,
-  `player_tag`, `recap`) pass the outer envelope check and are ignored, not rejected. An envelope for another
-  `match_id` is dropped.
+- **Accepted kinds:** `event`, `positions`, `status` and `stats` (all on `match-<id>`). `stats` is checked strictly
+  against the stat panel of `CONTRACTS.md` §7.4, heavy block included; a panel that fails is rejected as a whole. The
+  other kinds in `CONTRACTS.md` §7 (`overlay`, `player_tag`, `recap`) pass the outer envelope check and are ignored,
+  not rejected. An envelope for another `match_id` is dropped.
 
 ## 2. Store
 
@@ -80,11 +83,15 @@ _Answer:_
   | `counters` | display | live messages, events, frames, last-received time, messages in the last 10 s |
   | `timeline` | display | the newest 120 rows for the active filter, newest first |
   | `latestFrame` | display | the newest tracking frame by `match_ms` |
+  | `stats` | display | `latest`: the stat panel with the greatest `match_ms`; `heavy`: the greatest one with a `heavy` block |
   | `inspector` | display | the selected row, or the newest event while following |
 
 - **Applying a kind:** `status` sets the setup (if present), phase, period and score, and adds a "Match state" row;
   `event` adds a row described by `describeEvent` (readable title, detail, emphasis for goal, cards and substitutions);
-  `positions` adds one "Position frame" row per frame in `data.frames` and updates `latestFrame`. A setup that arrives
+  `positions` adds one "Position frame" row per frame in `data.frames` and updates `latestFrame`; `stats` replaces
+  `stats.latest` (and `stats.heavy` when it has a block) unless it is older by `match_ms` (a re-sent panel for the same
+  second replaces it). `stats` adds no timeline row and is not counted as an event or frame; the snapshot carries
+  every panel so far, and only these two are kept. A setup that arrives
   after some events re-describes those rows with names. Setup is identified by match id and seed, so the second copy
   (snapshot, then first status) is a no-op.
 - **Rows:** two ring buffers of 600 rows (events and status; tracking). History rows (from the snapshot) have

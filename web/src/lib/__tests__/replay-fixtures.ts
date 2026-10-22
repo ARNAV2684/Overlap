@@ -12,7 +12,7 @@
 import type { TrackingFrame } from "@/lib/contracts";
 import { replayClock } from "@/lib/replay-envelopes";
 import type { ArchiveStore, StoredDoc, StoredMatch, TrackingFile } from "@/lib/server/archive-store";
-import { makeFrame, makeSetup } from "./fixtures";
+import { makeFrame, makePanel, makeSetup } from "./fixtures";
 
 export const P1_END = 125_000;
 export const P2_END = 61_000;
@@ -75,16 +75,18 @@ export function frameAt(period: number, periodMs: number, ballX = 50): TrackingF
   };
 }
 
-/** One stat panel as the archiver stores it (CONTRACTS.md §7.4, shortened). */
+/** One stat panel as the archiver stores it (CONTRACTS.md §7.4, complete, so it passes the strict schema). */
 export const storedPanel = (period: number, periodMs: number): StoredDoc => {
   const matchMs = startOf(period) + periodMs;
   return {
     ...cosmosFields(`stats-${String(matchMs).padStart(9, "0")}`),
-    match_id: "SYN-0042",
-    match_ms: matchMs,
-    clock: replayClock(period, periodMs),
-    period,
-    low_sample: [],
+    ...makePanel({
+      match_ms: matchMs,
+      clock: replayClock(period, periodMs),
+      period,
+      score: { home: 0, away: 0 },
+      momentum: { period, bucket: Math.floor(periodMs / 300_000), home: 0, away: 0 },
+    }),
   };
 };
 
