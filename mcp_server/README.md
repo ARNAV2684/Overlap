@@ -55,7 +55,9 @@ the declared schema, status, bound identity/cursor, exact context and structured
 Use the existing local Cosmos emulator. If it is not running, follow the shared
 [local setup instructions](../infra/specs/local-development.md); do not start a second emulator on the same ports.
 The current shared configuration uses HTTP on loopback port 8081. `infra/local/env.example` contains public emulator
-credentials, not cloud credentials. These commands accept only a loopback endpoint and database `live`, and always
+credentials, not cloud credentials. With a key these commands accept only a loopback endpoint; without one the
+reader accepts only an Azure Cosmos endpoint and signs in with managed identity (read-only role; the seed command
+never runs against Azure). Always database `live`, and always
 use container `moments` with partition key `/match_id`, regardless of the relay's container setting.
 
 From `mcp_server/`:

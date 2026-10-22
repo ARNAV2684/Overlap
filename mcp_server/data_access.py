@@ -38,26 +38,54 @@ def _check_doc_args(container: str, doc_id: str) -> None:
 
 
 def local_cosmos_settings() -> tuple[str, str]:
+    """Key access: only the local emulator on loopback (its public, documented key)."""
     endpoint = os.environ.get("OVERLAP_COSMOS_ENDPOINT", "http://127.0.0.1:8081")
     parsed = urlsplit(endpoint)
     if (parsed.scheme not in ("http", "https") or parsed.hostname not in ("127.0.0.1", "localhost", "::1")
             or parsed.username or parsed.password or parsed.query or parsed.fragment or parsed.path not in ("", "/")):
-        raise ValueError("This milestone accepts only a loopback Cosmos emulator endpoint")
+        raise ValueError("Key access accepts only a loopback Cosmos emulator endpoint")
     if not parsed.port:
         raise ValueError("Specify the local emulator port")
-    if os.environ.get("OVERLAP_COSMOS_DATABASE", "live") != "live":
-        raise ValueError("This milestone reads only database live")
+    _check_database()
     key = os.environ.get("OVERLAP_COSMOS_KEY")
     if not key:
         raise ValueError("Set OVERLAP_COSMOS_KEY from infra/local/env.example (emulator only)")
     return endpoint, key
 
 
-def cosmos_client() -> CosmosClient:
-    endpoint, key = local_cosmos_settings()
+def azure_cosmos_endpoint() -> str:
+    """Managed-identity access: only an Azure Cosmos account endpoint (https://<account>.documents.azure.com)."""
+    endpoint = os.environ.get("OVERLAP_COSMOS_ENDPOINT", "")
+    parsed = urlsplit(endpoint)
+    host = parsed.hostname or ""
+    if (parsed.scheme != "https" or not host.endswith(".documents.azure.com") or host.count(".") != 3
+            or parsed.username or parsed.password or parsed.query or parsed.fragment
+            or parsed.path not in ("", "/") or parsed.port not in (None, 443)):
+        raise ValueError("Without a key, OVERLAP_COSMOS_ENDPOINT must be https://<account>.documents.azure.com")
+    _check_database()
+    return endpoint
+
+
+def _check_database() -> None:
+    if os.environ.get("OVERLAP_COSMOS_DATABASE", "live") != "live":
+        raise ValueError("The reader reads only database live")
+
+
+def cosmos_client(credential=None) -> CosmosClient:
+    """The emulator with its key when OVERLAP_COSMOS_KEY is set; otherwise Azure Cosmos with managed identity
+    (DefaultAzureCredential; azure-identity is in the Functions app and agents environments). The reader only reads:
+    on Azure its identity gets the Cosmos DB Built-in Data Reader role, nothing more."""
     # SDK retries are off: the bound tool owns its two-attempt budget.
-    return CosmosClient(endpoint, credential=key, retry_total=0, retry_connect=0,
-                        retry_read=0, retry_status=0, connection_timeout=1, read_timeout=1)
+    options = {"retry_total": 0, "retry_connect": 0, "retry_read": 0, "retry_status": 0, "connection_timeout": 1,
+               "read_timeout": 1}
+    if os.environ.get("OVERLAP_COSMOS_KEY"):
+        endpoint, key = local_cosmos_settings()
+        return CosmosClient(endpoint, credential=key, **options)
+    endpoint = azure_cosmos_endpoint()
+    if credential is None:
+        from azure.identity.aio import DefaultAzureCredential
+        credential = DefaultAzureCredential()
+    return CosmosClient(endpoint, credential=credential, **options)
 
 
 class FixtureReader:
@@ -102,8 +130,13 @@ class FixtureReader:
 class CosmosReader:
     source = "cosmos"
 
-    def __init__(self):
-        self.client = cosmos_client()
+    def __init__(self, credential=None):
+        self.own_credential = None
+        if credential is None and not os.environ.get("OVERLAP_COSMOS_KEY"):
+            azure_cosmos_endpoint()                        # fail on a bad endpoint before making a credential
+            from azure.identity.aio import DefaultAzureCredential
+            credential = self.own_credential = DefaultAzureCredential()
+        self.client = cosmos_client(credential)
         self.ready = False
         self.container = self.client.get_database_client("live").get_container_client("moments")
 
@@ -145,6 +178,8 @@ class CosmosReader:
 
     async def close(self) -> None:
         await self.client.close()
+        if self.own_credential is not None:
+            await self.own_credential.close()
 
 
 def make_reader(source: str, directory: Path) -> Reader:

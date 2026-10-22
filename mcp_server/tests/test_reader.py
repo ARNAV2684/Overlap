@@ -1,9 +1,16 @@
 """Scope, retry and source limits. Spec: mcp_server/specs/tools.md §§3–4."""
 import asyncio
 import json
+from pathlib import Path
 
 import pytest
-from mcp_server.data_access import FixtureReader, SourceFailure, local_cosmos_settings
+from mcp_server.data_access import (
+    CosmosReader,
+    FixtureReader,
+    SourceFailure,
+    azure_cosmos_endpoint,
+    local_cosmos_settings,
+)
 from mcp_server.schema import Identity, encoded
 from mcp_server.tools.match_state import MatchStateTool
 
@@ -127,3 +134,45 @@ def test_cloud_or_ambiguous_endpoints_fail_before_connect(monkeypatch, endpoint)
     monkeypatch.setenv("OVERLAP_COSMOS_KEY", "test-only")
     with pytest.raises(ValueError):
         local_cosmos_settings()
+
+
+@pytest.mark.parametrize("endpoint", [
+    "http://example.documents.azure.com", "https://example.documents.azure.com.evil.test",
+    "https://evil.test/example.documents.azure.com", "https://user@example.documents.azure.com",
+    "https://example.documents.azure.com/dbs/live", "https://example.documents.azure.com:8081",
+    "https://a.b.documents.azure.com", "http://localhost:8081",
+])
+def test_without_a_key_only_an_azure_cosmos_endpoint_is_accepted(monkeypatch, endpoint):
+    monkeypatch.setenv("OVERLAP_COSMOS_ENDPOINT", endpoint)
+    monkeypatch.delenv("OVERLAP_COSMOS_KEY", raising=False)
+    with pytest.raises(ValueError):
+        azure_cosmos_endpoint()
+
+
+def test_azure_mode_uses_the_given_identity_and_reads_only_live(monkeypatch):
+    monkeypatch.setenv("OVERLAP_COSMOS_ENDPOINT", "https://overlap-demo.documents.azure.com:443/")
+    monkeypatch.delenv("OVERLAP_COSMOS_KEY", raising=False)
+    assert azure_cosmos_endpoint() == "https://overlap-demo.documents.azure.com:443/"
+
+    class Token:                                       # stands in for a managed-identity credential
+        async def get_token(self, *scopes, **kwargs):
+            raise AssertionError("no network in tests")
+
+        async def close(self):
+            pass
+    reader = CosmosReader(credential=Token())
+    assert reader.own_credential is None and reader.container.id == "moments"
+    monkeypatch.setenv("OVERLAP_COSMOS_DATABASE", "other")
+    with pytest.raises(ValueError):
+        azure_cosmos_endpoint()
+
+
+def test_the_seed_command_never_writes_to_azure(monkeypatch, tmp_path):
+    import asyncio
+
+    from mcp_server.sample import seed
+    monkeypatch.setenv("OVERLAP_COSMOS_ENDPOINT", "https://overlap-demo.documents.azure.com")
+    monkeypatch.delenv("OVERLAP_COSMOS_KEY", raising=False)
+    path = Path(__file__).parent.parent / "samples" / "MO-1017-0001.json"
+    with pytest.raises(ValueError):
+        asyncio.run(seed(path))
