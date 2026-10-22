@@ -215,6 +215,23 @@ is the only screen reader checked. The snapshot rule is the trimmed one (D-9 B) 
   test stats checks (AC-08), then the 20× trace (AC-07), then keyboard (AC-06), then restart (AC-05). Never cut
   AC-01–AC-04: they are stat-charts AC-07.
 
+### Run 1 browser checklist (5×, Vedant at Chrome)
+
+Start the stack as in §13 (or reuse the one Run 2 leaves running), then send one match:
+`generator/cli.py live --hubs emulator --speed 5 --first-match <n>` and open `/match/SYN-<n>` before kickoff.
+
+| Step | Do | Record | AC |
+|---|---|---|---|
+| 1 | Watch the first two match minutes: stat bars move, the tide and pitch charts change at 1:00 and 2:00; inspector rejected count | Clock times, rejected count | AC-01 |
+| 2 | DevTools device toolbar at 375 px, then 1440 px, mid-match | Two screenshots, no horizontal scroll | AC-01, AC-04 |
+| 3 | Open a second window on the same match, reload it, put both side by side | One screenshot with equal stat bars | AC-02 |
+| 4 | Ctrl+C the stand-in, wait about 10 s, start it again | Times of reconnecting and live; no duplicate timeline rows; stats back to live | AC-05 |
+| 5 | Keyboard only: Tab through the page; timeline arrows, Home/End, Enter/Space; chart and team switches; then Narrator on one timeline row and one chart | Checklist result, focus always visible | AC-06 |
+| 6 | At full time: screenshot, reload, screenshot | Same final numbers | AC-02 |
+| 7 | Optional, on a 20× match with `next start`: Performance panel about 60 s mid-match, React Profiler on the timeline | Longest task, commits per 250 ms | AC-07 |
+
+Keep screenshots and the trace outside the repo (D-5); paste the results into §15.
+
 ## 13. Integration and change management
 
 - **Proposed branch / PR boundaries:** `web/e2e-stats-run` from `web/realtime-routes` · `e0f12a1`, in about 12 small
