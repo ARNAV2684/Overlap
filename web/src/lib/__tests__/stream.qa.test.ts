@@ -15,7 +15,7 @@
 import { describe, expect, it } from "vitest";
 import { goalBetween, type Score } from "@/components/scoreboard/goal";
 import { createApiClient } from "@/lib/api";
-import { parseEnvelope, type ParsedEnvelope } from "@/lib/contracts";
+import { parseEnvelope, type ParsedEnvelope, type StatPanel } from "@/lib/contracts";
 import { createMatchSocket } from "@/lib/socket";
 import { createMatchStore, type ConnectionStatus, type MatchStore } from "@/lib/store";
 
@@ -34,6 +34,8 @@ type Tally = {
   /** Stat panels applied, and how many of them carried the heavy block. */
   panels: number;
   heavyPanels: number;
+  /** Each applied panel by envelope seq, so a late joiner's panels can be compared with what was live. */
+  panelsBySeq: Map<number, StatPanel>;
   statuses: ConnectionStatus[];
   scores: (Score | null)[];
 };
@@ -44,6 +46,7 @@ function tallying(store: MatchStore, tally: Tally): MatchStore {
     if (envelope.kind === "stats") {
       tally.panels++;
       if (envelope.data.heavy) tally.heavyPanels++;
+      tally.panelsBySeq.set(envelope.seq, envelope.data);
       return;
     }
     if (envelope.kind !== "event") return;
@@ -69,7 +72,7 @@ function tallying(store: MatchStore, tally: Tally): MatchStore {
 
 async function watchToFullTime(matchId: string) {
   const store = createMatchStore(matchId, { onReject: (m) => console.warn(m) });
-  const tally: Tally = { types: new Map(), goals: 0, cards: [], panels: 0, heavyPanels: 0, statuses: [], scores: [] };
+  const tally: Tally = { types: new Map(), goals: 0, cards: [], panels: 0, heavyPanels: 0, panelsBySeq: new Map(), statuses: [], scores: [] };
   store.subscribe(() => {
     const { connection, scoreboard } = store.getState();
     if (tally.statuses.at(-1) !== connection.status) tally.statuses.push(connection.status);
