@@ -199,3 +199,63 @@ def test_models_close_their_http_client():
     asyncio.run(Models(Settings(), client=SimpleNamespace(client=Inner())).close())
     asyncio.run(Models(Settings()).close())                    # no client: nothing to close
     assert closed == [True]
+
+
+# --- the breaker ----------------------------------------------------------------------------------------------------
+
+class Clock:
+    def __init__(self):
+        self.t = 0.0
+
+    def __call__(self):
+        return self.t
+
+
+def test_breaker_pauses_after_failures_then_probes_once():
+    from models import Breaker
+    b, now = Breaker(limit=3, cooldown_s=60), 100.0
+    for _ in range(2):
+        assert b.allow(now)
+        b.failure(now)
+    assert b.allow(now)
+    b.failure(now)                                         # third in a row: paused
+    assert not b.allow(now + 59)
+    assert b.allow(now + 61)                               # one probe
+    assert not b.allow(now + 61)                           # and only one
+    b.failure(now + 62)                                    # probe failed: paused again
+    assert not b.allow(now + 100) and b.allow(now + 123)
+    b.success()
+    assert b.allow(now + 124) and b.failures == 0
+
+
+class SlowAgent:
+    calls = 0
+
+    def __init__(self, client, instructions, name=None):
+        pass
+
+    async def run(self, messages, **kwargs):
+        SlowAgent.calls += 1
+        raise ConnectionError("model down")
+
+
+def test_failing_model_trips_the_breaker_and_later_calls_skip_it(monkeypatch):
+    import agent_framework
+    monkeypatch.setattr(agent_framework, "Agent", SlowAgent)
+    SlowAgent.calls = 0
+    clock = Clock()
+    s = Settings(provider="local", local_base_url="http://localhost:1", local_model="m", model_breaker_failures=2,
+                 model_breaker_cooldown_s=30)
+    m = Models(s, ModelGate(s), client=object(), clock=clock)
+    reasons = []
+    for _ in range(5):
+        try:
+            ask(m, deadline=1e9)
+        except ModelFailed as e:
+            reasons.append(e.reason)
+    assert reasons == ["provider_error", "provider_error", "breaker_open", "breaker_open", "breaker_open"]
+    assert SlowAgent.calls == 2                            # paused calls never reach the provider (or the budget)
+    clock.t = 31
+    with pytest.raises(ModelFailed) as e:
+        ask(m, deadline=1e9)
+    assert e.value.reason == "provider_error" and SlowAgent.calls == 3     # the probe

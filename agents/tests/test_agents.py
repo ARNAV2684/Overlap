@@ -459,3 +459,21 @@ def test_an_optional_tool_outside_scope_still_rejects(moments, clock):
     from context import ContextRejected
     d = deps(MemoryStore(), clock, replies={"get_live_state": ContextRejected("get_live_state:outside_scope")})
     assert process(by_id(moments, "MO-1017-0013"), d)["status"] == "rejected"
+
+
+def test_a_moment_the_match_has_moved_past_is_suppressed_before_any_model_call(moments, clock):
+    store = MemoryStore()
+    cluster = by_id(moments, "MO-1017-0013")
+    store.states["SYN-1017"] = {"phase": "live", "period": 2,
+                                "source": {"event_seq": 9, "match_ms": cluster["evidence"]["match_ms"] + 400_000}}
+    d = deps(store, clock)
+    assert process(cluster, d)["status"] == "suppressed"
+    assert job(store, "MO-1017-0013")["terminal_reason"] == "stale" and d.models.calls == []
+
+
+def test_replays_can_turn_the_stale_check_off(moments, clock):
+    import dataclasses
+    store = MemoryStore()
+    store.states["SYN-1017"] = {"phase": "full_time", "period": 2, "source": {"event_seq": 9, "match_ms": 6_000_000}}
+    d = deps(store, clock, settings=dataclasses.replace(SETTINGS, skip_stale=False))
+    assert process(by_id(moments, "MO-1017-0013"), d)["status"] == "delivery_pending"

@@ -43,6 +43,12 @@ async def run(run: RunState) -> dict:
     base = {"trigger": e["trigger"], "team_id": e["team_id"], "period": e["period"], "match_ms": e["match_ms"],
             "priority": priority(e["trigger"]), "model": False, "merged": []}
 
+    # Too late already (the playhead is past its live window, a new half, or full time): no model call, no card.
+    if s.skip_stale:
+        from publisher import eligibility
+        if eligibility("overlay", e["period"], e["match_ms"], await store.match_state(m["match_id"])) == "late":
+            return {**base, "decision": "suppress", "reason": "stale"}
+
     # Same triggering event, several moments: the highest-priority one shows; the others feed its card.
     last = e["event_ids"][-1] if e["event_ids"] else None
     siblings = [o for o in await store.moments(m["match_id"]) if o["moment_id"] != m["moment_id"] and last

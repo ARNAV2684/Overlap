@@ -125,7 +125,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--model-jobs", type=int, help="model-backed moments per match when a model is on")
     ap.add_argument("--only", nargs="*", help="only these match ids")
     args = ap.parse_args(argv)
-    settings = Settings.from_env()
+    settings = dataclasses.replace(Settings.from_env(), skip_stale=False)    # replayed, finished matches
     if args.model_jobs:
         settings = dataclasses.replace(settings, max_model_jobs_per_match=args.model_jobs,
                                        high_priority_reserve=min(settings.high_priority_reserve,

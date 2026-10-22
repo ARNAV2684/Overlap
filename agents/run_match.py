@@ -181,6 +181,7 @@ def main(argv: list[str] | None = None) -> int:
     if not moments:
         print(f"no moments for {match_id}")
         return 1
+    settings = dataclasses.replace(settings, skip_stale=False)      # a finished match: every moment is "late"
     report = asyncio.run(run(match_id, moments, state, settings))
     text = json.dumps(report, indent=2, ensure_ascii=False, default=dict)
     if args.report:

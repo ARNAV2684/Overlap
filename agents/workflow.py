@@ -31,7 +31,7 @@ from state import LeaseLost, SourceConflict, Store, write_outbox
 from validate import InvalidMoment, validate_moment
 
 __all__ = ["AGENT_STAGES", "ORDER", "RECAP_ORDER", "TEMPLATE_STAGES", "Deps", "RunKey", "RunState", "Stages",
-           "build_workflow", "process_moment", "process_recap"]
+           "build_workflow", "process_moment", "process_recap", "suppress_moment"]
 
 ORDER = ("spotter", "analyst", "narrator", "fact_checker", "translator", "director")
 RECAP_ORDER = ("recap_writer", "fact_checker", "translator", "director")
@@ -131,6 +131,24 @@ async def process_moment(doc: dict, deps: Deps) -> dict:
         await _record_rejection(deps.store, doc, str(e))
         return {"status": "rejected", "moment_id": doc.get("id")}
     return await _run_job(moment, deps, ORDER)
+
+
+async def suppress_moment(doc: dict, deps: Deps, reason: str) -> dict:
+    """Close a moment without running it (queue overflow): claimed like any job, then finished `suppressed`, so a
+    repeated notification later finds it finished. No stage, model call or outbox."""
+    try:
+        moment = validate_moment(doc)
+    except InvalidMoment as e:
+        await _record_rejection(deps.store, doc, str(e))
+        return {"status": "rejected", "moment_id": doc.get("id")}
+    try:
+        job = await deps.jobs.claim(moment, deps.worker)
+    except SourceConflict:
+        return {"status": "conflict", "moment_id": moment["moment_id"]}
+    if job is None or job.doc["state"] != "running" or job.stage_outputs:
+        return {"status": "skipped", "moment_id": moment["moment_id"]}   # already done, or started: leave it be
+    await deps.jobs.finish(job, "suppressed", reason)
+    return {"status": "suppressed", "reason": reason, "moment_id": moment["moment_id"]}
 
 
 async def process_recap(match_id: str, deps: Deps) -> dict:

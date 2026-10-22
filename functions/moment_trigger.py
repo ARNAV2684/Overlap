@@ -37,19 +37,54 @@ def make_deps(store=None, settings=None):
     return agent_deps(store or CosmosStore.from_env(), settings)
 
 
+HIGH = ("goal", "red_card", "penalty")         # never dropped for queue overflow
+PARALLEL_MATCHES = 2                          # workflow.md §3: 1 running job per match, 2 globally
+
+
+def plan_batch(docs: list[dict], max_queued: int) -> tuple[list[dict], list[dict]]:
+    """Moments to run and moments to drop (workflow.md §3). Per match, in id order: one running plus `max_queued`
+    waiting normal moments are kept, the newest ones; older normal moments beyond that are dropped. High-priority
+    moments are always kept. Non-moments are ignored."""
+    keep, drop = [], []
+    by_match: dict[str, list[dict]] = {}
+    for doc in docs:
+        if isinstance(doc, dict) and doc.get("kind") == "moment":
+            by_match.setdefault(doc.get("match_id", ""), []).append(doc)
+    for match_docs in by_match.values():
+        match_docs.sort(key=lambda d: d.get("id", ""))
+        normal = [d for d in match_docs if (d.get("evidence") or {}).get("trigger") not in HIGH]
+        overflow = {id(d) for d in normal[:max(0, len(normal) - (1 + max_queued))]}
+        for d in match_docs:
+            (drop if id(d) in overflow else keep).append(d)
+    return keep, drop
+
+
 async def handle_batch(docs: list[dict], deps=None) -> list[dict]:
-    """Process a batch of documents in order (one running job at a time). Non-moments are ignored."""
-    from workflow import process_moment
+    """Process a batch: each match's moments in order (one running job per match), at most two matches at once;
+    overflow beyond the queue limit is closed as suppressed (`queue_overflow`)."""
+    from workflow import process_moment, suppress_moment
     own = deps is None
     deps = deps or make_deps()
-    results = []
+    keep, drop = plan_batch(docs, deps.settings.max_queued_per_match)
+    results: list[dict] = []
+    gate = asyncio.Semaphore(PARALLEL_MATCHES)
+
+    async def one_match(match_docs: list[dict]) -> None:
+        async with gate:
+            for doc in match_docs:
+                result = await process_moment(doc, deps)
+                log.info("%s: %s", doc.get("id"), result.get("status"))
+                results.append(result)
+
     try:
-        for doc in docs:
-            if not isinstance(doc, dict) or doc.get("kind") != "moment":
-                continue
-            result = await process_moment(doc, deps)
-            log.info("%s: %s", doc.get("id"), result.get("status"))
+        for doc in drop:
+            result = await suppress_moment(doc, deps, "queue_overflow")
+            log.info("%s: %s (queue overflow)", doc.get("id"), result.get("status"))
             results.append(result)
+        by_match: dict[str, list[dict]] = {}
+        for doc in keep:
+            by_match.setdefault(doc.get("match_id", ""), []).append(doc)
+        await asyncio.gather(*(one_match(v) for v in by_match.values()))
     finally:
         if own:
             await deps.store.close()

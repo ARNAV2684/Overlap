@@ -191,6 +191,35 @@ def approx_tokens(text: str) -> int:
 
 
 @dataclass
+class Breaker:
+    """Pauses model calls after `limit` failures in a row (timeouts, provider errors), for `cooldown_s`; then lets
+    one probe call through: success closes it, failure pauses again. A slow or failing model then costs each moment
+    nothing instead of its whole deadline, so cards still go out (as templates) before they expire."""
+    limit: int
+    cooldown_s: float
+    failures: int = 0
+    open_until: float = 0.0
+    probing: bool = False
+
+    def allow(self, now: float) -> bool:
+        if not self.open_until:
+            return True
+        if now < self.open_until or self.probing:
+            return False
+        self.probing = True                              # one probe call after the pause
+        return True
+
+    def success(self) -> None:
+        self.failures, self.open_until, self.probing = 0, 0.0, False
+
+    def failure(self, now: float) -> None:
+        self.failures += 1
+        probe, self.probing = self.probing, False
+        if probe or self.failures >= self.limit:
+            self.open_until = now + self.cooldown_s
+
+
+@dataclass
 class Models:
     """Model access for the agents: the gate (budget, timeout) and the chat client, bounded by the job's deadline.
     With provider `off` or no client every call fails fast with reason `off`."""
@@ -198,6 +227,11 @@ class Models:
     gate: ModelGate | None = None
     client: Any = None
     clock: Callable[[], float] = time.time
+    breaker: Breaker | None = None
+
+    def __post_init__(self):
+        if self.breaker is None:
+            self.breaker = Breaker(self.settings.model_breaker_failures, self.settings.model_breaker_cooldown_s)
 
     @property
     def on(self) -> bool:
@@ -224,17 +258,24 @@ class Models:
         if self.settings.provider == "azure":
             options["response_format"] = schema            # structured outputs on Azure OpenAI
         agent = Agent(self.client, instructions, name=name)
+        if not self.breaker.allow(self.clock()):
+            raise ModelFailed("breaker_open")
         try:
             response = await self.gate.run(agent, message, match_id=match_id, moment_id=moment_id,
                                            timeout_s=timeout, options=options)
         except ModelDisabled as e:
+            self.breaker.probing = False                 # not the model's health: release a probe, count nothing
             raise ModelFailed("off") from e
         except BudgetExceeded as e:
+            self.breaker.probing = False
             raise ModelFailed("budget") from e
         except ModelTimeout as e:
+            self.breaker.failure(self.clock())
             raise ModelFailed("timeout") from e
         except Exception as e:                          # provider, network or credential failure: template
+            self.breaker.failure(self.clock())
             raise ModelFailed("provider_error") from e
+        self.breaker.success()                          # the provider answered, whatever the answer was
         try:
             return schema.model_validate(parse_json(getattr(response, "text", None)))
         except (ValueError, ValidationError) as e:

@@ -9,7 +9,7 @@ from pathlib import Path
 
 from azure.cosmos import PartitionKey, exceptions
 
-from .data_access import cosmos_client
+from .data_access import cosmos_client, local_cosmos_settings
 from .schema import clean_document, encoded, parse_moment, read_json
 from .server import SAMPLE_DIR
 
@@ -33,6 +33,7 @@ async def insert_once(container, document: dict) -> str:
 async def seed(path: Path) -> dict:
     document = read_json(path)
     parse_moment(document)
+    local_cosmos_settings()                         # the seed writes: the local emulator only, never Azure
     async with asyncio.timeout(15):
         async with cosmos_client() as client:
             database = await client.create_database_if_not_exists("live")

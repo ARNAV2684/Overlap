@@ -171,9 +171,13 @@ Exact framework APIs/version compatibility are verified and pinned in M2/M3; thi
   the tool has at most two point-read attempts per bound session, each bounded by two seconds including initial
   SDK connection work. Only transient storage failures/timeouts retry. Wrong scope never reads. Additional calls
   after the allowance return `source_not_ready`. No silent fixture fallback.
-- Local configuration restricts Cosmos to loopback, ignores the relay's `OVERLAP_COSMOS_CONTAINER=screen`, and
-  always chooses `moments`. Model/cloud SDKs and tokens are not required or loaded. Emulator credentials cannot
-  demonstrate production read-only RBAC.
+- Two access modes, chosen by `OVERLAP_COSMOS_KEY`. **With a key:** only a loopback emulator endpoint (the key is
+  the emulator's public one). **Without a key:** only an Azure Cosmos account endpoint
+  `https://<account>.documents.azure.com`, signed in with managed identity (`DefaultAzureCredential`, from the
+  Functions app's environment); the identity holds the Cosmos DB Built-in Data Reader role and nothing more. Both
+  modes read only database `live`, ignore the relay's `OVERLAP_COSMOS_CONTAINER=screen` and always choose `moments`
+  for the frozen context. Emulator credentials cannot demonstrate production read-only RBAC; the Azure role does.
+- The seed command writes, so it accepts only the key mode (the local emulator) and never an Azure endpoint.
 - Reject duplicate JSON fields in fixture files, non-finite values, booleans in integer fields and unknown source
   fields. Strip only documented Cosmos system fields. Source documents have a 64 KiB bound; MCP application
   results retain the 12 KiB bound. The source's labels and team names are untrusted data, never instructions.
