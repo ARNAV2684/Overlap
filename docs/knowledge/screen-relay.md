@@ -22,7 +22,7 @@ Specifications: [`functions/specs/screen-relay.md`](../../functions/specs/screen
 
 ## Status and evidence
 
-Implemented core, store, local runner and Functions entrypoints. Existing plan records a local full-match pass; it also records Azure-host/browser checks still pending at that evidence date.
+Implemented core, store, local runner and Functions entrypoints. Existing plan records a local full-match pass; it also records Azure-host/browser checks still pending at that evidence date. On 23 Oct the Functions entrypoints ran under `func start` for the first time (Azure readiness H4): two fixes were needed (the worker rejected `list[...]` binding annotations; batch triggers carry message properties in `PropertiesArray`), after which the relay and archiver handled full matches inside the host.
 
 Evidence / checks to inspect: [`functions/tests/test_screen_relay.py`](../../functions/tests/test_screen_relay.py), [`functions/tests/e2e_local.py`](../../functions/tests/e2e_local.py), [`plans/active/PLAN_functions_screen-relay.md`](../../plans/active/PLAN_functions_screen-relay.md). Existing recorded tests are attributed to their handover; no runtime suite was re-run for these notes.
 
