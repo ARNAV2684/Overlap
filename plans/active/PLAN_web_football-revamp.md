@@ -411,6 +411,11 @@ a file for the season data, the stats engine as season producer, reference clubs
    - **Motion:** a calmer run cycle with less lean, bounce and arm swing.
    - **Seen** on the new `/dev/figures` preview (broadcast and close cameras, jog, run and sprint), not yet in a
      full live match.
+1b. **Attack by flank on the pitch, live:** done.
+   - **What:** the 3D pitch's attack story now carries all three lanes (share of the team's final-third actions in
+     the last few minutes), with each lane's shots and xG so far from `heavy.shots`.
+   - **Where:** shown as a strip in the story caption (`story.ts`, `PitchOverlay.tsx`).
+   - **Checked:** unit-tested; **not yet seen in a live match.**
 2. **Player focus link:** done. `PlayerFocus.tsx` links to `/player/<id>`. For a player of a reference club it
    leads to the 404 page; hide the link for `hidden_teams` if that matters.
 3. **Light theme and phone width:** check the new pages there (only dark desktop was seen). The visuals keep a dark
