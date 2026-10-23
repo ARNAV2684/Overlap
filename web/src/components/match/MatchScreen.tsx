@@ -73,7 +73,7 @@ export function MatchScreen({ intro, initialSpeed }: { intro?: ReactNode; initia
           <ModeSwitch />
           <div className="relative aspect-[4/3] overflow-hidden rounded-[18px] border border-ink/[0.06] sm:aspect-auto sm:h-[64vh] sm:min-h-[460px] xl:h-[68vh]">
             <PitchStage highlight={highlight}>
-              <PitchOverlay />
+              <PitchOverlay onShowChart={showChart} />
               {source === "replay" && (
                 <div className="pointer-events-none absolute bottom-2 right-2 sm:bottom-4 sm:right-4">
                   <ReplayBar initialSpeed={initialSpeed} />

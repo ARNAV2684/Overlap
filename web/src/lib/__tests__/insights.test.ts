@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createInsightFeed, overlayText, parseInsight } from "@/lib/live/insights";
+import { createInsightFeed, keyNumber, overlayText, parseInsight } from "@/lib/live/insights";
 import { audienceGroup, effectiveMode, parsePreferences } from "@/lib/preferences";
 import { isViewerGroup, parseGroups } from "@/lib/server/pubsub-token";
 
@@ -140,5 +140,28 @@ describe("viewer groups (negotiate)", () => {
     for (const g of ["match-SYN-0901-casual-de", "match-SYN-901", "match-SYN-0901-club-dtn-en", "other", "match-SYN-0901-player-CAL-7-en"]) {
       expect(isViewerGroup(g)).toBe(false);
     }
+  });
+});
+
+describe("keyNumber (the AI card's picked-out number)", () => {
+  it("picks the first decimal or unit number, not the minute", () => {
+    expect(keyNumber("45' Orrinford Albion are pressing harder: 1.10 pressures per opponent pass, up from 0.73.")).toEqual({
+      before: "45' Orrinford Albion are pressing harder: ",
+      number: "1.10",
+      after: " pressures per opponent pass, up from 0.73.",
+    });
+    expect(keyNumber("Kestlebury have 61% of the ball in the last 10 minutes")?.number).toBe("61%");
+    expect(keyNumber("A big chance worth 0.42 xG for Kone")?.number).toBe("0.42 xG");
+  });
+  it("falls back to a plain number and keeps the sentence whole", () => {
+    const k = keyNumber("Three shots in 5 minutes")!;
+    expect(k.number).toBe("5");
+    expect(`${k.before}${k.number}${k.after}`).toBe("Three shots in 5 minutes");
+  });
+  it("keeps a scoreline whole", () => {
+    expect(keyNumber("Calverholme Athletic score. 3–0.")).toEqual({ before: "Calverholme Athletic score. ", number: "3–0", after: "." });
+  });
+  it("is null without a number", () => {
+    expect(keyNumber("What a goal")).toBeNull();
   });
 });

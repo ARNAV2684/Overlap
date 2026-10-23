@@ -110,6 +110,23 @@ export function overlayText(overlay: Overlay, mode: string, lang: string): strin
   return byMode[lang] ?? byMode.en ?? Object.values(byMode)[0] ?? "";
 }
 
+/**
+ * The number a card is built around, picked out of its sentence so the card can show it big: a scoreline (3–0), else
+ * the first number with a decimal or a unit (1.10, 61%, 0.42 xG, 24 m), else the first plain number that isn't a
+ * match minute (45′). The
+ * number itself comes from the evidence pack; this only finds it in the text. Null when the sentence has none.
+ */
+export function keyNumber(text: string): { before: string; number: string; after: string } | null {
+  // A scoreline is one number to a reader: "3–0" stays whole
+  const score = /(?<![\d.])(\d{1,2}) ?[–-] ?(\d{1,2})(?![\d%′'’])(?!\.\d)/.exec(text);
+  if (score) return { before: text.slice(0, score.index), number: score[0], after: text.slice(score.index + score[0].length) };
+  const candidates = [...text.matchAll(/(\d+(?:\.\d+)?)(\s?(?:%|xG|m\b|km\/h|min\b))?(['′’]?)/g)].filter((m) => !m[3]);
+  const pick = candidates.find((m) => m[1].includes(".") || m[2]) ?? candidates[0];
+  if (!pick || pick.index === undefined) return null;
+  const number = `${pick[1]}${pick[2] ?? ""}`;
+  return { before: text.slice(0, pick.index), number, after: text.slice(pick.index + number.length) };
+}
+
 // ---------------------------------------------------------------------------------------------------------------
 // Feed: ordering, dedupe, and which card is up now
 // ---------------------------------------------------------------------------------------------------------------

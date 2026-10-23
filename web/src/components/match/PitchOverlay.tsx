@@ -9,7 +9,7 @@
 // Spec:    web/specs/screens.md §2.2–§2.3
 
 import { useEffect, useState } from "react";
-import { overlayText } from "@/lib/live/insights";
+import { keyNumber, overlayText } from "@/lib/live/insights";
 import type { StoryKind } from "@/lib/live/story";
 import { useScoreboard } from "@/lib/store-hooks";
 import { useExperience, useFeed } from "@/providers/MatchExperience";
@@ -185,39 +185,82 @@ export function StoryChips() {
   );
 }
 
-function MomentPopup() {
+/** A tiny bar-chart glyph for the chart chip. */
+function ChartGlyph() {
+  return (
+    <svg viewBox="0 0 10 10" className="h-2.5 w-2.5" aria-hidden="true">
+      <rect x="0.5" y="5" width="2" height="4.5" rx="0.4" fill="currentColor" />
+      <rect x="4" y="2.5" width="2" height="7" rx="0.4" fill="currentColor" />
+      <rect x="7.5" y="0.5" width="2" height="9" rx="0.4" fill="currentColor" />
+    </svg>
+  );
+}
+
+/**
+ * The AI moment card in the visual kit's style: the minute and badge, the plain sentence with its key number picked
+ * out in the focus blue (and shown big beside it), and a small chip for the chart it points to.
+ */
+function MomentPopup({ onShowChart }: { onShowChart?: (component: string, eventId?: string) => void }) {
   const { current } = useFeed();
   const { mode } = useExperience();
   const [prefs] = usePreferences();
   if (!current) return null;
   const text = overlayText(current, mode, prefs.lang);
+  const key = keyNumber(text);
   const high = current.priority === "high";
+  const visual = current.visual;
   return (
     <div
       key={current.overlay_id}
-      className="ov-rise pointer-events-auto w-[min(340px,calc(100%-24px))] overflow-hidden rounded-[12px] border border-white/10 bg-[#0e0e10]/50 text-white backdrop-blur-sm"
+      className="ov-rise pointer-events-auto w-[min(360px,calc(100%-24px))] overflow-hidden rounded-[14px] border border-white/10 bg-[#0b0d12]/60 text-white backdrop-blur-md"
       role="status"
       aria-live="polite"
     >
-      <div className={`h-[3px] ${high ? "bg-accent" : "bg-white/30"}`} />
-      <div className="p-3">
+      <div className={`h-[3px] ${high ? "bg-accent" : "bg-viz-focus"}`} />
+      <div className="p-3.5">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="rounded-full bg-accent px-2 py-0.5 font-mono text-[9px] font-black uppercase tracking-[1px] text-white">{current.clock.split(":")[0]}′ · AI moment</span>
+          <span className={`font-mono text-[9px] font-black uppercase tracking-[1.6px] ${high ? "text-accent" : "text-white/60"}`}>
+            {current.clock.split(":")[0]}′ · AI moment
+          </span>
           <VerifiedBadge verified={current.verified} fallback={current.fallback} />
-          {current.visual && <span className="font-mono text-[9px] font-bold uppercase tracking-[1px] text-white/40">{COMPONENT_LABEL[current.visual.component] ?? current.visual.component}</span>}
         </div>
-        <p className="mt-1.5 text-[13.5px] font-semibold leading-snug [text-shadow:0_1px_6px_rgb(0_0_0/0.5)]">{text}</p>
+        <div className="mt-2 flex items-start gap-3">
+          <p className="min-w-0 flex-1 text-[14px] font-semibold leading-snug [text-shadow:0_1px_6px_rgb(0_0_0/0.5)]">
+            {key ? (
+              <>
+                {key.before}
+                <span className="font-mono font-black text-viz-focus">{key.number}</span>
+                {key.after}
+              </>
+            ) : (
+              text
+            )}
+          </p>
+          {key && <p className="shrink-0 font-mono text-[26px] font-black leading-none text-viz-focus tabular">{key.number}</p>}
+        </div>
+        {visual && (
+          <button
+            type="button"
+            onClick={() => onShowChart?.(visual.component, visual.highlight?.event_id)}
+            className="mt-2.5 inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.06] px-2.5 py-1 font-mono text-[9px] font-black uppercase tracking-[1.2px] text-white/75 transition-colors hover:bg-white/[0.14] hover:text-white"
+            title="Open this chart in the analysis below"
+          >
+            <ChartGlyph />
+            {COMPONENT_LABEL[visual.component] ?? visual.component}
+            <span aria-hidden="true">→</span>
+          </button>
+        )}
       </div>
     </div>
   );
 }
 
 /** Over the pitch on tablets and up; on phones the chips and caption sit under the pitch (PitchUnderlay). */
-export function PitchOverlay() {
+export function PitchOverlay({ onShowChart }: { onShowChart?: (component: string, eventId?: string) => void } = {}) {
   return (
     <>
       <div className="pointer-events-none absolute inset-x-3 top-3 flex items-start justify-between gap-3 sm:inset-x-4 sm:top-4">
-        <MomentPopup />
+        <MomentPopup onShowChart={onShowChart} />
         <div className="ml-auto hidden sm:block">
           <StoryChips />
         </div>
