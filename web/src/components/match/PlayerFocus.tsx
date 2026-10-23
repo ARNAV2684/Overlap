@@ -8,6 +8,7 @@
 // Outputs: UI, or nothing when nobody is followed
 // Spec:    web/specs/screens.md §3.2
 
+import Link from "next/link";
 import { useMemo } from "react";
 import { playerNumbers } from "@/lib/live/charts";
 import { useScoreboard } from "@/lib/store-hooks";
@@ -47,7 +48,10 @@ export function PlayerFocus() {
             {meta.name}
           </p>
           <p className="ov-sub">
-            {meta.pos} · {team.name}
+            {meta.pos} · {team.name} ·{" "}
+            <Link href={`/player/${prefs.player}`} className="text-viz-focus hover:underline">
+              Season scout card →
+            </Link>
           </p>
         </div>
         <button type="button" onClick={() => update({ player: null, mode: "casual" })} className="text-[12px] font-semibold text-ink/40 hover:text-ink/80">

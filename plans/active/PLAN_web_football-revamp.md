@@ -408,8 +408,8 @@ a file for the season data, the stats engine as season producer, reference clubs
 1. **Cleaner 3D player figures** (`web/src/components/pitch3d/scene/figure.ts`, M3). Not started: it needs a match
    playing (the local stack) to judge. The figures look like a video game; calmer proportions, materials and motion
    are wanted.
-2. **Player focus link:** `PlayerFocus.tsx` should link the followed player to `/player/<id>`. Season ids are the
-   match ids, so the link exists for the eight generated clubs.
+2. **Player focus link:** done. `PlayerFocus.tsx` links to `/player/<id>`. For a player of a reference club it
+   leads to the 404 page; hide the link for `hidden_teams` if that matters.
 3. **Light theme and phone width:** check the new pages there (only dark desktop was seen). The visuals keep a dark
    canvas in both themes by design.
 4. **Season tests:** page-level tests for the season screens (today only the data views and routes are tested).
