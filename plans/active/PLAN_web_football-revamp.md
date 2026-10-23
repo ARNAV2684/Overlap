@@ -10,7 +10,7 @@
 | Review coordinator | Arnav |
 | Affected component owners | Arnav, Azeem (web, `web/src/lib/contracts.ts`); Azeem (stats engine: stat panel, new season aggregates); Arnav (agents, MCP `season` tool, Cosmos) |
 | Proposal version and date | v0.2 · 23 Oct 2026 (v0.2: decisions taken, player figures and visual redesign added) |
-| Status | In progress (go from Azeem, 23 Oct; M1 and M2 on `web/football-revamp`) |
+| Status | In progress, handed over to Arnav 23 Oct (M1, M2 and most of M3 on `web/football-revamp`) |
 | Plan tier and file | Full · `plans/active/PLAN_web_football-revamp.md` |
 | Repository | [ARNAV2684/Overlap](https://github.com/ARNAV2684/Overlap) |
 | Reviewed branch and commit | main · `0c73c59` (after #84) |
@@ -349,4 +349,55 @@ a file for the season data, the stats engine as season producer, reference clubs
 
 ### Handover after implementation
 
-Pending implementation.
+**Handed over to Arnav on 23 Oct 2026** (Azeem's weekly usage limit), on branch `web/football-revamp`.
+
+**Done:**
+- **M1, specs:**
+  - `stats/specs/season.md`; `publishing.md` §2 (`heavy.shots`);
+  - `CONTRACTS.md` §7.4 and §11;
+  - `web/specs/realtime.md` §7, `screens.md` §2.5 and §8–§11, `charts.md` §4 and §11–§14.
+- **M2, data:**
+  - `heavy.shots` in every heavy block (`stats/whole_match.py`).
+  - `python main.py season`: the season document, on S1 equal to the generator's table, about 1 MB, committed at
+    `web/data/season/season-S1.json`.
+  - `/api/season/<id>`, `/team/<id>` and `/player/<id>`, with the web schemas.
+  - AC-02 to AC-05 pass.
+- **M3, match centre (partly):**
+  - **Visual kit** (`web/src/components/viz/Viz.tsx`): card, near-black pitch, blue-ramp zone grid, legend, side
+    panel, chips and toggle.
+  - **Five analysis tabs:**
+    - **Story:** momentum and key events.
+    - **Attack:** xG race, shot map sized by xG, attack by flank.
+    - **Possession:** pass network, zone dominance, pass map.
+    - **Defence:** pressing zones with the press line, team stats.
+    - **Players:** tracking heatmap and the match player table.
+  - **Heatmap:** chips instead of dropdowns.
+  - **Preview:** a development page at `/dev/viz` (404 in production) shows the visuals on the fixture's last
+    panel without the local stack.
+- **Checks:**
+  - Stats: 70 tests, ruff clean.
+  - Web: 520 tests (2 opt-in skipped), lint, typecheck and `next build` clean.
+
+**Differences from this plan:**
+- **Tabs:** five, not four. Story is a tab, not a strip under the score; `screens.md` §2.5 needs that correction.
+- **New files not in §8:** `web/src/components/viz/Viz.tsx`, `charts/{XgRace,FlankAttack,ZoneDominance}.tsx`,
+  `web/src/app/dev/viz/*`, `web/data/dev/preview-SYN-1017.json` and `web/src/lib/__tests__/analysis-charts.test.ts`.
+- **Visual reference (D-05):** from browser screenshots of Azeem's own design layouts (the zone grids, the side
+  panel, the title race, goal timing). The artifacts themselves could not be unpacked.
+
+**Left to do, in order:**
+1. **M3 check:** look at `/dev/viz` and one live or replayed match (`npm run dev`) in both themes and at phone
+   width. The last fixes were not seen in a browser:
+   - the toggle colours;
+   - unique list keys;
+   - the smaller ATTACK label on half pitches;
+   - the xG race sentence using the match clock.
+2. **M3 figures:** cleaner 3D players (`web/src/components/pitch3d/scene/figure.ts`). Azeem: they look like a video
+   game; calmer proportions, materials and motion are wanted. Not started.
+3. **M3 player focus:** `PlayerFocus.tsx` should become a link to the player page once M5 exists.
+4. **M4, league and club pages:** `screens.md` §8–§9, `charts.md` §14. The data and routes are ready
+   (`LeagueView`, `TeamView`). Your title-race and goal-timing designs fit them directly.
+5. **M5, player and compare pages:** `screens.md` §10–§11 (`PlayerView` is ready).
+6. **M6, optional:** AI season notes (agents) and the season document on Azure.
+7. **Close-out:** AC-06 to AC-08 and AC-10 still need their evidence.
+
