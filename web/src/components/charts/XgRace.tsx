@@ -28,6 +28,7 @@ export function XgRace({
   awayShots,
   minute,
   clock,
+  totals,
 }: {
   home: TeamInfo;
   away: TeamInfo;
@@ -36,6 +37,11 @@ export function XgRace({
   minute: number;
   /** The match clock the numbers are at, e.g. 67:12. */
   clock: string;
+  /**
+   * Each team's xG from the stat panel. When given, the headline numbers use it, so they match the live rail exactly
+   * (summing per-shot xG that is already rounded to 2 places can land 0.01 off the stats engine's own total).
+   */
+  totals?: { home: number | null; away: number | null };
 }) {
   if (!homeShots || !awayShots) {
     return (
@@ -50,8 +56,8 @@ export function XgRace({
   const top = Math.max(1, Math.ceil(Math.max(h[h.length - 1].total, a[a.length - 1].total) * 2) / 2);
   const sx = (m: number) => PAD.l + (Math.min(m, end) / end) * (W - PAD.l - PAD.r);
   const sy = (v: number) => H - PAD.b - (v / top) * (H - PAD.t - PAD.b);
-  const ht = h[h.length - 1].total;
-  const at = a[a.length - 1].total;
+  const ht = totals?.home ?? h[h.length - 1].total;
+  const at = totals?.away ?? a[a.length - 1].total;
   const leader = ht >= at ? home : away;
   return (
     <VizCard

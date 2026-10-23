@@ -153,8 +153,8 @@ export function AnalysisPanel({ focus }: { focus: Focus }) {
 
       {tab === "attack" && (
         <>
-          <XgRace home={teams.home} away={teams.away} homeShots={data.xg.home} awayShots={data.xg.away} minute={data.minute} clock={data.panel?.clock ?? "0:00"} />
-          <ShotMap shots={data.xg[side]} fallback={data.fallbackShots} names={data.names} highlight={highlight} team={teamName} controls={teamToggle} />
+          <XgRace home={teams.home} away={teams.away} homeShots={data.xg.home} awayShots={data.xg.away} minute={data.minute} clock={data.panel?.clock ?? "0:00"} totals={{ home: data.panel?.teams.home.xg ?? null, away: data.panel?.teams.away.xg ?? null }} />
+          <ShotMap shots={data.xg[side]} fallback={data.fallbackShots} names={data.names} highlight={highlight} team={teamName} controls={teamToggle} total={data.panel?.teams[side].xg ?? null} />
           <FlankAttack team={teamName} zones={data.zones[side]} shots={data.xg[side]} controls={teamToggle} />
         </>
       )}

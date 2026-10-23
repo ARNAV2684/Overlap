@@ -34,6 +34,7 @@ export function ShotMap({
   highlight,
   team,
   controls,
+  total,
 }: {
   shots: readonly HeavyShot[] | null;
   fallback?: readonly ShotDot[];
@@ -41,9 +42,11 @@ export function ShotMap({
   highlight?: string | null;
   team: string;
   controls?: React.ReactNode;
+  /** The team's xG from the stat panel; when given it is the headline, so it matches the live rail exactly. */
+  total?: number | null;
 }) {
   const all = dots(shots, fallback);
-  const xg = shots ? shots.reduce((s, x) => s + x.xg, 0) : null;
+  const xg = shots ? (total ?? shots.reduce((s, x) => s + x.xg, 0)) : null;
   const onTarget = all.filter((d) => d.outcome === "goal" || d.outcome === "saved").length;
   const goals = all.filter((d) => d.outcome === "goal").length;
   const best = shots ? [...all].sort((a, b) => (b.xg ?? 0) - (a.xg ?? 0)).slice(0, 4) : [];
