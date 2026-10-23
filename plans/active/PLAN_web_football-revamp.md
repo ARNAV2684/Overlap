@@ -405,9 +405,12 @@ a file for the season data, the stats engine as season producer, reference clubs
 - **Checks:** web 520 tests, lint, typecheck and `next build` clean.
 
 **Left to do, in order:**
-1. **Cleaner 3D player figures** (`web/src/components/pitch3d/scene/figure.ts`, M3). Not started: it needs a match
-   playing (the local stack) to judge. The figures look like a video game; calmer proportions, materials and motion
-   are wanted.
+1. **Cleaner 3D player figures:** done in `figure.ts`.
+   - **Build:** slimmer athletic proportions, a smaller head without the nose bump, smaller knees, sleek dark boots.
+   - **Materials and scale:** matte cloth and skin; a thin, half-transparent team ring; scale 2.2 (was 2.4).
+   - **Motion:** a calmer run cycle with less lean, bounce and arm swing.
+   - **Seen** on the new `/dev/figures` preview (broadcast and close cameras, jog, run and sprint), not yet in a
+     full live match.
 2. **Player focus link:** done. `PlayerFocus.tsx` links to `/player/<id>`. For a player of a reference club it
    leads to the 404 page; hide the link for `hidden_teams` if that matters.
 3. **Light theme and phone width:** check the new pages there (only dark desktop was seen). The visuals keep a dark
