@@ -10,7 +10,7 @@
 | Review coordinator | Arnav |
 | Affected component owners | Generator, stats engine: Azeem · Event Hubs, Cosmos, Web PubSub, relay, archiver, agents, MCP: Arnav (Pranav helping) · Web app: Arnav, Azeem · Other infrastructure and `azure.yaml`: unassigned (Arnav decides) |
 | Proposal version and date | v1.1 · 23 Oct 2026 (D-01, D-03, D-10 decided; A0 in progress) |
-| Status | In progress: A0 (specs drafted on `infra/azure-specs`) |
+| Status | In progress: A0 (specs agreed and merged in #85; Bicep foundation on `infra/azure-foundation`) |
 | Plan tier and file | Full · `plans/active/PLAN_infra_azure-pass.md` |
 | Repository | [ARNAV2684/Overlap](https://github.com/ARNAV2684/Overlap) |
 | Reviewed branch and commit | main · 0c73c59 |
@@ -272,8 +272,8 @@ them); cost over the full judging period (only extrapolated from A8 and the firs
 | A4 — Azure OpenAI in Foundry | GPT mini deployment, role, budget alerts; model cards from the laptop agents | Arnav | A0, A2 | AC-06 | 24 Oct (parallel) |
 | A5 — Translator | F0 resource, custom subdomain, role; real translations | Arnav | A0 | AC-07 | 24 Oct (parallel) |
 | A6 — Functions hosting | Plan per D-03; `azd deploy functions`; relay, archiver, insights on Azure | Arnav | A1–A5 | AC-08 | 25 Oct |
-| A7 — Stats engine hosting | Container Apps environment, ACR, stats image, identity checkpoint store | Arnav; `stats/` change by or with Azeem | A1, A2, Azeem's agreement | AC-09 | 25 Oct |
-| A9 — Web app hosting | Web image, public ingress, identity, Azure settings | Arnav, Azeem | A3, A7 (environment) | AC-10 | 25 Oct |
+| A7 — Stats engine hosting | Container Apps environment, ACR, stats image, identity checkpoint store; the first real Cosmos `moments` write on Azure (stats S4, handed to Arnav by Azeem on 23 Oct) | Arnav; `stats/` change by or with Azeem | A1, A2, Azeem's agreement | AC-09 | 25 Oct |
+| A9 — Web app hosting | Web image (includes `web/data/season/season-S1.json`, which the season routes read from disk), public ingress, identity, Azure settings | Arnav, Azeem | A3, A7 (environment) | AC-10 | 25 Oct |
 | A10 — Generator on Azure | Generator job; `/api/start-match` starts it with a rate limit | Arnav; job settings with Azeem's agreement | A7, A9 | AC-11 | 26 Oct |
 | A8 — Same 20× match on Azure | Full run measured; Azeem's review round 2 on the Azure model; specs and plans updated; cost recorded | Arnav; review: Azeem | A6, A7, A9, A10 | AC-12, AC-13 | 26 Oct |
 
@@ -381,7 +381,13 @@ them); cost over the full judging period (only extrapolated from A8 and the firs
 |---|---|---|---|---|
 | Arnav | v1 | D-01: Azure free account ($200 credit). D-03: dedicated plan, 1 instance. D-10: install tools. D-02: Sweden Central for every resource (after a comparison with Central India). "Lets start sprint A0" | Go for A0 | 23 Oct · conversation |
 
-**Implementation readiness:** blocked by D-01, D-02, D-10 (A0); A7 and A10 also by Azeem's agreement.
+**Implementation readiness:** A0 under way (go from Arnav, 23 Oct). D-01, D-02, D-03, D-10, D-11 decided.
+
+**Football revamp handover (23 Oct):** Azeem handed his remaining work to Arnav (`PLAN_web_football-revamp` §15,
+PRs #86–#88). The Azure items in it are covered here: stats engine S4 and the first real Cosmos `moments` write (A7),
+and the web app deployed with `web/data/season/season-S1.json` (A9). Because Azeem handed stats S4 to Arnav, the
+`stats/consumer.py` checkpoint change in A7 no longer waits on him; the generator job (A10) still touches only
+`infra/containers/`.
 **Relevant specification agreement:** pending (`infra/specs/resources.md`, `security.md`, `costs.md` are A0's first PR).
 **Next action and owner:** Arnav decides D-01–D-13 and says **go** for A0 · Arnav.
 
