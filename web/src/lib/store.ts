@@ -4,7 +4,7 @@
 //          reference-stable slices of it (see store-hooks.ts)
 // Inputs:  envelopes (validated, or raw and validated here), the connection status, the viewer's controls
 // Outputs: createMatchStore(): getState(), subscribe(), and the actions below
-// Spec:    web/specs/realtime.md §2. web/IMPLEMENTATION_PLAN.md Phase 5.1
+// Spec:    web/specs/realtime.md §2. vedant-frontend/web/IMPLEMENTATION_PLAN.md Phase 5.1
 //
 // How it works
 //  - Ingesting is cheap and constant. Rows and counters change in plain mutable fields; React is told at most once
@@ -180,6 +180,11 @@ export type MatchStore = {
   readonly matchId: string;
   getState(): StoreState;
   subscribe(listener: () => void): () => void;
+  /**
+   * Hands every applied envelope to `listener` straight away, before the 250 ms display flush, so a renderer can
+   * keep every tracking frame (the display slice keeps only the newest). Returns the unsubscribe function.
+   */
+  onEnvelope(listener: (envelope: ParsedEnvelope, receivedAt: number | null) => void): () => void;
   /** Applies a validated envelope. `receivedAt` is the browser's time, or null for snapshot (history) envelopes. */
   ingest(envelope: ParsedEnvelope, receivedAt: number | null): IngestResult;
   /** Validates first. A message that fails is counted and logged, never thrown. */
@@ -298,6 +303,7 @@ export function createMatchStore(matchId: string, options: StoreOptions = {}): M
   let paused = false;
   /** While paused, rows that arrived after this order are hidden from the display. */
   let cutoff: number | null = null;
+  const envelopeListeners = new Set<(envelope: ParsedEnvelope, receivedAt: number | null) => void>();
   let notice: Notice = { text: notices.connecting, tone: "info" };
 
   // ---- published state
@@ -595,7 +601,15 @@ export function createMatchStore(matchId: string, options: StoreOptions = {}): M
           break;
         }
       }
+      envelopeListeners.forEach((listener) => listener(envelope, receivedAt));
       return "applied";
+    },
+
+    onEnvelope(listener) {
+      envelopeListeners.add(listener);
+      return () => {
+        envelopeListeners.delete(listener);
+      };
     },
 
     ingestRaw(raw, receivedAt) {
@@ -712,6 +726,7 @@ export function createMatchStore(matchId: string, options: StoreOptions = {}): M
       if (timer !== null) clearTimeout(timer);
       timer = null;
       listeners.clear();
+      envelopeListeners.clear();
     },
   };
 

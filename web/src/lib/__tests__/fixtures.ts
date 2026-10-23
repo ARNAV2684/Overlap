@@ -3,7 +3,7 @@
 // Purpose: small hand-written valid messages that tests copy and then break on purpose
 // Inputs:  optional overrides
 // Outputs: a match setup, events, a tracking frame and envelopes (invented clubs and players only)
-// Spec:    web/IMPLEMENTATION_PLAN.md Phase 4.4
+// Spec:    vedant-frontend/web/IMPLEMENTATION_PLAN.md Phase 4.4
 
 import type {
   HeavyBlock,

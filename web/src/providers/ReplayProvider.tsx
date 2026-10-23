@@ -6,7 +6,7 @@
 //          the screen the store (the live screen's panels read it unchanged), the player and the "replay" row source
 // Inputs:  matchId (SYN-NNNN), children, client? (for tests; defaults to this app's replay route)
 // Outputs: ReplayProvider; useReplayPlayer() and useReplayState() for the replay controls, header and intro
-// Spec:    web/specs/realtime.md §5.2. Plan: plans/active/PLAN_web_replay.md
+// Spec:    web/specs/realtime.md §5.2. Plan: vedant-frontend/plans/active/PLAN_web_replay.md
 //
 // Like MatchStreamProvider: a different matchId gets a fresh store and player (the inner component is keyed by
 // match). Creating them has no side effects; start() runs in the effect, and StrictMode's second run is harmless

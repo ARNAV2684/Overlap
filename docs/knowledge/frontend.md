@@ -1,65 +1,63 @@
 # Frontend
 
-Last verified: 2026-10-20 · source main `36f5d00` · source inspection, not fresh runtime certification. Replay parts updated 2026-10-23 against main `3353483`, with a local runtime check.
+Last verified: 2026-10-24 · branch `web/live-home` · local runtime check on the full local stack (live SYN-0901 at 20×,
+replays, phone and desktop, both themes).
 
 ## Purpose
 
-Shows live match information, catch-up, replay of archived matches and eventually insight cards.
+The viewer's screen: a live (or replayed) match on a 3D pitch that tells its story, the agents' checked moment cards
+for the viewer's mode and language, and the match analytics.
 
 ## Ownership
 
-Registry: Vedant. See [registry](../../plans/REGISTRY.md). Team-reported: None beyond registry.
+Registry: Arnav, Azeem (from 24 Oct). See [registry](../../plans/REGISTRY.md). The earlier web app (Vedant, 15–22 Oct)
+is kept for reference in [`vedant-frontend/`](../../vedant-frontend/README.md); its data layer is still live in `web/`.
 
 ## Inputs and outputs
 
-Negotiation and snapshot client + §7 envelopes → validated store and UI. Replay: the server route `/api/replay/<id>` reads the stored match (§4.1: Cosmos `matches`, `events`, `stats`; Blob `tracking`) with server-only settings and turns it into §7 envelopes, one minute per request; the browser plays them into the same store. It reads the archive directly, not through `archiver/reader.py`. Verified overlays are a future insight dependency. See [shared contracts](../../CONTRACTS.md).
+In: §7 envelopes on `match-<id>` (negotiate + snapshot + socket, or the archive replay route), and §10.6 insight
+envelopes (`overlay`, `player_tag`, `recap`) on one audience group per viewer (`match-<id>-casual|analyst-<lang>`,
+`-club-<team>-<lang>`, `-player-<player>-<lang>`), caught up through `/api/match/<id>/insights/snapshot` (forwarded to the
+stand-in locally) and, for replays, `/api/match/<id>/insights/history` (Cosmos `overlays`). Out: the screens. See
+[shared contracts](../../CONTRACTS.md).
 
 ## Implementation and specifications
 
-Source: [`web/src/app/page.tsx`](../../web/src/app/page.tsx), [`web/src/app/match/[id]/page.tsx`](../../web/src/app/match/[id]/page.tsx), [`web/src/components/live/MatchStreamProvider.tsx`](../../web/src/components/live/MatchStreamProvider.tsx), [`web/src/lib/socket.ts`](../../web/src/lib/socket.ts), [`web/src/lib/store.ts`](../../web/src/lib/store.ts), [`web/src/lib/api.ts`](../../web/src/lib/api.ts), [`web/src/app/api/negotiate/route.ts`](../../web/src/app/api/negotiate/route.ts). Replay: [`web/src/app/replay/[id]/page.tsx`](../../web/src/app/replay/[id]/page.tsx), [`web/src/components/replay`](../../web/src/components/replay), [`web/src/lib/replay-player.ts`](../../web/src/lib/replay-player.ts), [`web/src/lib/replay-client.ts`](../../web/src/lib/replay-client.ts), [`web/src/app/api/replay/[id]/route.ts`](../../web/src/app/api/replay/[id]/route.ts), [`web/src/lib/replay-envelopes.ts`](../../web/src/lib/replay-envelopes.ts), [`web/src/lib/server`](../../web/src/lib/server).
+Source: [`web/src/components/pitch3d`](../../web/src/components/pitch3d) (three.js stage, figures, overlays),
+[`web/src/lib/live`](../../web/src/lib/live) (motion, match memory, story director, insights, chart data),
+[`web/src/components/match`](../../web/src/components/match), [`web/src/components/charts`](../../web/src/components/charts),
+[`web/src/providers`](../../web/src/providers), and the kept data layer in [`web/src/lib`](../../web/src/lib) and
+[`web/src/app/api`](../../web/src/app/api).
 
-Specifications: [`web/specs/realtime.md`](../../web/specs/realtime.md), [`web/specs/screens.md`](../../web/specs/screens.md).
+Specifications: [`screens.md`](../../web/specs/screens.md), [`pitch.md`](../../web/specs/pitch.md),
+[`charts.md`](../../web/specs/charts.md), [`design-system.md`](../../web/specs/design-system.md),
+[`realtime.md`](../../web/specs/realtime.md) (§4 insights). Plan: [`PLAN_web_live-home`](../../plans/active/PLAN_web_live-home.md).
 
 ## Status and evidence
 
-Partial implementation: redirect, live page, stream provider, socket/store/API client exist. PR [#48](https://github.com/ARNAV2684/Overlap/pull/48) (merged 19 Oct) added the live pitch, scoreboard, event timeline, message inspector and metric cards. The app-owned negotiate route is still a 501 stub on this main revision, so the browser negotiates with the local stand-in. Insight cards and viewer modes are not built. README descriptions of an empty app are stale; inspect source.
-
-Replay is built and merged (specs, route and page in [#72](https://github.com/ARNAV2684/Overlap/pull/72), the half-time and full-time panels fix in [#75](https://github.com/ARNAV2684/Overlap/pull/75)). Checked on the local stack on 23 Oct against archived `SYN-0501` (6–0): the opt-in route test replays every stored event, frame and panel with 0 rejected, and Chrome plays the match at 20× to full time with the archived score at 375 and 1440 px. Local emulators only; the Azure read path (identity and roles) is not built yet.
-
-Evidence / checks to inspect: [`web/src/lib`](../../web/src/lib), [`web/IMPLEMENTATION_PLAN.md`](../../web/IMPLEMENTATION_PLAN.md), [`plans/active/PLAN_web_live-match-viewer.md`](../../plans/active/PLAN_web_live-match-viewer.md), [`plans/active/PLAN_web_replay.md`](../../plans/active/PLAN_web_replay.md) (replay validation and handover). Existing recorded tests are attributed to their handover; no runtime suite was re-run for these notes.
+Built locally on branch `web/live-home` (not merged). Checks: lint, typecheck, build, 482 unit tests. Runtime: SYN-0901
+streamed at 20× through generator → Event Hubs emulator → Functions host (relay, archiver, insights) and the stats
+engine → stand-in → this app; the home page played it live with moment cards and story changes to full time, skipped a
+stale "live" match, and replayed SYN-0901 with its 18 cards and recap from the insights history.
 
 ## Dependencies
 
-Upstream / prerequisites: [web-pubsub](web-pubsub.md), [archiver](archiver.md), [storage](storage.md), [ai-insights](ai-insights.md), [environments](environments.md).
+Upstream / prerequisites: [web-pubsub](web-pubsub.md), [screen-relay](screen-relay.md), [archiver](archiver.md),
+[storage](storage.md), [ai-insights](ai-insights.md), [environments](environments.md).
 
-Downstream / consumers: viewers using the screen; no further backend producer.
-
-Connections include planned dependencies; status above determines whether a connection exists at runtime.
+Downstream / consumers: viewers.
 
 ## Next work
 
-PR #48 is merged. Next: the app's own negotiate route, stat panels from the stats engine (CONTRACTS §7.4, live since #53), insight cards (§10.3) and viewer modes. Validate real relay/browser and API integration before claiming completion. Replay next: read roles for the web app on Azure (archiver plan A3 / S4), then a run against Azure storage.
+Azure: the insights snapshot route reads `overlays` itself (it answers 501 off the stand-in); web app read roles on the
+archive and `overlays` (archiver plan A3). Per-shot xG (`heavy.shots`) for shot sizes. Model-written cards need the
+Azure model (templates locally).
 
 ## Work and coordination record
 
-Verified 19 October 2026 against main `a61166b`. This describes recorded responsibility and repository evidence, not a live report of someone's laptop activity.
-
 | Responsible person / basis | Recorded work | Governing reference | Current integration boundary |
 |---|---|---|---|
-| Vedant; see Ownership above | Live UI/client code is partial on main; PR #48 merged the live screen components. | [Specification](../../web/specs/realtime.md) | See Inputs and outputs and Status above; implementation and review are distinct. |
-
-### WEB-01
-
-| Field | Value |
-|---|---|
-| Review/input needed from | Arnav / Pranav |
-| Request | Check the merged #48 screen against the real relay/PubSub snapshot and negotiation services. |
-| Connected component | [screen-relay](screen-relay.md) |
-| Why it matters | A mismatch here can block the connected component; do not create a private contract to work around it. |
-| Done when | A browser run through the relay on the local stack (screen task SC4) plus real integration evidence; merge alone is not a live test. |
-| Status | Proposed coordination item; no notification sent and no fresh reviewer acceptance recorded. |
-| Decision evidence / due date | Not recorded / no deadline agreed. Record the review URL and affected revision here when available. |
-
-Incoming reviews: [RELAY-01](screen-relay.md#relay-01), [ARCH-01](archiver.md#arch-01), [AI-01](ai-insights.md#ai-01), [PUBSUB-01](web-pubsub.md#pubsub-01). Each canonical note holds its own decision/status.
+| Arnav, Azeem; see Ownership above | 3D live screen and homepage on `web/live-home` (24 Oct) | [`PLAN_web_live-home`](../../plans/active/PLAN_web_live-home.md) | Local stack verified; Azure not started |
+| Vedant (15–22 Oct) | Data layer (routes, socket, store, replay engine) still live; earlier UI in `vedant-frontend/` | [`vedant-frontend/README.md`](../../vedant-frontend/README.md) | Reference only |
 
 [Project map](README.md) · [Rebuild and verification](setup.md)

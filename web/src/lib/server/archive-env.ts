@@ -6,7 +6,7 @@
 //          OVERLAP_ARCHIVE_STORAGE (connection string, local) or OVERLAP_ARCHIVE_BLOB_ENDPOINT (Azure). See
 //          web/.env.example
 // Outputs: readArchiveEnv(): the settings, or the names of the problems; describeArchiveEnvProblems() for one log line
-// Spec:    web/specs/realtime.md §5.1 (settings). Plan: plans/active/PLAN_web_replay.md
+// Spec:    web/specs/realtime.md §5.1 (settings). Plan: vedant-frontend/plans/active/PLAN_web_replay.md
 //
 // These are the archiver's own variable names (archiver/event_store.py, archiver/tracking_chunks.py). None has the
 // NEXT_PUBLIC_ prefix, so Next.js never sends them to the browser; import this file only from server code. Settings

@@ -1,93 +1,58 @@
-// PassNetwork.tsx — Pass network
+// PassNetwork.tsx — Who passes to whom
 //
-// Purpose: who passes to whom in one team: a node per player at his mean pass-start position, sized by passes, and a
-//          link per pair with 3 or more completed passes, scaled to the busiest link (metrics.md §6), attacking left
-//          to right
-// Inputs:  network (heavy.pass_network[side], or null before the first heavy panel: an empty pitch with "First update
-//          at the end of the first minute"), players (names and shirts from the setup), team (the club's name),
-//          colour (its primary kit colour, or undefined before the setup: grey), className
-// Outputs: a TeamPitch figure whose label counts players and links and names the busiest passer; a <title> on every
-//          node and link
-// Spec:    web/specs/charts.md §2 (pass network)
-//
-// The stats engine draws the network for the starting XI until the team's first substitution, which the caption says.
-// Nodes get the dark marker outline and readableInk() numbers, like the live pitch's markers. No window or highlight
-// yet: they come with overlays.
+// Purpose: a team's passing connections from the stats engine: each player at the mean spot they pass from, links
+//          between pairs with three or more completed passes, thicker for more
+// Inputs:  the heavy block's pass network for one side (CONTRACTS.md §7.4), shirt numbers, the team colour
+// Outputs: SVG
+// Spec:    web/specs/charts.md §7
 
-import { memo } from "react";
-import { TeamPitch } from "@/components/charts/pitch/TeamPitch";
-import { cn } from "@/lib/cn";
 import type { PassNetworkData } from "@/lib/contracts";
-import { FIRST_HEAVY_NOTE, networkGeometry, topPasser } from "@/lib/stat-charts";
-import type { PlayerInfo } from "@/lib/store";
-import { inkFillClass } from "@/lib/team-colours";
+import { MiniPitch, toM } from "./MiniPitch";
 
-type PassNetworkProps = {
+export function PassNetwork({
+  network,
+  shirts,
+  colour,
+  label,
+}: {
   network: PassNetworkData | null;
-  players: ReadonlyMap<string, PlayerInfo>;
-  team: string;
-  colour?: string;
-  className?: string;
-};
-
-const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
-
-function PassNetworkView({ network, players, team, colour, className }: PassNetworkProps) {
-  if (!network) {
-    return <TeamPitch label={`Pass network, ${team}: ${FIRST_HEAVY_NOTE.toLowerCase()}`} empty={FIRST_HEAVY_NOTE} className={className} />;
+  shirts: ReadonlyMap<string, number>;
+  colour: string;
+  label: string;
+}) {
+  if (!network || !network.nodes.length) {
+    return (
+      <MiniPitch label={label}>
+        <text x="52.5" y="35" textAnchor="middle" className="fill-ink/40 text-[3px]">
+          The network appears after the first minute.
+        </text>
+      </MiniPitch>
+    );
   }
-
-  const { nodes, links } = networkGeometry(network, players);
-  const top = topPasser(nodes);
-  const label =
-    `Pass network, ${team}: ${plural(nodes.length, "player", "players")}, ` +
-    `${plural(links.length, "link", "links")} of 3 or more passes.` +
-    (top ? ` Most passes: ${top.name} (${top.passes}).` : "");
-
+  const at = new Map(network.nodes.map((n) => [n.player_id, toM(n.x, n.y)]));
+  const maxLink = Math.max(1, ...network.links.map((l) => l.count));
+  const maxPasses = Math.max(1, ...network.nodes.map((n) => n.passes));
   return (
-    <TeamPitch label={label} caption="Starting XI until the first substitution" className={className}>
-      <g>
-        {links.map((link) => (
-          <line
-            key={link.key}
-            x1={link.from.x}
-            y1={link.from.y}
-            x2={link.to.x}
-            y2={link.to.y}
-            strokeWidth={link.width}
-            strokeOpacity={link.opacity}
-            strokeLinecap="round"
-            className="stroke-pitch-marker-edge"
-          >
-            <title>{`${link.from.name} to ${link.to.name}: ${plural(link.count, "pass", "passes")}`}</title>
-          </line>
-        ))}
-      </g>
-      <g>
-        {nodes.map((node) => (
-          <g key={node.playerId} transform={`translate(${node.x} ${node.y})`}>
-            <title>{`${node.name}: ${plural(node.passes, "pass", "passes")}`}</title>
-            <circle
-              r={node.r}
-              fill={colour}
-              strokeWidth={0.25}
-              className={cn("stroke-pitch-marker-edge", colour === undefined && "fill-greys-500")}
-            />
-            {node.shirt === undefined ? null : (
-              <text
-                textAnchor="middle"
-                dominantBaseline="central"
-                fontSize={Math.max(1.2, node.r * 0.9)}
-                className={cn("font-semibold select-none", colour ? inkFillClass(colour) : "fill-white")}
-              >
-                {node.shirt}
-              </text>
-            )}
+    <MiniPitch label={label}>
+      {network.links.map((l) => {
+        const a = at.get(l.from);
+        const b = at.get(l.to);
+        if (!a || !b) return null;
+        const t = l.count / maxLink;
+        return <line key={`${l.from}-${l.to}`} x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={colour} strokeWidth={0.25 + t * 1.6} strokeOpacity={0.25 + t * 0.6} strokeLinecap="round" />;
+      })}
+      {network.nodes.map((n) => {
+        const p = at.get(n.player_id)!;
+        const r = 1.6 + (n.passes / maxPasses) * 1.8;
+        return (
+          <g key={n.player_id}>
+            <circle cx={p.x} cy={p.y} r={r} fill={colour} stroke="#fff" strokeWidth="0.35" />
+            <text x={p.x} y={p.y + 0.9} textAnchor="middle" className="fill-white font-mono text-[2.4px] font-black">
+              {shirts.get(n.player_id) ?? ""}
+            </text>
           </g>
-        ))}
-      </g>
-    </TeamPitch>
+        );
+      })}
+    </MiniPitch>
   );
 }
-
-export const PassNetwork = memo(PassNetworkView);

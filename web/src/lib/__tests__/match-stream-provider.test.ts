@@ -1,7 +1,7 @@
 import { createElement, type ComponentType, type ReactNode } from "react";
 import { renderToString } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { MatchStreamProvider } from "@/components/live/MatchStreamProvider";
+import { MatchStreamProvider } from "@/providers/MatchStreamProvider";
 import { useConnection, useMatchStore, useScoreboard } from "@/lib/store-hooks";
 
 // Same component, typed so that children can be passed the way createElement wants them

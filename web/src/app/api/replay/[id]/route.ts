@@ -3,7 +3,7 @@
 // Purpose: serve a finished, archived match for replay: a manifest, or one minute of §7 envelopes (?chunk=<index>)
 // Inputs:  HTTP GET; the match archive through src/lib/server/archive-store.ts (settings: archive-env.ts)
 // Outputs: JSON: the manifest, a chunk, or { error } (codes in web/specs/realtime.md §5.1)
-// Spec:    web/specs/realtime.md §5.1. Plan: plans/active/PLAN_web_replay.md
+// Spec:    web/specs/realtime.md §5.1. Plan: vedant-frontend/plans/active/PLAN_web_replay.md
 //
 // Stored overlays are not served yet: nothing produces them (CONTRACTS.md §10). Settings and keys never appear in a
 // response or a log line; storage errors are logged by operation only.

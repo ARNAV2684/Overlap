@@ -4,7 +4,7 @@
 // Inputs:  HTTP GET; Cosmos `matches` and `match_state` through src/lib/server/archive-store.ts (settings:
 //          archive-env.ts, the same as the replay route)
 // Outputs: JSON { matches: [...] }, or { error } (codes in web/specs/realtime.md §5.3)
-// Spec:    web/specs/realtime.md §5.3. Plan: plans/active/PLAN_web_match-list.md
+// Spec:    web/specs/realtime.md §5.3. Plan: vedant-frontend/plans/active/PLAN_web_match-list.md
 //
 // Replaces the mock's GET /mock/matches. The picker asks every 5 s, so only failures and left-out documents are
 // logged. Settings and keys never appear in a response or a log line; storage errors are logged by operation only.

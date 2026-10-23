@@ -3,7 +3,7 @@
 // Purpose: pick readable text for a kit colour (the number on a player marker, a label on a team-coloured bar)
 // Inputs:  a kit colour as #RRGGBB (the setup guarantees this format)
 // Outputs: "dark" or "light", plus ready-made Tailwind classes for each; teamColourStyle() for the CSS variables
-// Spec:    web/IMPLEMENTATION_PLAN.md Phase 4.3, Phase 7 (team colours)
+// Spec:    vedant-frontend/web/IMPLEMENTATION_PLAN.md Phase 4.3, Phase 7 (team colours)
 //
 // The class names are written out in full so Tailwind can see them.
 

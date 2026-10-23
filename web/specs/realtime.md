@@ -3,14 +3,15 @@
 > **Status: merged for review in #19 (16 Oct); not yet marked agreed.** Answers §1 (connection), §2 (store), §3
 > (catch-up) and adds §6 (testing and checks) for the live match screen. §4 (overlay scheduler) is **not started**.
 > `stats` envelopes and the store's `stats` slice (§1, §2) are **written for review** (22 Oct) for
-> [`PLAN_web_stat-charts`](../../plans/active/PLAN_web_stat-charts.md).
-> §5 (replay) is **written for review** (20 Oct) for [`PLAN_web_replay`](../../plans/active/PLAN_web_replay.md); no
+> [`PLAN_web_stat-charts`](../../vedant-frontend/plans/active/PLAN_web_stat-charts.md).
+> §4 (insights) is **built** (24 Oct) for [`PLAN_web_live-home`](../../plans/active/PLAN_web_live-home.md).
+> §5 (replay) is **written for review** (20 Oct) for [`PLAN_web_replay`](../../vedant-frontend/plans/active/PLAN_web_replay.md); no
 > replay code exists yet. The live screen's code is on `main` (#43, #48). Plan:
-> [`PLAN_web_live-match-viewer`](../../plans/active/PLAN_web_live-match-viewer.md). The `status` and `positions`
+> [`PLAN_web_live-match-viewer`](../../vedant-frontend/plans/active/PLAN_web_live-match-viewer.md). The `status` and `positions`
 > payloads and the snapshot shape are now in `CONTRACTS.md` §7.2–§7.3. The app's own negotiate and snapshot routes
 > (§1.1, §3.1) replace the stream server's and end the mock dependency: **written for review** (23 Oct, approach agreed
-> in person) for [`PLAN_web_realtime-routes`](../../plans/active/PLAN_web_realtime-routes.md). §5.3 (the match list, this app's own route, replacing the
-> mock's) is **written for review** (22 Oct) for [`PLAN_web_match-list`](../../plans/active/PLAN_web_match-list.md).
+> in person) for [`PLAN_web_realtime-routes`](../../vedant-frontend/plans/active/PLAN_web_realtime-routes.md). §5.3 (the match list, this app's own route, replacing the
+> mock's) is **written for review** (22 Oct) for [`PLAN_web_match-list`](../../vedant-frontend/plans/active/PLAN_web_match-list.md).
 
 Decides how messages reach the screen and stay in order.
 
@@ -52,7 +53,9 @@ _Answer:_
 
 - **Runtime:** a Node.js route handler, always dynamic (it reads the request). Settings are server-only.
 - **Request:** `?groups=` with 1 to 4 comma-separated groups, each `match-<id>` with a valid match id
-  (`CONTRACTS.md` §1.3). Audience and player groups are not accepted yet: this screen joins none.
+  (`CONTRACTS.md` §1.3) or one of that match's insight audience groups (§4; `CONTRACTS.md` §10.6:
+  `match-<id>-casual|analyst-<lang>`, `match-<id>-club-<teamId>-<lang>`, `match-<id>-player-<playerId>-<lang>`, with
+  `lang` one of `en es hi fr`). Anything else is `400 bad_groups`.
 - **Token:** made with the Web PubSub server SDK (`@azure/web-pubsub`) for hub `OVERLAP_WEBPUBSUB_HUB` (default
   `live`): role `webpubsub.joinLeaveGroup.<group>` and an initial join for each requested group, **no send role**, no
   user id, valid for 10 minutes. A connection is checked when it opens, and `socket.ts` negotiates again on every
@@ -189,13 +192,39 @@ _Answer:_
   | 502 | `storage_error` | Cosmos failed or took longer than 10 s |
   | 500 | `internal_error` | Anything else; the log line names only the error's type |
 
-## 4. Overlay scheduler
+## 4. Insights: audience groups, catch-up and the scheduler
 
-- Timing by `show_at_ms`, priority and how pile-ups are avoided.
+Written 24 Oct for [`PLAN_web_live-home`](../../plans/active/PLAN_web_live-home.md). Built in `src/lib/live/insights.ts`,
+`src/providers/MatchExperience.tsx` and the two insights routes below. Contract: `CONTRACTS.md` §6, §10.4 and §10.6.
 
-_Answer:_
+**Groups.** The viewer's preferences pick one audience group (`src/lib/preferences.ts` `audienceGroup()`):
+`match-<id>-casual-<lang>`, `match-<id>-analyst-<lang>`, `match-<id>-club-<teamId>-<lang>` or
+`match-<id>-player-<playerId>-<lang>`. Club and player modes need a club or player of this match, otherwise the screen
+reads the casual group and says so. A second socket (`createGroupSocket`) joins only that group, receive-only, through
+`/api/negotiate`, which now accepts these audience groups as well as `match-<id>` (§1.1; at most 4 groups). The relay
+stays the only sender on `match-<id>`; the insights publisher the only sender on audience groups.
 
-Not started. Out of scope for the live match screen (the mock sends no overlays).
+**Envelopes.** `kind` `overlay` (data: the §6 overlay with `period`, `mode`, `lang`), `player_tag` (data:
+`{player_id, name, metric, value, unit, threshold}`) and `recap` (data: `{lines: [{text, …}], …}`). Parsed loosely
+(`parseInsight`): unknown extra fields are kept; a card with no text for the viewer's language falls back to English.
+
+**Catch-up (live).** After the group is joined, `GET /api/match/<id>/insights/snapshot?mode=&lang=(&club=|&player=)`
+returns the two newest live cards and the group cursor. Locally the route forwards to the Web PubSub stand-in, which
+serves this endpoint from Cosmos `overlays`; on Azure it answers `501 not_implemented` until the route reads `overlays`
+itself, and the screen then shows live cards only. Errors: `400 bad_match_id | bad_audience`, `503
+insights_unavailable`.
+
+**History (replay).** `GET /api/match/<id>/insights/history?group=<audience group>` returns every envelope the
+publisher numbered for that group (`overlays`, `kind = audience_delivery`, in seq order; deliveries that expired
+unnumbered have no envelope and are left out). A replay shows each card when the replay playhead reaches its
+`show_at_ms`, and the recap at full time. Errors: `400 bad_match_id | bad_group`, `503`, `502 storage_error`.
+
+**Scheduler** (`createInsightFeed`). Cards dedupe by `overlay_id`, so a reconnect, the snapshot and the live stream
+never show one card twice. A card goes on screen when the playhead (§2 of `pitch.md`: the smooth motion playhead) is at
+or past `show_at_ms` in the same period, and is dropped if the playhead is more than 300,000 match ms past it
+(`CONTRACTS.md` §10.6 expiry). One card at a time, for `duration_ms` of wall time (6 s by default, at most 12 s); at
+most two wait, high priority first, then the newest moment. Every card received stays in the feed, newest first; in
+a replay only those whose moment has been reached are listed.
 
 ## 5. Replay
 
@@ -203,7 +232,7 @@ Not started. Out of scope for the live match screen (the mock sends no overlays)
 
 _Answer:_
 
-Plan: [`PLAN_web_replay`](../../plans/active/PLAN_web_replay.md). Replay plays a **finished** match from the archiver's
+Plan: [`PLAN_web_replay`](../../vedant-frontend/plans/active/PLAN_web_replay.md). Replay plays a **finished** match from the archiver's
 storage (`CONTRACTS.md` §4.1, `archiver/specs/storage.md` §3) through the same store and panels as the live screen.
 The web app's own route reads storage on the server and sends §7 envelopes, a minute at a time; a player in the
 browser releases them at the chosen speed.
@@ -313,7 +342,7 @@ browser releases them at the chosen speed.
 
 ### 5.3 Match list `GET /api/matches`
 
-Plan: [`PLAN_web_match-list`](../../plans/active/PLAN_web_match-list.md). The list behind the match picker
+Plan: [`PLAN_web_match-list`](../../vedant-frontend/plans/active/PLAN_web_match-list.md). The list behind the match picker
 (`screens.md` §1), read from the same archive as replay. It replaced the mock's provisional `GET /mock/matches`, so the
 picker works the same with the local stand-in (which has no list) and on Azure.
 

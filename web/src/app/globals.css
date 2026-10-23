@@ -1,199 +1,252 @@
 @import "tailwindcss";
 
-/* Palette: raw colour scales (plan Phase 2.1). Components use semantic names from Phase 2.2, not these directly.
-   Defining orange and blue here replaces Tailwind's default scales, so bg-orange-500 etc. use these values. */
-@theme {
-  /* Greys: neutrals */
-  --color-greys-50: #fafafa;
-  --color-greys-100: #f5f5f5;
-  --color-greys-200: #e6e6e6;
-  --color-greys-300: #d3d3d3;
-  --color-greys-400: #a3a3a3;
-  --color-greys-500: #727272;
-  --color-greys-600: #535353;
-  --color-greys-700: #474747;
-  --color-greys-800: #272727;
-  --color-greys-900: #1a1a1a;
-  --color-greys-950: #0b0b0b;
+/* Overlap theme. Warm paper in light mode, near-black in dark (the default), one coral accent, Outfit for words and
+   Geist Mono for numbers and small labels. Components read these tokens through Tailwind (bg-surface, text-ink, …)
+   or as CSS variables; no component hard-codes a colour except team kits, which come from the match setup. */
 
-  /* Orange: primary (500 is the brand primary) */
-  --color-orange-50: #fff8ec;
-  --color-orange-100: #fff0d3;
-  --color-orange-200: #ffdea7;
-  --color-orange-300: #ffc56e;
-  --color-orange-400: #ffa234;
-  --color-orange-500: #ff860d;
-  --color-orange-600: #fc6f03;
-  --color-orange-700: #c95005;
-  --color-orange-800: #a03f0c;
-  --color-orange-900: #80350e;
-  --color-orange-950: #451905;
+@custom-variant dark (&:where(.dark, .dark *));
 
-  /* Blue: secondary */
-  --color-blue-50: #eff6ff;
-  --color-blue-100: #dbebfe;
-  --color-blue-200: #c0dcfd;
-  --color-blue-300: #94c7fc;
-  --color-blue-400: #62a8f8;
-  --color-blue-500: #3d86f4;
-  --color-blue-600: #2768e9;
-  --color-blue-700: #1f53d6;
-  --color-blue-800: #2044ad;
-  --color-blue-900: #1f3d89;
-  --color-blue-950: #1b2c5f;
+@theme inline {
+  --color-canvas: var(--ov-canvas);
+  --color-surface: var(--ov-surface);
+  --color-raised: var(--ov-raised);
+  --color-ink: var(--ov-ink);
+  --color-ink-2: var(--ov-ink-2);
+  --color-ink-3: var(--ov-ink-3);
+  --color-accent: #ff4f38;
+  --color-accent-soft: rgb(255 79 56 / 0.14);
+  --color-live: #4ade80;
+  --color-win: rgb(74 222 128 / 0.85);
+  --color-draw: rgb(160 160 170 / 0.5);
+  --color-loss: rgb(248 113 113 / 0.75);
+  --color-shot-goal: #ff4f38;
+  --color-shot-saved: #4a90d9;
+  --color-shot-missed: #7a7a92;
+  --color-shot-blocked: #e8a838;
+  --color-shot-woodwork: #d4637a;
 
-  /* Card colours: fixed by meaning, the same everywhere. Always shown with the words
-     "Yellow card" / "Red card". Each name becomes bg-/text-/border- utilities. */
-  --color-card-yellow: #facc15;
-  --color-card-yellow-ink: var(--color-greys-950); /* text ON a yellow chip */
-  --color-card-yellow-soft: color-mix(in oklab, #facc15 14%, transparent); /* row tint */
-  --color-card-red: #dc2626;
-  --color-card-red-ink: #ffffff; /* text ON a red chip */
-  --color-card-red-text: #f87171; /* red as TEXT on dark; #dc2626 alone is only 3.6:1 */
-  --color-card-red-soft: color-mix(in oklab, #dc2626 18%, transparent); /* row tint */
-}
+  --font-sans: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", monospace;
 
-/* Text classes (plan Phase 2.3): each name is a utility that sets size, line height, letter spacing and weight
-   together, e.g. text-score. Sizes come from the demo, none below 11 px. Minimum for running text is 12 px.
-   If you add one, also add its name to the text list in src/lib/cn.ts, or tailwind-merge will drop it. */
-@theme {
-  --text-display: 2rem;
-  --text-display--line-height: 1.15;
-  --text-display--letter-spacing: -0.02em;
-  --text-display--font-weight: 700;
-
-  --text-score: 2.75rem;
-  --text-score--line-height: 1;
-  --text-score--letter-spacing: 0.08em;
-  --text-score--font-weight: 700;
-
-  --text-metric: 1.75rem;
-  --text-metric--line-height: 1.1;
-  --text-metric--letter-spacing: -0.01em;
-  --text-metric--font-weight: 600;
-
-  --text-title: 1.375rem;
-  --text-title--line-height: 1.25;
-  --text-title--font-weight: 600;
-
-  --text-heading: 0.9375rem;
-  --text-heading--line-height: 1.4;
-  --text-heading--font-weight: 600;
-
-  --text-body: 0.875rem;
-  --text-body--line-height: 1.5;
-
-  --text-body-sm: 0.8125rem;
-  --text-body-sm--line-height: 1.5;
-
-  --text-caption: 0.75rem;
-  --text-caption--line-height: 1.5;
-
-  --text-eyebrow: 0.6875rem;
-  --text-eyebrow--line-height: 1.4;
-  --text-eyebrow--letter-spacing: 0.14em;
-  --text-eyebrow--font-weight: 700;
-
-  --text-label: 0.6875rem;
-  --text-label--line-height: 1.3;
-  --text-label--letter-spacing: 0.04em;
-  --text-label--font-weight: 500;
-
-  --text-clock: 1.375rem;
-  --text-clock--line-height: 1.2;
-  --text-clock--font-weight: 500;
-
-  --text-code: 0.75rem;
-  --text-code--line-height: 1.7;
-}
-
-/* Digits of equal width so changing numbers (score, clock, counters) don't jitter */
-@utility numeric {
-  font-variant-numeric: tabular-nums;
-}
-
-/* Corner radii (plan Phase 2.5): rounded-card (scoreboard), rounded-panel, rounded-control (buttons, inputs),
-   rounded-pill (badges) */
-@theme {
   --radius-card: 14px;
-  --radius-panel: 12px;
-  --radius-control: 6px;
-  --radius-pill: 999px;
 }
 
 :root {
-  color-scheme: dark; /* dark theme only (decided) */
-  --bg: var(--color-greys-950);
-  --surface: var(--color-greys-900); /* panels, cards */
-  --surface-raised: var(--color-greys-800); /* hover, selected row base */
-  --line: var(--color-greys-800); /* borders, dividers */
-  --line-strong: var(--color-greys-500); /* control borders: 3.6:1 on panels, meets the 3:1 rule for UI parts */
-  --ink: var(--color-greys-50); /* main text */
-  --ink-muted: var(--color-greys-400); /* secondary text */
-  --primary: var(--color-orange-500); /* brand, live, focus ring */
-  --primary-hover: var(--color-orange-400);
-  --primary-ink: var(--color-greys-950); /* text ON primary: NOT white, white is only 2.4:1 */
-  --accent-text: var(--color-orange-400); /* orange text on dark */
-  --secondary: var(--color-blue-500); /* selection, info, links */
-  --secondary-text: var(--color-blue-400);
-  --secondary-soft: color-mix(in oklab, var(--color-blue-500) 18%, transparent);
-
-  /* Pitch (LivePitch, Phase 9): light grey surface, dark grey boundaries */
-  --pitch-surface: var(--color-greys-300);
-  --pitch-stripe: var(--color-greys-200);
-  --pitch-line: var(--color-greys-700);
-  --pitch-marker-edge: var(--color-greys-950);
-
-  /* Page background glow: orange top-right, blue top-left, at 12% so text keeps 6.7:1 or more at the brightest point */
-  --glow-orange: color-mix(in oklab, var(--color-orange-500) 12%, transparent);
-  --glow-blue: color-mix(in oklab, var(--color-blue-500) 12%, transparent);
+  color-scheme: light;
+  --ov-canvas: #faf8f5;
+  --ov-surface: #ffffff;
+  --ov-raised: #edeae3;
+  --ov-ink: #17151a;
+  --ov-ink-2: #6b6875;
+  --ov-ink-3: #9b98a3;
+  /* rgb triplet of the ink, for hairlines and washes at any opacity */
+  --ov-ink-rgb: 23, 21, 26;
 }
 
-/* Semantic colours and fonts as utilities: bg-surface, border-line, text-ink-muted, bg-primary text-primary-ink... */
-@theme inline {
-  --color-bg: var(--bg);
-  --color-surface: var(--surface);
-  --color-surface-raised: var(--surface-raised);
-  --color-line: var(--line);
-  --color-line-strong: var(--line-strong);
-  --color-ink: var(--ink);
-  --color-ink-muted: var(--ink-muted);
-  --color-primary: var(--primary);
-  --color-primary-hover: var(--primary-hover);
-  --color-primary-ink: var(--primary-ink);
-  --color-accent-text: var(--accent-text);
-  --color-secondary: var(--secondary);
-  --color-secondary-text: var(--secondary-text);
-  --color-secondary-soft: var(--secondary-soft);
-  --color-pitch-surface: var(--pitch-surface);
-  --color-pitch-stripe: var(--pitch-stripe);
-  --color-pitch-line: var(--pitch-line);
-  --color-pitch-marker-edge: var(--pitch-marker-edge);
-  /* Team colours are set at runtime from the match setup (Phase 7) */
-  --color-team-home: var(--team-home, var(--color-orange-500));
-  --color-team-away: var(--team-away, var(--color-blue-400));
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+.dark {
+  color-scheme: dark;
+  --ov-canvas: #141414;
+  --ov-surface: #1e1e1f;
+  --ov-raised: #2c2c2e;
+  --ov-ink: #ffffff;
+  --ov-ink-2: #a0a0b8;
+  --ov-ink-3: #66667e;
+  --ov-ink-rgb: 255, 255, 255;
+}
+
+html,
+body {
+  background: var(--ov-canvas);
+  color: var(--ov-ink);
 }
 
 body {
-  background-color: var(--bg);
-  background-image:
-    radial-gradient(ellipse 60% 45% at 85% 0%, var(--glow-orange), transparent),
-    radial-gradient(ellipse 55% 40% at 10% 0%, var(--glow-blue), transparent);
-  background-repeat: no-repeat;
-  background-attachment: fixed; /* glow stays in the viewport instead of stretching with a long page */
-  color: var(--ink);
   font-family: var(--font-sans);
-  font-size: var(--text-body); /* base text is 14 px: this is a dense data screen */
-  line-height: var(--text-body--line-height);
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Focus ring (plan Phase 2.5): every interactive element gets the same visible ring, 7:1 or more on the page and panels.
-   :where() keeps this at zero specificity, so a component can still override it deliberately. */
-@layer base {
-  :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
-    outline: 2px solid var(--primary);
-    outline-offset: 2px;
+/* A card: an almost invisible border and wash over the canvas */
+.ov-card {
+  border-radius: var(--radius-card);
+  border: 1px solid rgb(var(--ov-ink-rgb) / 0.06);
+  background: rgb(var(--ov-ink-rgb) / 0.025);
+}
+
+/* Small uppercase labels in mono, the two levels used everywhere */
+.ov-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: rgb(var(--ov-ink-rgb) / 0.42);
+}
+.ov-sub {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.6px;
+  color: rgb(var(--ov-ink-rgb) / 0.3);
+}
+
+.ov-hairline {
+  border-color: rgb(var(--ov-ink-rgb) / 0.06);
+}
+
+.ov-wash {
+  background: rgb(var(--ov-ink-rgb) / 0.04);
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes ov-pulse {
+  70% {
+    box-shadow: 0 0 0 7px rgb(74 222 128 / 0);
   }
+  100% {
+    box-shadow: 0 0 0 0 rgb(74 222 128 / 0);
+  }
+}
+.ov-live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--color-live);
+  box-shadow: 0 0 0 0 rgb(74 222 128 / 0.6);
+  animation: ov-pulse 1.8s infinite;
+}
+
+@keyframes ov-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.ov-rise {
+  animation: ov-rise 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes ov-flash {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  15% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+  25% {
+    transform: scale(1);
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.ov-flash {
+  animation: ov-flash 3.2s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ov-live-dot,
+  .ov-rise,
+  .ov-flash {
+    animation: none;
+  }
+}
+
+:focus-visible {
+  outline: 2px solid #ff4f38;
+  outline-offset: 2px;
+}
+
+/* Labels floating over the 3D pitch */
+.ov-tag {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  border-radius: 999px;
+  padding: 4px 10px 4px 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  background: rgb(14 14 16 / 0.82);
+  border: 1px solid rgb(255 255 255 / 0.14);
+  backdrop-filter: blur(6px);
+  margin-top: -6px;
+  will-change: transform;
+}
+.ov-tag b {
+  font-family: var(--font-mono);
+  font-weight: 900;
+  color: #ff4f38;
+}
+/* Opacity only: the position lives in `transform`, which an animation must not touch */
+@keyframes ov-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.ov-tag[data-kind="speed"] {
+  animation: ov-fade 0.3s ease-out both;
+  border-color: rgb(74 222 128 / 0.5);
+}
+.ov-tag-speed {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 900;
+  color: #0e0e10;
+  background: #4ade80;
+  border-radius: 999px;
+  padding: 1px 7px;
+}
+.ov-marker {
+  position: absolute;
+  left: 0;
+  top: 0;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: #fff;
+  background: rgb(14 14 16 / 0.75);
+  border-radius: 6px;
+  padding: 3px 7px;
+}
+.ov-stage[data-webgl="unavailable"] .ov-stage-fallback {
+  display: grid;
+}
+
+@keyframes ov-score {
+  0% {
+    color: #ff4f38;
+    transform: scale(1.25);
+  }
+  60% {
+    color: #ff4f38;
+  }
+  100% {
+    transform: none;
+  }
+}
+.ov-flash-score {
+  animation: ov-score 1.4s cubic-bezier(0.2, 0.7, 0.2, 1);
 }

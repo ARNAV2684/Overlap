@@ -7,7 +7,7 @@
 // Inputs:  the store from the nearest MatchStoreContext
 // Outputs: useMatchStore(), useConnection(), useScoreboard(), useCounters(), useTimelineRows(), useLatestFrame(),
 //          useSelectedRow(), useStats(), useNotice(), useControls(), usePlayers()
-// Spec:    web/specs/realtime.md §2. web/IMPLEMENTATION_PLAN.md Phase 5.1
+// Spec:    web/specs/realtime.md §2. vedant-frontend/web/IMPLEMENTATION_PLAN.md Phase 5.1
 //
 // Every slice keeps the same object until its content changes (see store.ts), so the selectors below return
 // stable references and useSyncExternalStore does not loop or re-render needlessly.

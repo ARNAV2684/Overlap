@@ -1,31 +1,40 @@
-import type { Metadata } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Geist_Mono, Outfit } from "next/font/google";
 import "./globals.css";
+import { TopNav } from "@/components/shell/TopNav";
+import { PreferencesProvider } from "@/providers/PreferencesProvider";
 
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-  display: "swap",
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  variable: "--font-jetbrains-mono",
-  subsets: ["latin"],
-  display: "swap",
-});
+const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit", display: "swap" });
+const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono", display: "swap" });
 
 export const metadata: Metadata = {
-  title: "Overlap · Live stream",
-  description: "Watch a synthetic football match's data arrive live: every event and tracking frame as it is received.",
+  title: { default: "Overlap — every match, explained live", template: "%s · Overlap" },
+  description:
+    "Live synthetic football told as it happens: a 3D pitch, tactical overlays and AI moments checked number by number, in your mode and language.",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: dark)", color: "#141414" },
+    { media: "(prefers-color-scheme: light)", color: "#faf8f5" },
+  ],
+};
+
+// Dark is the default. A saved choice is applied before the first paint so the page never flashes the other theme.
+const themeScript = `try{var t=localStorage.getItem("ov-theme");if(t==="light")document.documentElement.classList.remove("dark")}catch(e){}`;
+
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html
-      lang="en"
-      className={`${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col">{children}</body>
+    <html lang="en" className={`dark ${outfit.variable} ${geistMono.variable}`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
+      <body className="min-h-dvh antialiased">
+        <PreferencesProvider>
+          <TopNav />
+          {children}
+        </PreferencesProvider>
+      </body>
     </html>
   );
 }

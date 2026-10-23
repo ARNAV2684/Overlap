@@ -1,13 +1,23 @@
-// page.tsx — Recap
-//
-// Purpose: full-time story with charts, per mode and language
-// Inputs:  viewer preferences, match data
-// Outputs: a page
-// Spec:    web/specs/screens.md
-//
-// Status: placeholder. Nothing is implemented yet. Write and agree the spec first.
+import type { Metadata } from "next";
+import { Suspense } from "react";
+import { notFound } from "next/navigation";
+import { isMatchId } from "@/lib/contracts";
+import { RecapView } from "@/components/match/RecapView";
 
-// Build-safe stub so the app compiles. Replace with the real screen once the spec is agreed.
-export default function Page() {
-  return null;
+export const metadata: Metadata = { title: "Recap" };
+
+type Props = { params: Promise<{ id: string }> };
+
+export default function RecapPage({ params }: Props) {
+  return (
+    <Suspense fallback={<main className="mx-auto max-w-[860px] px-4 py-10" />}>
+      <Resolved params={params} />
+    </Suspense>
+  );
+}
+
+async function Resolved({ params }: Props) {
+  const { id } = await params;
+  if (!isMatchId(id)) notFound();
+  return <RecapView matchId={id} />;
 }

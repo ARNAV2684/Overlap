@@ -1,8 +1,13 @@
 # Web app
 
-Next.js (App Router, TypeScript): the viewer's screen. One message format (the envelope in
+Next.js (App Router, TypeScript): the viewer's screen. The home page opens on a match being played on a 3D pitch
+(three.js) that tells the story of the match, with the agents' checked moment cards, the viewer's mode and language,
+and the match analytics underneath. One message format (the envelope in
 [`CONTRACTS.md` §7](../CONTRACTS.md#7-envelope-everything-sent-to-browsers)) feeds it from snapshots, the live
-socket and replay files alike.
+socket and the archive replay alike.
+
+Owners: Arnav and Azeem ([registry](../plans/REGISTRY.md)). Plan: [`PLAN_web_live-home`](../plans/active/PLAN_web_live-home.md).
+The earlier screens are kept in [`../vedant-frontend/`](../vedant-frontend/README.md).
 
 ## Run locally
 
@@ -24,52 +29,36 @@ npm run dev                  # http://localhost:3000
 | `npm run build` / `npm start` | Production build, then serve it |
 | `npm run lint` | ESLint |
 | `npm run typecheck` | `tsc --noEmit` |
-| `npm test` / `npm run test:watch` | Vitest unit and component tests (no server needed) |
+| `npm test` / `npm run test:watch` | Vitest unit tests (no server needed) |
 
 Run `lint`, `typecheck`, `test` and `build` before asking for review (the CI web job runs lint, typecheck and build).
 
 ### With the local stack
 
-The browser only talks to this app: it gets its WebSocket address from `/api/negotiate` and its catch-up history from
-`/api/match/<id>/snapshot` (`specs/realtime.md` §1.1, §3.1). Those routes need the server settings in
-`web/.env.local` (see `web/.env.example`): `OVERLAP_WEBPUBSUB_ENDPOINT` (the Web PubSub stand-in on
-`http://localhost:8787`) and the Cosmos emulator settings with `OVERLAP_COSMOS_CONTAINER=screen`.
+The browser only talks to this app: `/api/negotiate` gives it receive-only WebSocket addresses (the match group and the
+viewer's insight audience group), `/api/match/<id>/snapshot` the catch-up, `/api/match/<id>/insights/snapshot` and
+`/insights/history` the moment cards, `/api/matches` the archive list and `/api/replay/<id>` the replay
+([`specs/realtime.md`](specs/realtime.md)). The server settings go in `web/.env.local` (see `web/.env.example`): the Web
+PubSub stand-in (`OVERLAP_WEBPUBSUB_ENDPOINT=http://localhost:8787`), the Cosmos emulator with
+`OVERLAP_COSMOS_CONTAINER=screen`, and the archive settings.
 
 Start the local stack in the order of [`infra/specs/local-development.md`](../infra/specs/local-development.md) §5:
-the Docker emulators, the Web PubSub stand-in, the relay (and archiver), the stats engine, then a generator match.
-Then run `npm run dev` here and open `http://localhost:3000`:
+the Docker emulators, the Web PubSub stand-in, the Functions host (`func start`: relay, archiver and the insights flow)
+or the relay, archiver and insights poller separately, the stats engine, then a generator match
+(`uv run python cli.py live --hubs emulator --speed 20 --first-match <n>` in `generator/`). Then `npm run dev` here:
 
-- `/` lists the matches in the match archive (`/api/matches`): live ones link to their live screen, finished ones to
-  their replay; refreshed every 5 s. It needs the archive settings in `web/.env.local` (the same ones as replay, see
-  `web/.env.example`) and the local stack's Cosmos emulator with the archiver running. The mock writes no archive, so
-  with the mock alone `/` says the list isn't available; open `/match/SYN-9001` directly instead.
-- `/match/SYN-9001` is the live screen: scoreboard, four counters, match stats, event timeline, live pitch and message
-  inspector. After full time the server stays up for `--linger-s` seconds; reload the page to start a new run. The
-  match stats need the stats engine's panels (`kind: stats`), so with the mock alone they wait for the first panel;
-  run the local stack with the stats consumer (`infra/specs/local-development.md`) to see them.
-- `/dev/ui` (development only) shows every token, primitive and timeline row variant, including the red and
-  second-yellow cards `SYN-9001` never produces (`SYN-9002` has a red card).
-- `infra/local/webpubsub_standin/` fed by the screen relay also serves port 8787 and works the same way.
-
-The old viewer on `http://127.0.0.1:8788` (`mock/single-match-demo/`) is the reference the screen was rebuilt from.
-
-### End-to-end check against the stream
-
-`src/lib/__tests__/stream.qa.test.ts` runs the real socket and store against the running app (`QA_APP_URL`, default
-`http://localhost:3000`) on the local stack until full time and checks that nothing is rejected, every message is
-applied once, the badge reaches "finished" and the final score matches the server. It is skipped unless asked for
-(use the generator match's id):
-
-```bash
-QA_STREAM=1 QA_MATCHES=SYN-0042 npx vitest run src/lib/__tests__/stream.qa.test.ts
-```
+- `/` plays the live match (or, with nothing live, replays the newest finished match at 5×) on the 3D pitch, with the
+  story, the moment cards and the analytics.
+- `/match/<id>` opens one match, live or replayed; `/replay/<id>` always replays (1×, 5×, 20×, pause, restart).
+- `/matches` lists the archive; `/match/<id>/recap` shows the final score, the recap and every moment;
+  `/how-it-works` explains the pipeline.
 
 ### Replay an archived match
 
-`/replay/<id>` plays a finished match from the archive on the live screen's panels, at 20× by default (1× and 5× too),
-with pause and resume. `/api/replay/<id>` reads Cosmos and Blob on the server and answers with a manifest, then one
+`/replay/<id>` plays a finished match from the archive on the same screen as a live match, at 5× by default (1× and 20×
+too), with pause, resume and restart; the moment cards come from the insights history. `/api/replay/<id>` reads Cosmos and Blob on the server and answers with a manifest, then one
 minute of §7 envelopes per `?chunk=<n>`; the browser loads two minutes ahead
-([`specs/realtime.md`](specs/realtime.md) §5, [`specs/screens.md`](specs/screens.md) §1).
+([`specs/realtime.md`](specs/realtime.md) §5, [`specs/screens.md`](specs/screens.md) §2.4).
 
 1. Start the local stack with the archiver and the stats engine, then play a match and wait for full time
    ([`../infra/specs/local-development.md`](../infra/specs/local-development.md), steps 1–7). The mock writes no
@@ -86,56 +75,37 @@ match through the real route and checks it against the stored result:
 QA_REPLAY=1 QA_REPLAY_MATCH=SYN-0501 npx vitest run src/lib/__tests__/replay.qa.test.ts
 ```
 
-## The live screen
+### End-to-end check against the stream
 
-| Part | Files | Reads from the store |
-|---|---|---|
-| Frame: header and badge, intro, notice, footer | `src/components/layout/*`, `src/components/live/LiveMatchView.tsx` | connection, notice |
-| Scoreboard, goal flash and announcement | `src/components/Scoreboard.tsx`, `src/components/scoreboard/*` | scoreboard (live while paused) |
-| Four counters | `src/components/metrics/*` | counters (frozen while paused) |
-| Match stats: stat bars, momentum tide, pass network, pressing and touch zones | `src/components/live/MatchStatsSection.tsx`, `src/components/charts/{StatBars,MomentumTide,PassNetwork,PressingZones,HeatmapZones}.tsx`, `src/lib/stat-charts.ts` | stats (frozen while paused), players |
-| Event timeline: one component per row type | `src/components/timeline/**` | timeline, controls, inspector |
-| Live pitch | `src/components/charts/LivePitch.tsx`, `src/components/charts/pitch/*`, `src/components/live/LivePositionsPanel.tsx` | latest frame, players |
-| Message inspector | `src/components/inspector/*` | inspector, connection (rejected count) |
-| Match picker | `src/app/page.tsx`, `src/app/api/matches/route.ts`, `src/lib/match-list.ts` | none (`listMatches()`) |
-| Data path | `src/lib/{env,contracts,api,socket,store,store-hooks,ring-buffer}.ts`, `src/components/live/MatchStreamProvider.tsx` | — |
+`src/lib/__tests__/stream.qa.test.ts` runs the real socket and store against the running app (`QA_APP_URL`, default
+`http://localhost:3000`) on the local stack until full time and checks that nothing is rejected, every message is
+applied once, the badge reaches "finished" and the final score matches the server. It is skipped unless asked for
+(use the generator match's id):
 
-Every panel has a store-free `…View` version, used by the route's loading fallback so the first paint does not jump.
-Plan and progress: [`IMPLEMENTATION_PLAN.md`](IMPLEMENTATION_PLAN.md) and
-[`../plans/active/PLAN_web_live-match-viewer.md`](../plans/active/PLAN_web_live-match-viewer.md).
+```bash
+QA_STREAM=1 QA_MATCHES=SYN-0042 npx vitest run src/lib/__tests__/stream.qa.test.ts
+```
 
-## The replay screen
-
-The same panels as the live screen, fed by a replay player instead of the socket.
-
-| Part | Files |
-|---|---|
-| Page, header "/ Replay", intro with the final score, toolbar (Play/Pause, speeds, progress), failure cards | `src/app/replay/[id]/page.tsx`, `src/components/replay/*` |
-| Player: playhead in match time, speeds, prefetch, retries | `src/lib/replay-player.ts`, `src/lib/replay-client.ts` |
-| Route: stored match → manifest and one minute of envelopes | `src/app/api/replay/[id]/route.ts`, `src/lib/replay-envelopes.ts`, `src/lib/server/archive-{env,store}.ts` |
-| Row source ("Replay · archive" on timeline rows) | `src/lib/stream-source.ts` |
-
-Plan, checks and handover: [`../plans/active/PLAN_web_replay.md`](../plans/active/PLAN_web_replay.md).
-
-## Define before you code
+## Specs
 
 | # | Spec | What it decides | Governs |
 |---|---|---|---|
-| 1 | [`specs/design-system.md`](specs/design-system.md) | Overlap's own palette, type and logo, club theming and contrast, layout, motion, accessibility | every component |
-| 2 | [`specs/screens.md`](specs/screens.md) | Every page, exactly what each viewer mode shows, preferences, the judges' path | `src/app/**`, `src/components/*` |
-| 3 | [`specs/charts.md`](specs/charts.md) | Shared chart rules (`window`, `highlight`, pitch mapping) and each chart's props, data, interactions and empty state | `src/components/charts/*` |
-| 4 | [`specs/realtime.md`](specs/realtime.md) | Connection and groups, the store and seq dedupe, catch-up, the overlay scheduler, replay | `src/lib/*`, `src/app/api/*` |
+| 1 | [`specs/design-system.md`](specs/design-system.md) | Palette, type, cards, motion, accessibility | every component |
+| 2 | [`specs/screens.md`](specs/screens.md) | Every page, the match screen's parts, preferences, the feed | `src/app/**`, `src/components/{home,match,shell}/*` |
+| 3 | [`specs/pitch.md`](specs/pitch.md) | The 3D stage, figures, cameras, smooth motion, match memory, the story director | `src/components/pitch3d/**`, `src/lib/live/{motion,match-memory,story}.ts` |
+| 4 | [`specs/charts.md`](specs/charts.md) | Each analytics chart and its data | `src/components/charts/*`, `src/lib/live/charts.ts` |
+| 5 | [`specs/realtime.md`](specs/realtime.md) | Connection, store, catch-up, insights (§4), replay, match list | `src/lib/*`, `src/app/api/*`, `src/providers/*` |
 
 ## Files
 
 | Path | Job |
 |---|---|
-| `src/app/page.tsx` | Match picker (built) |
-| `src/app/match/[id]/page.tsx` | Live match screen (built) |
-| `src/app/match/[id]/recap/page.tsx` | Full-time recap |
-| `src/app/replay/[id]/page.tsx` | Replay at 1×, 5×, 20× (built) |
-| `src/app/how-it-works/page.tsx` | Architecture and agent trace for judges |
-| `src/app/api/*` | Negotiate, snapshot, replay, match list, preferences, start-match |
-| `src/components/charts/*` | Live pitch, momentum tide, shot map, pass network, pressing zones, heatmap zones, stat bars, key events |
-| `src/components/*` | Moment card, agent trace, scoreboard, commentary feed, viewer controls |
-| `src/lib/*` | Store, socket, overlay scheduler, preferences, visual lookup, coordinates, contract types |
+| `src/app/page.tsx`, `src/components/home/HomeLive.tsx` | Home: live match or replay of the newest |
+| `src/app/match/[id]/page.tsx`, `src/app/replay/[id]/page.tsx`, `src/components/match/MatchById.tsx`, `MatchSession.tsx` | One match, live or replay |
+| `src/components/match/*` | Match screen: score header, pitch overlay (story, chips, moment card), replay bar, viewer bar, feed, player focus, analytics, recap |
+| `src/components/pitch3d/**` | The 3D pitch: `scene/stage.ts` (renderer, lights, cameras, story overlays), `scene/pitch.ts`, `scene/figure.ts`, `scene/overlays.ts`, `PitchStage.tsx` (loop and labels) |
+| `src/components/charts/*` | Momentum, stat bars, shot map, pass network, pressing, heatmap, pass map, key events |
+| `src/lib/live/*` | Motion, match memory, story director, insights client and feed, chart data |
+| `src/providers/*` | Live stream, replay, match experience, preferences |
+| `src/app/api/*` | Negotiate, snapshot, insights snapshot and history, replay, match list (preferences and start-match are stubs) |
+| `src/lib/*` | Contracts, socket, store, replay engine, API client, preferences, coordinates, formatting |

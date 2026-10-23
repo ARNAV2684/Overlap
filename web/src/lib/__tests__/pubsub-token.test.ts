@@ -16,7 +16,7 @@ describe("parseGroups", () => {
     expect(parseGroups(null)).toBeNull();
     expect(parseGroups("")).toBeNull();
     expect(parseGroups("match-SYN-42")).toBeNull();
-    expect(parseGroups("match-SYN-0042-casual-en")).toBeNull();
+    expect(parseGroups("match-SYN-0042-casual-de")).toBeNull();
     expect(parseGroups("match-SYN-0042,")).toBeNull();
     expect(parseGroups("everyone")).toBeNull();
     const tooMany = Array.from({ length: MAX_GROUPS + 1 }, (_, i) => `match-SYN-000${i}`).join(",");

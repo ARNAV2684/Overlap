@@ -4,7 +4,7 @@
 //          time as §7 envelopes, in the same shapes the screen relay sends live
 // Inputs:  documents as archive-store.ts reads them (Cosmos fields included, frames unsorted and possibly repeated)
 // Outputs: buildReplayIndex() (manifest plus what each chunk needs), buildReplayChunk() (envelopes and rejected count)
-// Spec:    web/specs/realtime.md §5.1; CONTRACTS.md §4.1, §7.2, §7.3. Plan: plans/active/PLAN_web_replay.md
+// Spec:    web/specs/realtime.md §5.1; CONTRACTS.md §4.1, §7.2, §7.3. Plan: vedant-frontend/plans/active/PLAN_web_replay.md
 //
 // Pure: no I/O, no clock, no randomness, so the same stored match always gives the same envelopes and `seq` numbers.
 // Status envelopes follow functions/screen_relay.py: one after PeriodStart, after each goal Shot and after PeriodEnd.
