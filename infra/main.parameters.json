@@ -13,6 +13,15 @@
     },
     "principalType": {
       "value": "${AZURE_PRINCIPAL_TYPE=User}"
+    },
+    "budgetContactEmail": {
+      "value": "${BUDGET_CONTACT_EMAIL}"
+    },
+    "deployModel": {
+      "value": "${DEPLOY_MODEL=true}"
+    },
+    "webPubSubSku": {
+      "value": "${WEBPUBSUB_SKU=Standard_S1}"
     }
   }
 }
