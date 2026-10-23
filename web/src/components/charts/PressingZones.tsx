@@ -1,62 +1,83 @@
 // PressingZones.tsx — Where a team presses
 //
-// Purpose: the stats engine's pressing grid (pressures, tackles, interceptions, fouls and recoveries per zone) as a
-//          heat grid over the pitch, the team attacking left → right, with how high the press sits
+// Purpose: the stats engine's pressing grid as zones on the blue ramp with their counts, the share in each third,
+//          the press line, and the busiest zones in words
 // Inputs:  one side's grid [col][row] (9 columns from its own goal, 6 rows from its left; CONTRACTS.md §7.4), the
-//          team's PPDA and press height from the light panel, the team colour
-// Outputs: SVG and a summary line
+//          team's PPDA and press height from the light panel
+// Outputs: a viz card
 // Spec:    web/specs/charts.md §9
 
-import { PRESSING_COLS, PRESSING_ROWS } from "@/lib/contracts";
-import { MiniPitch } from "./MiniPitch";
+import { busiestZones, thirds } from "@/lib/live/charts";
+import { Em, EmptyViz, InsightPanel, PitchLine, RampLegend, StatStrip, VizCard, VizPitch, ZoneGrid } from "@/components/viz/Viz";
+
+const pct = (v: number) => `${Math.round(v * 100)}%`;
 
 export function PressingZones({
   grid,
-  colour,
-  label,
+  team,
   ppda,
   heightM,
+  controls,
 }: {
   grid: readonly (readonly number[])[] | null;
-  colour: string;
-  label: string;
+  team: string;
   ppda: number | null;
   heightM: number | null;
+  controls?: React.ReactNode;
 }) {
-  const cw = 105 / PRESSING_COLS;
-  const rh = 68 / PRESSING_ROWS;
-  const max = grid ? Math.max(1, ...grid.flat()) : 1;
-  const total = grid ? grid.flat().reduce((s, v) => s + v, 0) : 0;
-  const attackingHalf = grid ? grid.slice(Math.ceil(PRESSING_COLS / 2)).flat().reduce((s, v) => s + v, 0) : 0;
+  const t = grid ? thirds(grid) : null;
+  const busiest = grid ? busiestZones(grid) : [];
+  const ahead = t ? t.middle + t.final : 0;
   return (
-    <div>
-      <MiniPitch label={label}>
-        {grid?.map((col, c) =>
-          col.map((v, r) =>
-            v > 0 ? (
-              <g key={`${c}-${r}`}>
-                <rect x={c * cw + 0.4} y={r * rh + 0.4} width={cw - 0.8} height={rh - 0.8} rx="1" fill={colour} fillOpacity={0.12 + (v / max) * 0.78} />
-                <text x={c * cw + cw / 2} y={r * rh + rh / 2 + 1.1} textAnchor="middle" className="fill-white font-mono text-[3px] font-black">
-                  {v}
-                </text>
-              </g>
-            ) : null,
-          ),
-        )}
-        {heightM !== null && (
-          <g>
-            <line x1={heightM} y1="0" x2={heightM} y2="68" stroke="#fff" strokeWidth="0.4" strokeDasharray="1.2 1" />
-            <text x={heightM + 1} y="4" className="fill-white font-mono text-[2.6px] font-black">
-              PRESS HEIGHT {Math.round(heightM)} M
-            </text>
-          </g>
-        )}
-      </MiniPitch>
-      <p className="mt-2 font-mono text-[10px] font-bold uppercase tracking-wider text-ink/45">
-        {total
-          ? `${total} pressing actions · ${Math.round((attackingHalf / total) * 100)}% in the opponent's half${ppda !== null ? ` · PPDA ${ppda.toFixed(1)} (last 10′)` : ""}`
-          : "No pressing actions yet."}
-      </p>
-    </div>
+    <VizCard
+      eyebrow="Pressing zones · this match"
+      title={`Where ${team} press`}
+      subtitle="Pressures in each zone, the team attacking left to right"
+      kpis={[
+        { value: t ? String(t.total) : "–", label: "Pressures" },
+        { value: heightM !== null ? heightM.toFixed(0) : "–", label: "Press ht (m)", focus: true },
+        { value: ppda !== null ? ppda.toFixed(1) : "–", label: "PPDA 10′" },
+      ]}
+      controls={controls}
+      aside={
+        t && t.total > 0 ? (
+          <InsightPanel
+            sentence={
+              <>
+                {team} make <Em>{pct(ahead)}</Em> of their pressures outside their own third
+                {heightM !== null ? (
+                  <>
+                    , with the press line at <Em>{heightM.toFixed(0)} m</Em> from their goal
+                  </>
+                ) : null}
+                .
+              </>
+            }
+            listTitle="Busiest zones"
+            items={busiest.map((z) => ({ label: z.label, value: String(z.count) }))}
+            note="PPDA is opponent passes allowed per defensive action over the last 10 minutes: lower means a harder press."
+          />
+        ) : undefined
+      }
+      footer={t && t.total > 0 ? <RampLegend /> : undefined}
+    >
+      {!grid || !t || t.total === 0 ? (
+        <EmptyViz text="No pressing actions yet." />
+      ) : (
+        <>
+          <StatStrip
+            cells={[
+              { value: pct(t.own), label: "Own third", share: t.own },
+              { value: pct(t.middle), label: "Middle third", share: t.middle },
+              { value: pct(t.final), label: "Final third", share: t.final },
+            ]}
+          />
+          <VizPitch label={`${team} pressing zones: ${t.total} pressures`}>
+            <ZoneGrid grid={grid} showCounts />
+            {heightM !== null && <PitchLine xM={heightM} label={`PRESS LINE ${heightM.toFixed(0)}`} />}
+          </VizPitch>
+        </>
+      )}
+    </VizCard>
   );
 }
