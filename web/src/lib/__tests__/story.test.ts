@@ -1,3 +1,11 @@
+// story.test.ts — The story director
+//
+// Purpose: each pitch story (territory, protect, shape, attack with its live flank strip) is chosen and filled from
+//          the match memory as specified
+// Inputs:  hand-made setups, events and tracking frames (fixtures.ts)
+// Outputs: pass / fail
+// Spec:    web/specs/pitch.md
+
 import { describe, expect, it } from "vitest";
 import type { ParsedEnvelope, TrackingFrame } from "@/lib/contracts";
 import { createMatchMemory, metresFromOwnGoal } from "@/lib/live/match-memory";
