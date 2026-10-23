@@ -3,7 +3,8 @@
 // PitchStage.tsx — The live 3D pitch
 //
 // Purpose: mount the WebGL stage, run its animation loop from the match experience, and float HTML labels over it:
-//          speed tags when a player crosses a threshold, the followed player's name, and the story's line markers
+//          speed tags when a player crosses a threshold, the followed player's name, the story's line markers, and
+//          each lane's share of the attack (attack by flank) at the attacking third
 // Inputs:  the match experience and preferences from context; `highlight` player ids from the screen
 // Outputs: UI (a canvas and a label layer; children are drawn on top, for the caption and controls)
 // Spec:    web/specs/pitch.md
@@ -21,7 +22,7 @@ import { flightAt, shotFlight, type BallPoint, type ShotFlight } from "@/lib/liv
 import { bookingsAt, FIELD_EVENT_LABELS, minuteOf, shortName, type FieldEvent } from "@/lib/live/match-events";
 import { useExperience } from "@/providers/MatchExperience";
 import { usePreferences } from "@/providers/PreferencesProvider";
-import { createStage, toWorld, type Stage } from "./scene/stage";
+import { attackingThird, createStage, toWorld, type Stage } from "./scene/stage";
 import { PITCH_H, PITCH_W } from "./scene/pitch";
 import { CARD_Y } from "./scene/effects";
 import { FIGURE_SCALE } from "./scene/figure";
@@ -295,6 +296,19 @@ export function PitchStage({ highlight = [], children }: { highlight?: readonly 
           put("m:now", s.lineNow, "Defensive line now", true);
           if (s.lineBefore !== undefined && s.lineNow !== undefined && Math.abs(s.lineBefore - s.lineNow) >= 1.5) {
             put("m:before", s.lineBefore, "Before the goal", false);
+          }
+        }
+        // Attack by flank: each lane's share, where the attacking third starts (the lit stripes run on to the goal)
+        if (e.analysis && s?.kind === "attack" && s.side && s.flanks) {
+          const third = attackingThird(s.side, sample.period);
+          const x = third.x0 + (third.x1 - third.x0) * 0.1;
+          for (const f of s.flanks) {
+            const at = stage.project(x, 0, third.laneZ(f.channel));
+            if (!at) continue;
+            const el = label(`f:${f.channel}`, "ov-flank");
+            el.innerHTML = `<b>${f.share}%</b>${f.channel}`;
+            el.dataset.top = String(f.channel === s.channel);
+            el.style.transform = `translate(${at.x}px, ${at.y}px) translate(-50%, -50%)`;
           }
         }
       }
