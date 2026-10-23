@@ -1,3 +1,10 @@
+// page.tsx — How it works
+//
+// Purpose: the pipeline in six steps, the seven agents, and what each pitch story means
+// Inputs:  none
+// Outputs: page
+// Spec:    web/specs/screens.md §7
+
 import type { Metadata } from "next";
 import Link from "next/link";
 
