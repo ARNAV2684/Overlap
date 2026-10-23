@@ -433,3 +433,24 @@ a file for the season data, the stats engine as season producer, reference clubs
 5. **M6, optional:** AI season notes through the agents; the season document in Cosmos on Azure.
 6. **Close-out:** AC-06 to AC-08 and AC-10 still need their evidence.
 
+**Arnav's session (24 Oct, branch `web/revamp-polish`):**
+- **Territory tide back on the grass**, calmer: faint at all times (0.1), fuller (0.36) only while territory is the
+  story (Arnav's call, overriding the removal in #88). `pitch.md` already described it; how-it-works text restored.
+- **Figures a little larger:** `FIGURE_SCALE` 2.45 (2.2 after #87, 2.4 before), keeping the slimmer build.
+- **AI moment card** in the kit's style: plain sentence, key number picked out in blue and shown big, chart chip that
+  opens the chart's tab (`keyNumber` in `lib/live/insights.ts`, tested; scorelines stay whole). `screens.md` §2.3.
+- **Score header:** cleaner layout, clock and half under the score, momentum sparkline. `screens.md` §2.1.
+- **Calmer pitch overlays:** shape lines, pass network (24 strongest links), block tint and lane band in the kit blue
+  at lower strength. `pitch.md` §4.
+- **Scout-card link** shows only when the season route has the player (hidden for CAL and DTN players).
+- **Fixes:** xG headline numbers use the stat panel's total so the rail, xG race and shot map agree; the press line
+  label moved under the pitch; busiest zones listed once each (summed per zone); event ticker moved under the chips
+  from tablet width up; insights poller no longer crashes on a job document without `source_hash` (`agents/state.py`,
+  regression test); dev server pinned to `web/` (a stray `package-lock.json` in the home folder made it watch the
+  whole tree and reload the page every few seconds).
+- **Tests:** page-level season screen tests (`season-screens.test.ts`); web 534 pass, lint and typecheck clean,
+  production build clean; agents 177 pass.
+- **Seen live** (local stack, SYN-2402 to SYN-2404 at 20×, production build): figures in wide and close cameras, the
+  tide, the new card and chip, the sparkline, the numbers rail beside the pitch, Attack / Defence / Players tabs,
+  player focus with and without the scout link.
+
