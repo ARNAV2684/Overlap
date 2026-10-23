@@ -404,6 +404,15 @@ a file for the season data, the stats engine as season producer, reference clubs
   - the central lanes renamed Centre-left and Centre-right.
 - **Checks:** web 520 tests, lint, typecheck and `next build` clean.
 
+**Third session (23 Oct, branch `web/live-rail`, after #87):**
+- **Territory tide removed:** no longer drawn on the pitch (Azeem: the wave hid the play). Territory stays a caption
+  story.
+- **Live numbers rail:** `LiveRail.tsx`, `screens.md` §2.7, beside the pitch. It shows xG, a mini xG race and split
+  bars, updating every match second.
+- **Checked:** seen on `/dev/viz` with a recorded panel; not yet in a live match.
+- **Still to sweep on the live screen:** the AI moment card in the design style, a cleaner score header with a
+  momentum sparkline, and calmer pitch overlays in the blue palette.
+
 **Left to do, in order:**
 1. **Cleaner 3D player figures:** done in `figure.ts`.
    - **Build:** slimmer athletic proportions, a smaller head without the nose bump, smaller knees, sleek dark boots.
