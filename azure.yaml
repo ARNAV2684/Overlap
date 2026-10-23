@@ -1,8 +1,15 @@
 # azure.yaml — azd project
 #
-# Purpose: describe the services azd deploys
-# Inputs:  -
-# Outputs: -
+# Purpose: describe the infrastructure and services azd deploys
+# Inputs:  infra/main.bicep, infra/main.parameters.json
+# Outputs: the rg-<environment> resource group and everything in it
 # Spec:    infra/specs/resources.md
 #
-# Status: placeholder. Nothing is implemented yet. Write and agree the spec first.
+# Sprint A0 (plans/active/PLAN_infra_azure-pass.md): infrastructure only, so `azd provision` deploys identities,
+# storage and monitoring. Services (functions, stats, web, generator) are added in A6, A7, A9 and A10.
+
+name: overlap
+infra:
+  provider: bicep
+  path: infra
+  module: main
