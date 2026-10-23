@@ -114,13 +114,13 @@ QA_STREAM=1 QA_MATCHES=SYN-0042 npx vitest run src/lib/__tests__/stream.qa.test.
 
 The live screen and archive replay share the same viewer. No extra packages or assets are needed.
 
-1. Check out the review branch `web/broadcast-local-preview` (or pull `main` after it merges).
+1. Pull `main`.
 2. In `web/`, run `npm ci`. Keep your existing `.env.local`; on a fresh laptop copy `.env.example` and configure your own local endpoints as described above.
 3. Start the existing [local stack](../infra/specs/local-development.md) and generator, or use a match already archived on your machine. Run `npm run dev` and open `http://localhost:3000`.
-4. Choose **Watch** for the uncluttered pitch or **Analyse** for tactical overlays. **Close** follows the action; **Wide** and **Top** remain available.
+4. Choose **Watch** for the uncluttered pitch or **Analyse** (the default) for the story overlays. **Wide**, **Close** and **Top** are the cameras.
 5. For a natural-speed motion review, open a finished match from `/matches`, then select **1×** and **Close**. At **20×**, both player and ball travel are deliberately accelerated.
 6. Below the pitch, select a team, player and period in **Tracking heatmap**. Warmer cells indicate more observed position samples, scaled to that selection's peak. The heatmap is not a claim of complete coverage, especially after joining late.
 
-The pitch adds procedural stadium seating, turf, nets, detailed kits and contact shadows. Running animation and ball rotation use rendered travel on the shared tracking clock. The camera follows with a consistent response across frame rates. Tracking coordinates, match events and backend contracts are unchanged; exact foot-to-ball contact remains limited by the source tracking and procedural models.
+The pitch has worn turf, corded nets, floodlight masts, detailed kits and contact shadows. Running steps follow rendered travel on the shared tracking clock. The ball flies in 3D: tracked heights for lofted balls, and shots flown from their events to the exact point they cross the goal line, with a trail ([`specs/pitch.md`](specs/pitch.md) §6). Tracking coordinates, match events and backend contracts are unchanged; exact foot-to-ball contact remains limited by the source tracking and procedural models.
 
 Git shares the viewer code, not another teammate's running services or recorded matches. Use your own local match ID; no developer-specific ports, recordings, database contents or secrets are needed from the author.

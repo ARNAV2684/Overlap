@@ -3,14 +3,17 @@
 // ScoreHeader.tsx — Teams, score and clock
 //
 // Purpose: the top of the match screen: both clubs with their kit crests, the score in big mono digits, the clock and
-//          phase, and whether this is live or a replay. A goal makes the score flash
-// Inputs:  the match store's scoreboard and connection; the stream source
+//          phase, whether this is live or a replay, and each team's score sheet (scorers and cards) underneath.
+//          A goal makes the score flash
+// Inputs:  the match store's scoreboard and connection; the stream source; the match memory at the playhead
 // Outputs: UI
 // Spec:    web/specs/screens.md §2.1
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Phase, Team } from "@/lib/contracts";
 import { formatPhase } from "@/lib/format";
+import { scoreSheet, type SheetEntry } from "@/lib/live/match-events";
+import { useExperience } from "@/providers/MatchExperience";
 import { useConnection, useScoreboard } from "@/lib/store-hooks";
 import { useStreamSource } from "@/lib/stream-source";
 
@@ -39,6 +42,36 @@ function TeamName({ name }: { name: string }) {
   return <span className="hidden sm:inline">{name}</span>;
 }
 
+function SheetIcon({ kind }: { kind: SheetEntry["kind"] }) {
+  if (kind === "goal") return <span aria-label="Goal" className="text-[11px] leading-none">⚽</span>;
+  return (
+    <span
+      aria-label={kind === "yellow" ? "Yellow card" : "Red card"}
+      className={`inline-block h-[11px] w-[8px] shrink-0 rounded-[2px] ${kind === "yellow" ? "bg-[#f5c518]" : "bg-[#e5383b]"}`}
+    />
+  );
+}
+
+/** One team's scorers and cards, in match order; the newest one rises in. Phones show icons and minutes only. */
+function Sheet({ entries, align }: { entries: readonly SheetEntry[]; align: "left" | "right" }) {
+  if (!entries.length) return <div />;
+  const newest = entries[entries.length - 1]?.id;
+  return (
+    <ul className={`flex flex-wrap gap-x-3 gap-y-1 ${align === "right" ? "justify-end text-right" : ""}`}>
+      {entries.map((e) => (
+        <li key={e.id} className={`flex items-center gap-1.5 text-[12px] font-semibold text-ink/65 ${e.id === newest ? "ov-rise" : ""}`}>
+          <SheetIcon kind={e.kind} />
+          <span className="hidden sm:inline">{e.name}</span>
+          <span className="font-mono text-[11px] font-bold text-ink/45">
+            {e.minute}
+            {e.note ? ` ${e.note}` : ""}
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export function ScoreHeader() {
   const board = useScoreboard();
   const { status } = useConnection();
@@ -46,6 +79,12 @@ export function ScoreHeader() {
   const home = board.setup?.teams.home ?? null;
   const away = board.setup?.teams.away ?? null;
   const score = board.score;
+  const { memory, playheadMs, tick } = useExperience();
+  // Scorers and cards up to what the pitch is showing (the stream runs a little ahead of the picture)
+  const sheet = useMemo(() => {
+    void tick;
+    return scoreSheet(memory.fieldEvents(), board.setup, playheadMs);
+  }, [memory, board.setup, playheadMs, tick]);
 
   // Flash the score when it changes (not on the first value)
   const last = useRef<string | null>(null);
@@ -67,7 +106,11 @@ export function ScoreHeader() {
           : { text: status === "stale" ? "Waiting for data" : "Connecting", cls: "bg-ink/10 text-ink/60" };
 
   return (
-    <div className="ov-score-inner flex flex-col gap-3" style={{ background: `linear-gradient(110deg, ${home?.colours.primary ?? '#123d45'}33, transparent 45%, ${away?.colours.primary ?? '#46316f'}33)` }}>
+    <div
+      className="flex flex-col gap-3 p-4 sm:p-5"
+      // A wash of each team's kit colour from its side of the header
+      style={{ background: `linear-gradient(110deg, ${home?.colours.primary ?? "#123d45"}33, transparent 45%, ${away?.colours.primary ?? "#46316f"}33)` }}
+    >
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="ov-eyebrow">
@@ -99,6 +142,12 @@ export function ScoreHeader() {
           <Crest team={away} size={48} />
         </div>
       </div>
+      {(sheet.home.length > 0 || sheet.away.length > 0) && (
+        <div className="grid grid-cols-2 gap-4 border-t border-ink/[0.06] pt-2.5" aria-label="Score sheet">
+          <Sheet entries={sheet.home} align="left" />
+          <Sheet entries={sheet.away} align="right" />
+        </div>
+      )}
     </div>
   );
 }

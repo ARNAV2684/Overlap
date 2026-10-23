@@ -10,10 +10,13 @@
 
 import * as THREE from "three";
 import type { MatchSetup } from "@/lib/contracts";
-import { attacksEast, type Side } from "@/lib/coordinates";
+import { attacksEast, teamToPitch, type Side } from "@/lib/coordinates";
+import type { Booking, FieldEvent } from "@/lib/live/match-events";
 import type { MatchMemory } from "@/lib/live/match-memory";
-import { renderedTravel, followAlpha, type MotionSample } from "@/lib/live/motion";
+import type { BallPoint } from "@/lib/live/ball-flight";
+import { renderedTravel, type MotionSample } from "@/lib/live/motion";
 import { formationLines, territoryFront, type Story } from "@/lib/live/story";
+import { BallTrail, BookingCards, BURST_S, EventMarkers, GoalBurst } from "./effects";
 import { createFigure, disposeFigureAssets, type Figure } from "./figure";
 import { Discs, Hull, LaneBand, Ribbons, TerritoryTide, type Segment } from "./overlays";
 import { createPitch, PITCH_H, PITCH_W } from "./pitch";
@@ -44,21 +47,32 @@ export function overlayColour(colours: { primary: string; secondary: string }): 
 }
 
 export type StageUpdate = {
+  /** Analyse shows the story director's overlays; Watch is the clean pitch (events and cards still show). */
+  analysis: boolean;
+  /** The ball in 3D (smoothed tracking, or a shot's flight); null falls back to the sample's ball. */
+  ball: BallPoint | null;
+  /** A colour while the ball should leave a trail (a shot, or a lofted ball), else null. */
+  trail: string | null;
   sample: MotionSample | null;
   story: Story | null;
   memory: MatchMemory;
   /** Players to ring (followed player, the current card's player). */
   highlight: ReadonlySet<string>;
+  /** Who is booked at the playhead: a small card rides above each of them. */
+  bookings: ReadonlyMap<string, Booking>;
   /** Wall seconds since the last update, and since the stage started. */
   dt: number;
   time: number;
-  analysis?: boolean;
 };
 
 export type Stage = {
   setSetup(setup: MatchSetup | null): void;
   setView(view: View): void;
   update(u: StageUpdate): void;
+  /** A short mark on the grass for a set piece or stoppage, in the acting team's colour. */
+  markEvent(event: FieldEvent, side: Side, time: number): void;
+  /** The goal celebration: camera push to the goal, confetti, the net bulging. `calm` skips the motion. */
+  celebrate(side: Side, period: number, time: number, calm: boolean): void;
   /** World point to CSS pixels in the canvas, or null when behind the camera. */
   project(x: number, y: number, z: number): { x: number; y: number } | null;
   resize(width: number, height: number): void;
@@ -67,15 +81,15 @@ export type Stage = {
 
 /** Camera elevation, degrees above the pitch, seen from the south touchline. */
 const VIEWS: Record<Exclude<View, "close">, { elevation: number }> = {
-  broadcast: { elevation: 46 },
+  broadcast: { elevation: 56 },
   tactical: { elevation: 82 },
 };
 /** The close camera: a TV-style follow of the ball, this far behind and above it (metres). */
 const CLOSE = { back: 30, up: 21, ahead: 2 };
 const FOV = 30;
 /** Metres kept visible beyond each touchline and goal line, plus room for the broadcast camera's drift. */
-const MARGIN_X = 7;
-const MARGIN_Z = 7;
+const MARGIN_X = 2.5;
+const MARGIN_Z = 2.5;
 const FOLLOW_MAX = 4;
 
 /**
@@ -141,7 +155,7 @@ export function createStage(canvas: HTMLCanvasElement): Stage {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.16;
+  renderer.toneMappingExposure = 1.3;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFShadowMap;
 
@@ -196,6 +210,13 @@ export function createStage(canvas: HTMLCanvasElement): Stage {
   const markers = new Ribbons(8, "#ffffff", 2);
   const nodes = new Discs(11);
   scene.add(tide.object, hull.object, lane.object, lines.object, links.object, markers.object, nodes.object);
+  const cards = new BookingCards();
+  const eventMarks = new EventMarkers();
+  const burst = new GoalBurst();
+  const trail = new BallTrail();
+  scene.add(cards.object, eventMarks.object, burst.object, trail.object);
+  /** The goal camera: while it runs it overrides the chosen view, then eases back. */
+  let cine: { goalX: number; start: number } | null = null;
 
   // Ball
   const ballTex = (() => {
@@ -225,8 +246,11 @@ export function createStage(canvas: HTMLCanvasElement): Stage {
   ballShadow.rotation.x = -Math.PI / 2;
   ballShadow.position.y = 0.035;
   scene.add(ballShadow);
-  let previousSample: MotionSample | null = null;
+  /** The ball's last drawn position, for its spin (it rolls along the way it travels). */
+  let lastBall: THREE.Vector3 | null = null;
   const spinAxis = new THREE.Vector3();
+  /** The previous sample, for how far each player moved on screen (steps their legs). */
+  let previousSample: MotionSample | null = null;
 
   let sized = false;
   let setup: MatchSetup | null = null;
@@ -243,7 +267,6 @@ export function createStage(canvas: HTMLCanvasElement): Stage {
   function setSetup(next: MatchSetup | null) {
     if (next?.match_id === setup?.match_id) return;
     setup = next;
-    previousSample = null;
     clearFigures();
     if (!setup) return;
     let seed = 0;
@@ -386,16 +409,20 @@ export function createStage(canvas: HTMLCanvasElement): Stage {
 
     update(u) {
       const sample = u.sample;
-      // Camera: ease to the chosen view; the broadcast camera drifts with the ball like a real one
-      if (view === "close") {
+      // Camera: ease to the chosen view; the broadcast camera drifts with the ball like a real one. A goal takes over
+      // for a moment: a quick push towards the goal, a hold, then back
+      if (cine && u.time - cine.start > BURST_S + 0.4) cine = null;
+      if (cine) {
+        const side = Math.sign(cine.goalX);
+        camPos.lerp(new THREE.Vector3(cine.goalX - side * 26, 17, 26), Math.min(1, u.dt * 3.2));
+        camLook.lerp(new THREE.Vector3(cine.goalX - side * 4, 1.2, 0), Math.min(1, u.dt * 3.6));
+      } else if (view === "close") {
         // Follow the ball, kept inside the pitch so the camera never swings out over the stands
         const b = sample ? toWorld(sample.ball.x, sample.ball.y) : { x: 0, z: 0 };
         const lx = Math.max(-PITCH_W / 2 + 12, Math.min(PITCH_W / 2 - 12, b.x));
         const lz = Math.max(-PITCH_H / 2 + 6, Math.min(PITCH_H / 2 - 6, b.z)) + CLOSE.ahead;
-        // Position and target share one response: no extra look-at lag at close range.
-        const alpha = followAlpha(u.dt, 12 * Math.max(1, Math.min(sample?.rate ?? 1, 4)));
-        camPos.lerp(new THREE.Vector3(lx, CLOSE.up, lz + CLOSE.back), alpha);
-        camLook.lerp(new THREE.Vector3(lx, 0, lz), alpha);
+        camPos.lerp(new THREE.Vector3(lx, CLOSE.up, lz + CLOSE.back), Math.min(1, u.dt * 1.2));
+        camLook.lerp(new THREE.Vector3(lx, 0, lz), Math.min(1, u.dt * 1.8));
       } else {
         const v = fitted[view];
         const follow =
@@ -407,17 +434,29 @@ export function createStage(canvas: HTMLCanvasElement): Stage {
       camera.lookAt(camLook);
 
       if (sample) {
-        const b = toWorld(sample.ball.x, sample.ball.y);
-        const h = Math.max(0, sample.ball.z) + 0.3;
-        ball.position.set(b.x, h, b.z);
-        const travel = renderedTravel(previousSample, sample);
-        if (travel.distance > 0) {
-          spinAxis.set(travel.dz, 0, -travel.dx).normalize();
-          ball.rotateOnWorldAxis(spinAxis, travel.distance / 0.3);
+        // The ball in 3D: its height lifts it off its shadow, which stays on the grass and fades as it climbs
+        const bp = u.ball ?? { x: sample.ball.x, y: sample.ball.y, z: sample.ball.z };
+        const b = toWorld(bp.x, bp.y);
+        const height = Math.max(0, bp.z);
+        const at = new THREE.Vector3(b.x, height + 0.3, b.z);
+        // Spin: it rolls about the axis across its travel, by the distance covered (a reset is not rolled)
+        if (lastBall) {
+          const dx = at.x - lastBall.x;
+          const dz = at.z - lastBall.z;
+          const moved = Math.hypot(dx, dz);
+          if (moved > 0.001 && moved < 12) {
+            spinAxis.set(dz, 0, -dx).normalize();
+            ball.rotateOnWorldAxis(spinAxis, moved / 0.3);
+          }
         }
+        lastBall = at;
+        ball.position.copy(at);
         ballShadow.position.set(b.x, 0.035, b.z);
-        ballShadow.scale.setScalar(1 / (1 + sample.ball.z * 0.3));
+        ballShadow.scale.setScalar(1 + height * 0.18);
+        (ballShadow.material as THREE.MeshBasicMaterial).opacity = 0.42 / (1 + height * 0.45);
         ball.visible = ballShadow.visible = true;
+        if (u.trail) trail.add(at, u.trail, u.time);
+        else trail.break();
 
         for (const [id, entry] of figures) {
           const p = sample.players.get(id);
@@ -439,20 +478,70 @@ export function createStage(canvas: HTMLCanvasElement): Stage {
           }
           entry.last = w;
           entry.figure.root.visible = true;
-          const movement = renderedTravel(previousSample, sample, id);
-          entry.figure.update(w.x, w.z, movement.speed, fx, fz, u.dt, movement.distance);
+          // Legs step by the ground covered on screen; how hard they run comes from the tracked speed
+          const moved = renderedTravel(previousSample, sample, id).distance;
+          entry.figure.update(w.x, w.z, p.speedKmh / 3.6, fx, fz, u.dt, moved);
           entry.figure.setHighlight(u.highlight.has(id), "#ff4f38");
         }
-        const analysis = u.analysis ?? true;
-        [tide, hull, lane, lines, links, markers, nodes].forEach((o) => { o.object.visible = analysis; });
-        if (analysis) drawStory(u, sample);
+        const booked = new Map<string, { x: number; z: number }>();
+        for (const id of u.bookings.keys()) {
+          const p = sample.players.get(id);
+          if (p) booked.set(id, toWorld(p.x, p.y));
+        }
+        cards.update(u.bookings, booked, camera, u.time);
+        // Watch mode: the clean pitch, without the story director's overlays
+        [tide, hull, lane, lines, links, markers, nodes].forEach((o) => (o.object.visible = u.analysis && o.object.visible));
+        if (u.analysis) drawStory(u, sample);
       } else {
         ball.visible = ballShadow.visible = false;
         figures.forEach((e) => (e.figure.root.visible = false));
         tide.set(0, "#2bb3c0", "#ff4f38", u.time, 0);
       }
       previousSample = sample;
+      eventMarks.update(u.time);
+      burst.update(u.time, u.dt);
+      trail.update(u.time);
       renderer.render(scene, camera);
+    },
+
+    markEvent(event, side, time) {
+      const east = attacksEast(side, event.period) ?? side === "home";
+      const p = teamToPitch({ x: event.x, y: event.y }, east);
+      const w = toWorld(p.x, p.y);
+      const colour = colourOf(side);
+      switch (event.kind) {
+        case "corner":
+        case "throw_in":
+          eventMarks.add("ring", w.x, w.z, colour, time);
+          break;
+        case "free_kick":
+        case "foul":
+          eventMarks.add("ring", w.x, w.z, "#ffffff", time, 2);
+          break;
+        case "card":
+          eventMarks.add("ring", w.x, w.z, event.card === "yellow" ? "#f5c518" : "#e5383b", time, 2);
+          break;
+        case "offside":
+          eventMarks.add("line", w.x, 0, "#ffffff", time, 2.2);
+          break;
+        case "goal_kick": {
+          // The six-yard box the kick is taken from glows
+          const own = east ? -PITCH_W / 2 : PITCH_W / 2;
+          eventMarks.add("box", own + (east ? 2.75 : -2.75), 0, colour, time, 2.2, 5.5, 18.32);
+          break;
+        }
+        case "goal":
+          break;
+      }
+    },
+
+    celebrate(side, period, time, calm) {
+      const east = attacksEast(side, period) ?? side === "home";
+      const goalX = east ? PITCH_W / 2 : -PITCH_W / 2;
+      const colours = setup ? [setup.teams[side].colours.primary, setup.teams[side].colours.secondary, colourOf(side)] : [colourOf(side)];
+      burst.fire(goalX, calm ? [] : colours, east ? pitch.nets.east : pitch.nets.west, time);
+      if (calm) burst.object.visible = false;
+      else cine = { goalX, start: time };
     },
 
     project(x, y, z) {
@@ -486,7 +575,7 @@ export function createStage(canvas: HTMLCanvasElement): Stage {
       clearFigures();
       disposeFigureAssets();
       pitch.dispose();
-      [tide, hull, lane, lines, links, markers, nodes].forEach((o) => o.dispose());
+      [tide, hull, lane, lines, links, markers, nodes, cards, eventMarks, burst, trail].forEach((o) => o.dispose());
       ball.geometry.dispose();
       (ball.material as THREE.Material).dispose();
       ballTex.dispose();

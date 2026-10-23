@@ -21,6 +21,7 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from "react";
+import { createBallTrack, type BallTrack } from "@/lib/live/ball-flight";
 import { createMatchMemory, type MatchMemory } from "@/lib/live/match-memory";
 import { createMotion, type Motion, type MotionSample } from "@/lib/live/motion";
 import { createGroupSocket, createInsightFeed, parseInsight, type FeedState, type InsightFeed } from "@/lib/live/insights";
@@ -36,6 +37,8 @@ type Experience = {
   matchId: string;
   source: StreamSource;
   motion: Motion;
+  /** The ball's tracked path in 3D, smoothed for the pitch (fed the same frames as the motion). */
+  ballTrack: BallTrack;
   memory: MatchMemory;
   feed: InsightFeed;
   story: Story | null;
@@ -43,6 +46,12 @@ type Experience = {
   setPinned(kind: StoryKind | null): void;
   view: View;
   setView(view: View): void;
+  /** Analyse: the story director's overlays on the pitch. Watch: the clean pitch. */
+  analysis: boolean;
+  setAnalysis(on: boolean): void;
+  /** Marks, labels and the ticker for set pieces and stoppages on the pitch (goals and cards always show). */
+  showEvents: boolean;
+  setShowEvents(on: boolean): void;
   mode: Mode;
   /** The latest interpolated sample, refreshed a few times a second for panels (the stage samples on its own). */
   sampleRef: React.RefObject<MotionSample | null>;
@@ -80,11 +89,14 @@ export function MatchExperienceProvider({ children }: { children: ReactNode }) {
   const { setup } = useScoreboard();
   const [prefs] = usePreferences();
   const [motion] = useState(createMotion);
+  const [ballTrack] = useState(createBallTrack);
   const [memory] = useState(createMatchMemory);
   const sampleRef = useRef<MotionSample | null>(null);
   const [story, setStory] = useState<Story | null>(null);
   const [pinned, setPinned] = useState<StoryKind | null>(null);
   const [view, setView] = useState<View>("broadcast");
+  const [showEvents, setShowEvents] = useState(true);
+  const [analysis, setAnalysis] = useState(true);
   const [tick, setTick] = useState(0);
   const [playheadMs, setPlayheadMs] = useState(0);
 
@@ -94,10 +106,13 @@ export function MatchExperienceProvider({ children }: { children: ReactNode }) {
       memory.ingest(envelope);
       if (envelope.kind === "positions") {
         const now = performance.now();
-        for (const frame of envelope.data.frames) motion.push(frame, now);
+        for (const frame of envelope.data.frames) {
+          motion.push(frame, now);
+          ballTrack.push(frame);
+        }
       }
     });
-  }, [store, memory, motion]);
+  }, [store, memory, motion, ballTrack]);
 
   useEffect(() => {
     if (setup) memory.setSetup(setup);
@@ -206,6 +221,7 @@ export function MatchExperienceProvider({ children }: { children: ReactNode }) {
       matchId: store.matchId,
       source,
       motion,
+      ballTrack,
       memory,
       feed,
       story,
@@ -213,12 +229,16 @@ export function MatchExperienceProvider({ children }: { children: ReactNode }) {
       setPinned,
       view,
       setView,
+      showEvents,
+      setShowEvents,
+      analysis,
+      setAnalysis,
       mode,
       sampleRef,
       tick,
       playheadMs,
     }),
-    [store.matchId, source, motion, memory, feed, story, pinned, view, mode, tick, playheadMs],
+    [store.matchId, source, motion, ballTrack, memory, feed, story, pinned, view, showEvents, analysis, mode, tick, playheadMs],
   );
   return <ExperienceContext.Provider value={value}>{children}</ExperienceContext.Provider>;
 }

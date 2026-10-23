@@ -11,6 +11,7 @@
 
 import type { HeavyStatPanel, MatchEvent, MatchSetup, ParsedEnvelope, StatPanel, TrackingFrame } from "@/lib/contracts";
 import { attacksEast, type Side } from "@/lib/coordinates";
+import { classifyFieldEvent, type FieldEvent } from "@/lib/live/match-events";
 
 export const SHAPE_EVERY_MS = 1000;
 /** Shapes kept per team, in match ms. */
@@ -47,6 +48,10 @@ export type MatchMemory = {
   players(): ReadonlyMap<string, PlayerMeta>;
   events(): readonly MatchEvent[];
   goals(): readonly Goal[];
+  /** Goals, cards, set pieces and stoppages to mark on the pitch, in arrival order. */
+  fieldEvents(): readonly FieldEvent[];
+  /** Every shot, in arrival order, for the 3D ball's shot flights. */
+  shots(): readonly MatchEvent[];
   shapes(side: Side): readonly ShapeSample[];
   /**
    * Seconds spent in each cell of the pitch frame (HEAT_COLS × HEAT_ROWS, row-major), per player, sampled once a
@@ -74,6 +79,8 @@ export function createMatchMemory(): MatchMemory {
   let meta = new Map<string, PlayerMeta>();
   let events: MatchEvent[] = [];
   let goals: Goal[] = [];
+  let fieldEvents: FieldEvent[] = [];
+  let shots: MatchEvent[] = [];
   let shapes: Record<Side, ShapeSample[]> = { home: [], away: [] };
   let balls: BallSample[] = [];
   let latest: StatPanel | null = null;
@@ -143,6 +150,8 @@ export function createMatchMemory(): MatchMemory {
   function reset() {
     events = [];
     goals = [];
+    fieldEvents = [];
+    shots = [];
     shapes = { home: [], away: [] };
     balls = [];
     latest = null;
@@ -165,6 +174,8 @@ export function createMatchMemory(): MatchMemory {
     players: () => meta,
     events: () => events,
     goals: () => goals,
+    fieldEvents: () => fieldEvents,
+    shots: () => shots,
     shapes: (side) => shapes[side],
     heat: (playerId) => {
       const periods = heat.get(playerId);
@@ -191,6 +202,9 @@ export function createMatchMemory(): MatchMemory {
           seenEvents.add(e.event_id);
           events.push(e);
           if (events.length > EVENT_LIMIT) events = events.slice(-EVENT_LIMIT);
+          const field = classifyFieldEvent(e);
+          if (field) fieldEvents.push(field);
+          if (e.type === "Shot") shots.push(e);
           if (e.type === "Shot" && e.shot_outcome === "goal") {
             const side = sideOf(e.team_id);
             if (side) {

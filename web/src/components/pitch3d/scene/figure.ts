@@ -1,7 +1,8 @@
 // figure.ts — A 3D footballer
 //
-// Purpose: a stylised human figure (head, hair, neck, torso, arms, hands, legs, boots) in a team's kit, with a
-//          procedural run cycle driven by the player's real speed from tracking
+// Purpose: a stylised human figure (shaped head with nose and fitted hair, neck, a tapered torso with ribbed shirt
+//          panels and numbers front and back, arms, bare thighs under the shorts, socks with cuffs, boots) in a
+//          team's kit, with a contact shadow, and a run cycle stepped by the ground it covers
 // Inputs:  kit colours, skin tone, shirt number
 // Outputs: createFigure(): { root, update(), setHighlight(), dispose }
 // Spec:    web/specs/pitch.md §1.2
@@ -12,7 +13,7 @@
 
 import * as THREE from "three";
 
-export const FIGURE_SCALE = 1.8;
+export const FIGURE_SCALE = 2.4;
 
 export type Kit = {
   shirt: string;
@@ -22,6 +23,9 @@ export type Kit = {
   /** The team's colour for the ring at the player's feet (bright enough to read on grass). */
   ring: string;
 };
+
+/** The fastest the run cycle may turn over, in cycles per wall second. */
+const MAX_STEP_HZ = 3.6;
 
 const SKIN = ["#f1c7a5", "#e0ac83", "#c68a5e", "#a86b43", "#7d4b2c", "#5a3520"];
 const HAIR = ["#1b1410", "#2b1d14", "#4a3220", "#6b4a2b", "#c9a46a", "#0d0d0d"];
@@ -121,7 +125,10 @@ function limb(geo: THREE.BufferGeometry, material: THREE.Material, length: numbe
 
 export type Figure = {
   root: THREE.Group;
-  /** Moves and animates: position in world metres, speed in m/s of match time, dt in wall seconds. */
+  /**
+   * Moves and animates. Position in world metres; speed in m/s from tracking (how hard the player runs); dt in wall
+   * seconds; distance in metres covered on screen since the last frame (what steps the legs).
+   */
   update(x: number, z: number, speed: number, faceX: number, faceZ: number, dt: number, distance: number): void;
   setHighlight(on: boolean, colour?: string): void;
   dispose(): void;
@@ -223,7 +230,7 @@ export function createFigure(kit: Kit, seed: number): Figure {
   shadow.scale.set(1.8, 1.2, 1);
   root.add(shadow);
   // A ring in the team colour at the player's feet, so teams read at full-pitch distance
-  const baseMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(kit.ring), transparent: true, opacity: 0.28, depthWrite: false });
+  const baseMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(kit.ring), transparent: true, opacity: 0.85, depthWrite: false });
   const base = new THREE.Mesh(g.base, baseMat);
   base.rotation.x = -Math.PI / 2;
   base.position.y = 0.035;
@@ -257,11 +264,11 @@ export function createFigure(kit: Kit, seed: number): Figure {
       yaw += diff * (1 - Math.exp(-dt * 18));
       root.rotation.y = yaw;
 
-      // Phase follows displayed ground travel, not a separately capped playback clock.
-      // A stride grows from walking to sprinting; pause/seek adds no distance.
+      // Steps follow the ground covered on screen (a stride grows from walking to sprinting; a pause adds none), but
+      // never faster than MAX_STEP_HZ, so 20× playback stays readable instead of a blur of legs
       const effort = Math.min(1, speed / 7.5);
       const stride = (1.4 + effort * 2.2) * FIGURE_SCALE;
-      phase += (distance / stride) * Math.PI * 2;
+      phase += Math.min(distance / stride, MAX_STEP_HZ * dt) * Math.PI * 2;
       idle += dt;
       const s = Math.sin(phase);
       const c = Math.cos(phase);
@@ -275,11 +282,11 @@ export function createFigure(kit: Kit, seed: number): Figure {
       arms[1].upper.rotation.x = s * swing * 0.85;
       arms[0].fore.rotation.x = -0.35 - effort * 0.9;
       arms[1].fore.rotation.x = -0.35 - effort * 0.9;
-      chest.rotation.x = 0.02 + effort * 0.14;
+      chest.rotation.x = 0.04 + effort * 0.22;
       chest.rotation.y = s * 0.12 * effort;
       // Standing players breathe and shift their weight a little
       const breathe = effort < 0.1 ? Math.sin(idle * 1.8) * 0.01 : 0;
-      body.position.y = Math.abs(c) * 0.035 * effort * FIGURE_SCALE + breathe;
+      body.position.y = Math.abs(c) * 0.06 * effort * FIGURE_SCALE + breathe;
     },
     dispose() {
       (shadow.material as THREE.Material).dispose();

@@ -10,10 +10,14 @@ never sees positions.
 
 - **Grass and markings** (`scene/pitch.ts`): generated on canvases at 24 px per metre: 20 mowing stripes, soft clumps,
   per-pixel blade noise (also used as a bump map), a corner vignette; the markings drawn in metres on a second
-  transparent layer. A darker apron, advertising boards with an accent strip, goals with nets, the stadium floor.
+  transparent layer, with flatter bumps and worn patches in front of each goal mouth. A darker apron, advertising
+  boards with an accent strip, the stadium floor and four slim floodlight masts at the corners (no stands or crowd).
+- **Goals:** round white posts and crossbar with rounded joints, grey back stanchions and ground bars, and a net of
+  real cords (a sagging grid over the roof, back and sides) with a faint fill behind it. On a goal the net bulges with
+  a ripple and lights up.
 - **Light:** a floodlit night: sky/ground hemisphere light, a warm key light with shadows, two rim lights, ACES tone
   mapping.
-- **Cameras:** Wide (46° above the near touchline), Close (follows the ball like a TV camera, kept inside the pitch)
+- **Cameras:** Wide (56° above the near touchline), Close (follows the ball like a TV camera, kept inside the pitch)
   and Top (82°). Wide and Top are fitted on every resize: the distance is found by bisection so the whole pitch plus a
   margin fits, then the target is moved so the near and far touchlines have equal room. Wide drifts a few metres with
   the ball.
@@ -21,13 +25,19 @@ never sees positions.
 
 ### 1.2 Players and ball
 
-`scene/figure.ts`: a stylised footballer from capsules and spheres (head, hair, neck, torso with the shirt number on the
-back, arms, hands, shorts, legs, socks, boots), scaled ×1.8 so players read at full-pitch distance. Kits come from the
+`scene/figure.ts`: a stylised footballer (a shaped torso with shirt panels, trim and the number on the back, head with
+nose and hair, neck, arms, hands, shorts, bare thighs, socks with cuffs, rounded boots in a colour), scaled ×2.4 so
+players read at full-pitch distance, with a soft contact shadow under each. Kits come from the
 setup (shirt and socks in the primary colour, shorts in the secondary); goalkeepers get a contrasting kit; skin and
 hair vary by player. A ring at the feet in the team's overlay colour, and an accent ring for a highlighted player.
-Animation: the figure turns towards where it moves (towards the ball when standing); a run cycle whose stride follows
-rendered ground travel, with stride length derived from movement speed, with lean, arm swing, knee bend and
-bob; standing players breathe. The ball rotates with its rendered travel and rises with its tracked height.
+Animation: the figure turns towards where it moves (towards the ball when standing); a run cycle that steps by the
+ground the figure covers on screen (`renderedTravel` in `motion.ts`, so it matches the drawn movement at any speed),
+capped at 3.6 steps a second so 20× never strobes; lean, arm swing, knee bend and bob come from the tracked speed;
+standing players breathe. The ball is described in §6.
+
+**Watch / Analyse** (the switch above the pitch, Analyse by default): Watch is the clean pitch, without the story
+director's overlays (tint, block, lines, links, lane, markers) and its caption and chips; match events, cards, labels
+and the ball's trail still show. Analyse adds the story.
 
 Labels (`PitchStage.tsx`, HTML projected from 3D): a **speed tag** when a player passes 31 km/h (name, shirt and the
 peak speed of the burst; at most two at once, 14 s cooldown per player), the followed player's name, and the line
@@ -61,14 +71,47 @@ current one has been up 4.5 s, except a goal, which switches at once.
 
 Every number shown is computed from tracking, events or the stat panel; nothing is invented.
 
-## 5. Broadcast presentation (proposed for shared review)
+## 5. Match events on the field
 
-Watch mode hides tactical surface overlays and their captions but retains camera selection and insight cards.
-Analyse mode restores the existing story overlays. Mode changes do not restart the match. Procedural stadium tiers,
-batched spectators, floodlight fixtures and visible netting supply context without real branding or external assets.
-Lighting remains one shadow-casting key plus fill/rim lights. Positions and motion still come from tracking unchanged.
+Built 24 Oct (`lib/live/match-events.ts`, `components/pitch3d/scene/effects.ts`, `PitchStage.tsx`). This is the visual
+layer of what happens in the match; the agents' commentary is separate (`realtime.md` §4).
 
-Player and turf presentation: scale reduced to 1.8; tapered shirts, exposed thighs/knees, boot and sock trim, soft contact shadows and toned-down identity rings. Turf has finer noise and subtle goalmouth wear. These are presentation details only, not simulated tackles or changes to recorded positions.
+- **Which events:** goals (a `Shot` with `goal`), cards (`Card`: yellow, second yellow, red), corners (`Corner`),
+  throw-ins, free kicks and goal kicks (the restart `Pass` carries `throw_in`, `free_kick` or `goal_kick` in its
+  qualifiers), offsides (`Offside`) and fouls (`Foul`). The match memory keeps them as field events in arrival order.
+- **When they fire:** once, when the smooth playhead crosses the event's `match_ms` between two frames, so they stay
+  in sync with the picture at any speed or frame rate. A page that drew no frame for 3 s, a catch-up snapshot (only the
+  last 15 match seconds count on the first frame) and a replay that jumps back never fire a backlog.
+- **Cards above players:** from the cards up to the playhead, each booked player carries a small card (1.0 × 1.38 m)
+  above their head, always facing the camera: it pops in big and bouncing, then rides along small. Yellow stays for
+  the match; a red (or second yellow) shows until the player leaves the pitch. A booked player's name or speed tag
+  sits above the card.
+- **Marks and labels:** corners and throw-ins pulse a ring at the spot in the team colour; free kicks, fouls and cards
+  a white or card-coloured ring; offsides flash a line across the pitch at the attacker's position; goal kicks light up
+  the six-yard box. Each gets a short label at the spot (2.2 s).
+- **Event ticker:** one quiet line at the top of the pitch for 3.2 s, for example `41′ Corner · Calverholme Athletic`,
+  `19′ Yellow card · Vik`. The **Events** chip turns marks, labels and the ticker off (goals and cards always show).
+- **Goal celebration (2.9 s):** the camera pushes quickly towards the goal and back; confetti in the scoring team's
+  colours bursts from the goal mouth; the net bulges and lights up; **GOAL** sweeps across the pitch in the team's
+  colours with a shine, with the scorer, minute and new score. Under reduced motion the camera and confetti are
+  skipped.
 
-### Synchronized presentation timing
-Ball and player translations retain the same interpolated tracking timestamp. The playhead cannot move backwards during ordinary rate correction. Gait phase advances by rendered ground distance and its stride length grows with movement speed; ball rotation follows its rendered displacement/radius. No extra position smoothing or fabricated possession attachment is applied. On pause, reset or period transition, no travel is accumulated. The close camera uses a shared exponential response for position and target, accelerated for fast playback. 20× remains accelerated footage; use 1× to judge lifelike pace. This procedural animation does not reproduce exact foot contacts or infer missing source tracking.
+## 6. The ball in 3D
+
+`lib/live/ball-flight.ts` (pure), drawn by `scene/stage.ts`. Only what the data contains is drawn in the air: real
+tracked heights and shot events; nothing is invented.
+
+- **Tracked ball:** a smooth Catmull-Rom path through the 5 Hz tracked ball, heights included (tracking carries real
+  heights for lofted balls, up to about 10 m), never below the grass and flat when both frames are on the ground. A
+  jump over 18 m between two frames (a kick-off after a goal, a restart) is a reset: the ball holds, then appears at the
+  new spot, instead of flying across the pitch. Periods never blend; a replay that jumps back starts again.
+- **Shots:** tracking draws a shot flat in one or two frames, so a shot is flown from its event instead: from the
+  shooter (head height for a header) to the exact point it crossed the goal line (`goal_mouth_y` across the mouth,
+  `goal_mouth_z` in metres), at `shot_speed_kmh`, with a lift that grows with distance and height. It ends by its
+  outcome: a goal goes on into the net and rests there until the kick-off; a miss carries on past the line; a save
+  drops at the keeper; a blocked shot stops a few metres out and is knocked aside; a shot off the woodwork comes back
+  into play. A shot fires like the other events (when the playhead crosses it, never as a backlog).
+- **Trail:** a short fading trail while the ball is in the air: in the shot map's outcome colour for a shot, white for
+  a lofted ball (above 0.8 m).
+- **Spin and shadow:** the ball rolls about the axis across its travel by the distance it covers (a reset is not
+  rolled). Its shadow stays on the grass and grows and fades as it climbs.

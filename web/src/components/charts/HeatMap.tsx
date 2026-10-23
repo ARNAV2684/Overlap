@@ -1,6 +1,12 @@
 "use client";
 
-// Relative observed tracking density. Uses the existing period-normalised heatGrid; no event-derived positions.
+// HeatMap.tsx — Where a player (or a team) has been
+//
+// Purpose: relative density of observed tracking positions on a dark pitch, blue (low) to red (high), attacking
+//          left → right, with a legend; an empty state until tracking arrives
+// Inputs:  a normalised grid (charts.ts heatGrid: period direction corrected and smoothed), a colour and label
+// Outputs: SVG and legend
+// Spec:    web/specs/charts.md §5, §10
 import { useId } from "react";
 import { HEAT_COLS, HEAT_ROWS } from "@/lib/live/match-memory";
 
@@ -10,7 +16,7 @@ export function HeatMap({ grid, colour, label }: { grid: Float32Array; colour: s
   const ch = 68 / HEAT_ROWS;
   const populated = grid.some((v) => Number.isFinite(v) && v > 0);
   return (
-    <div className="ov-heat-map">
+    <div className="min-w-0">
       <svg viewBox="-3 -3 111 74" className="block w-full" role="img" aria-label={`${label}. Relative observed tracking density; attacking left to right.`}>
         <defs>
           <filter id={`${id}-blur`} x="-15%" y="-15%" width="130%" height="130%"><feGaussianBlur stdDeviation="1.5" /></filter>
@@ -39,9 +45,9 @@ export function HeatMap({ grid, colour, label }: { grid: Float32Array; colour: s
         <g fill="#d8eef0"><circle cx="52.5" cy="34" r="0.4" /><circle cx="11" cy="34" r="0.35" /><circle cx="94" cy="34" r="0.35" /></g>
         {!populated && <text x="52.5" y="35" textAnchor="middle" fill="#d8eef0" fontSize="3">Waiting for observed tracking</text>}
       </svg>
-      <div className="ov-heat-legend">
+      <div className="mt-2.5 flex flex-wrap justify-between gap-2 text-[11px] text-ink/55">
         <span className="flex items-center gap-2"><i className="h-2 w-2 rounded-full" style={{ background: colour }} />{label}</span>
-        <span className="flex items-center gap-2">Low <i className="ov-heat-scale" /> High</span>
+        <span className="flex items-center gap-2">Low <i className="inline-block h-[5px] w-20 rounded-full bg-[linear-gradient(90deg,#2563eb,#06b6d4,#84cc16,#facc15,#ef4444)]" /> High</span>
       </div>
     </div>
   );
