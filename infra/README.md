@@ -31,8 +31,8 @@ The `azd` project file is [`azure.yaml`](../azure.yaml) at the repo root.
 ## Status
 
 Built sprint by sprint ([`PLAN_infra_azure-pass`](../plans/active/PLAN_infra_azure-pass.md)). **A0 deployed (24 Oct):**
-resource group `rg-overlap` in Sweden Central with the identities, storage and monitoring. The other modules are still
-placeholders until their sprint.
+resource group `rg-overlap` in Sweden Central with the identities, storage and monitoring. **A1 and A2 (24 Oct):** Event
+Hubs and Cosmos DB, proven with a 20× match. The other modules are still placeholders until their sprint.
 
 ## Deploy
 

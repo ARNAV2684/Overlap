@@ -22,7 +22,7 @@ Specifications: [`infra/specs/local-development.md`](../../infra/specs/local-dev
 
 ## Status and evidence
 
-Implemented local configuration. Cloud Bicep module remains a placeholder. Both local hubs currently have four partitions and relay/stats/archiver consumer groups; do not copy older diagrams that omit tracking stats.
+Implemented local configuration. Azure (A1, 24 Oct): `infra/modules/event-hubs.bicep` deployed in `rg-overlap` (Standard, 1 TU, local auth off, same hubs, partitions and groups); a 20× match streamed from the laptop generator was read by the relay, stats engine and archiver with settings changed only. Both local hubs currently have four partitions and relay/stats/archiver consumer groups; do not copy older diagrams that omit tracking stats.
 
 Evidence / checks to inspect: [`plans/active/PLAN_functions_screen-relay.md`](../../plans/active/PLAN_functions_screen-relay.md). Existing recorded tests are attributed to their handover; no runtime suite was re-run for these notes.
 

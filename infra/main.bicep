@@ -5,8 +5,8 @@
 // Outputs: resource group, identity client ids, storage and monitoring endpoints (become azd environment values)
 // Spec:    infra/specs/resources.md, infra/specs/security.md, infra/specs/costs.md
 //
-// Built sprint by sprint (plans/active/PLAN_infra_azure-pass.md). A0: identities, storage, monitoring. Later sprints
-// add Event Hubs, Cosmos DB, Web PubSub, Foundry and Translator, the Functions app and Container Apps here.
+// Built sprint by sprint (plans/active/PLAN_infra_azure-pass.md). A0: identities, storage, monitoring. A1: Event Hubs.
+// A2: Cosmos DB. Later sprints add Web PubSub, Foundry and Translator, the Functions app and Container Apps here.
 // Key Vault is not deployed (resources.md §2.11). Budgets are on the subscription, outside this template (costs.md §1).
 
 targetScope = 'subscription'
@@ -75,6 +75,35 @@ module storage 'modules/storage.bicep' = {
   }
 }
 
+module eventHubs 'modules/event-hubs.bicep' = {
+  name: 'event-hubs'
+  scope: rg
+  params: {
+    location: location
+    token: token
+    tags: tags
+    functionsPrincipalId: identity.outputs.functions.principalId
+    statsPrincipalId: identity.outputs.stats.principalId
+    generatorPrincipalId: identity.outputs.generator.principalId
+    developerPrincipalId: principalId
+    developerPrincipalType: principalType
+  }
+}
+
+module cosmos 'modules/cosmos.bicep' = {
+  name: 'cosmos'
+  scope: rg
+  params: {
+    location: location
+    token: token
+    tags: tags
+    functionsPrincipalId: identity.outputs.functions.principalId
+    statsPrincipalId: identity.outputs.stats.principalId
+    webPrincipalId: identity.outputs.web.principalId
+    developerPrincipalId: principalId
+  }
+}
+
 output AZURE_LOCATION string = location
 output AZURE_RESOURCE_GROUP string = rg.name
 output AZURE_FUNCTIONS_CLIENT_ID string = identity.outputs.functions.clientId
@@ -84,3 +113,5 @@ output AZURE_WEB_CLIENT_ID string = identity.outputs.web.clientId
 output AZURE_STORAGE_ACCOUNT string = storage.outputs.name
 output OVERLAP_ARCHIVE_BLOB_ENDPOINT string = storage.outputs.blobEndpoint
 output AZURE_LOG_ANALYTICS_WORKSPACE_ID string = monitoring.outputs.workspaceId
+output OVERLAP_EVENTHUBS_NAMESPACE string = eventHubs.outputs.fullyQualifiedNamespace
+output OVERLAP_COSMOS_ENDPOINT string = cosmos.outputs.endpoint
