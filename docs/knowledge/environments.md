@@ -1,6 +1,6 @@
 # Local development and Azure deployment
 
-Last verified: 2026-10-19 · source main `a61166b` · source inspection, not fresh runtime certification.
+Last verified: 2026-10-24 · branch `infra/azure-foundation` · A0 provisioned and checked on Azure.
 
 ## Purpose
 
@@ -22,7 +22,7 @@ Specifications: [`infra/specs/local-development.md`](../../infra/specs/local-dev
 
 ## Status and evidence
 
-Local Compose/stand-in/tooling exist. Main Bicep and several cloud modules are placeholders. This note is not deployment evidence.
+Local Compose/stand-in/tooling exist. Azure: sprint A0 is deployed (resource group `rg-overlap`, Sweden Central: four managed identities, a storage account with shared keys off, Log Analytics with a 0.5 GB daily cap, Application Insights). Event Hubs, Cosmos DB, Web PubSub, Foundry, Translator, the Functions app and Container Apps follow in sprints A1–A10 ([`PLAN_infra_azure-pass`](../../plans/active/PLAN_infra_azure-pass.md)); their modules are still placeholders.
 
 Evidence / checks to inspect: [`infra/local/webpubsub_standin/check_standin.py`](../../infra/local/webpubsub_standin/check_standin.py), [`infra/local/check_cosmos.py`](../../infra/local/check_cosmos.py). Existing recorded tests are attributed to their handover; no runtime suite was re-run for these notes.
 

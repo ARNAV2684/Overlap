@@ -10,7 +10,7 @@
 | Review coordinator | Arnav |
 | Affected component owners | Generator, stats engine: Azeem · Event Hubs, Cosmos, Web PubSub, relay, archiver, agents, MCP: Arnav (Pranav helping) · Web app: Arnav, Azeem · Other infrastructure and `azure.yaml`: unassigned (Arnav decides) |
 | Proposal version and date | v1.1 · 23 Oct 2026 (D-01, D-03, D-10 decided; A0 in progress) |
-| Status | In progress: A0 (specs agreed and merged in #85; Bicep foundation on `infra/azure-foundation`) |
+| Status | In progress: A0 deployed 24 Oct (specs merged in #85; identities, storage, monitoring live in `rg-overlap`); A1 next |
 | Plan tier and file | Full · `plans/active/PLAN_infra_azure-pass.md` |
 | Repository | [ARNAV2684/Overlap](https://github.com/ARNAV2684/Overlap) |
 | Reviewed branch and commit | main · 0c73c59 |
