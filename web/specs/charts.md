@@ -52,3 +52,12 @@ in the middle; the event an AI card points to is highlighted.
 
 The heavy block's pressing grid (9 columns from the team's own goal × 6 rows from its left) as a heat grid with counts,
 the press-height line, and the share of pressing actions in the opponent's half with the 10-minute PPDA.
+
+## 10. Prominent tracking heat (proposed for shared review)
+
+A panel below the pitch exposes team and player selection independently of insight preferences. It reuses heatGrid,
+including its per-period direction correction and smoothing. A cool-to-warm legend means low to high relative
+observed density; each selection is normalised to its own maximum, so colour is not an absolute cross-team measure.
+The panel labels its observations explicitly: it only knows tracking delivered during this viewing session (including
+any replayed frames). Never claim full-match coverage or total distance from this grid. No observations gives an
+empty state. Team density includes all observed players, including substitutes while on the pitch.

@@ -146,6 +146,7 @@ export function createMotion(): Motion {
     sample(wallNow) {
       if (!frames.length) return null;
       const top = frames[frames.length - 1].match_ms;
+      const previousPlayhead = playhead;
       const dt = lastSample === null ? 0 : Math.min(250, Math.max(0, wallNow - lastSample));
       lastSample = wallNow;
       // Frames stopped coming (pause, end of match, a dropped connection): play on to the newest frame, then stop
@@ -159,7 +160,7 @@ export function createMotion(): Motion {
         playhead += dt * rate;
         playhead += (target - playhead) * Math.min(1, dt / 600);
       }
-      playhead = Math.min(playhead, top);
+      playhead = Math.min(top, Math.max(previousPlayhead ?? frames[0].match_ms, playhead));
       if (playhead < frames[0].match_ms) playhead = frames[0].match_ms;
       const moving = !(stalled && playhead >= top);
 
@@ -170,3 +171,20 @@ export function createMotion(): Motion {
     },
   };
 }
+
+/** Presentation-only travel in metres. Never bridges a seek, period change or missing sample. */
+export function renderedTravel(previous: MotionSample | null, current: MotionSample, id?: string) {
+  const seconds = previous ? (current.matchMs - previous.matchMs) / 1000 : 0;
+  const a = id ? previous?.players.get(id) : previous?.ball;
+  const b = id ? current.players.get(id) : current.ball;
+  if (!previous || previous.period !== current.period || seconds <= 0 || seconds > 5 || !a || !b) {
+    return { dx: 0, dz: 0, distance: 0, speed: 0, seconds: 0 };
+  }
+  const dx = (b.x - a.x) * 1.05;
+  const dz = (b.y - a.y) * 0.68;
+  const distance = Math.hypot(dx, dz);
+  return { dx, dz, distance, speed: distance / seconds, seconds };
+}
+
+/** Frame-rate independent follow, expressed in wall seconds. */
+export const followAlpha = (dt: number, rate: number) => 1 - Math.exp(-Math.max(0, dt) * Math.max(0, rate));

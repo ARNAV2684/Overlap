@@ -13,7 +13,7 @@ never sees positions.
   transparent layer. A darker apron, advertising boards with an accent strip, goals with nets, the stadium floor.
 - **Light:** a floodlit night: sky/ground hemisphere light, a warm key light with shadows, two rim lights, ACES tone
   mapping.
-- **Cameras:** Wide (56° above the near touchline), Close (follows the ball like a TV camera, kept inside the pitch)
+- **Cameras:** Wide (46° above the near touchline), Close (follows the ball like a TV camera, kept inside the pitch)
   and Top (82°). Wide and Top are fitted on every resize: the distance is found by bisection so the whole pitch plus a
   margin fits, then the target is moved so the near and far touchlines have equal room. Wide drifts a few metres with
   the ball.
@@ -22,12 +22,12 @@ never sees positions.
 ### 1.2 Players and ball
 
 `scene/figure.ts`: a stylised footballer from capsules and spheres (head, hair, neck, torso with the shirt number on the
-back, arms, hands, shorts, legs, socks, boots), scaled ×2.4 so players read at full-pitch distance. Kits come from the
+back, arms, hands, shorts, legs, socks, boots), scaled ×1.8 so players read at full-pitch distance. Kits come from the
 setup (shirt and socks in the primary colour, shorts in the secondary); goalkeepers get a contrasting kit; skin and
 hair vary by player. A ring at the feet in the team's overlay colour, and an accent ring for a highlighted player.
 Animation: the figure turns towards where it moves (towards the ball when standing); a run cycle whose stride follows
-the tracked speed at the playback rate (capped at 3.6 Hz so 20× never strobes), with lean, arm swing, knee bend and
-bob; standing players breathe. The ball spins with its speed and rises with its tracked height.
+rendered ground travel, with stride length derived from movement speed, with lean, arm swing, knee bend and
+bob; standing players breathe. The ball rotates with its rendered travel and rises with its tracked height.
 
 Labels (`PitchStage.tsx`, HTML projected from 3D): a **speed tag** when a player passes 31 km/h (name, shirt and the
 peak speed of the burst; at most two at once, 14 s cooldown per player), the followed player's name, and the line
@@ -60,3 +60,15 @@ current one has been up 4.5 s, except a goal, which switches at once.
 | **Territory** | Otherwise | Both teams' colours meeting at a wavy front, where the ball has lived (exponentially weighted over 3 minutes) | Each team's share of time with the ball in the other's half |
 
 Every number shown is computed from tracking, events or the stat panel; nothing is invented.
+
+## 5. Broadcast presentation (proposed for shared review)
+
+Watch mode hides tactical surface overlays and their captions but retains camera selection and insight cards.
+Analyse mode restores the existing story overlays. Mode changes do not restart the match. Procedural stadium tiers,
+batched spectators, floodlight fixtures and visible netting supply context without real branding or external assets.
+Lighting remains one shadow-casting key plus fill/rim lights. Positions and motion still come from tracking unchanged.
+
+Player and turf presentation: scale reduced to 1.8; tapered shirts, exposed thighs/knees, boot and sock trim, soft contact shadows and toned-down identity rings. Turf has finer noise and subtle goalmouth wear. These are presentation details only, not simulated tackles or changes to recorded positions.
+
+### Synchronized presentation timing
+Ball and player translations retain the same interpolated tracking timestamp. The playhead cannot move backwards during ordinary rate correction. Gait phase advances by rendered ground distance and its stride length grows with movement speed; ball rotation follows its rendered displacement/radius. No extra position smoothing or fabricated possession attachment is applied. On pause, reset or period transition, no travel is accumulated. The close camera uses a shared exponential response for position and target, accelerated for fast playback. 20× remains accelerated footage; use 1× to judge lifelike pace. This procedural animation does not reproduce exact foot contacts or infer missing source tracking.

@@ -12,7 +12,7 @@
 
 import * as THREE from "three";
 
-export const FIGURE_SCALE = 2.4;
+export const FIGURE_SCALE = 1.8;
 
 export type Kit = {
   shirt: string;
@@ -31,17 +31,23 @@ let geos: Record<string, THREE.BufferGeometry> | null = null;
 function geometries() {
   if (geos) return geos;
   geos = {
-    head: new THREE.SphereGeometry(0.115, 20, 16),
+    head: new THREE.SphereGeometry(0.105, 20, 16),
+    nose: new THREE.SphereGeometry(0.025, 8, 6),
+    trim: new THREE.CylinderGeometry(0.065, 0.065, 0.035, 12),
     hair: new THREE.SphereGeometry(0.121, 20, 12, 0, Math.PI * 2, 0, Math.PI * 0.55),
     neck: new THREE.CylinderGeometry(0.05, 0.06, 0.1, 10),
-    torso: new THREE.CapsuleGeometry(0.17, 0.32, 6, 14),
+    torso: new THREE.LatheGeometry([
+      new THREE.Vector2(0.13, -0.25), new THREE.Vector2(0.145, -0.2),
+      new THREE.Vector2(0.16, 0.12), new THREE.Vector2(0.19, 0.2),
+      new THREE.Vector2(0.14, 0.27), new THREE.Vector2(0.065, 0.3),
+    ], 20),
     hips: new THREE.CapsuleGeometry(0.15, 0.08, 6, 12),
     upperArm: new THREE.CapsuleGeometry(0.052, 0.22, 4, 10),
     foreArm: new THREE.CapsuleGeometry(0.045, 0.22, 4, 10),
     hand: new THREE.SphereGeometry(0.05, 10, 8),
     thigh: new THREE.CapsuleGeometry(0.075, 0.32, 4, 10),
     shin: new THREE.CapsuleGeometry(0.06, 0.34, 4, 10),
-    boot: new THREE.BoxGeometry(0.1, 0.07, 0.24),
+    boot: new THREE.SphereGeometry(0.08, 12, 8),
     shadow: new THREE.CircleGeometry(0.42, 24),
     ring: new THREE.RingGeometry(0.62, 0.8, 40),
     base: new THREE.RingGeometry(0.34, 0.46, 32),
@@ -63,22 +69,34 @@ function mat(colour: string, roughness = 0.62) {
 
 /** A shirt with the number on its back: a small canvas texture wrapped on the torso capsule. */
 function shirtMaterial(kit: Kit) {
-  const key = `shirt|${kit.shirt}|${kit.number}`;
+  const key = `shirt|${kit.shirt}|${kit.shorts}|${kit.number}`;
   const cached = matCache.get(key);
   if (cached) return cached;
   const canvas = document.createElement("canvas");
-  canvas.width = 128;
-  canvas.height = 64;
+  canvas.width = 256;
+  canvas.height = 128;
   const g = canvas.getContext("2d")!;
   g.fillStyle = kit.shirt;
-  g.fillRect(0, 0, 128, 64);
+  g.fillRect(0, 0, 256, 128);
+  // Low-contrast fabric ribs and side panels, generated rather than external kit assets.
+  g.fillStyle = "rgba(255,255,255,0.035)";
+  for (let x = 0; x < 256; x += 4) g.fillRect(x, 0, 1, 128);
+  g.fillStyle = kit.shorts;
+  g.fillRect(0, 0, 256, 5);
+  g.fillRect(0, 120, 256, 3);
+  g.globalAlpha = 0.35;
+  g.fillRect(0, 0, 7, 128); g.fillRect(126, 0, 7, 128);
+  g.globalAlpha = 1;
   const ink = luminance(kit.shirt) > 0.55 ? "#141414" : "#ffffff";
   g.fillStyle = ink;
-  g.font = "900 30px Outfit, system-ui, sans-serif";
+  g.font = "800 52px Arial, sans-serif";
   g.textAlign = "center";
   g.textBaseline = "middle";
   // The capsule's UV seam is at the back's centre line: u=0.75 faces away from the default forward (+Z)
-  g.fillText(kit.number, 96, 30);
+  g.fillText(kit.number, 192, 65);
+  g.font = "700 12px Arial, sans-serif";
+  g.fillText(kit.number, 64, 46);
+  g.fillRect(48, 23, 8, 11); // small fictional chest patch, no club branding
   const tex = new THREE.CanvasTexture(canvas);
   tex.colorSpace = THREE.SRGBColorSpace;
   const m = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.68 });
@@ -104,7 +122,7 @@ function limb(geo: THREE.BufferGeometry, material: THREE.Material, length: numbe
 export type Figure = {
   root: THREE.Group;
   /** Moves and animates: position in world metres, speed in m/s of match time, dt in wall seconds. */
-  update(x: number, z: number, speed: number, faceX: number, faceZ: number, dt: number, rate: number): void;
+  update(x: number, z: number, speed: number, faceX: number, faceZ: number, dt: number, distance: number): void;
   setHighlight(on: boolean, colour?: string): void;
   dispose(): void;
 };
@@ -117,7 +135,7 @@ export function createFigure(kit: Kit, seed: number): Figure {
   const sleeve = mat(kit.shirt, 0.68);
   const shorts = mat(kit.shorts, 0.7);
   const socks = mat(kit.socks, 0.7);
-  const boots = mat("#111214", 0.4);
+  const boots = mat(seed % 3 === 0 ? "#e6d575" : seed % 3 === 1 ? "#e6ecec" : "#161b23", 0.48);
 
   const root = new THREE.Group();
   const body = new THREE.Group(); // scaled, leans and bobs
@@ -135,7 +153,7 @@ export function createFigure(kit: Kit, seed: number): Figure {
   body.add(chest);
   const torso = new THREE.Mesh(g.torso, shirt);
   torso.position.y = 0.3;
-  torso.scale.set(1.12, 1, 0.78);
+  torso.scale.set(1.1, 1, 0.68);
   torso.castShadow = true;
   chest.add(torso);
   const neck = new THREE.Mesh(g.neck, skin);
@@ -143,10 +161,14 @@ export function createFigure(kit: Kit, seed: number): Figure {
   chest.add(neck);
   const head = new THREE.Mesh(g.head, skin);
   head.position.y = 0.76;
+  head.scale.set(0.94, 1.15, 1);
   head.castShadow = true;
   chest.add(head);
+  const nose = new THREE.Mesh(g.nose, skin);
+  nose.position.set(0, 0.75, 0.105); chest.add(nose);
   const hairCap = new THREE.Mesh(g.hair, hair);
-  hairCap.position.y = 0.775;
+  hairCap.position.y = 0.79;
+  hairCap.scale.set(0.88, 1, 0.9);
   hairCap.rotation.x = -0.25;
   chest.add(hairCap);
 
@@ -167,7 +189,10 @@ export function createFigure(kit: Kit, seed: number): Figure {
 
   const legs: { thigh: THREE.Group; shin: THREE.Group; side: number }[] = [];
   for (const side of [-1, 1]) {
-    const thigh = limb(g.thigh, shorts, 0.44);
+    const thigh = limb(g.thigh, skin, 0.44);
+    const shortLeg = new THREE.Mesh(g.thigh, shorts);
+    shortLeg.scale.set(1.15, 0.52, 1.15); shortLeg.position.y = -0.1; shortLeg.castShadow = true;
+    thigh.add(shortLeg);
     thigh.position.set(side * 0.1, 0.9, 0);
     body.add(thigh);
     // Bare knee to sock: the shin is the sock colour, a skin band sits at the top
@@ -181,20 +206,24 @@ export function createFigure(kit: Kit, seed: number): Figure {
     const boot = new THREE.Mesh(g.boot, boots);
     boot.position.set(0, -0.47, 0.05);
     boot.castShadow = true;
+    boot.scale.set(0.85, 0.5, 1.65);
     shin.add(boot);
+    const cuff = new THREE.Mesh(g.trim, mat(kit.shorts));
+    cuff.position.y = -0.13; shin.add(cuff);
     legs.push({ thigh, shin, side });
   }
 
   // A soft contact shadow, and a ring for the highlighted player
   const shadow = new THREE.Mesh(
     g.shadow,
-    new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.28, depthWrite: false }),
+    new THREE.MeshBasicMaterial({ map: contactTexture(), transparent: true, opacity: 0.6, depthWrite: false }),
   );
   shadow.rotation.x = -Math.PI / 2;
   shadow.position.y = 0.03;
+  shadow.scale.set(1.8, 1.2, 1);
   root.add(shadow);
   // A ring in the team colour at the player's feet, so teams read at full-pitch distance
-  const baseMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(kit.ring), transparent: true, opacity: 0.85, depthWrite: false });
+  const baseMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(kit.ring), transparent: true, opacity: 0.28, depthWrite: false });
   const base = new THREE.Mesh(g.base, baseMat);
   base.rotation.x = -Math.PI / 2;
   base.position.y = 0.035;
@@ -218,24 +247,25 @@ export function createFigure(kit: Kit, seed: number): Figure {
       ring.visible = on;
       if (colour) ringMat.color.set(colour);
     },
-    update(x, z, speed, faceX, faceZ, dt, rate) {
+    update(x, z, speed, faceX, faceZ, dt, distance) {
       root.position.set(x, 0, z);
       // Turn towards where the player is going, or towards the ball when standing
       const target = Math.atan2(faceX, faceZ);
       let diff = target - yaw;
       while (diff > Math.PI) diff -= Math.PI * 2;
       while (diff < -Math.PI) diff += Math.PI * 2;
-      yaw += diff * Math.min(1, dt * 8);
+      yaw += diff * (1 - Math.exp(-dt * 18));
       root.rotation.y = yaw;
 
-      // Stride: about one cycle per 2.3 m of ground, seen at the playback rate but never faster than ~3.6 Hz
+      // Phase follows displayed ground travel, not a separately capped playback clock.
+      // A stride grows from walking to sprinting; pause/seek adds no distance.
       const effort = Math.min(1, speed / 7.5);
-      const cycleHz = Math.min(3.6, (speed * Math.max(rate, 0.0001)) / 2.3);
-      phase += dt * cycleHz * Math.PI * 2;
+      const stride = (1.4 + effort * 2.2) * FIGURE_SCALE;
+      phase += (distance / stride) * Math.PI * 2;
       idle += dt;
       const s = Math.sin(phase);
       const c = Math.cos(phase);
-      const swing = 0.15 + effort * 0.8;
+      const swing = effort < 0.02 ? 0 : 0.12 + effort * 0.68;
 
       legs[0].thigh.rotation.x = s * swing;
       legs[1].thigh.rotation.x = -s * swing;
@@ -245,11 +275,11 @@ export function createFigure(kit: Kit, seed: number): Figure {
       arms[1].upper.rotation.x = s * swing * 0.85;
       arms[0].fore.rotation.x = -0.35 - effort * 0.9;
       arms[1].fore.rotation.x = -0.35 - effort * 0.9;
-      chest.rotation.x = 0.04 + effort * 0.22;
+      chest.rotation.x = 0.02 + effort * 0.14;
       chest.rotation.y = s * 0.12 * effort;
       // Standing players breathe and shift their weight a little
       const breathe = effort < 0.1 ? Math.sin(idle * 1.8) * 0.01 : 0;
-      body.position.y = Math.abs(c) * 0.06 * effort * FIGURE_SCALE + breathe;
+      body.position.y = Math.abs(c) * 0.035 * effort * FIGURE_SCALE + breathe;
     },
     dispose() {
       (shadow.material as THREE.Material).dispose();
@@ -257,6 +287,17 @@ export function createFigure(kit: Kit, seed: number): Figure {
       ringMat.dispose();
     },
   };
+}
+
+let contact: THREE.CanvasTexture | null = null;
+function contactTexture() {
+  if (contact) return contact;
+  const c = document.createElement("canvas"); c.width = c.height = 64;
+  const ctx = c.getContext("2d")!;
+  const fade = ctx.createRadialGradient(32, 32, 2, 32, 32, 32);
+  fade.addColorStop(0, "rgba(0,0,0,0.9)"); fade.addColorStop(0.45, "rgba(0,0,0,0.4)"); fade.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = fade; ctx.fillRect(0, 0, 64, 64);
+  contact = new THREE.CanvasTexture(c); return contact;
 }
 
 /** Releases the shared geometries and materials (call when the last stage goes away). */
@@ -268,4 +309,5 @@ export function disposeFigureAssets() {
     m.dispose();
   });
   matCache.clear();
+  contact?.dispose(); contact = null;
 }

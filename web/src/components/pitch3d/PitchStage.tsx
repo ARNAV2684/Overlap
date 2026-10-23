@@ -30,7 +30,7 @@ type Label = { el: HTMLDivElement; seen: boolean };
 
 const escape = (text: string) => text.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
-export function PitchStage({ highlight = [], children }: { highlight?: readonly string[]; children?: ReactNode }) {
+export function PitchStage({ highlight = [], children, analysis = true }: { highlight?: readonly string[]; children?: ReactNode; analysis?: boolean }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const labelsRef = useRef<HTMLDivElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -39,9 +39,9 @@ export function PitchStage({ highlight = [], children }: { highlight?: readonly 
   const [prefs] = usePreferences();
 
   // The loop reads these through refs, so changing them never restarts the stage
-  const live = useRef({ exp, prefs, highlight });
+  const live = useRef({ exp, prefs, highlight, analysis });
   useEffect(() => {
-    live.current = { exp, prefs, highlight };
+    live.current = { exp, prefs, highlight, analysis };
   });
 
   useEffect(() => {
@@ -88,14 +88,14 @@ export function PitchStage({ highlight = [], children }: { highlight?: readonly 
       const now = performance.now();
       const dt = Math.min(0.1, (now - last) / 1000);
       last = now;
-      const { exp: e, prefs: p, highlight: hl } = live.current;
+      const { exp: e, prefs: p, highlight: hl, analysis: showAnalysis } = live.current;
       const setup = e.memory.setup();
       stage.setSetup(setup);
       stage.setView(e.view);
       const sample = e.motion.sample(now);
       const ring = new Set(hl);
       if (p.player) ring.add(p.player);
-      stage.update({ sample, story: e.story, memory: e.memory, highlight: ring, dt, time: (now - start) / 1000 });
+      stage.update({ sample, story: e.story, memory: e.memory, highlight: ring, dt, analysis: showAnalysis, time: (now - start) / 1000 });
 
       labels.forEach((l) => (l.seen = false));
       if (sample) {
@@ -127,7 +127,7 @@ export function PitchStage({ highlight = [], children }: { highlight?: readonly 
         }
         // Story markers: the defensive line now and before the goal
         const s = e.story;
-        if (s?.kind === "protect" && s.side) {
+        if (showAnalysis && s?.kind === "protect" && s.side) {
           const east = attacksEast(s.side, sample.period) ?? s.side === "home";
           const lineX = (m: number) => (east ? m : PITCH_W - m) - PITCH_W / 2;
           // "Now" sits at the near touchline, "before" at the far one, so the two never overlap

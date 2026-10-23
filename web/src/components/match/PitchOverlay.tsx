@@ -70,7 +70,7 @@ export function StoryCaption() {
   );
 }
 
-export function StoryChips() {
+export function StoryChips({ analysis = true }: { analysis?: boolean }) {
   const { pinned, setPinned, view, setView } = useExperience();
   const chip = (active: boolean) =>
     `whitespace-nowrap rounded-full px-3 py-1.5 font-mono text-[10px] font-black uppercase tracking-[1.2px] transition-colors ${
@@ -78,7 +78,7 @@ export function StoryChips() {
     }`;
   return (
     <div className="pointer-events-auto flex items-center gap-2 sm:flex-wrap sm:justify-end">
-      <div className="flex rounded-full border border-white/10 bg-[#0e0e10]/70 p-1 backdrop-blur-md" role="group" aria-label="What the pitch shows">
+      {analysis && <div className="flex rounded-full border border-white/10 bg-[#0e0e10]/70 p-1 backdrop-blur-md" role="group" aria-label="What the pitch shows">
         <button type="button" className={chip(pinned === null)} onClick={() => setPinned(null)} aria-pressed={pinned === null} title="The story director picks">
           Auto
         </button>
@@ -87,7 +87,7 @@ export function StoryChips() {
             {STORY_LABEL[k]}
           </button>
         ))}
-      </div>
+      </div>}
       <div className="flex rounded-full border border-white/10 bg-[#0e0e10]/70 p-1 backdrop-blur-md" role="group" aria-label="Camera">
         {(["broadcast", "close", "tactical"] as const).map((v) => (
           <button key={v} type="button" className={chip(view === v)} onClick={() => setView(v)} aria-pressed={view === v}>
@@ -127,29 +127,29 @@ function MomentPopup() {
 }
 
 /** Over the pitch on tablets and up; on phones the chips and caption sit under the pitch (PitchUnderlay). */
-export function PitchOverlay() {
+export function PitchOverlay({ analysis = true }: { analysis?: boolean }) {
   return (
     <>
       <div className="pointer-events-none absolute inset-x-3 top-3 flex items-start justify-between gap-3 sm:inset-x-4 sm:top-4">
         <MomentPopup />
         <div className="ml-auto hidden sm:block">
-          <StoryChips />
+          <StoryChips analysis={analysis} />
         </div>
       </div>
       <div className="pointer-events-none absolute inset-x-4 bottom-4 hidden items-end justify-between gap-3 sm:flex">
-        <StoryCaption />
+        {analysis && <StoryCaption />}
       </div>
     </>
   );
 }
 
-export function PitchUnderlay() {
+export function PitchUnderlay({ analysis = true }: { analysis?: boolean }) {
   return (
     <div className="flex flex-col gap-3 sm:hidden">
       <div className="overflow-x-auto rounded-[14px] bg-[#0e0e10] p-2">
-        <StoryChips />
+        <StoryChips analysis={analysis} />
       </div>
-      <StoryCaption />
+      {analysis && <StoryCaption />}
     </div>
   );
 }
