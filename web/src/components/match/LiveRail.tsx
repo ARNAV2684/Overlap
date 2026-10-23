@@ -31,7 +31,7 @@ function Bar({ row, colours }: { row: Row; colours: { home: string; away: string
         <span className="text-[11.5px] text-ink/50">{row.label}</span>
         <span className={`font-mono font-bold tabular ${better === "away" ? "text-ink" : "text-ink/50"}`}>{fmt(row.away)}</span>
       </div>
-      <div className="mt-1 flex h-1.5 gap-0.5 overflow-hidden rounded-full">
+      <div className="mt-1 flex h-1.5 gap-0.5 overflow-hidden rounded-full ring-1 ring-ink/10">
         <span className="rounded-l-full" style={{ width: `${(h / total) * 100}%`, background: colours.home, opacity: better === "away" ? 0.45 : 1 }} />
         <span className="rounded-r-full" style={{ width: `${(a / total) * 100}%`, background: colours.away, opacity: better === "home" ? 0.45 : 1 }} />
       </div>
@@ -102,10 +102,9 @@ export function LiveRailView({ setup, panel, heavyPanel }: { setup: MatchSetup; 
       <div className="mt-3 grid grid-cols-[1fr_auto_1fr] items-end gap-2">
         {(["home", "away"] as const).map((s, i) => (
           <div key={s} className={i ? "order-3 text-right" : "order-1"}>
-            <p className="font-mono text-[30px] font-bold leading-none tabular" style={{ color: colours[s] }}>
-              {xg[s] !== null ? xg[s]!.toFixed(2) : "–"}
-            </p>
-            <p className="mt-1 text-[11.5px] text-ink/55">
+            <p className="font-mono text-[30px] font-bold leading-none tabular">{xg[s] !== null ? xg[s]!.toFixed(2) : "–"}</p>
+            <p className={`mt-1 flex items-center gap-1.5 text-[11.5px] text-ink/55 ${i ? "justify-end" : ""}`}>
+              <span className="h-2 w-2 rounded-full ring-1 ring-ink/25" style={{ background: colours[s] }} />
               {setup.teams[s].team_id} · {t?.[s].shots ?? 0} shots
             </p>
           </div>

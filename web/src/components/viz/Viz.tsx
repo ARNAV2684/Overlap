@@ -57,7 +57,7 @@ export function VizCard({
         )}
       </header>
       {controls && <div className="mt-4 flex flex-wrap items-center justify-between gap-2">{controls}</div>}
-      <div className={`mt-4 grid gap-4 ${aside ? "lg:grid-cols-[minmax(0,1.55fr)_minmax(240px,1fr)]" : ""}`}>
+      <div className={`mt-4 grid grid-cols-[minmax(0,1fr)] gap-4 ${aside ? "lg:grid-cols-[minmax(0,1.55fr)_minmax(240px,1fr)]" : ""}`}>
         <div className="min-w-0">{children}</div>
         {aside && <aside className="min-w-0">{aside}</aside>}
       </div>

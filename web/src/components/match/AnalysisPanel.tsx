@@ -141,7 +141,7 @@ export function AnalysisPanel({ focus }: { focus: Focus }) {
       </div>
 
       {tab === "story" && (
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
           <VizCard eyebrow="Match momentum · 5-minute tide" title="Who had the upper hand" subtitle="Weighted attacking actions per 5 minutes; home above the line">
             <MomentumChart points={data.momentum} goals={data.goals} home={teams.home} away={teams.away} />
           </VizCard>
