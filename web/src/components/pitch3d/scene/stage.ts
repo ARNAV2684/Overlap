@@ -10,10 +10,12 @@
 
 import * as THREE from "three";
 import type { MatchSetup } from "@/lib/contracts";
-import { attacksEast, type Side } from "@/lib/coordinates";
+import { attacksEast, teamToPitch, type Side } from "@/lib/coordinates";
+import type { Booking, FieldEvent } from "@/lib/live/match-events";
 import type { MatchMemory } from "@/lib/live/match-memory";
 import type { MotionSample } from "@/lib/live/motion";
 import { formationLines, territoryFront, type Story } from "@/lib/live/story";
+import { BookingCards, BURST_S, EventMarkers, GoalBurst } from "./effects";
 import { createFigure, disposeFigureAssets, type Figure } from "./figure";
 import { Discs, Hull, LaneBand, Ribbons, TerritoryTide, type Segment } from "./overlays";
 import { createPitch, PITCH_H, PITCH_W } from "./pitch";
@@ -49,6 +51,8 @@ export type StageUpdate = {
   memory: MatchMemory;
   /** Players to ring (followed player, the current card's player). */
   highlight: ReadonlySet<string>;
+  /** Who is booked at the playhead: a small card rides above each of them. */
+  bookings: ReadonlyMap<string, Booking>;
   /** Wall seconds since the last update, and since the stage started. */
   dt: number;
   time: number;
@@ -58,6 +62,10 @@ export type Stage = {
   setSetup(setup: MatchSetup | null): void;
   setView(view: View): void;
   update(u: StageUpdate): void;
+  /** A short mark on the grass for a set piece or stoppage, in the acting team's colour. */
+  markEvent(event: FieldEvent, side: Side, time: number): void;
+  /** The goal celebration: camera push to the goal, confetti, the net bulging. `calm` skips the motion. */
+  celebrate(side: Side, period: number, time: number, calm: boolean): void;
   /** World point to CSS pixels in the canvas, or null when behind the camera. */
   project(x: number, y: number, z: number): { x: number; y: number } | null;
   resize(width: number, height: number): void;
@@ -195,6 +203,12 @@ export function createStage(canvas: HTMLCanvasElement): Stage {
   const markers = new Ribbons(8, "#ffffff", 2);
   const nodes = new Discs(11);
   scene.add(tide.object, hull.object, lane.object, lines.object, links.object, markers.object, nodes.object);
+  const cards = new BookingCards();
+  const eventMarks = new EventMarkers();
+  const burst = new GoalBurst();
+  scene.add(cards.object, eventMarks.object, burst.object);
+  /** The goal camera: while it runs it overrides the chosen view, then eases back. */
+  let cine: { goalX: number; start: number } | null = null;
 
   // Ball
   const ballTex = (() => {
@@ -383,8 +397,14 @@ export function createStage(canvas: HTMLCanvasElement): Stage {
 
     update(u) {
       const sample = u.sample;
-      // Camera: ease to the chosen view; the broadcast camera drifts with the ball like a real one
-      if (view === "close") {
+      // Camera: ease to the chosen view; the broadcast camera drifts with the ball like a real one. A goal takes over
+      // for a moment: a quick push towards the goal, a hold, then back
+      if (cine && u.time - cine.start > BURST_S + 0.4) cine = null;
+      if (cine) {
+        const side = Math.sign(cine.goalX);
+        camPos.lerp(new THREE.Vector3(cine.goalX - side * 26, 17, 26), Math.min(1, u.dt * 3.2));
+        camLook.lerp(new THREE.Vector3(cine.goalX - side * 4, 1.2, 0), Math.min(1, u.dt * 3.6));
+      } else if (view === "close") {
         // Follow the ball, kept inside the pitch so the camera never swings out over the stands
         const b = sample ? toWorld(sample.ball.x, sample.ball.y) : { x: 0, z: 0 };
         const lx = Math.max(-PITCH_W / 2 + 12, Math.min(PITCH_W / 2 - 12, b.x));
@@ -434,13 +454,61 @@ export function createStage(canvas: HTMLCanvasElement): Stage {
           entry.figure.update(w.x, w.z, p.speedKmh / 3.6, fx, fz, u.dt, sample.rate);
           entry.figure.setHighlight(u.highlight.has(id), "#ff4f38");
         }
+        const booked = new Map<string, { x: number; z: number }>();
+        for (const id of u.bookings.keys()) {
+          const p = sample.players.get(id);
+          if (p) booked.set(id, toWorld(p.x, p.y));
+        }
+        cards.update(u.bookings, booked, camera, u.time);
         drawStory(u, sample);
       } else {
         ball.visible = ballShadow.visible = false;
         figures.forEach((e) => (e.figure.root.visible = false));
         tide.set(0, "#2bb3c0", "#ff4f38", u.time, 0);
       }
+      eventMarks.update(u.time);
+      burst.update(u.time, u.dt);
       renderer.render(scene, camera);
+    },
+
+    markEvent(event, side, time) {
+      const east = attacksEast(side, event.period) ?? side === "home";
+      const p = teamToPitch({ x: event.x, y: event.y }, east);
+      const w = toWorld(p.x, p.y);
+      const colour = colourOf(side);
+      switch (event.kind) {
+        case "corner":
+        case "throw_in":
+          eventMarks.add("ring", w.x, w.z, colour, time);
+          break;
+        case "free_kick":
+        case "foul":
+          eventMarks.add("ring", w.x, w.z, "#ffffff", time, 2);
+          break;
+        case "card":
+          eventMarks.add("ring", w.x, w.z, event.card === "yellow" ? "#f5c518" : "#e5383b", time, 2);
+          break;
+        case "offside":
+          eventMarks.add("line", w.x, 0, "#ffffff", time, 2.2);
+          break;
+        case "goal_kick": {
+          // The six-yard box the kick is taken from glows
+          const own = east ? -PITCH_W / 2 : PITCH_W / 2;
+          eventMarks.add("box", own + (east ? 2.75 : -2.75), 0, colour, time, 2.2, 5.5, 18.32);
+          break;
+        }
+        case "goal":
+          break;
+      }
+    },
+
+    celebrate(side, period, time, calm) {
+      const east = attacksEast(side, period) ?? side === "home";
+      const goalX = east ? PITCH_W / 2 : -PITCH_W / 2;
+      const colours = setup ? [setup.teams[side].colours.primary, setup.teams[side].colours.secondary, colourOf(side)] : [colourOf(side)];
+      burst.fire(goalX, calm ? [] : colours, east ? pitch.nets.east : pitch.nets.west, time);
+      if (calm) burst.object.visible = false;
+      else cine = { goalX, start: time };
     },
 
     project(x, y, z) {
@@ -474,7 +542,7 @@ export function createStage(canvas: HTMLCanvasElement): Stage {
       clearFigures();
       disposeFigureAssets();
       pitch.dispose();
-      [tide, hull, lane, lines, links, markers, nodes].forEach((o) => o.dispose());
+      [tide, hull, lane, lines, links, markers, nodes, cards, eventMarks, burst].forEach((o) => o.dispose());
       ball.geometry.dispose();
       (ball.material as THREE.Material).dispose();
       ballTex.dispose();

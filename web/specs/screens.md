@@ -24,17 +24,23 @@ one column; the story chips and caption move under the pitch.
 ### 2.1 Score header
 
 Competition and venue, match id, Live / Replay / Full time badge, the clock in big mono with the half, both clubs with
-kit crests, and the score, which flashes on a goal.
+kit crests, and the score, which flashes on a goal. Under each team, its **score sheet**: scorers (⚽ name minute, with
+"pen" for penalties) and cards (a small yellow or red card, "2nd yellow" for a second booking), in match order up to
+what the pitch is showing; the newest rises in. Phones show the icons and minutes only.
 
 ### 2.2 The 3D pitch and the story
 
-The pitch is specified in [`pitch.md`](pitch.md). Over it: the story caption (what the pitch shows, a one-line
-explanation and the number behind it), story chips (Auto, Territory, Team shape, Pass network) and the camera
-(Wide, Close, Top). Auto lets the story director choose; a chip pins a story.
+The pitch is specified in [`pitch.md`](pitch.md), its match events (cards above players, set-piece marks, the event
+ticker, the goal celebration) in §5 there. Over it: the story caption, story chips (Auto, Territory, Team shape, Pass
+network), the camera (Wide, Close, Top) and the Events switch. Auto lets the story director choose; a chip pins a
+story. The caption is light glass (45 %) and folds to a one-line pill (`Territory · Territory tide 61%`) 5 s after
+each new story, so the field stays visible; hovering, focusing or tapping it opens it again. On phones it sits under
+the pitch and stays open.
 
 ### 2.3 The AI moment card
 
-When a card is due (`realtime.md` §4) it rises over the pitch for its duration: the minute, "AI moment", the badge
+When a card is due (`realtime.md` §4) it rises over the pitch for its duration, as light glass (50 %) and compact so the
+play shows through: the minute, "AI moment", the badge
 (**Numbers verified** only when the fact-checker passed every number; **Template · checked** for template lines), the
 chart it points to, and the text in the viewer's mode and language. The player the card is about gets a ring on the
 pitch.

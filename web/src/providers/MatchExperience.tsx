@@ -43,6 +43,9 @@ type Experience = {
   setPinned(kind: StoryKind | null): void;
   view: View;
   setView(view: View): void;
+  /** Marks, labels and the ticker for set pieces and stoppages on the pitch (goals and cards always show). */
+  showEvents: boolean;
+  setShowEvents(on: boolean): void;
   mode: Mode;
   /** The latest interpolated sample, refreshed a few times a second for panels (the stage samples on its own). */
   sampleRef: React.RefObject<MotionSample | null>;
@@ -85,6 +88,7 @@ export function MatchExperienceProvider({ children }: { children: ReactNode }) {
   const [story, setStory] = useState<Story | null>(null);
   const [pinned, setPinned] = useState<StoryKind | null>(null);
   const [view, setView] = useState<View>("broadcast");
+  const [showEvents, setShowEvents] = useState(true);
   const [tick, setTick] = useState(0);
   const [playheadMs, setPlayheadMs] = useState(0);
 
@@ -213,12 +217,14 @@ export function MatchExperienceProvider({ children }: { children: ReactNode }) {
       setPinned,
       view,
       setView,
+      showEvents,
+      setShowEvents,
       mode,
       sampleRef,
       tick,
       playheadMs,
     }),
-    [store.matchId, source, motion, memory, feed, story, pinned, view, mode, tick, playheadMs],
+    [store.matchId, source, motion, memory, feed, story, pinned, view, showEvents, mode, tick, playheadMs],
   );
   return <ExperienceContext.Provider value={value}>{children}</ExperienceContext.Provider>;
 }

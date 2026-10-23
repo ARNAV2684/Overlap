@@ -60,3 +60,28 @@ current one has been up 4.5 s, except a goal, which switches at once.
 | **Territory** | Otherwise | Both teams' colours meeting at a wavy front, where the ball has lived (exponentially weighted over 3 minutes) | Each team's share of time with the ball in the other's half |
 
 Every number shown is computed from tracking, events or the stat panel; nothing is invented.
+
+## 5. Match events on the field
+
+Built 24 Oct (`lib/live/match-events.ts`, `components/pitch3d/scene/effects.ts`, `PitchStage.tsx`). This is the visual
+layer of what happens in the match; the agents' commentary is separate (`realtime.md` §4).
+
+- **Which events:** goals (a `Shot` with `goal`), cards (`Card`: yellow, second yellow, red), corners (`Corner`),
+  throw-ins, free kicks and goal kicks (the restart `Pass` carries `throw_in`, `free_kick` or `goal_kick` in its
+  qualifiers), offsides (`Offside`) and fouls (`Foul`). The match memory keeps them as field events in arrival order.
+- **When they fire:** once, when the smooth playhead crosses the event's `match_ms` between two frames, so they stay
+  in sync with the picture at any speed or frame rate. A page that drew no frame for 3 s, a catch-up snapshot (only the
+  last 15 match seconds count on the first frame) and a replay that jumps back never fire a backlog.
+- **Cards above players:** from the cards up to the playhead, each booked player carries a small card (1.0 × 1.38 m)
+  above their head, always facing the camera: it pops in big and bouncing, then rides along small. Yellow stays for
+  the match; a red (or second yellow) shows until the player leaves the pitch. A booked player's name or speed tag
+  sits above the card.
+- **Marks and labels:** corners and throw-ins pulse a ring at the spot in the team colour; free kicks, fouls and cards
+  a white or card-coloured ring; offsides flash a line across the pitch at the attacker's position; goal kicks light up
+  the six-yard box. Each gets a short label at the spot (2.2 s).
+- **Event ticker:** one quiet line at the top of the pitch for 3.2 s, for example `41′ Corner · Calverholme Athletic`,
+  `19′ Yellow card · Vik`. The **Events** chip turns marks, labels and the ticker off (goals and cards always show).
+- **Goal celebration (2.9 s):** the camera pushes quickly towards the goal and back; confetti in the scoring team's
+  colours bursts from the goal mouth; the net bulges and lights up; **GOAL** sweeps across the pitch in the team's
+  colours with a shine, with the scorer, minute and new score. Under reduced motion the camera and confetti are
+  skipped.

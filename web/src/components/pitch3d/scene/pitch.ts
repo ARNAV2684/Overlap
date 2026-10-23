@@ -156,11 +156,12 @@ function goal(material: THREE.Material, netMaterial: THREE.Material, east: boole
   bar.castShadow = true;
   group.add(bar);
   // The net: a light box open at the front
-  const net = new THREE.Mesh(new THREE.BoxGeometry(2, 2.44, 7.32), netMaterial);
+  // Each net gets its own material so one can light up when it bulges
+  const net = new THREE.Mesh(new THREE.BoxGeometry(2, 2.44, 7.32), netMaterial.clone());
   net.position.set(east ? 1 : -1, 1.22, 0);
   group.add(net);
   group.position.set(east ? PITCH_W / 2 : -PITCH_W / 2, 0, 0);
-  return group;
+  return { group, net };
 }
 
 export function createPitch(maxAnisotropy: number) {
@@ -233,11 +234,16 @@ export function createPitch(maxAnisotropy: number) {
     depthWrite: false,
     side: THREE.DoubleSide,
   });
-  group.add(goal(postMat, netMat, false), goal(postMat, netMat, true));
+  const west = goal(postMat, netMat, false);
+  const east = goal(postMat, netMat, true);
+  group.add(west.group, east.group);
 
   return {
     group,
+    /** The two nets, so a goal can make one bulge. */
+    nets: { west: west.net, east: east.net },
     dispose() {
+      netMat.dispose(); // the template the nets were cloned from
       group.traverse((o) => {
         if (o instanceof THREE.Mesh) {
           o.geometry.dispose();
