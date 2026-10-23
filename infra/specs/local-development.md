@@ -52,7 +52,10 @@ It runs on the host (not in Docker), accepts any token locally and binds to `127
 | Archive: Cosmos containers | `matches`, `events`, `stats` in `live` (created by the archiver) | Same, created by Bicep |
 | `OVERLAP_ARCHIVE_STORAGE` / `OVERLAP_ARCHIVE_BLOB_ENDPOINT` | Azurite (`UseDevelopmentStorage=true`) | `https://<name>.blob.core.windows.net`, managed identity |
 | `OVERLAP_ARCHIVER_CONSUMER_GROUP` | `archiver` | Same |
-| `AzureWebJobsStorage` | Azurite | Storage account, managed identity |
+| `AzureWebJobsStorage` | Azurite | Storage account, managed identity (`AzureWebJobsStorage__accountName`, `__credential`, `__clientId`) |
+| Functions bindings `EVENTHUBS`, `COSMOS` | Emulator connection strings (`functions/local.settings.example.json`) | `EVENTHUBS__fullyQualifiedNamespace`, `COSMOS__accountEndpoint`, each with `__credential=managedidentity` and `__clientId` |
+| Model, translator | `OVERLAP_MODEL_PROVIDER=local` or `off`, `OVERLAP_TRANSLATOR=fake` | `azure` for both, with `OVERLAP_AZURE_OPENAI_*` and `OVERLAP_TRANSLATOR_ENDPOINT` / `_REGION` |
+| `AZURE_CLIENT_ID` | Not set (developer sign-in or keys) | The workload's user-assigned identity ([`security.md`](security.md) §1) |
 | Negotiate URL used by the browser | `http://localhost:8787/negotiate` | Web app's `/api/negotiate` |
 
 Local values live in `infra/local/.env.local` (created from `.env.local.example`, never committed). The emulators'
