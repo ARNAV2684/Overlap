@@ -12,7 +12,7 @@ import * as THREE from "three";
 import type { MatchSetup } from "@/lib/contracts";
 import { attacksEast, type Side } from "@/lib/coordinates";
 import type { MatchMemory } from "@/lib/live/match-memory";
-import type { MotionSample } from "@/lib/live/motion";
+import { renderedTravel, followAlpha, type MotionSample } from "@/lib/live/motion";
 import { formationLines, territoryFront, type Story } from "@/lib/live/story";
 import { createFigure, disposeFigureAssets, type Figure } from "./figure";
 import { Discs, Hull, LaneBand, Ribbons, TerritoryTide, type Segment } from "./overlays";
@@ -52,6 +52,7 @@ export type StageUpdate = {
   /** Wall seconds since the last update, and since the stage started. */
   dt: number;
   time: number;
+  analysis?: boolean;
 };
 
 export type Stage = {
@@ -66,15 +67,15 @@ export type Stage = {
 
 /** Camera elevation, degrees above the pitch, seen from the south touchline. */
 const VIEWS: Record<Exclude<View, "close">, { elevation: number }> = {
-  broadcast: { elevation: 56 },
+  broadcast: { elevation: 46 },
   tactical: { elevation: 82 },
 };
 /** The close camera: a TV-style follow of the ball, this far behind and above it (metres). */
 const CLOSE = { back: 30, up: 21, ahead: 2 };
 const FOV = 30;
 /** Metres kept visible beyond each touchline and goal line, plus room for the broadcast camera's drift. */
-const MARGIN_X = 2.5;
-const MARGIN_Z = 2.5;
+const MARGIN_X = 7;
+const MARGIN_Z = 7;
 const FOLLOW_MAX = 4;
 
 /**
@@ -140,7 +141,7 @@ export function createStage(canvas: HTMLCanvasElement): Stage {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.3;
+  renderer.toneMappingExposure = 1.16;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFShadowMap;
 
@@ -224,7 +225,8 @@ export function createStage(canvas: HTMLCanvasElement): Stage {
   ballShadow.rotation.x = -Math.PI / 2;
   ballShadow.position.y = 0.035;
   scene.add(ballShadow);
-  let ballSpin = 0;
+  let previousSample: MotionSample | null = null;
+  const spinAxis = new THREE.Vector3();
 
   let sized = false;
   let setup: MatchSetup | null = null;
@@ -241,6 +243,7 @@ export function createStage(canvas: HTMLCanvasElement): Stage {
   function setSetup(next: MatchSetup | null) {
     if (next?.match_id === setup?.match_id) return;
     setup = next;
+    previousSample = null;
     clearFigures();
     if (!setup) return;
     let seed = 0;
@@ -389,8 +392,10 @@ export function createStage(canvas: HTMLCanvasElement): Stage {
         const b = sample ? toWorld(sample.ball.x, sample.ball.y) : { x: 0, z: 0 };
         const lx = Math.max(-PITCH_W / 2 + 12, Math.min(PITCH_W / 2 - 12, b.x));
         const lz = Math.max(-PITCH_H / 2 + 6, Math.min(PITCH_H / 2 - 6, b.z)) + CLOSE.ahead;
-        camPos.lerp(new THREE.Vector3(lx, CLOSE.up, lz + CLOSE.back), Math.min(1, u.dt * 1.2));
-        camLook.lerp(new THREE.Vector3(lx, 0, lz), Math.min(1, u.dt * 1.8));
+        // Position and target share one response: no extra look-at lag at close range.
+        const alpha = followAlpha(u.dt, 12 * Math.max(1, Math.min(sample?.rate ?? 1, 4)));
+        camPos.lerp(new THREE.Vector3(lx, CLOSE.up, lz + CLOSE.back), alpha);
+        camLook.lerp(new THREE.Vector3(lx, 0, lz), alpha);
       } else {
         const v = fitted[view];
         const follow =
@@ -405,8 +410,11 @@ export function createStage(canvas: HTMLCanvasElement): Stage {
         const b = toWorld(sample.ball.x, sample.ball.y);
         const h = Math.max(0, sample.ball.z) + 0.3;
         ball.position.set(b.x, h, b.z);
-        ballSpin += (sample.ball.speedKmh / 3.6) * u.dt * Math.max(0.2, Math.min(sample.rate, 3)) * 1.8;
-        ball.rotation.set(ballSpin, ballSpin * 0.3, 0);
+        const travel = renderedTravel(previousSample, sample);
+        if (travel.distance > 0) {
+          spinAxis.set(travel.dz, 0, -travel.dx).normalize();
+          ball.rotateOnWorldAxis(spinAxis, travel.distance / 0.3);
+        }
         ballShadow.position.set(b.x, 0.035, b.z);
         ballShadow.scale.setScalar(1 / (1 + sample.ball.z * 0.3));
         ball.visible = ballShadow.visible = true;
@@ -431,15 +439,19 @@ export function createStage(canvas: HTMLCanvasElement): Stage {
           }
           entry.last = w;
           entry.figure.root.visible = true;
-          entry.figure.update(w.x, w.z, p.speedKmh / 3.6, fx, fz, u.dt, sample.rate);
+          const movement = renderedTravel(previousSample, sample, id);
+          entry.figure.update(w.x, w.z, movement.speed, fx, fz, u.dt, movement.distance);
           entry.figure.setHighlight(u.highlight.has(id), "#ff4f38");
         }
-        drawStory(u, sample);
+        const analysis = u.analysis ?? true;
+        [tide, hull, lane, lines, links, markers, nodes].forEach((o) => { o.object.visible = analysis; });
+        if (analysis) drawStory(u, sample);
       } else {
         ball.visible = ballShadow.visible = false;
         figures.forEach((e) => (e.figure.root.visible = false));
         tide.set(0, "#2bb3c0", "#ff4f38", u.time, 0);
       }
+      previousSample = sample;
       renderer.render(scene, camera);
     },
 

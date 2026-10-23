@@ -250,3 +250,34 @@ body {
 .ov-flash-score {
   animation: ov-score 1.4s cubic-bezier(0.2, 0.7, 0.2, 1);
 }
+
+/* Local broadcast prototype: contained presentation, shared data and original theme remain intact. */
+.ov-broadcast-score { overflow:hidden; border:1px solid rgb(var(--ov-ink-rgb)/.12); border-radius:20px; box-shadow:0 16px 60px #00000015; }
+.ov-score-inner { padding:20px 24px; }
+.ov-broadcast-toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:2px 2px 0; }
+.ov-broadcast-kicker { display:block; font-family:var(--font-mono); font-size:10px; font-weight:700; letter-spacing:2px; color:var(--color-accent); }
+.ov-broadcast-subtitle { display:block; margin-top:4px; font-size:12px; color:var(--ov-ink-2); }
+.ov-mode-switch { display:flex; flex-shrink:0; align-items:center; padding:4px; border:1px solid rgb(var(--ov-ink-rgb)/.12); background:rgb(var(--ov-ink-rgb)/.035); border-radius:10px; }
+.ov-mode-switch button { padding:7px 15px; border-radius:7px; font-size:12px; font-weight:700; color:var(--ov-ink-2); cursor:pointer; }
+.ov-mode-switch button[aria-pressed=true] { background:var(--ov-ink); color:var(--ov-canvas); box-shadow:0 2px 8px #0002; }
+.ov-mode-switch button:focus-visible,.ov-heat-controls select:focus-visible { outline:2px solid var(--color-accent); outline-offset:3px; }
+.ov-broadcast-pitch { border:1px solid rgb(var(--ov-ink-rgb)/.12); border-radius:20px; box-shadow:0 24px 70px #0003; background:#080d13; }
+.ov-heat-panel { margin-top:8px; border:1px solid rgb(var(--ov-ink-rgb)/.1); border-radius:20px; background:linear-gradient(145deg,rgb(var(--ov-ink-rgb)/.045),transparent); overflow:hidden; }
+.ov-heat-heading { display:flex; align-items:start; justify-content:space-between; gap:12px; padding:24px 24px 16px; }
+.ov-heat-heading h2 { font-size:clamp(21px,2vw,28px); font-weight:800; letter-spacing:-.8px; margin:6px 0; }
+.ov-observed-badge { flex-shrink:0; font-family:var(--font-mono); font-size:9px; letter-spacing:1px; border:1px solid rgb(var(--ov-ink-rgb)/.15); border-radius:6px; padding:7px; color:var(--ov-ink-2); }
+.ov-heat-controls { display:flex; flex-wrap:wrap; align-items:end; gap:12px; padding:0 24px 20px; }
+.ov-heat-controls label { display:flex; flex-direction:column; gap:5px; font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--ov-ink-2); }
+.ov-heat-controls select { max-width:240px; min-height:38px; border:1px solid rgb(var(--ov-ink-rgb)/.15); border-radius:8px; padding:6px 30px 6px 10px; background:var(--ov-surface); color:var(--ov-ink); font-size:12px; text-transform:none; letter-spacing:0; }
+.ov-heat-content { display:grid; grid-template-columns:minmax(0,1fr) 200px; gap:24px; padding:0 24px 24px; align-items:center; }
+.ov-heat-map { min-width:0; }
+.ov-heat-legend { display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-top:10px; font-size:11px; color:var(--ov-ink-2); }
+.ov-heat-scale { display:inline-block; width:80px; height:5px; border-radius:3px; background:linear-gradient(90deg,#2563eb,#06b6d4,#84cc16,#facc15,#ef4444); }
+.ov-heat-notes h3 { font-size:20px; font-weight:700; line-height:1.15; letter-spacing:-.5px; margin:10px 0; }
+.ov-heat-notes p { font-size:12px; line-height:1.6; color:var(--ov-ink-2); }
+.ov-heat-notes dl { margin:18px 0; border-block:1px solid rgb(var(--ov-ink-rgb)/.1); padding:12px 0; }
+.ov-heat-notes dl div { display:flex; justify-content:space-between; gap:12px; font-size:11px; margin:4px 0; }
+.ov-heat-notes dt { color:var(--ov-ink-2); }.ov-heat-notes dd { font-family:var(--font-mono); font-weight:700; }
+.ov-heat-direction { font-family:var(--font-mono); font-size:10px!important; letter-spacing:1.2px; margin-bottom:8px; }.ov-heat-direction span { color:var(--color-accent); margin:0 12px; }
+.ov-heat-panel footer { padding:12px 24px; border-top:1px solid rgb(var(--ov-ink-rgb)/.08); font-size:11px; line-height:1.5; color:var(--ov-ink-2); }
+@media(max-width:700px) { .ov-score-inner{padding:16px;} .ov-heat-content{grid-template-columns:1fr;padding:0 16px 16px;} .ov-heat-notes{display:none;} .ov-heat-heading{padding:18px 16px;flex-wrap:wrap;} .ov-heat-controls{padding:0 16px 16px;} .ov-heat-controls select{max-width:190px;} .ov-broadcast-subtitle{font-size:10px;} .ov-mode-switch button{padding:7px 11px;} }

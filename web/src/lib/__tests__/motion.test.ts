@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { blendFrames, createMotion, LAG_WALL_MS } from "@/lib/live/motion";
+import { blendFrames, createMotion, LAG_WALL_MS, renderedTravel, followAlpha } from "@/lib/live/motion";
 import { makeFrame } from "./fixtures";
 
 const frame = (ms: number, x: number, period = 1) =>
@@ -77,5 +77,46 @@ describe("createMotion", () => {
     m.push(frame(600_000, 50), 0);
     m.push(frame(1000, 5), 10);
     expect(m.newestMs()).toBe(1000);
+  });
+});
+
+
+describe("rendered travel", () => {
+  const sample = (ms: number, x: number, period = 1) => ({ ...blendFrames(frame(ms, x, period), frame(ms, x, period), ms), rate: 20 });
+  it("keeps ball and player travel synchronized at the same displayed timestamp", () => {
+    const a = sample(1000, 10), b = sample(1200, 11);
+    const ball = renderedTravel(a, b), player = renderedTravel(a, b, "NBR-11");
+    expect(ball).toEqual(player);
+    expect(player.distance).toBeCloseTo(1.05);
+    expect(player.speed).toBeCloseTo(5.25);
+    // Arrival/playback rate must not alter distance or invent extra spin.
+    expect(renderedTravel(a, { ...b, rate: 1 })).toEqual(ball);
+  });
+  it("does not animate travel on pause, rewind, period change or first sample", () => {
+    const a = sample(1000, 10);
+    for (const b of [a, sample(0, 20), sample(1200, 20, 2), sample(10000, 90)]) {
+      expect(renderedTravel(a, b).distance).toBe(0);
+    }
+    expect(renderedTravel(null, a).distance).toBe(0);
+    expect(renderedTravel(a, sample(1200, 11), "missing").distance).toBe(0);
+  });
+  it("follows consistently at 30 and 60 fps without a slow camera tail", () => {
+    const follow = (fps: number) => {
+      let x = 0;
+      for (let i = 0; i < fps / 2; i++) x += (1 - x) * followAlpha(1 / fps, 12);
+      return x;
+    };
+    expect(follow(30)).toBeCloseTo(follow(60), 10);
+    expect(follow(60)).toBeGreaterThan(0.99);
+  });
+  it("does not move the playhead backwards when incoming cadence changes", () => {
+    const m = createMotion();
+    let previous = 0;
+    for (let wall = 0; wall < 5000; wall += 16) {
+      if (wall % 64 === 0) m.push(frame(wall * (wall < 2000 ? 1 : 5), wall / 100), wall);
+      const s = m.sample(wall)!;
+      expect(s.matchMs).toBeGreaterThanOrEqual(previous);
+      previous = s.matchMs;
+    }
   });
 });

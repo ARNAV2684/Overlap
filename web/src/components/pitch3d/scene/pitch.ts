@@ -46,7 +46,7 @@ function grassCanvases(widthM: number, heightM: number) {
   c.fillStyle = "#2f7a33";
   c.fillRect(0, 0, w, h);
   for (let i = -2; i < stripes + 2; i++) {
-    c.fillStyle = i % 2 === 0 ? "#3a8a3c" : "#2c7531";
+    c.fillStyle = i % 2 === 0 ? "#337b42" : "#296b38";
     c.fillRect(pitchLeft + i * stripeW, 0, stripeW + 1, h);
   }
   // Soft clumps of lighter and darker grass so no two metres look alike
@@ -66,7 +66,7 @@ function grassCanvases(widthM: number, heightM: number) {
   const bimg = b.createImageData(w, h);
   for (let i = 0; i < img.data.length; i += 4) {
     const n = rand();
-    const blade = (n - 0.5) * 34;
+    const blade = (n - 0.5) * 12;
     img.data[i] = Math.max(0, Math.min(255, img.data[i] + blade * 0.55));
     img.data[i + 1] = Math.max(0, Math.min(255, img.data[i + 1] + blade));
     img.data[i + 2] = Math.max(0, Math.min(255, img.data[i + 2] + blade * 0.35));
@@ -76,6 +76,15 @@ function grassCanvases(widthM: number, heightM: number) {
   }
   c.putImageData(img, 0, 0);
   b.putImageData(bimg, 0, 0);
+  // Worn goalmouth turf, soft and irregular rather than a painted brown rectangle.
+  for (const end of [0, 1]) {
+    const gx = (APRON + end * PITCH_W) * PPM;
+    const gy = (APRON + PITCH_H / 2) * PPM;
+    c.save(); c.translate(gx, gy); c.scale(0.75, 1.4);
+    const wear = c.createRadialGradient(0, 0, 0, 0, 0, 4 * PPM);
+    wear.addColorStop(0, "rgba(147,122,71,0.25)"); wear.addColorStop(0.5, "rgba(127,115,65,0.12)"); wear.addColorStop(1, "rgba(127,115,65,0)");
+    c.fillStyle = wear; c.fillRect(-4 * PPM, -4 * PPM, 8 * PPM, 8 * PPM); c.restore();
+  }
   // A gentle vignette towards the corners, where floodlights reach less
   const vg = c.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.35, w / 2, h / 2, Math.max(w, h) * 0.7);
   vg.addColorStop(0, "rgba(0,0,0,0)");
@@ -159,6 +168,19 @@ function goal(material: THREE.Material, netMaterial: THREE.Material, east: boole
   const net = new THREE.Mesh(new THREE.BoxGeometry(2, 2.44, 7.32), netMaterial);
   net.position.set(east ? 1 : -1, 1.22, 0);
   group.add(net);
+  // Fine physical net grid: visible at close camera distance, with no downloaded textures.
+  const meshMat = new THREE.MeshBasicMaterial({ color: 0xdce8ed, transparent: true, opacity: 0.4 });
+  const back = east ? 2 : -2;
+  for (let z = -3.66; z <= 3.67; z += 0.36) {
+    const cord = new THREE.Mesh(new THREE.BoxGeometry(0.018, 2.44, 0.018), meshMat);
+    cord.position.set(back, 1.22, z); group.add(cord);
+    const roof = new THREE.Mesh(new THREE.BoxGeometry(2, 0.018, 0.018), meshMat);
+    roof.position.set(back / 2, 2.44, z); group.add(roof);
+  }
+  for (let y = 0.1; y <= 2.45; y += 0.3) {
+    const cord = new THREE.Mesh(new THREE.BoxGeometry(0.018, 0.018, 7.32), meshMat);
+    cord.position.set(back, y, 0); group.add(cord);
+  }
   group.position.set(east ? PITCH_W / 2 : -PITCH_W / 2, 0, 0);
   return group;
 }
@@ -176,7 +198,7 @@ export function createPitch(maxAnisotropy: number) {
   bumpTex.anisotropy = maxAnisotropy;
   const grass = new THREE.Mesh(
     new THREE.PlaneGeometry(widthM, heightM),
-    new THREE.MeshStandardMaterial({ map: colourTex, bumpMap: bumpTex, bumpScale: 0.6, roughness: 0.92, metalness: 0 }),
+    new THREE.MeshStandardMaterial({ map: colourTex, bumpMap: bumpTex, bumpScale: 0.22, roughness: 0.92, metalness: 0 }),
   );
   grass.rotation.x = -Math.PI / 2;
   grass.receiveShadow = true;
@@ -224,11 +246,61 @@ export function createPitch(maxAnisotropy: number) {
     group.add(strip);
   }
 
+  // Four stepped stands; static spectators use one instanced draw call.
+  const tierMat = new THREE.MeshStandardMaterial({ color: 0x172534, roughness: 0.95 });
+  const trimMat = new THREE.MeshStandardMaterial({ color: 0x354759, roughness: 0.75 });
+  const crowdPositions: THREE.Vector3[] = [];
+  for (let row = 0; row < 7; row++) {
+    const height = 0.8 + row * 0.85;
+    for (const sign of [-1, 1]) {
+      const z = sign * (PITCH_H / 2 + APRON + 2 + row * 1.5);
+      const terrace = new THREE.Mesh(new THREE.BoxGeometry(122, 0.7, 1.5), tierMat);
+      terrace.position.set(0, height, z); group.add(terrace);
+      const edge = new THREE.Mesh(new THREE.BoxGeometry(122, 0.08, 0.1), trimMat);
+      edge.position.set(0, height + 0.38, z - sign * 0.65); group.add(edge);
+      for (let x = -59; x < 60; x += 1.1) {
+        if (Math.abs(x % 20) < 1.5) continue; // aisles
+        crowdPositions.push(new THREE.Vector3(x, height + 0.7, z));
+      }
+      const x = sign * (PITCH_W / 2 + APRON + 2 + row * 1.5);
+      const end = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.7, 82), tierMat);
+      end.position.set(x, height, 0); group.add(end);
+      for (let z2 = -39; z2 < 40; z2 += 1.1) {
+        if (Math.abs(z2 % 18) < 1.4) continue;
+        crowdPositions.push(new THREE.Vector3(x, height + 0.7, z2));
+      }
+    }
+  }
+  const crowd = new THREE.InstancedMesh(new THREE.CapsuleGeometry(0.22, 0.35, 2, 4),
+    new THREE.MeshStandardMaterial({ roughness: 1 }), crowdPositions.length);
+  const dummy = new THREE.Object3D();
+  const rand = mulberry32(19);
+  const colours = [0x586778, 0x829397, 0x283b55, 0x666277, 0xa18e79, 0x304e50];
+  crowdPositions.forEach((p, i) => {
+    dummy.position.copy(p); dummy.scale.setScalar(0.8 + rand() * 0.35); dummy.updateMatrix();
+    crowd.setMatrixAt(i, dummy.matrix); crowd.setColorAt(i, new THREE.Color(colours[Math.floor(rand() * colours.length)]));
+  });
+  group.add(crowd);
+
+  // Far-side floodlight towers: luminous fixtures only; the stage supplies the actual lights.
+  const steel = new THREE.MeshStandardMaterial({ color: 0x4c6274, metalness: 0.65, roughness: 0.4 });
+  const lamp = new THREE.MeshBasicMaterial({ color: 0xe0efff });
+  for (const x of [-57, 57]) {
+    const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.5, 23, 8), steel);
+    mast.position.set(x, 11.5, -48); group.add(mast);
+    const rack = new THREE.Mesh(new THREE.BoxGeometry(5.4, 2.5, 0.4), steel);
+    rack.position.set(x, 23, -48); rack.rotation.x = -0.25; group.add(rack);
+    for (let i = 0; i < 6; i++) for (let j = 0; j < 2; j++) {
+      const light = new THREE.Mesh(new THREE.PlaneGeometry(0.65, 0.7), lamp);
+      light.position.set(x - 2.1 + i * 0.84, 22.5 + j, -47.65); light.rotation.x = -0.25; group.add(light);
+    }
+  }
+
   const postMat = new THREE.MeshStandardMaterial({ color: 0xf4f4f4, roughness: 0.35 });
   const netMat = new THREE.MeshStandardMaterial({
     color: 0xffffff,
     transparent: true,
-    opacity: 0.12,
+    opacity: 0.035,
     roughness: 1,
     depthWrite: false,
     side: THREE.DoubleSide,
