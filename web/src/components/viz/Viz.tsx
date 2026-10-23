@@ -137,7 +137,7 @@ export function StatStrip({ cells }: { cells: { value: string; label: string; sh
 /** A near-black pitch, attacking left → right, in metres (viewBox 105 × 68; `half` shows the attacking half). */
 export function VizPitch({ children, half = false, label, attack = true }: { children?: ReactNode; half?: boolean; label: string; attack?: boolean }) {
   return (
-    <svg viewBox={half ? "50 0 55 68" : "0 0 105 68"} className="viz-pitch block w-full" role="img" aria-label={label}>
+    <svg viewBox={half ? "50 0 55 68" : "0 0 105 68"} className={`viz-pitch block w-full ${half ? "mx-auto max-w-[440px]" : ""}`} role="img" aria-label={label}>
       <rect x="0" y="0" width="105" height="68" fill="var(--color-viz-bg)" />
       {children}
       <g fill="none" stroke="var(--color-viz-line)" strokeWidth="0.3" pointerEvents="none">

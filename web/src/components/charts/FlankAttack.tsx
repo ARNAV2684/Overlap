@@ -60,11 +60,11 @@ export function FlankAttack({
           <VizPitch half label={`${team} attack by flank: ${lanes.map((l) => `${l.label} ${pct(l.touchShare)}`).join(", ")}`}>
             {lanes.map((l) => (
               <g key={l.channel}>
-                <rect x="52.5" y={l.channel * rh + 0.3} width="52.5" height={rh - 0.6} fill={rampColour(l.touchShare / max)} />
-                <text x="78.75" y={l.channel * rh + rh / 2} textAnchor="middle" className="viz-svg-count" style={{ fontSize: "5px" }}>
+                <rect x="52.5" y={l.channel * rh + 0.3} width="52.5" height={rh - 0.6} fill={rampColour(l.touchShare / max)} fillOpacity="0.6" />
+                <text x="78.75" y={l.channel * rh + rh / 2} textAnchor="middle" className="viz-svg-count" style={{ fontSize: "3.4px" }}>
                   {pct(l.touchShare)}
                 </text>
-                <text x="78.75" y={l.channel * rh + rh / 2 + 4.2} textAnchor="middle" className="viz-svg-label" style={{ fontSize: "2.6px" }}>
+                <text x="78.75" y={l.channel * rh + rh / 2 + 3.4} textAnchor="middle" className="viz-svg-label" style={{ fontSize: "1.7px" }}>
                   {l.shots} SHOTS{shots ? ` · ${l.xg.toFixed(2)} xG` : ""}
                 </text>
               </g>
