@@ -8,6 +8,7 @@
 # Run from stats/:
 #   uv run python main.py live                       # beside the local stack (infra/specs/local-development.md §5)
 #   uv run python main.py replay <match folder | run folder> [--panels | --moments] [--out file.json]
+#   uv run python main.py season <run folder> [--world world.json] [--hide CAL,DTN] --out season.json
 # A match folder holds setup.json and events.ndjson (or .gz), and optionally tracking.ndjson.gz. A run folder from the
 # generator's batch mode holds them under matches/<match_id>/.
 
@@ -129,20 +130,31 @@ def match_folders(folder: Path) -> list[Path]:
     return sorted(p for p in base.iterdir() if (p / "setup.json").exists())
 
 
-def replay_match(folder: Path, publisher: publish.Publisher | None = None,
-                 moments: publish.Moments | None = None) -> dict:
-    """Feeds a recorded match through the pipeline, events then frames, and returns its numbers."""
+def event_lines(folder: Path) -> Iterator[dict]:
+    events = folder / "events.ndjson"
+    return _lines(events if events.exists() else folder / "events.ndjson.gz")
+
+
+def play(folder: Path, publisher: publish.Publisher | None = None,
+         moments: publish.Moments | None = None) -> tuple[Pipeline, str]:
+    """Feeds a recorded match through the pipeline, events then frames; returns the pipeline and the match id."""
     pipeline = Pipeline(publisher, moments)
     setup = json.loads((folder / "setup.json").read_text(encoding="utf-8"))
     pipeline.handle("setup", setup)
-    events = folder / "events.ndjson"
-    for event in _lines(events if events.exists() else folder / "events.ndjson.gz"):
+    for event in event_lines(folder):
         pipeline.handle("event", event)
     tracking = folder / "tracking.ndjson.gz"
     if tracking.exists():
         for frame in _lines(tracking):
             pipeline.handle("tracking", frame)
-    return pipeline.summary(setup["match_id"])
+    return pipeline, setup["match_id"]
+
+
+def replay_match(folder: Path, publisher: publish.Publisher | None = None,
+                 moments: publish.Moments | None = None) -> dict:
+    """Feeds a recorded match through the pipeline and returns its numbers."""
+    pipeline, match_id = play(folder, publisher, moments)
+    return pipeline.summary(match_id)
 
 
 def replay(folder: Path) -> dict[str, dict]:
@@ -214,6 +226,11 @@ def main(argv: list[str] | None = None) -> int:
     rp.add_argument("--panels", action="store_true", help="write the stat panels instead of the match totals")
     rp.add_argument("--moments", action="store_true", help="write the moment documents instead of the match totals")
     sub.add_parser("live", help="read both hubs, send stat panels and keep match_state")
+    se = sub.add_parser("season", help="build the season document of a finished season run")
+    se.add_argument("folder", type=Path, help="a season run folder (data/seasons/<run>)")
+    se.add_argument("--world", type=Path, help="the saved world, for attributes, roles and style dials")
+    se.add_argument("--hide", default="", help="team ids whose players get no season pages, comma separated")
+    se.add_argument("--out", type=Path, required=True, help="where to write the season document")
     args = parser.parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
     logging.getLogger("azure").setLevel(logging.WARNING)       # the SDKs log every HTTP call at INFO
@@ -222,6 +239,13 @@ def main(argv: list[str] | None = None) -> int:
     if not args.folder.exists():
         print(f"error: no such folder {args.folder}", file=sys.stderr)
         return 1
+    if args.command == "season":
+        import season
+        doc = season.build(args.folder, args.world, {t for t in args.hide.split(",") if t})
+        season.write(doc, args.out)
+        print(f"wrote {args.out}: {doc['built_from']['matches']} matches, {len(doc['players'])} players; "
+              f"designed against measured: {doc['dna_correlations']}")
+        return 0
     if args.moments:
         text = numbers_json(replay_moments(args.folder))
     else:
