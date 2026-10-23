@@ -50,6 +50,8 @@ export type MatchMemory = {
   goals(): readonly Goal[];
   /** Goals, cards, set pieces and stoppages to mark on the pitch, in arrival order. */
   fieldEvents(): readonly FieldEvent[];
+  /** Every shot, in arrival order, for the 3D ball's shot flights. */
+  shots(): readonly MatchEvent[];
   shapes(side: Side): readonly ShapeSample[];
   /**
    * Seconds spent in each cell of the pitch frame (HEAT_COLS × HEAT_ROWS, row-major), per player, sampled once a
@@ -78,6 +80,7 @@ export function createMatchMemory(): MatchMemory {
   let events: MatchEvent[] = [];
   let goals: Goal[] = [];
   let fieldEvents: FieldEvent[] = [];
+  let shots: MatchEvent[] = [];
   let shapes: Record<Side, ShapeSample[]> = { home: [], away: [] };
   let balls: BallSample[] = [];
   let latest: StatPanel | null = null;
@@ -148,6 +151,7 @@ export function createMatchMemory(): MatchMemory {
     events = [];
     goals = [];
     fieldEvents = [];
+    shots = [];
     shapes = { home: [], away: [] };
     balls = [];
     latest = null;
@@ -171,6 +175,7 @@ export function createMatchMemory(): MatchMemory {
     events: () => events,
     goals: () => goals,
     fieldEvents: () => fieldEvents,
+    shots: () => shots,
     shapes: (side) => shapes[side],
     heat: (playerId) => {
       const periods = heat.get(playerId);
@@ -199,6 +204,7 @@ export function createMatchMemory(): MatchMemory {
           if (events.length > EVENT_LIMIT) events = events.slice(-EVENT_LIMIT);
           const field = classifyFieldEvent(e);
           if (field) fieldEvents.push(field);
+          if (e.type === "Shot") shots.push(e);
           if (e.type === "Shot" && e.shot_outcome === "goal") {
             const side = sideOf(e.team_id);
             if (side) {

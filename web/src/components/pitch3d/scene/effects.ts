@@ -11,7 +11,7 @@
 import * as THREE from "three";
 import type { Booking } from "@/lib/live/match-events";
 import { FIGURE_SCALE } from "./figure";
-import { PITCH_H } from "./pitch";
+import { PITCH_H, type NetHandle } from "./pitch";
 
 const Y = 0.05;
 
@@ -178,7 +178,7 @@ export class GoalBurst {
   private readonly col = new Float32Array(PARTICLES * 3);
   private readonly mat: THREE.PointsMaterial;
   private born = -Infinity;
-  private net: { mesh: THREE.Mesh; base: number; dir: number } | null = null;
+  private net: NetHandle | null = null;
 
   constructor() {
     const geo = new THREE.BufferGeometry();
@@ -190,8 +190,8 @@ export class GoalBurst {
     this.object.visible = false;
   }
 
-  /** Confetti from the goal mouth at world x `goalX` (±52.5), in the team's colours; the net bulges. */
-  fire(goalX: number, colours: readonly string[], net: THREE.Mesh, time: number) {
+  /** Confetti from the goal mouth at world x `goalX` (±52.5), in the team's colours; the net ripples back. */
+  fire(goalX: number, colours: readonly string[], net: NetHandle, time: number) {
     const dir = goalX > 0 ? -1 : 1; // into the pitch
     const palette = [...colours, "#ffffff"].map((c) => new THREE.Color(c));
     for (let i = 0; i < PARTICLES; i++) {
@@ -212,7 +212,7 @@ export class GoalBurst {
     (this.object.geometry.attributes.color as THREE.BufferAttribute).needsUpdate = true;
     this.born = time;
     this.object.visible = true;
-    this.net = { mesh: net, base: net.position.x, dir: -dir };
+    this.net = net;
   }
 
   get active() {
@@ -222,12 +222,16 @@ export class GoalBurst {
   update(time: number, dt: number) {
     const t = (time - this.born) / BURST_S;
     if (this.net) {
-      // The net bulges back and settles; it glows a moment
+      // The net is pushed back from the goal line, ripples twice as it settles, and its cords catch the light
       const k = t < 1 ? Math.sin(Math.min(1, t * 2.2) * Math.PI) * Math.exp(-t * 2) : 0;
-      this.net.mesh.scale.x = 1 + k * 0.9;
-      this.net.mesh.position.x = this.net.base + this.net.dir * k * 0.9;
-      (this.net.mesh.material as THREE.MeshStandardMaterial).opacity = 0.12 + k * 0.35;
-      if (t >= 1) this.net = null;
+      const ripple = t < 1 ? Math.sin(t * Math.PI * 7) * Math.exp(-t * 3.5) * 0.12 : 0;
+      this.net.object.scale.set(1 + k * 0.45 + ripple, 1 + ripple * 0.3, 1 + k * 0.04);
+      this.net.cords.opacity = 0.5 + k * 0.45;
+      this.net.fill.opacity = 0.04 + k * 0.12;
+      if (t >= 1) {
+        this.net.object.scale.set(1, 1, 1);
+        this.net = null;
+      }
     }
     if (!this.object.visible) return;
     if (t >= 1) {
@@ -251,5 +255,76 @@ export class GoalBurst {
   dispose() {
     this.object.geometry.dispose();
     this.mat.dispose();
+  }
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Ball trail
+// ---------------------------------------------------------------------------------------------------------------
+
+const TRAIL = 56;
+/** How long a trail point glows, in wall seconds. */
+const TRAIL_S = 1.1;
+
+/** A comet trail of glowing points behind the ball while it flies: a shot in its outcome colour, a lofted ball white. */
+export class BallTrail {
+  readonly object: THREE.Points;
+  private readonly pos = new Float32Array(TRAIL * 3);
+  private readonly col = new Float32Array(TRAIL * 3);
+  private readonly born = new Float32Array(TRAIL).fill(-Infinity);
+  private readonly tint = Array.from({ length: TRAIL }, () => new THREE.Color());
+  private head = 0;
+  private last: THREE.Vector3 | null = null;
+
+  constructor() {
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.BufferAttribute(this.pos, 3).setUsage(THREE.DynamicDrawUsage));
+    geo.setAttribute("color", new THREE.BufferAttribute(this.col, 3).setUsage(THREE.DynamicDrawUsage));
+    const mat = new THREE.PointsMaterial({
+      size: 0.55,
+      vertexColors: true,
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      sizeAttenuation: true,
+    });
+    this.object = new THREE.Points(geo, mat);
+    this.object.frustumCulled = false;
+    this.object.renderOrder = 8;
+  }
+
+  /** Adds points between the last one and `at` (so a fast ball leaves an unbroken line), in `colour`. */
+  add(at: THREE.Vector3, colour: string, time: number) {
+    const from = this.last ?? at;
+    const steps = Math.min(8, Math.max(1, Math.round(from.distanceTo(at) / 0.6)));
+    for (let k = 1; k <= steps; k++) {
+      const p = from.clone().lerp(at, k / steps);
+      const i = this.head;
+      this.pos.set([p.x, p.y, p.z], i * 3);
+      this.born[i] = time;
+      this.tint[i].set(colour);
+      this.head = (this.head + 1) % TRAIL;
+    }
+    this.last = at.clone();
+  }
+
+  /** The ball stopped flying: the next trail starts fresh. */
+  break() {
+    this.last = null;
+  }
+
+  update(time: number) {
+    for (let i = 0; i < TRAIL; i++) {
+      const age = (time - this.born[i]) / TRAIL_S;
+      const k = age >= 1 || age < 0 ? 0 : (1 - age) * (1 - age);
+      this.col.set([this.tint[i].r * k, this.tint[i].g * k, this.tint[i].b * k], i * 3);
+    }
+    (this.object.geometry.attributes.position as THREE.BufferAttribute).needsUpdate = true;
+    (this.object.geometry.attributes.color as THREE.BufferAttribute).needsUpdate = true;
+  }
+
+  dispose() {
+    this.object.geometry.dispose();
+    (this.object.material as THREE.Material).dispose();
   }
 }

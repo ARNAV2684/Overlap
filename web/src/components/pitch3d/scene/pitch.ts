@@ -66,7 +66,7 @@ function grassCanvases(widthM: number, heightM: number) {
   const bimg = b.createImageData(w, h);
   for (let i = 0; i < img.data.length; i += 4) {
     const n = rand();
-    const blade = (n - 0.5) * 34;
+    const blade = (n - 0.5) * 24;
     img.data[i] = Math.max(0, Math.min(255, img.data[i] + blade * 0.55));
     img.data[i + 1] = Math.max(0, Math.min(255, img.data[i + 1] + blade));
     img.data[i + 2] = Math.max(0, Math.min(255, img.data[i + 2] + blade * 0.35));
@@ -76,6 +76,15 @@ function grassCanvases(widthM: number, heightM: number) {
   }
   c.putImageData(img, 0, 0);
   b.putImageData(bimg, 0, 0);
+  // Worn goalmouth turf, soft and irregular rather than a painted brown rectangle.
+  for (const end of [0, 1]) {
+    const gx = (APRON + end * PITCH_W) * PPM;
+    const gy = (APRON + PITCH_H / 2) * PPM;
+    c.save(); c.translate(gx, gy); c.scale(0.75, 1.4);
+    const wear = c.createRadialGradient(0, 0, 0, 0, 0, 4 * PPM);
+    wear.addColorStop(0, "rgba(147,122,71,0.25)"); wear.addColorStop(0.5, "rgba(127,115,65,0.12)"); wear.addColorStop(1, "rgba(127,115,65,0)");
+    c.fillStyle = wear; c.fillRect(-4 * PPM, -4 * PPM, 8 * PPM, 8 * PPM); c.restore();
+  }
   // A gentle vignette towards the corners, where floodlights reach less
   const vg = c.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.35, w / 2, h / 2, Math.max(w, h) * 0.7);
   vg.addColorStop(0, "rgba(0,0,0,0)");
@@ -140,28 +149,110 @@ function markingsCanvas(widthM: number, heightM: number) {
   return canvas;
 }
 
-function goal(material: THREE.Material, netMaterial: THREE.Material, east: boolean) {
-  const group = new THREE.Group();
-  const postGeo = new THREE.CylinderGeometry(0.07, 0.07, 2.44, 12);
-  const barGeo = new THREE.CylinderGeometry(0.07, 0.07, 7.32, 12);
-  for (const z of [-3.66, 3.66]) {
-    const post = new THREE.Mesh(postGeo, material);
-    post.position.set(0, 1.22, z);
-    post.castShadow = true;
-    group.add(post);
+/** A goal's net: the cords (one draw call) and a faint fill, in a group whose origin is on the goal line. */
+export type NetHandle = { object: THREE.Group; cords: THREE.LineBasicMaterial; fill: THREE.MeshStandardMaterial };
+
+/** Goal depth at the ground and at the crossbar (the net slopes from the top-back bar down to the ground bar). */
+const NET_DEPTH = 2.0;
+const NET_TOP_DEPTH = 1.0;
+const GOAL_H = 2.44;
+const GOAL_HALF_W = 3.66;
+const POST_R = 0.06;
+
+/**
+ * Net cords as line segments: the roof and back as one sagging surface along the goal's profile, and the two sides
+ * clipped to it. `dir` is +1 for the east goal (the net runs east of the goal line), -1 for the west.
+ */
+function netCords(dir: number): THREE.BufferGeometry {
+  const pts: number[] = [];
+  // The profile from the crossbar back over the roof and down to the ground bar, by arc length t in 0..1
+  const roof = NET_TOP_DEPTH;
+  const slope = Math.hypot(NET_DEPTH - NET_TOP_DEPTH, GOAL_H);
+  const total = roof + slope;
+  const profile = (t: number) => {
+    const d = t * total;
+    if (d <= roof) return { x: d, y: GOAL_H };
+    const k = (d - roof) / slope;
+    return { x: roof + k * (NET_DEPTH - NET_TOP_DEPTH), y: GOAL_H * (1 - k) };
+  };
+  // Sag: the middle of the net hangs back and down a little
+  const point = (u: number, t: number) => {
+    const pr = profile(t);
+    const sag = Math.sin(Math.PI * u) * Math.sin(Math.PI * t) * 0.16;
+    return [dir * (pr.x + sag * 0.6), pr.y - sag, -GOAL_HALF_W + u * 2 * GOAL_HALF_W];
+  };
+  const U = 26;
+  const T = 16;
+  for (let i = 0; i <= U; i++) {
+    for (let j = 0; j < T; j++) pts.push(...point(i / U, j / T), ...point(i / U, (j + 1) / T));
   }
-  const bar = new THREE.Mesh(barGeo, material);
-  bar.rotation.x = Math.PI / 2;
-  bar.position.set(0, 2.44, 0);
-  bar.castShadow = true;
-  group.add(bar);
-  // The net: a light box open at the front
-  // Each net gets its own material so one can light up when it bulges
-  const net = new THREE.Mesh(new THREE.BoxGeometry(2, 2.44, 7.32), netMaterial.clone());
-  net.position.set(east ? 1 : -1, 1.22, 0);
+  for (let j = 0; j <= T; j++) {
+    for (let i = 0; i < U; i++) pts.push(...point(i / U, j / T), ...point((i + 1) / U, j / T));
+  }
+  // Sides: vertical and horizontal cords inside the profile, at each post
+  const backAt = (y: number) => (y >= GOAL_H ? NET_TOP_DEPTH : NET_TOP_DEPTH + (1 - y / GOAL_H) * (NET_DEPTH - NET_TOP_DEPTH));
+  for (const z of [-GOAL_HALF_W, GOAL_HALF_W]) {
+    for (let x = 0.2; x < NET_DEPTH; x += 0.2) {
+      // The cord runs from the ground up to where the back slope (or the roof) meets it
+      const top = x <= NET_TOP_DEPTH ? GOAL_H : GOAL_H * (1 - (x - NET_TOP_DEPTH) / (NET_DEPTH - NET_TOP_DEPTH));
+      pts.push(dir * x, 0, z, dir * x, top, z);
+    }
+    for (let y = 0.2; y < GOAL_H; y += 0.2) pts.push(0, y, z, dir * backAt(y), y, z);
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.Float32BufferAttribute(pts, 3));
+  return geo;
+}
+
+/** A tube between two points, for the goal frame's bars. */
+function bar(a: THREE.Vector3, b: THREE.Vector3, r: number, material: THREE.Material) {
+  const len = a.distanceTo(b);
+  const mesh = new THREE.Mesh(new THREE.CylinderGeometry(r, r, len, 16), material);
+  mesh.position.copy(a).add(b).multiplyScalar(0.5);
+  mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), b.clone().sub(a).normalize());
+  mesh.castShadow = true;
+  return mesh;
+}
+
+function goal(postMat: THREE.Material, frameMat: THREE.Material, east: boolean) {
+  const group = new THREE.Group();
+  const dir = east ? 1 : -1;
+  const v = (x: number, y: number, z: number) => new THREE.Vector3(dir * x, y, z);
+  // Posts and crossbar (12 cm, white), with rounded corners where they meet
+  for (const z of [-GOAL_HALF_W, GOAL_HALF_W]) {
+    group.add(bar(v(0, 0, z), v(0, GOAL_H, z), POST_R, postMat));
+    const joint = new THREE.Mesh(new THREE.SphereGeometry(POST_R, 16, 12), postMat);
+    joint.position.copy(v(0, GOAL_H, z));
+    group.add(joint);
+  }
+  group.add(bar(v(0, GOAL_H, -GOAL_HALF_W), v(0, GOAL_H, GOAL_HALF_W), POST_R, postMat));
+  // The frame behind: top-back stanchions, the slope down to the ground bar, and the ground bars (thinner, grey)
+  for (const z of [-GOAL_HALF_W, GOAL_HALF_W]) {
+    group.add(bar(v(0, GOAL_H, z), v(NET_TOP_DEPTH, GOAL_H, z), 0.025, frameMat));
+    group.add(bar(v(NET_TOP_DEPTH, GOAL_H, z), v(NET_DEPTH, 0.02, z), 0.025, frameMat));
+    group.add(bar(v(0, 0.02, z), v(NET_DEPTH, 0.02, z), 0.02, frameMat));
+  }
+  group.add(bar(v(NET_TOP_DEPTH, GOAL_H, -GOAL_HALF_W), v(NET_TOP_DEPTH, GOAL_H, GOAL_HALF_W), 0.025, frameMat));
+  group.add(bar(v(NET_DEPTH, 0.02, -GOAL_HALF_W), v(NET_DEPTH, 0.02, GOAL_HALF_W), 0.02, frameMat));
+
+  // The net: cords plus a faint fill, in one group that a goal can push back (its origin is on the goal line)
+  const net = new THREE.Group();
+  const cords = new THREE.LineBasicMaterial({ color: 0xe6eef2, transparent: true, opacity: 0.5, depthWrite: false });
+  net.add(new THREE.LineSegments(netCords(dir), cords));
+  const fill = new THREE.MeshStandardMaterial({
+    color: 0xffffff,
+    transparent: true,
+    opacity: 0.04,
+    roughness: 1,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+  });
+  const box = new THREE.Mesh(new THREE.BoxGeometry(NET_DEPTH, GOAL_H, GOAL_HALF_W * 2), fill);
+  box.position.set((dir * NET_DEPTH) / 2, GOAL_H / 2, 0);
+  net.add(box);
   group.add(net);
   group.position.set(east ? PITCH_W / 2 : -PITCH_W / 2, 0, 0);
-  return { group, net };
+  return { group, net: { object: net, cords, fill } satisfies NetHandle };
 }
 
 export function createPitch(maxAnisotropy: number) {
@@ -177,7 +268,7 @@ export function createPitch(maxAnisotropy: number) {
   bumpTex.anisotropy = maxAnisotropy;
   const grass = new THREE.Mesh(
     new THREE.PlaneGeometry(widthM, heightM),
-    new THREE.MeshStandardMaterial({ map: colourTex, bumpMap: bumpTex, bumpScale: 0.6, roughness: 0.92, metalness: 0 }),
+    new THREE.MeshStandardMaterial({ map: colourTex, bumpMap: bumpTex, bumpScale: 0.4, roughness: 0.92, metalness: 0 }),
   );
   grass.rotation.x = -Math.PI / 2;
   grass.receiveShadow = true;
@@ -225,27 +316,47 @@ export function createPitch(maxAnisotropy: number) {
     group.add(strip);
   }
 
-  const postMat = new THREE.MeshStandardMaterial({ color: 0xf4f4f4, roughness: 0.35 });
-  const netMat = new THREE.MeshStandardMaterial({
-    color: 0xffffff,
-    transparent: true,
-    opacity: 0.12,
-    roughness: 1,
-    depthWrite: false,
-    side: THREE.DoubleSide,
-  });
-  const west = goal(postMat, netMat, false);
-  const east = goal(postMat, netMat, true);
+  // Floodlight masts at the four corners, outside the pitch: slim steel and softly glowing lamp heads (the stage
+  // supplies the actual light)
+  const steel = new THREE.MeshStandardMaterial({ color: 0x3a4652, metalness: 0.6, roughness: 0.45 });
+  const lamp = new THREE.MeshBasicMaterial({ color: 0xf2f6ff, transparent: true, opacity: 0.85 });
+  for (const sx of [-1, 1]) {
+    for (const sz of [-1, 1]) {
+      const x = sx * (PITCH_W / 2 + APRON + 5);
+      const z = sz * (PITCH_H / 2 + APRON + 5);
+      const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.4, 26, 8), steel);
+      mast.position.set(x, 13, z);
+      group.add(mast);
+      const head = new THREE.Group();
+      head.position.set(x, 26.2, z);
+      head.lookAt(0, 0, 0);
+      const rack = new THREE.Mesh(new THREE.BoxGeometry(4.2, 2.2, 0.3), steel);
+      head.add(rack);
+      for (let i = 0; i < 5; i++) {
+        for (let j = 0; j < 2; j++) {
+          const light = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 0.7), lamp);
+          light.position.set(-1.68 + i * 0.84, -0.5 + j, 0.17);
+          head.add(light);
+        }
+      }
+      group.add(head);
+    }
+  }
+
+  // Goals: glossy white posts and bar, grey frame behind
+  const postMat = new THREE.MeshStandardMaterial({ color: 0xfbfbfb, roughness: 0.22, metalness: 0.08 });
+  const frameMat = new THREE.MeshStandardMaterial({ color: 0x9aa3ab, roughness: 0.5, metalness: 0.3 });
+  const west = goal(postMat, frameMat, false);
+  const east = goal(postMat, frameMat, true);
   group.add(west.group, east.group);
 
   return {
     group,
-    /** The two nets, so a goal can make one bulge. */
+    /** The two nets, so a goal can make one ripple. */
     nets: { west: west.net, east: east.net },
     dispose() {
-      netMat.dispose(); // the template the nets were cloned from
       group.traverse((o) => {
-        if (o instanceof THREE.Mesh) {
+        if (o instanceof THREE.Mesh || o instanceof THREE.LineSegments) {
           o.geometry.dispose();
           const m = o.material as THREE.MeshStandardMaterial;
           m.map?.dispose();

@@ -19,7 +19,9 @@ TopNav.tsx`) has Live, Matches, How it works and the theme switch on every page.
 ## 2. Match screen (`/match/<id>` live or replay, `/replay/<id>` replay; and the home page)
 
 `components/match/MatchScreen.tsx`. Desktop: the pitch column and a 380 px side column, analytics underneath. Phones:
-one column; the story chips and caption move under the pitch.
+one column; the story chips and caption move under the pitch. Above the pitch, "Match centre" (Live or Recorded
+tracking) and the **Watch / Analyse** switch (`pitch.md` §1.2); Analyse is the default, and Watch hides the story
+caption and chips. Under the pitch, the tracking heatmap (§2.6).
 
 ### 2.1 Score header
 
@@ -52,8 +54,15 @@ Over the pitch for replays: play / pause, 1× · 5× · 20×, a progress line an
 ### 2.5 Analytics
 
 Tabs under the pitch, specified in [`charts.md`](charts.md): Momentum, Team stats, Shot map, Pass network, Pressing,
-Heatmap, Pass map, Key events. Per-team charts have a home/away switch. A card in the feed opens the chart it refers
-to (`visual.component`) and highlights its event.
+Pass map, Key events. Per-team charts have a home/away switch. A card in the feed opens the chart it refers to
+(`visual.component`) and highlights its event; a heatmap card scrolls to the tracking heatmap.
+
+### 2.6 Tracking heatmap
+
+`components/match/TrackingHeatPanel.tsx`, a card under the pitch ([`charts.md`](charts.md) §10): a home/away switch,
+a player picker (whole team or one player) and a period picker (all observed, either half, either half of extra time);
+the heatmap with its legend; beside it on desktop the position samples and players observed, and "Defend → Attack".
+A footer says it is built only from the tracking this page has received.
 
 ## 3. Your match (preferences)
 

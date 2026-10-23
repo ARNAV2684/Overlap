@@ -106,7 +106,11 @@ export function ScoreHeader() {
           : { text: status === "stale" ? "Waiting for data" : "Connecting", cls: "bg-ink/10 text-ink/60" };
 
   return (
-    <div className="flex flex-col gap-3">
+    <div
+      className="flex flex-col gap-3 p-4 sm:p-5"
+      // A wash of each team's kit colour from its side of the header
+      style={{ background: `linear-gradient(110deg, ${home?.colours.primary ?? "#123d45"}33, transparent 45%, ${away?.colours.primary ?? "#46316f"}33)` }}
+    >
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="ov-eyebrow">
@@ -125,7 +129,7 @@ export function ScoreHeader() {
       </div>
       <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 sm:gap-6">
         <div className="flex min-w-0 items-center gap-3">
-          <Crest team={home} />
+          <Crest team={home} size={48} />
           <span className="line-clamp-2 min-w-0 text-[13px] font-extrabold leading-tight text-ink/90 sm:text-[19px]"><TeamName name={home?.name ?? "Home"} /></span>
         </div>
         <div key={flash} className={`flex items-baseline gap-1.5 font-mono text-[34px] font-black leading-none tabular sm:gap-2 sm:text-[52px] ${flash ? "ov-flash-score" : ""}`}>
@@ -135,7 +139,7 @@ export function ScoreHeader() {
         </div>
         <div className="flex min-w-0 items-center justify-end gap-3">
           <span className="line-clamp-2 min-w-0 text-right text-[13px] font-extrabold leading-tight text-ink/90 sm:text-[19px]"><TeamName name={away?.name ?? "Away"} /></span>
-          <Crest team={away} />
+          <Crest team={away} size={48} />
         </div>
       </div>
       {(sheet.home.length > 0 || sheet.away.length > 0) && (

@@ -2,8 +2,9 @@
 
 // AnalysisPanel.tsx — Match analytics under the pitch
 //
-// Purpose: the match told in charts, one tab at a time: momentum, team stats, shot map, pass network, heatmap, pass
-//          map and key events; a team switch for the per-team charts; the followed player for heatmap and pass map.
+// Purpose: the match told in charts, one tab at a time: momentum, team stats, shot map, pass network, pressing, pass
+//          map and key events; a team switch for the per-team charts; the followed player for the pass map. (The
+//          heatmap has its own panel under the pitch: TrackingHeatPanel.)
 //          An AI card can open the chart it refers to
 // Inputs:  the match experience (memory, tick) and preferences; `focus` from the feed (component + event)
 // Outputs: UI
@@ -11,12 +12,11 @@
 
 import { useMemo, useState } from "react";
 import type { Side } from "@/lib/coordinates";
-import { heatGrid, keyEvents, momentumSeries, passLines, teamShots } from "@/lib/live/charts";
+import { keyEvents, momentumSeries, passLines, teamShots } from "@/lib/live/charts";
 import { useScoreboard } from "@/lib/store-hooks";
 import { useExperience } from "@/providers/MatchExperience";
 import { usePreferences } from "@/providers/PreferencesProvider";
 import { overlayColour } from "@/components/pitch3d/scene/stage";
-import { HeatMap } from "@/components/charts/HeatMap";
 import { KeyEvents } from "@/components/charts/KeyEvents";
 import { MomentumChart } from "@/components/charts/MomentumChart";
 import { PassMap } from "@/components/charts/PassMap";
@@ -31,7 +31,6 @@ export const TABS = [
   { id: "shots", label: "Shot map" },
   { id: "network", label: "Pass network" },
   { id: "pressing", label: "Pressing" },
-  { id: "heat", label: "Heatmap" },
   { id: "passes", label: "Pass map" },
   { id: "events", label: "Key events" },
 ] as const;
@@ -43,7 +42,6 @@ export const TAB_FOR_COMPONENT: Record<string, TabId> = {
   stat_bars: "stats",
   shot_map: "shots",
   pass_network: "network",
-  heatmap_zones: "heat",
   pressing_zones: "pressing",
   key_events: "events",
 };
@@ -80,8 +78,6 @@ export function AnalysisPanel({ focus }: { focus: Focus }) {
     const events = memory.events();
     const panel = memory.latestPanel();
     const heavy = memory.heavyPanel();
-    const lineupIds = team ? team.lineup.map((p) => p.player_id).concat(team.bench.map((p) => p.player_id)) : [];
-    const heatFor = followed && followed.side === side ? [followed.id] : lineupIds;
     return {
       momentum: momentumSeries(memory),
       goals: [...memory.goals()],
@@ -89,15 +85,14 @@ export function AnalysisPanel({ focus }: { focus: Focus }) {
       shots: team ? teamShots(events, team.team_id) : [],
       network: heavy?.heavy.pass_network[side] ?? null,
       pressing: heavy?.heavy.pressing_grid[side] ?? null,
-      heat: heatGrid(memory, heatFor, side),
       passes: team ? passLines(events, followed && followed.side === side ? { playerId: followed.id } : { teamId: team.team_id }) : [],
       keys: keyEvents(events, setup),
       shirts: new Map(team ? [...team.lineup, ...team.bench].map((p) => [p.player_id, p.shirt]) : []),
     };
   }, [tick, memory, team, side, followed, setup]);
 
-  const perTeam = tab === "shots" || tab === "network" || tab === "pressing" || tab === "heat" || tab === "passes";
-  const who = followed && followed.side === side && (tab === "heat" || tab === "passes") ? followed.name : team?.name ?? "";
+  const perTeam = tab === "shots" || tab === "network" || tab === "pressing" || tab === "passes";
+  const who = followed && followed.side === side && tab === "passes" ? followed.name : team?.name ?? "";
 
   return (
     <section className="ov-card overflow-hidden" aria-label="Match analytics">
@@ -184,11 +179,6 @@ export function AnalysisPanel({ focus }: { focus: Focus }) {
             />
           </div>
         )}
-        {tab === "heat" && (
-          <div className="mx-auto max-w-[760px]">
-            <HeatMap grid={data.heat} colour={colours[side]} label={`${who} heatmap`} />
-          </div>
-        )}
         {tab === "passes" && (
           <div className="mx-auto max-w-[760px]">
             <PassMap passes={data.passes} colour={colours[side]} label={`${who} passes`} />
@@ -201,7 +191,7 @@ export function AnalysisPanel({ focus }: { focus: Focus }) {
         )}
         {perTeam && (
           <p className="mx-auto mt-3 max-w-[760px] text-[12px] text-ink/40">
-            {tab === "heat" || tab === "passes"
+            {tab === "passes"
               ? followed && followed.side === side
                 ? `Following ${followed.name}. Attacking left to right.`
                 : "Whole team. Follow a player to see theirs. Attacking left to right."

@@ -129,23 +129,25 @@ function CaptionCard({
 }
 
 export function StoryChips() {
-  const { pinned, setPinned, view, setView, showEvents, setShowEvents } = useExperience();
+  const { pinned, setPinned, view, setView, showEvents, setShowEvents, analysis } = useExperience();
   const chip = (active: boolean) =>
     `whitespace-nowrap rounded-full px-3 py-1.5 font-mono text-[10px] font-black uppercase tracking-[1.2px] transition-colors ${
       active ? "bg-white text-[#0e0e10]" : "text-white/65 hover:text-white"
     }`;
   return (
     <div className="pointer-events-auto flex items-center gap-2 sm:flex-wrap sm:justify-end">
-      <div className="flex rounded-full border border-white/10 bg-[#0e0e10]/70 p-1 backdrop-blur-md" role="group" aria-label="What the pitch shows">
-        <button type="button" className={chip(pinned === null)} onClick={() => setPinned(null)} aria-pressed={pinned === null} title="The story director picks">
-          Auto
-        </button>
-        {(Object.keys(STORY_LABEL) as StoryKind[]).map((k) => (
-          <button key={k} type="button" className={chip(pinned === k)} onClick={() => setPinned(k)} aria-pressed={pinned === k} title={STORY_HINT[k]}>
-            {STORY_LABEL[k]}
+      {analysis && (
+        <div className="flex rounded-full border border-white/10 bg-[#0e0e10]/70 p-1 backdrop-blur-md" role="group" aria-label="What the pitch shows">
+          <button type="button" className={chip(pinned === null)} onClick={() => setPinned(null)} aria-pressed={pinned === null} title="The story director picks">
+            Auto
           </button>
-        ))}
-      </div>
+          {(Object.keys(STORY_LABEL) as StoryKind[]).map((k) => (
+            <button key={k} type="button" className={chip(pinned === k)} onClick={() => setPinned(k)} aria-pressed={pinned === k} title={STORY_HINT[k]}>
+              {STORY_LABEL[k]}
+            </button>
+          ))}
+        </div>
+      )}
       <div className="flex rounded-full border border-white/10 bg-[#0e0e10]/70 p-1 backdrop-blur-md" role="group" aria-label="Camera">
         {(["broadcast", "close", "tactical"] as const).map((v) => (
           <button key={v} type="button" className={chip(view === v)} onClick={() => setView(v)} aria-pressed={view === v}>
@@ -206,7 +208,7 @@ export function PitchOverlay() {
         </div>
       </div>
       <div className="pointer-events-none absolute inset-x-4 bottom-4 hidden items-end justify-between gap-3 sm:flex">
-        <StoryCaption collapsible />
+        <StoryCaptionIfAnalysing collapsible />
       </div>
     </>
   );
@@ -218,7 +220,13 @@ export function PitchUnderlay() {
       <div className="overflow-x-auto rounded-[14px] bg-[#0e0e10] p-2">
         <StoryChips />
       </div>
-      <StoryCaption />
+      <StoryCaptionIfAnalysing />
     </div>
   );
+}
+
+/** The caption belongs to Analyse; Watch is the clean pitch. */
+function StoryCaptionIfAnalysing({ collapsible = false }: { collapsible?: boolean }) {
+  const { analysis } = useExperience();
+  return analysis ? <StoryCaption collapsible={collapsible} /> : null;
 }

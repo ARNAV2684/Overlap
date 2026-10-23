@@ -17,6 +17,7 @@
 
 import { useEffect, useRef, type ReactNode } from "react";
 import { attacksEast, teamToPitch, type Side } from "@/lib/coordinates";
+import { flightAt, shotFlight, type BallPoint, type ShotFlight } from "@/lib/live/ball-flight";
 import { bookingsAt, FIELD_EVENT_LABELS, minuteOf, shortName, type FieldEvent } from "@/lib/live/match-events";
 import { useExperience } from "@/providers/MatchExperience";
 import { usePreferences } from "@/providers/PreferencesProvider";
@@ -50,6 +51,17 @@ const ICONS: Record<FieldEvent["kind"], string> = {
   offside: "⚐",
   foul: "✕",
 };
+
+/** Trail colours of a shot's flight, by outcome (the shot map's colours); a lofted ball leaves a white trail. */
+const SHOT_TRAIL: Record<ShotFlight["outcome"], string> = {
+  goal: "#ff4f38",
+  saved: "#4a90d9",
+  missed: "#a4a4bc",
+  blocked: "#e8a838",
+  woodwork: "#d4637a",
+};
+/** A tracked ball higher than this (metres) is in the air and leaves a trail. */
+const AIRBORNE_M = 0.8;
 
 type Label = { el: HTMLDivElement; seen: boolean };
 
@@ -112,6 +124,9 @@ export function PitchStage({ highlight = [], children }: { highlight?: readonly 
 
     // Match events: which have fired, and the ones whose spot label is still up
     const fired = new Set<string>();
+    // Shots being flown in 3D
+    const shotsFlown = new Set<string>();
+    let flights: ShotFlight[] = [];
     let lastPlayhead = -Infinity;
     let lastFrameAt = -Infinity;
     const spots: { key: string; event: FieldEvent; side: Side; until: number; text: string }[] = [];
@@ -184,7 +199,38 @@ export function PitchStage({ highlight = [], children }: { highlight?: readonly 
       const time = (now - start) / 1000;
       const fieldEvents = e.memory.fieldEvents();
       const bookings = sample ? bookingsAt(fieldEvents, sample.matchMs) : new Map();
-      stage.update({ sample, story: e.story, memory: e.memory, highlight: ring, bookings, dt, time });
+
+      // The ball in 3D: a shot in flight, or the smoothed tracked path
+      let ball: BallPoint | null = null;
+      let trail: string | null = null;
+      if (sample) {
+        const setup = e.memory.setup();
+        const crossedFrom = now - lastFrameAt < MAX_FRAME_GAP_MS ? lastPlayhead : sample.matchMs - FRESH_MS;
+        if (sample.matchMs < lastPlayhead - 5000) {
+          shotsFlown.clear();
+          flights = [];
+        }
+        if (setup) {
+          for (const shot of e.memory.shots()) {
+            if (shot.match_ms > sample.matchMs || shotsFlown.has(shot.event_id)) continue;
+            shotsFlown.add(shot.event_id);
+            if (shot.match_ms <= crossedFrom || !shot.team_id) continue;
+            const side: Side = shot.team_id === setup.teams.home.team_id ? "home" : "away";
+            const f = shotFlight(shot, attacksEast(side, shot.period) ?? side === "home");
+            if (f) flights.push(f);
+          }
+        }
+        flights = flights.filter((f) => f.endMs >= sample.matchMs);
+        const flying = flights.find((f) => f.startMs <= sample.matchMs);
+        if (flying) {
+          ball = flightAt(flying, sample.matchMs);
+          trail = SHOT_TRAIL[flying.outcome];
+        } else {
+          ball = e.ballTrack.at(sample.matchMs);
+          trail = ball && ball.z > AIRBORNE_M ? "#ffffff" : null;
+        }
+      }
+      stage.update({ sample, story: e.story, memory: e.memory, highlight: ring, bookings, dt, time, analysis: e.analysis, ball, trail });
 
       if (sample) {
         // A replay that restarts or jumps back: everything before the playhead is history again
@@ -234,7 +280,7 @@ export function PitchStage({ highlight = [], children }: { highlight?: readonly 
         }
         // Story markers: the defensive line now and before the goal
         const s = e.story;
-        if (s?.kind === "protect" && s.side) {
+        if (e.analysis && s?.kind === "protect" && s.side) {
           const east = attacksEast(s.side, sample.period) ?? s.side === "home";
           const lineX = (m: number) => (east ? m : PITCH_W - m) - PITCH_W / 2;
           // "Now" sits at the near touchline, "before" at the far one, so the two never overlap
