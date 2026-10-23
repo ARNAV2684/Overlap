@@ -41,7 +41,7 @@ _Answer:_
   Settings hold only endpoints and identity client ids, which are not secrets.
 - The local emulators' keys in `infra/local/` and `functions/local.settings.example.json` are Microsoft's public,
   documented values; they never work against Azure.
-- Key Vault: **pending decision (D-11)**, see [`resources.md`](resources.md) §2.11. Proposed: not deployed.
+- Key Vault: **not deployed** (Arnav, 23 Oct, D-11), see [`resources.md`](resources.md) §2.11.
 
 ## 3. Public endpoints
 

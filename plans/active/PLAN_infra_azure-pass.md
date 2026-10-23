@@ -356,7 +356,7 @@ them); cost over the full judging period (only extrapolated from A8 and the firs
 8. **D-08 Live matches for judges:** start-match button with a rate limit (recommended), a schedule, or both.
 9. **D-09 Model:** GPT-5 mini or the closest current mini model, checked at deployment.
 10. **D-10 Tools:** OK to install Azure CLI, `azd` and Bicep with winget; Arnav signs in himself.
-11. **D-11 Key Vault:** not deployed, because nothing is secret (recommended).
+11. **D-11 Key Vault:** not deployed (decided by Arnav, 23 Oct).
 12. **Azeem:** agree the `stats/consumer.py` checkpoint change (A7) and running the generator as a Container Apps job
     from a container file in `infra/containers/` (A10).
 13. **Calendar:** whether deployment work may continue during the 25–26 Oct freeze (R-07).

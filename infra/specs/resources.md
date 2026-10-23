@@ -128,9 +128,8 @@ off.
 
 ### 2.11 Key Vault
 
-**Pending decision (D-11).** Nothing in Overlap is secret: every service signs in with identity. Proposed: the module
-stays a placeholder and is not deployed. If Arnav wants it, it is deployed empty (Standard, RBAC authorisation, purge
-protection off) for future use.
+**Not deployed (Arnav, 23 Oct, D-11).** Nothing in Overlap is secret: every service signs in with identity, so
+`key-vault.bicep` stays a placeholder.
 
 ## 3. Environments
 
