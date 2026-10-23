@@ -72,7 +72,7 @@ export function PressingZones({
               { value: pct(t.final), label: "Final third", share: t.final },
             ]}
           />
-          <VizPitch label={`${team} pressing zones: ${t.total} pressures`}>
+          <VizPitch footer={heightM !== null} label={`${team} pressing zones: ${t.total} pressures`}>
             <ZoneGrid grid={grid} showCounts />
             {heightM !== null && <PitchLine xM={heightM} label={`PRESS LINE ${heightM.toFixed(0)}`} />}
           </VizPitch>

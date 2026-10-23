@@ -135,9 +135,23 @@ export function StatStrip({ cells }: { cells: { value: string; label: string; sh
 }
 
 /** A near-black pitch, attacking left → right, in metres (viewBox 105 × 68; `half` shows the attacking half). */
-export function VizPitch({ children, half = false, label, attack = true }: { children?: ReactNode; half?: boolean; label: string; attack?: boolean }) {
+/** `footer` adds a strip under the pitch for a PitchLine's label, so the label never covers the bottom row's counts. */
+export function VizPitch({
+  children,
+  half = false,
+  label,
+  attack = true,
+  footer = false,
+}: {
+  children?: ReactNode;
+  half?: boolean;
+  label: string;
+  attack?: boolean;
+  footer?: boolean;
+}) {
+  const h = footer ? 74.5 : 68;
   return (
-    <svg viewBox={half ? "50 0 55 68" : "0 0 105 68"} className={`viz-pitch block w-full ${half ? "mx-auto max-w-[440px]" : ""}`} role="img" aria-label={label}>
+    <svg viewBox={half ? `50 0 55 ${h}` : `0 0 105 ${h}`} className={`viz-pitch block w-full ${half ? "mx-auto max-w-[440px]" : ""}`} role="img" aria-label={label}>
       <rect x="0" y="0" width="105" height="68" fill="var(--color-viz-bg)" />
       {children}
       <g fill="none" stroke="var(--color-viz-line)" strokeWidth="0.3" pointerEvents="none">
@@ -206,13 +220,16 @@ export function ZoneGrid({
   );
 }
 
-/** A dashed line across the pitch at `xM` metres, with a pill label at the foot (the press line, a defensive line). */
+/**
+ * A dashed line across the pitch at `xM` metres (the press line, a defensive line), with a pill label in the strip
+ * under the pitch: draw it inside a `VizPitch footer`.
+ */
 export function PitchLine({ xM, label }: { xM: number; label: string }) {
   return (
     <g pointerEvents="none">
-      <line x1={xM} y1="0" x2={xM} y2="68" stroke="#fff" strokeOpacity="0.85" strokeWidth="0.35" strokeDasharray="1 0.9" />
-      <rect x={xM - 10} y="61.6" width="20" height="4.6" rx="2.3" fill="#0a0a0a" stroke="var(--color-viz-line)" strokeWidth="0.25" />
-      <text x={xM} y="64.75" textAnchor="middle" className="viz-svg-pill">
+      <line x1={xM} y1="0" x2={xM} y2="69.4" stroke="#fff" strokeOpacity="0.85" strokeWidth="0.35" strokeDasharray="1 0.9" />
+      <rect x={xM - 10} y="69.4" width="20" height="4.6" rx="2.3" fill="#0a0a0a" stroke="var(--color-viz-line)" strokeWidth="0.25" />
+      <text x={xM} y="72.55" textAnchor="middle" className="viz-svg-pill">
         {label}
       </text>
     </g>

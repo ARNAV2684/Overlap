@@ -242,20 +242,26 @@ export function thirds(grid: readonly (readonly number[])[]): { own: number; mid
 const THIRD = ["Own third", "Middle third", "Final third"];
 const LANE = ["Left wing", "Left half-space", "Centre-left", "Centre-right", "Right half-space", "Right wing"];
 
-/** The busiest cells of a [col][row] grid as football zones ("Middle third · Centre"), most first. */
+/**
+ * The busiest football zones of a [col][row] grid ("Middle third · Centre"), most first. Several grid cells fall in
+ * one zone (a third spans three columns), so cells are summed per zone: each zone is listed once.
+ */
 export function busiestZones(grid: readonly (readonly number[])[], n = 3): { key: string; label: string; count: number }[] {
   const cols = grid.length;
   const rows = grid[0]?.length ?? 0;
-  const cells: { key: string; label: string; count: number }[] = [];
+  const zones = new Map<string, { key: string; label: string; count: number }>();
   grid.forEach((col, c) =>
     col.forEach((v, r) => {
       if (v <= 0) return;
-      const third = THIRD[Math.min(2, Math.floor((c / cols) * 3))];
-      const lane = rows === 6 ? LANE[r] : ["Left", "Centre", "Right"][Math.min(2, Math.floor((r / rows) * 3))];
-      cells.push({ key: `${c}:${r}`, label: `${third} · ${lane}`, count: v });
+      const t = Math.min(2, Math.floor((c / cols) * 3));
+      const l = rows === 6 ? r : Math.min(2, Math.floor((r / rows) * 3));
+      const label = `${THIRD[t]} · ${rows === 6 ? LANE[l] : ["Left", "Centre", "Right"][l]}`;
+      const zone = zones.get(label) ?? { key: `${t}:${l}`, label, count: 0 };
+      zone.count += v;
+      zones.set(label, zone);
     }),
   );
-  return cells.sort((a, b) => b.count - a.count || a.key.localeCompare(b.key)).slice(0, n);
+  return [...zones.values()].sort((a, b) => b.count - a.count || a.key.localeCompare(b.key)).slice(0, n);
 }
 
 /** Touch zones [channel][col] turned into the [col][row] layout the zone grid draws. */
