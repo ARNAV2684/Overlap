@@ -12,10 +12,10 @@ Decides every Azure resource, its tier and its settings. Moving from the local s
 
 _Answer:_
 
-- **Region:** one Bicep parameter, `location`, for every resource. **Pending decision (D-02): Central India or Sweden
-  Central.** The chosen region must offer every resource in §2 and have model quota for §2.9; that is checked with
-  `az` before the first deployment. The Foundry resource (§2.9) may be placed in a second region only if the chosen
-  region has no quota for the model; every other resource stays in `location`.
+- **Region:** **Sweden Central** (`swedencentral`) for every resource (Arnav, 23 Oct), set once as the Bicep
+  parameter `location`. Chosen over Central India for model availability (GPT-5 mini listed for Global Standard and
+  the EU Data Zone) and closeness to the judges; the cost is ~130–150 ms extra latency when testing from India.
+  Service availability and model quota are confirmed with `az` before the first deployment.
 - **Resource group:** `rg-overlap`, one per `azd` environment (environment name `overlap`).
 - **Names:** `<abbreviation>-overlap-<token>`, where `<token>` is `uniqueString(subscription().id, resourceGroup().id)`
   cut to 6 characters, for names that must be globally unique. Storage and registry names drop the hyphens.
