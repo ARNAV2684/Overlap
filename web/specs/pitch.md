@@ -39,7 +39,7 @@ capped at 3.6 steps a second so 20× never strobes; lean, arm swing, knee bend a
 standing players breathe. The ball is described in §6.
 
 **Watch / Analyse** (the switch above the pitch, Analyse by default): Watch is the clean pitch, without the story
-director's overlays (tint, block, lines, links, lane, markers) and its caption and chips; match events, cards, labels
+director's overlays (tint, block, lines, links, lane, flank lanes, markers) and its caption and chips; match events, cards, labels
 and the ball's trail still show. Analyse adds the story.
 
 Labels (`PitchStage.tsx`, HTML projected from 3D): a **speed tag** when a player passes 31 km/h (name, shirt and the
@@ -69,12 +69,27 @@ current one has been up 4.5 s, except a goal, which switches at once.
 | Story | When (Auto) | On the pitch | Caption |
 |---|---|---|---|
 | **Team shape** (protect) | Within 5 match minutes of a goal, same half | The scoring team's formation lines linked back to front (each line left to right, each player to the nearest in the next line), a tint over its block, the defensive line now (solid) and before the goal (dashed) | "X drop deeper / push up / hold their shape", the line's change in metres from the 3 minutes before the goal to the last 45 s |
-| **Pass network** (attack) | A team has the ball in its final third ≥ 45 % of the last 25 s, or ≥ 66 % momentum share with possession | The stats engine's passing links (≥ 3 completed passes) drawn between the players' live positions, thicker for more; rings sized by passes; an animated chevron band down the lane it attacks | "X attack down the left/centre/right", the lane's share of the team's final-third actions in the last 6 minutes |
+| **Pass network** (attack) | A team has the ball in its final third ≥ 45 % of the last 25 s, or ≥ 66 % momentum share with possession | The stats engine's passing links (≥ 3 completed passes) drawn between the players' live positions, thicker for more; rings sized by passes; an animated chevron band down the lane it attacks, every chevron's tip towards the goal being attacked; the three flank lanes of the attacking third, each lit by its share, with its share as a label | "X attack down the left/centre/right", the lane's share of the team's final-third actions in the last 6 minutes |
 | **Territory** | Otherwise | Both teams' colours meeting at a wavy front, where the ball has lived (exponentially weighted over 3 minutes) | Each team's share of time with the ball in the other's half |
 
 Every number shown is computed from tracking, events or the stat panel; nothing is invented.
 
-**Calm palette (24 Oct):** the team shape and pass network lines, rings, block tint and lane band are drawn in the
+**Favourite club (S7):** `directStory(memory, sample, pinned, preferred)` takes the side of the viewer's favourite
+club (`MatchExperience` maps the Club preference to a side of this match, else null). With one, only that club's goals
+start a Team shape story and only its attacks start a Pass network story; a pinned Team shape or Pass network is about
+it. Territory, which is about both teams, is unchanged.
+
+**Attack arrows and flank lanes (S7):** the lane band (`LaneBand`, `scene/overlays.ts`) runs from just past halfway to
+the goal line the team attacks this half (`attacksEast(side, period)`), and its chevrons are bent with the tip ahead of
+the arms, so they point at that goal and move towards it, for home and away in both halves. Under it, `FlankLanes`
+draws the attacking third (team-frame x 66.7–100) as three stripes, left, centre and right as the team faces the goal
+(`attackingThird`, `scene/stage.ts`), each as bright as its share of the team's final-third actions (the strongest
+full, the others scaled, a faint floor so all three read), brightest at the goal end. `PitchStage` labels each lane
+with its share (`42% LEFT`) where the third starts; the main lane's label is filled in the focus blue. The numbers are
+the story's `flanks` (`attackChannel` over the last 6 minutes), the same as the caption's; for both teams at once,
+`flankShares` (the live rail, `screens.md` §2.7).
+
+**Calm palette (24 Oct):** the team shape and pass network lines, rings, block tint, lane band and flank lanes are drawn in the
 visual kit's blue (`--color-viz-focus`, `#3b8ef0`) at reduced strength, and the pass network shows its 24 strongest
 links only; the caption names the team. The territory tide keeps both teams' colours, faint at all times (opacity 0.1)
 and fuller (0.36) only while territory is the story.

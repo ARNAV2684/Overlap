@@ -1,7 +1,8 @@
 // stage.ts — The 3D match stage
 //
 // Purpose: own the WebGL renderer, the stadium lighting, the camera, the 22 figures and the ball, and draw the
-//          story director's picture (tide, shape lines, pass network, lane) on the grass every animation frame
+//          story director's picture (tide, shape lines, pass network, lane, flank lanes) on the grass every animation
+//          frame
 // Inputs:  a canvas; per frame: the interpolated sample, the story and the match memory
 // Outputs: createStage(): { setSetup, setView, update, project, resize, dispose }
 // Spec:    web/specs/pitch.md
@@ -15,16 +16,30 @@ import type { Booking, FieldEvent } from "@/lib/live/match-events";
 import type { MatchMemory } from "@/lib/live/match-memory";
 import type { BallPoint } from "@/lib/live/ball-flight";
 import { renderedTravel, type MotionSample } from "@/lib/live/motion";
-import { formationLines, territoryFront, type Story } from "@/lib/live/story";
+import { CHANNELS, formationLines, LANE_Y, territoryFront, type Channel, type Story } from "@/lib/live/story";
 import { BallTrail, BookingCards, BURST_S, EventMarkers, GoalBurst } from "./effects";
 import { createFigure, disposeFigureAssets, type Figure } from "./figure";
-import { Discs, Hull, LaneBand, Ribbons, TerritoryTide, type Segment } from "./overlays";
+import { Discs, FlankLanes, Hull, LaneBand, Ribbons, TerritoryTide, type Segment } from "./overlays";
 import { createPitch, PITCH_H, PITCH_W } from "./pitch";
 
 export type View = "broadcast" | "close" | "tactical";
 
 /** Pitch frame (0–100) to world metres. */
 export const toWorld = (x: number, y: number) => ({ x: x * 1.05 - PITCH_W / 2, z: y * 0.68 - PITCH_H / 2 });
+
+/**
+ * A team's attacking third in a period, in world metres: x from the start of the third to the goal line it attacks,
+ * and the centre z of each lane (left, centre, right in the team's own frame, as it faces that goal).
+ */
+export function attackingThird(side: Side, period: number) {
+  const east = attacksEast(side, period) ?? side === "home";
+  return {
+    east,
+    x0: toWorld(east ? 66.7 : 33.3, 0).x,
+    x1: toWorld(east ? 100 : 0, 0).x,
+    laneZ: (channel: Channel) => toWorld(0, east ? LANE_Y[channel] : 100 - LANE_Y[channel]).z,
+  };
+}
 
 const GK_KITS = ["#c6f432", "#ffb020", "#38e1ff", "#ff5cc8"];
 
@@ -204,12 +219,13 @@ export function createStage(canvas: HTMLCanvasElement): Stage {
   // Overlays, back to front
   const tide = new TerritoryTide();
   const hull = new Hull();
+  const flankLanes = new FlankLanes();
   const lane = new LaneBand();
   const lines = new Ribbons(40);
   const links = new Ribbons(60);
   const markers = new Ribbons(8, "#ffffff", 2);
   const nodes = new Discs(11);
-  scene.add(tide.object, hull.object, lane.object, lines.object, links.object, markers.object, nodes.object);
+  scene.add(tide.object, hull.object, flankLanes.object, lane.object, lines.object, links.object, markers.object, nodes.object);
   const cards = new BookingCards();
   const eventMarks = new EventMarkers();
   const burst = new GoalBurst();
@@ -322,6 +338,7 @@ export function createStage(canvas: HTMLCanvasElement): Stage {
     const nodePts: { x: number; z: number; r: number }[] = [];
     let hullPts: { x: number; z: number }[] = [];
     let laneOn = false;
+    let flanksOn = false;
 
     if (kind === "protect" && story?.side) {
       const side = story.side;
@@ -383,20 +400,28 @@ export function createStage(canvas: HTMLCanvasElement): Stage {
           if (p) nodePts.push({ ...p, r: 1.3 + (n.passes / maxPasses) * 1.8 });
         }
       }
+      const third = attackingThird(side, sample.period);
       if (story.channel) {
-        const east = attacksEast(side, sample.period) ?? side === "home";
-        // Team-frame lane (left = small y facing the opponent) to pitch frame, then world
-        const teamY = story.channel === "left" ? 16.7 : story.channel === "right" ? 83.3 : 50;
-        const pitchY = east ? teamY : 100 - teamY;
-        const z = toWorld(0, pitchY).z;
-        const x0 = toWorld(east ? 52 : 48, 0).x;
-        const x1 = toWorld(east ? 100 : 0, 0).x;
-        lane.set(x0, x1, z, PITCH_H / 3 - 2, STORY_BLUE, u.time, 0.35);
+        // The main lane's arrows run from halfway to the goal being attacked
+        const x0 = toWorld(third.east ? 52 : 48, 0).x;
+        lane.set(x0, third.x1, third.laneZ(story.channel), PITCH_H / 3 - 2, STORY_BLUE, u.time, 0.35);
         laneOn = true;
+      }
+      if (story.flanks) {
+        // Attack by flank: the three lanes of the attacking third, each lit by its share
+        const share = new Map(story.flanks.map((f) => [f.channel, f.share]));
+        const width = PITCH_H / 3 - 0.8;
+        flankLanes.set(
+          CHANNELS.map((c) => ({ x0: third.x0, x1: third.x1, z: third.laneZ(c), width, share: share.get(c) ?? 0 })),
+          STORY_BLUE,
+          0.3,
+        );
+        flanksOn = true;
       }
     }
 
     if (!laneOn) lane.set(0, 1, 0, 1, "#ffffff", u.time, 0);
+    if (!flanksOn) flankLanes.set([], STORY_BLUE, 0);
     lines.set(lineSegs, STORY_BLUE, lineSegs.length ? 0.7 : 0);
     links.set(linkSegs, STORY_BLUE, linkSegs.length ? 0.6 : 0);
     markers.set(markerSegs, "#ffffff", markerSegs.length ? 0.7 : 0);
@@ -494,7 +519,7 @@ export function createStage(canvas: HTMLCanvasElement): Stage {
         }
         cards.update(u.bookings, booked, camera, u.time);
         // Watch mode: the clean pitch, without the story director's overlays
-        [tide, hull, lane, lines, links, markers, nodes].forEach((o) => (o.object.visible = u.analysis && o.object.visible));
+        [tide, hull, flankLanes, lane, lines, links, markers, nodes].forEach((o) => (o.object.visible = u.analysis && o.object.visible));
         if (u.analysis) drawStory(u, sample);
       } else {
         ball.visible = ballShadow.visible = false;
@@ -579,7 +604,7 @@ export function createStage(canvas: HTMLCanvasElement): Stage {
       clearFigures();
       disposeFigureAssets();
       pitch.dispose();
-      [tide, hull, lane, lines, links, markers, nodes, cards, eventMarks, burst, trail].forEach((o) => o.dispose());
+      [tide, hull, flankLanes, lane, lines, links, markers, nodes, cards, eventMarks, burst, trail].forEach((o) => o.dispose());
       ball.geometry.dispose();
       (ball.material as THREE.Material).dispose();
       ballTex.dispose();

@@ -76,6 +76,20 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Native form controls follow the theme too (the viewer bar uses the site's own dropdown, components/ui/Select.tsx;
+   this is the fallback for any native control left, so its open list is never the browser's white one in dark) */
+select,
+input,
+textarea,
+button {
+  color-scheme: inherit;
+}
+select option,
+select optgroup {
+  background-color: var(--ov-surface);
+  color: var(--ov-ink);
+}
+
 /* A card: an almost invisible border and wash over the canvas */
 .ov-card {
   border-radius: var(--radius-card);
@@ -241,6 +255,38 @@ body {
   background: rgb(14 14 16 / 0.75);
   border-radius: 6px;
   padding: 3px 7px;
+}
+/* Attack by flank: a lane's share, on the grass at the start of the attacking third */
+.ov-flank {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: rgb(255 255 255 / 0.7);
+  background: rgb(14 14 16 / 0.6);
+  border: 1px solid rgb(59 142 240 / 0.35);
+  border-radius: 6px;
+  padding: 2px 7px;
+  animation: ov-fade 0.3s ease-out both;
+}
+.ov-flank b {
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0;
+  color: #fff;
+}
+.ov-flank[data-top="true"] {
+  border-color: #3b8ef0;
+  background: rgb(59 142 240 / 0.85);
+  color: #fff;
 }
 .ov-stage[data-webgl="unavailable"] .ov-stage-fallback {
   display: grid;

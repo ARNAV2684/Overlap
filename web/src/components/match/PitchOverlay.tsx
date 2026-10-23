@@ -10,7 +10,7 @@
 
 import { useEffect, useState } from "react";
 import { keyNumber, overlayText } from "@/lib/live/insights";
-import type { StoryKind } from "@/lib/live/story";
+import type { Story, StoryKind } from "@/lib/live/story";
 import { useScoreboard } from "@/lib/store-hooks";
 import { useExperience, useFeed } from "@/providers/MatchExperience";
 import { usePreferences } from "@/providers/PreferencesProvider";
@@ -42,6 +42,31 @@ export function VerifiedBadge({ verified, fallback }: { verified: boolean; fallb
   return (
     <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2 py-0.5 font-mono text-[9px] font-black uppercase tracking-[1px] text-white/60">
       {fallback ? "Template · checked" : "Unverified"}
+    </span>
+  );
+}
+
+/**
+ * Attack by flank, folded: three small lanes (left, centre, right as the team faces the goal), each filled to its
+ * share, the main lane brightest, so the split stays readable after the caption folds.
+ */
+export function FlankBar({ flanks, channel }: { flanks: NonNullable<Story["flanks"]>; channel?: Story["channel"] }) {
+  const label = flanks.map((f) => `${f.channel} ${f.share}%`).join(", ");
+  return (
+    <span className="flex shrink-0 items-end gap-[3px]" role="img" aria-label={`Attack by flank: ${label}`} title={`Attack by flank: ${label}`}>
+      {flanks.map((f) => (
+        <span key={f.channel} className="flex flex-col items-center gap-[2px]">
+          <span className="relative block h-[14px] w-[7px] overflow-hidden rounded-[2px] bg-white/[0.14]">
+            <span
+              className={`absolute inset-x-0 bottom-0 rounded-[2px] ${f.channel === channel ? "bg-viz-focus" : "bg-white/55"}`}
+              style={{ height: `${Math.max(8, f.share)}%` }}
+            />
+          </span>
+          <span className={`font-mono text-[7px] font-black leading-none ${f.channel === channel ? "text-white" : "text-white/45"}`}>
+            {f.channel[0].toUpperCase()}
+          </span>
+        </span>
+      ))}
     </span>
   );
 }
@@ -98,6 +123,7 @@ function CaptionCard({
         {dot}
         <span className="truncate text-[12px] font-bold">{story.title}</span>
         {story.metric && <span className="font-mono text-[12px] font-black text-accent tabular">{story.metric.value}</span>}
+        {story.flanks && <FlankBar flanks={story.flanks} channel={story.channel} />}
       </button>
     );
   }
