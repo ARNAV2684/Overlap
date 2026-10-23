@@ -21,7 +21,7 @@ TopNav.tsx`) has Live, Matches, How it works and the theme switch on every page.
 `components/match/MatchScreen.tsx`. Desktop: the pitch column and a 380 px side column, analytics underneath. Phones:
 one column; the story chips and caption move under the pitch. Above the pitch, "Match centre" (Live or Recorded
 tracking) and the **Watch / Analyse** switch (`pitch.md` §1.2); Analyse is the default, and Watch hides the story
-caption and chips. Under the pitch, the tracking heatmap (§2.6).
+caption and chips. The tracking heatmap (§2.6) is in the Players tab.
 
 ### 2.1 Score header
 
@@ -53,19 +53,17 @@ Over the pitch for replays: play / pause, 1× · 5× · 20×, a progress line an
 
 ### 2.5 Analytics
 
-**From `PLAN_web_football-revamp` S3** the seven tabs become four, each answering one football question. Momentum
-and key events move up into a story strip under the score header (the match at a glance).
+**From `PLAN_web_football-revamp` S3** the analytics are five tabs, each answering one football question, with a
+team toggle on the per-team visuals (no dropdowns):
 
-| Tab | The question | Charts ([`charts.md`](charts.md)) |
+| Tab | The question | Visuals ([`charts.md`](charts.md)) |
 |---|---|---|
-| **Attack** | Who created more, and was it quality or volume? | xG race (§11), shot map sized by xG (§4), attacking channels (§12), team stats |
-| **Possession** | How did each side move the ball? | Pass network (§7), pass map (§6), territory (zones) |
-| **Defence** | Where and how hard did they press? | Pressing grid (§9), PPDA against press height (§13), defensive actions |
-| **Players** | Who did the work? | Match player table, tracking heatmap (§10), physicals from tracking |
-
-Until S3 ships, the seven tabs below stay: Momentum, Team stats, Shot map, Pass network, Pressing, Pass map, Key
-events. Per-team charts have a home/away switch. A card in the feed opens the chart it refers to
-(`visual.component`) and highlights its event; a heatmap card scrolls to the tracking heatmap.
+| **Story** | What happened | Momentum (§2), key events (§8) |
+| **Attack** | Who created more | xG race (§11), shot map sized by xG (§4), attack by flank (§12) |
+| **Possession** | How they moved the ball | Pass network (§7), zone dominance (§12), pass map (§6) |
+| **Defence** | Where they pressed | Pressing zones with the press line (§9), team stats (§3) |
+| **Players** | Who did the work | Tracking heatmap (§10), the match player table | A card in the feed opens the chart it refers to
+(`visual.component`) and highlights its event; a heatmap card opens the Players tab.
 
 ### 2.6 Tracking heatmap
 
@@ -110,7 +108,7 @@ analyst) and language, from the insights history (`realtime.md` §4).
 
 The pipeline in six steps, the seven agents, and what each pitch story means.
 
-## 8. League `/league` (revamp S4)
+## 8. League `/league` (revamp S4, built)
 
 From `GET /api/season/<id>` (`realtime.md` §7). Every number is from the season document.
 - **Table:** position, played, won, drawn, lost, goals, goal difference, points, form, and **expected points** next
