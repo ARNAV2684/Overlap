@@ -71,7 +71,9 @@ class AzureTranslator:
             raise TranslationError(f"translator failed for {to}") from e
         out = []
         for item in items or []:
-            match = [t for t in (getattr(item, "translations", None) or []) if getattr(t, "language", None) == to]
+            # SDK 1.0 names the target language `to`; 2.0 named it `language`
+            match = [t for t in (getattr(item, "translations", None) or [])
+                     if (getattr(t, "to", None) or getattr(t, "language", None)) == to]
             if len(match) != 1 or not isinstance(match[0].text, str) or not match[0].text.strip():
                 raise TranslationError(f"translator returned no {to} text")
             out.append(match[0].text)
