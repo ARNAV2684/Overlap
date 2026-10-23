@@ -15,6 +15,7 @@ import { useExperience, useFeed } from "@/providers/MatchExperience";
 import { usePreferences } from "@/providers/PreferencesProvider";
 import { PitchStage } from "@/components/pitch3d/PitchStage";
 import { AiFeed } from "./AiFeed";
+import { LiveRail } from "./LiveRail";
 import { AnalysisPanel, TAB_FOR_COMPONENT, type Focus } from "./AnalysisPanel";
 import { PitchOverlay, PitchUnderlay } from "./PitchOverlay";
 import { PlayerFocus } from "./PlayerFocus";
@@ -84,6 +85,7 @@ export function MatchScreen({ intro, initialSpeed }: { intro?: ReactNode; initia
         </div>
         <aside className="flex min-w-0 flex-col gap-4">
           <ViewerBar />
+          <LiveRail />
           <PlayerFocus />
           <AiFeed onShowChart={showChart} />
         </aside>

@@ -19,6 +19,7 @@ import { ShotMap } from "@/components/charts/ShotMap";
 import { XgRace } from "@/components/charts/XgRace";
 import { ZoneDominance } from "@/components/charts/ZoneDominance";
 import { Toggle } from "@/components/viz/Viz";
+import { LiveRailView } from "@/components/match/LiveRail";
 
 export function VizPreview({ setup, panel }: { setup: MatchSetup; panel: StatPanel }) {
   const [side, setSide] = useState<Side>("home");
@@ -35,6 +36,9 @@ export function VizPreview({ setup, panel }: { setup: MatchSetup; panel: StatPan
   return (
     <main className="mx-auto flex max-w-[1200px] flex-col gap-4 px-3 py-6 sm:px-6">
       <p className="ov-eyebrow">Development preview · {setup.match_id} at {panel.clock}</p>
+      <div className="max-w-[380px]">
+        <LiveRailView setup={setup} panel={panel} heavyPanel={panel} />
+      </div>
       <XgRace home={teams.home} away={teams.away} homeShots={xgShots(heavy, "home")} awayShots={xgShots(heavy, "away")} minute={panel.match_ms / 60_000} clock={panel.clock} />
       <ShotMap shots={xgShots(heavy, side)} names={names} team={team.name} controls={toggle} />
       <FlankAttack team={team.name} zones={heavy.zones[side]} shots={xgShots(heavy, side)} controls={toggle} />
