@@ -278,7 +278,9 @@ class JobStore:
         if found is None:
             return None
         current, etag = found
-        if current["source_hash"] != h:
+        # A job document from an older schema (no source_hash) is treated like changed content: a conflict for this
+        # moment, never a crash that stops the poller for every match
+        if current.get("source_hash") != h:
             raise SourceConflict(moment["moment_id"])
         if current["state"] in TERMINAL:
             return None
