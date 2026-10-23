@@ -385,19 +385,34 @@ a file for the season data, the stats engine as season producer, reference clubs
 - **Visual reference (D-05):** from browser screenshots of Azeem's own design layouts (the zone grids, the side
   panel, the title race, goal timing). The artifacts themselves could not be unpacked.
 
+**Second session (23 Oct, branch `web/league-page`, after #86):**
+- **M4, league and club pages:**
+  - `/league`: the table with expected points and the gap, the title race by matchweek with result dots, the style
+    map (press height against pressing rate, average lines, named quadrants) and the leaders.
+  - `/club/<id>`: Club DNA, where it presses (season zones and busiest zones), chances created and conceded sized by
+    xG, goal timing for and against, and the squad.
+  - `screens.md` §2.5 now describes the five tabs.
+- **M5, player and compare pages:**
+  - `/player/<id>`: the scout card (twelve attributes on the five-step scale, role, foot, overall), a percentile
+    radar with the group median ring, per-90 bars against the group median, and season maps (shots, touches,
+    defensive actions).
+  - `/compare?a=&b=`: both players on one radar, per-90 values and attributes side by side.
+- **Seen in a browser** (dark theme, desktop):
+  - `/league`, `/club/KES`, `/club/WEX`, `/player/KES-09`, `/compare?a=KES-09&b=BRM-09` and `/dev/viz`, including
+    the toggle, key, label and clock fixes;
+  - the attack-by-flank lanes calmed down;
+  - the central lanes renamed Centre-left and Centre-right.
+- **Checks:** web 520 tests, lint, typecheck and `next build` clean.
+
 **Left to do, in order:**
-1. **M3 check:** look at `/dev/viz` and one live or replayed match (`npm run dev`) in both themes and at phone
-   width. The last fixes were not seen in a browser:
-   - the toggle colours;
-   - unique list keys;
-   - the smaller ATTACK label on half pitches;
-   - the xG race sentence using the match clock.
-2. **M3 figures:** cleaner 3D players (`web/src/components/pitch3d/scene/figure.ts`). Azeem: they look like a video
-   game; calmer proportions, materials and motion are wanted. Not started.
-3. **M3 player focus:** `PlayerFocus.tsx` should become a link to the player page once M5 exists.
-4. **M4, league and club pages:** `screens.md` §8–§9, `charts.md` §14. The data and routes are ready
-   (`LeagueView`, `TeamView`). Your title-race and goal-timing designs fit them directly.
-5. **M5, player and compare pages:** `screens.md` §10–§11 (`PlayerView` is ready).
-6. **M6, optional:** AI season notes (agents) and the season document on Azure.
-7. **Close-out:** AC-06 to AC-08 and AC-10 still need their evidence.
+1. **Cleaner 3D player figures** (`web/src/components/pitch3d/scene/figure.ts`, M3). Not started: it needs a match
+   playing (the local stack) to judge. The figures look like a video game; calmer proportions, materials and motion
+   are wanted.
+2. **Player focus link:** `PlayerFocus.tsx` should link the followed player to `/player/<id>`. Season ids are the
+   match ids, so the link exists for the eight generated clubs.
+3. **Light theme and phone width:** check the new pages there (only dark desktop was seen). The visuals keep a dark
+   canvas in both themes by design.
+4. **Season tests:** page-level tests for the season screens (today only the data views and routes are tested).
+5. **M6, optional:** AI season notes through the agents; the season document in Cosmos on Azure.
+6. **Close-out:** AC-06 to AC-08 and AC-10 still need their evidence.
 
