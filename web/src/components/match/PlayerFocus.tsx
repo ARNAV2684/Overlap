@@ -7,9 +7,12 @@
 // Inputs:  the followed player from preferences; the match memory
 // Outputs: UI, or nothing when nobody is followed
 // Spec:    web/specs/screens.md §3.2
+//
+// The link to the season scout card shows only once the season route confirms the player has a page: players of the
+// reference clubs are left out of the season document (stats/specs/season.md §6), so their link would lead to a 404.
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { playerNumbers } from "@/lib/live/charts";
 import { useScoreboard } from "@/lib/store-hooks";
 import { useExperience } from "@/providers/MatchExperience";
@@ -25,6 +28,18 @@ export function PlayerFocus() {
     void tick;
     return prefs.player ? playerNumbers(memory.events(), prefs.player, memory.heavyPanel()) : null;
   }, [tick, memory, prefs.player]);
+  const seasonId = setup?.season_id ?? null;
+  const [paged, setPaged] = useState<{ key: string; ok: boolean } | null>(null);
+  const pageKey = seasonId && prefs.player ? `${seasonId}/${prefs.player}` : null;
+  useEffect(() => {
+    if (!pageKey) return;
+    const ctl = new AbortController();
+    fetch(`/api/season/${pageKey.replace("/", "/player/")}`, { signal: ctl.signal })
+      .then((r) => setPaged({ key: pageKey, ok: r.ok }))
+      .catch(() => {});
+    return () => ctl.abort();
+  }, [pageKey]);
+  const hasPage = paged !== null && paged.key === pageKey && paged.ok;
   if (!meta || !numbers || !setup) return null;
   const team = setup.teams[meta.side];
 
@@ -48,10 +63,15 @@ export function PlayerFocus() {
             {meta.name}
           </p>
           <p className="ov-sub">
-            {meta.pos} · {team.name} ·{" "}
-            <Link href={`/player/${prefs.player}`} className="text-viz-focus hover:underline">
-              Season scout card →
-            </Link>
+            {meta.pos} · {team.name}
+            {hasPage && (
+              <>
+                {" · "}
+                <Link href={`/player/${prefs.player}`} className="text-viz-focus hover:underline">
+                  Season scout card →
+                </Link>
+              </>
+            )}
           </p>
         </div>
         <button type="button" onClick={() => update({ player: null, mode: "casual" })} className="text-[12px] font-semibold text-ink/40 hover:text-ink/80">
