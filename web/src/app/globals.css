@@ -24,6 +24,17 @@
   --color-shot-missed: #7a7a92;
   --color-shot-blocked: #e8a838;
   --color-shot-woodwork: #d4637a;
+  /* Analysis visuals (design-system.md §2.1): a near-black canvas in both themes, one focus blue, a five-step blue
+     ramp for zone grids and heat, red for the other side of a comparison */
+  --color-viz-bg: #0a0a0a;
+  --color-viz-line: rgb(255 255 255 / 0.1);
+  --color-viz-focus: #3b8ef0;
+  --color-viz-against: #e5484d;
+  --color-viz-1: #101826;
+  --color-viz-2: #152846;
+  --color-viz-3: #1c3d6e;
+  --color-viz-4: #2a5ea6;
+  --color-viz-5: #3b8ef0;
 
   --font-sans: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", monospace;
@@ -445,3 +456,62 @@ body {
 .ov-fade-in {
   animation: ov-fade 0.3s ease-out both;
 }
+
+/* Analysis visuals (design-system.md §4.1): a raised card, pill chips, a two-way toggle, stat cells, a near-black
+   pitch with rounded corners, and the side panel */
+.viz-card {
+  border-radius: var(--radius-card);
+  border: 1px solid rgba(var(--ov-ink-rgb), 0.08);
+  background: var(--ov-surface);
+  padding: 18px 18px 16px;
+}
+.viz-chip {
+  border-radius: 999px;
+  border: 1px solid rgba(var(--ov-ink-rgb), 0.1);
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(var(--ov-ink-rgb), 0.6);
+  transition: background-color 120ms, color 120ms;
+}
+.viz-chip:hover { color: rgba(var(--ov-ink-rgb), 0.85); }
+.viz-chip-on {
+  background: var(--ov-raised);
+  border-color: rgba(var(--ov-ink-rgb), 0.16);
+  color: var(--ov-ink);
+}
+.viz-toggle {
+  display: inline-flex;
+  border-radius: 999px;
+  background: rgba(var(--ov-ink-rgb), 0.06);
+  padding: 3px;
+}
+.viz-toggle > button {
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(var(--ov-ink-rgb), 0.55);
+}
+.viz-toggle > .viz-toggle-on {
+  background: var(--ov-raised);
+  color: var(--ov-ink);
+}
+.viz-cell {
+  border-radius: 10px;
+  border: 1px solid rgba(var(--ov-ink-rgb), 0.08);
+  background: rgba(var(--ov-ink-rgb), 0.03);
+  padding: 8px 10px;
+}
+.viz-pitch { border-radius: 10px; overflow: hidden; }
+.viz-panel {
+  height: 100%;
+  border-radius: 12px;
+  border: 1px solid rgba(var(--ov-ink-rgb), 0.08);
+  background: rgba(var(--ov-ink-rgb), 0.025);
+  padding: 16px;
+}
+.viz-svg-label { fill: rgb(255 255 255 / 0.45); font-family: var(--font-mono); font-size: 2.2px; font-weight: 700; letter-spacing: 0.3px; }
+.viz-svg-count { fill: rgb(255 255 255 / 0.92); font-family: var(--font-mono); font-size: 3.1px; font-weight: 800; }
+.viz-svg-pill { fill: #fff; font-family: var(--font-mono); font-size: 2.3px; font-weight: 700; letter-spacing: 0.25px; }
+.viz-svg-axis { fill: rgb(255 255 255 / 0.4); font-family: var(--font-mono); font-size: 2.4px; }

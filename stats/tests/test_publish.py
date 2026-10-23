@@ -48,12 +48,26 @@ def test_heavy_blocks_every_minute_and_at_both_period_ends(panels):
     assert len(minutes) == panels[-1]["match_ms"] // 60_000 + 1
     assert len(heavy) == len(minutes) + 2                      # plus the two PeriodEnd panels
     h = panels[-1]["heavy"]
-    assert set(h) == {"momentum_buckets", "pass_network", "pressing_grid", "zones"}   # no tracking in the fixture
+    assert set(h) == {"momentum_buckets", "pass_network", "pressing_grid", "zones", "shots"}   # no tracking here
     assert len(h["pressing_grid"]["home"]) == 9 and len(h["pressing_grid"]["home"][0]) == 6
     assert len(h["zones"]["away"]) == 3 and len(h["zones"]["away"][0]) == 6
     assert all(link["count"] >= 3 for link in h["pass_network"]["home"]["links"])
     buckets = [(b["period"], b["bucket"]) for b in h["momentum_buckets"]]
     assert buckets == sorted(set(buckets)) and (1, 0) in buckets and (2, 9) in buckets
+
+
+def test_heavy_shots_match_the_light_panel(panels):
+    """Every shot so far with its xG: the counts and xG totals agree with the light panel (publishing.md §2)."""
+    last = panels[-1]
+    for side in ("home", "away"):
+        shots = last["heavy"]["shots"][side]
+        assert len(shots) == last["teams"][side]["shots"]
+        assert abs(sum(s["xg"] for s in shots) - last["teams"][side]["xg"]) <= 0.01 * len(shots) + 0.01
+        assert [s["match_ms"] for s in shots] == sorted(s["match_ms"] for s in shots)
+        assert all(s["event_id"].startswith("SYN-1017-") and 0 < s["xg"] <= 0.95 for s in shots)
+        assert all(s["outcome"] in {"goal", "saved", "missed", "blocked", "woodwork"} for s in shots)
+    goals = sum(s["outcome"] == "goal" for side in ("home", "away") for s in last["heavy"]["shots"][side])
+    assert goals == last["score"]["home"] + last["score"]["away"]
 
 
 def test_every_panel_has_the_contract_shape(panels):

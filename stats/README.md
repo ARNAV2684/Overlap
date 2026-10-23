@@ -41,6 +41,7 @@ Starting definitions are in [`CONTRACTS.md` §8](../CONTRACTS.md#8-metric-defini
   - S2: rolling windows, stat panels every match second (heavy block every minute), `match_state`, and live mode.
   - S3: triggers, evidence packs and moment documents, written once to Cosmos `moments` with stable ids. `sprint`
     is deferred. Season S1 gives 19.7 moments a match. How the agents use them: [`agents-guide.md`](agents-guide.md).
+  - Revamp ([`PLAN_web_football-revamp`](../plans/active/PLAN_web_football-revamp.md)): every shot with its xG in the heavy block (`heavy.shots`), and the season document (`season.py`, [`specs/season.md`](specs/season.md)) behind the league, club and player pages.
 - **Next:** S4, the Azure deployment, once its infrastructure exists.
 - **Plan:** [`PLAN_stats_engine`](../plans/active/PLAN_stats_engine.md).
 
@@ -55,6 +56,7 @@ uv run python main.py replay tests/fixtures/SYN-1017          # one match: its n
 uv run python main.py replay ../data/seasons/S1 --out s1.json # a whole generated season
 uv run python main.py replay tests/fixtures/SYN-1017 --panels # the stat panels it would send
 uv run python main.py replay tests/fixtures/SYN-1017 --moments # the moment documents it would write
+uv run python main.py season ../data/seasons/S1 --world ../data/generated/world/S1.json --out ../web/data/season/season-S1.json
 ```
 
 **Live**, beside the local stack (`infra/specs/local-development.md` §5), with the settings from `infra/local/env.example`:

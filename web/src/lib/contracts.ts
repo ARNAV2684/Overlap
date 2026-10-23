@@ -320,11 +320,27 @@ export const passNetworkSchema = z.strictObject({
   links: z.array(z.strictObject({ from: playerId, to: playerId, count })),
 });
 
+/** One shot with its xG, in the shooting team's frame (`x` = 100 is the goal it attacks). */
+export const heavyShotSchema = z.strictObject({
+  event_id: eventId,
+  player_id: playerId.nullable(),
+  period,
+  match_ms: ms,
+  x: coordinate,
+  y: coordinate,
+  xg: z.number().min(0).max(1),
+  outcome: z.enum(["goal", "saved", "missed", "blocked", "woodwork"]),
+  situation: z.string().min(1),
+  body_part: z.string().min(1).nullable(),
+});
+
 export const heavyBlockSchema = z.strictObject({
   momentum_buckets: z.array(momentumBucketSchema),
   pass_network: bySide(passNetworkSchema),
   pressing_grid: bySide(countGrid(PRESSING_COLS, PRESSING_ROWS)),
   zones: bySide(countGrid(ZONE_CHANNELS, ZONE_COLS)),
+  /** Every shot so far, oldest first. Absent on panels archived before the stats engine sent it. */
+  shots: bySide(z.array(heavyShotSchema)).optional(),
   /** Only with tracking: keyed by player id. */
   players: z
     .record(
@@ -485,3 +501,136 @@ export function parseEnvelope(raw: unknown): ParseResult {
       return { ok: true, envelope: { ...rest, kind, data } };
   }
 }
+
+// ---------------------------------------------------------------------------------------------------------------
+// Season document (CONTRACTS.md §11). Built by the stats engine from a finished season run
+// (stats/season.py; every rule in stats/specs/season.md). Read through /api/season/* (web/specs/realtime.md §7)
+// ---------------------------------------------------------------------------------------------------------------
+
+const nullableNumber = z.number().nullable();
+const result = z.enum(["W", "D", "L"]);
+
+export const seasonShotSchema = z.strictObject({
+  match_id: matchId,
+  player_id: playerId.nullable().optional(),
+  x: coordinate,
+  y: coordinate,
+  xg: z.number().min(0).max(1),
+  outcome: z.enum(["goal", "saved", "missed", "blocked", "woodwork"]),
+  situation: z.string().nullable(),
+});
+
+export const seasonDnaSchema = z.strictObject({
+  dial: z.string().min(1),
+  designed: z.number(),
+  designed_rank: z.number().int().positive(),
+  measured_key: z.string().min(1),
+  measured_label: z.string().min(1),
+  measured: z.number(),
+  measured_rank: z.number().int().positive(),
+});
+
+export const seasonTeamSchema = z.strictObject({
+  team_id: teamId,
+  name: z.string().min(1),
+  colours: z.strictObject({ primary: hexColour, secondary: hexColour }),
+  formation: z.string().nullable(),
+  style: z.record(z.string(), z.number()),
+  reference: z.boolean(),
+  table: z.strictObject({
+    position: z.number().int().positive(),
+    played: count,
+    won: count,
+    drawn: count,
+    lost: count,
+    goals_for: count,
+    goals_against: count,
+    goal_difference: z.number().int(),
+    points: count,
+  }),
+  xpts: z.number(),
+  xpts_position: z.number().int().positive(),
+  xg_for: z.number(),
+  xg_against: z.number(),
+  form: z.array(result),
+  position_by_matchweek: z.array(z.number().int().positive()),
+  points_by_matchweek: z.array(count),
+  per_match: z.record(z.string(), z.number()),
+  season: z.record(z.string(), nullableNumber),
+  dna: z.array(seasonDnaSchema),
+  pressing_grid: countGrid(PRESSING_COLS, PRESSING_ROWS),
+  zones: countGrid(ZONE_CHANNELS, ZONE_COLS),
+  goals_by_15min: z.strictObject({ for: z.array(count).length(6), against: z.array(count).length(6) }),
+  shots_for: z.array(seasonShotSchema),
+  shots_against: z.array(seasonShotSchema),
+});
+
+export const seasonMatchSchema = z.strictObject({
+  match_id: matchId,
+  matchweek: z.number().int().positive(),
+  home: teamId,
+  away: teamId,
+  score: z.strictObject({ home: count, away: count }),
+  xg: z.strictObject({ home: z.number(), away: z.number() }),
+  xpts: z.strictObject({ home: z.number(), away: z.number() }),
+  win_probability: z.strictObject({ home: z.number(), draw: z.number(), away: z.number() }),
+});
+
+export const seasonPlayerSchema = z.strictObject({
+  player_id: playerId,
+  team_id: teamId,
+  name: z.string().min(1),
+  pos: z.string().min(1),
+  group: z.string().nullable(),
+  shirt: z.number().int().positive().nullable().optional(),
+  role: z.string().nullable(),
+  preferred_foot: z.string().nullable(),
+  weak_foot: z.number().int().nullable(),
+  overall: z.number().nullable(),
+  attr: z.record(z.string(), z.number()),
+  apps: count,
+  starts: count,
+  minutes: count,
+  totals: z.record(z.string(), z.number()),
+  per90: z.record(z.string(), z.number()),
+  rates: z.record(z.string(), nullableNumber),
+  shots: z.array(seasonShotSchema.omit({ player_id: true })),
+  touch_zones: countGrid(ZONE_CHANNELS, ZONE_COLS),
+  defensive_zones: countGrid(ZONE_CHANNELS, ZONE_COLS),
+  percentiles: z.record(z.string(), z.number().int().min(0).max(100)).nullable(),
+  peer_count: count.optional(),
+  low_sample: z.boolean(),
+});
+
+export const seasonDocumentSchema = z.strictObject({
+  id: z.string().min(1),
+  kind: z.literal("season"),
+  schema_version: z.literal(1),
+  season_id: seasonId,
+  world_version: z.number().int().nullable(),
+  built_from: z.strictObject({
+    run: z.string().min(1),
+    seed: z.number().int().nullable(),
+    matches: count,
+    world: z.boolean(),
+  }),
+  hidden_teams: z.array(teamId),
+  rules: z.strictObject({
+    min_minutes_for_percentiles: count,
+    groups: z.record(z.string(), z.string()),
+    radar: z.record(z.string(), z.array(z.string())),
+  }),
+  dna_correlations: z.record(z.string(), nullableNumber),
+  matchweeks: z.array(z.number().int().positive()),
+  teams: z.array(seasonTeamSchema),
+  matches: z.array(seasonMatchSchema),
+  players: z.array(seasonPlayerSchema),
+});
+
+export type SeasonShot = z.infer<typeof seasonShotSchema>;
+export type SeasonDna = z.infer<typeof seasonDnaSchema>;
+export type SeasonTeam = z.infer<typeof seasonTeamSchema>;
+export type SeasonMatch = z.infer<typeof seasonMatchSchema>;
+export type SeasonPlayer = z.infer<typeof seasonPlayerSchema>;
+export type SeasonDocument = z.infer<typeof seasonDocumentSchema>;
+export type HeavyShot = z.infer<typeof heavyShotSchema>;

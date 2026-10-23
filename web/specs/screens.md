@@ -53,8 +53,18 @@ Over the pitch for replays: play / pause, 1× · 5× · 20×, a progress line an
 
 ### 2.5 Analytics
 
-Tabs under the pitch, specified in [`charts.md`](charts.md): Momentum, Team stats, Shot map, Pass network, Pressing,
-Pass map, Key events. Per-team charts have a home/away switch. A card in the feed opens the chart it refers to
+**From `PLAN_web_football-revamp` S3** the seven tabs become four, each answering one football question. Momentum
+and key events move up into a story strip under the score header (the match at a glance).
+
+| Tab | The question | Charts ([`charts.md`](charts.md)) |
+|---|---|---|
+| **Attack** | Who created more, and was it quality or volume? | xG race (§11), shot map sized by xG (§4), attacking channels (§12), team stats |
+| **Possession** | How did each side move the ball? | Pass network (§7), pass map (§6), territory (zones) |
+| **Defence** | Where and how hard did they press? | Pressing grid (§9), PPDA against press height (§13), defensive actions |
+| **Players** | Who did the work? | Match player table, tracking heatmap (§10), physicals from tracking |
+
+Until S3 ships, the seven tabs below stay: Momentum, Team stats, Shot map, Pass network, Pressing, Pass map, Key
+events. Per-team charts have a home/away switch. A card in the feed opens the chart it refers to
 (`visual.component`) and highlights its event; a heatmap card scrolls to the tracking heatmap.
 
 ### 2.6 Tracking heatmap
@@ -99,3 +109,44 @@ analyst) and language, from the insights history (`realtime.md` §4).
 ## 7. How it works `/how-it-works`
 
 The pipeline in six steps, the seven agents, and what each pitch story means.
+
+## 8. League `/league` (revamp S4)
+
+From `GET /api/season/<id>` (`realtime.md` §7). Every number is from the season document.
+- **Table:** position, played, won, drawn, lost, goals, goal difference, points, form, and **expected points** next
+  to points with the gap ("deserved table"). The reference clubs are in the table without a link.
+- **Title race:** points by matchweek for every club, the leader's line strongest.
+- **Style map:** every club as a dot on press height (across) against pressing rate (up), in its colours: who presses
+  high, who sits deep.
+- **Leaders:** goals, npxG, assists, key passes, with links to the player pages.
+
+## 9. Club `/club/<teamId>` (revamp S4)
+
+From `GET /api/season/<id>/team/<teamId>`.
+- **Header:** crest colours, name, formation, table line and form.
+- **Club DNA:** each designed style dial beside the measured season value that follows it, with both ranks among the
+  10 clubs. A dial is called "read from the data" only where `dna_correlations` is 0.6 or more; the others say the
+  measure doesn't track it yet.
+- **Where they press:** the season pressing grid. **Where they play:** touch zones.
+- **Chances:** shots for and against on two half-pitches sized by xG, with xG for and against per match.
+- **When goals come:** goals for and against by 15-minute bucket.
+- **Squad:** players by minutes, with position, role, goals, assists and npxG, linking to their pages.
+
+## 10. Player `/player/<playerId>` (revamp S5)
+
+From `GET /api/season/<id>/player/<playerId>`.
+- **Scout card:** name, club, position, role, foot (and weak-foot quality), overall, and the twelve attributes on a
+  1–100 scale, grouped as physical (pace, acceleration, stamina), technical (passing, dribbling, finishing,
+  tackling, aerial), mental (vision, positioning, composure) and goalkeeping.
+- **Output:** minutes, appearances and starts. The group's radar with percentiles, and a bar per value with the
+  player's per 90 against the group median.
+  - **Under 450 minutes:** the percentiles are replaced by "not enough minutes yet".
+- **Maps:** season shots sized by xG, touch zones, defensive-action zones.
+- **Designed against measured:** an attribute beside its output where they pair up (finishing ↔ goals − npxG,
+  passing ↔ pass completion, dribbling ↔ take-on success).
+- **Compare** opens §11 with this player on the left.
+
+## 11. Compare `/compare?a=<playerId>&b=<playerId>` (revamp S5)
+
+Two players of any group side by side: scout cards, both on one radar (the first player's group), per 90 bars and
+percentiles. The picker lists the first player's peers.

@@ -51,6 +51,8 @@ Specifications agreed in #50.
 - **Recall, 20 surge matches against 20 controls:** a `momentum_swing` or `press_change` fires for the surging team within 15 minutes of onset in 15 of 20 matches, against 10 of 20 controls.
 - **Pranav's reader:** the fixture's shot clusters (`MO-1017-0013`, `MO-1017-0019`) pass `mcp_server/schema.parse_moment` once `context.players` is removed. The fixture's KES cluster equals his `agents/specs/examples/shot-cluster.md` apart from the ordinal.
 
+**Revamp (23 Oct, `web/football-revamp`):** the heavy block carries every shot with its xG (`heavy.shots`, `CONTRACTS.md` §7.4), and `main.py season` builds the season document (`CONTRACTS.md` §11, `stats/specs/season.md`) that the web app serves from `web/data/season/`. On S1 it reproduces the generator's table exactly, and designed style is recovered from events for press intensity (rank correlation 0.90), press height (0.98) and counter-attacks (0.89).
+
 **Not running yet:** moments against a live Cosmos (create-once is tested with an in-memory store), the `sprint` trigger, and Azure. Do not infer more from README file lists.
 
 Evidence / checks to inspect: [`stats/tests`](../../stats/tests), [`CONTRACTS.md`](../../CONTRACTS.md). Existing recorded tests are attributed to their handover; no runtime suite was re-run for these notes.

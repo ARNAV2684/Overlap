@@ -25,8 +25,9 @@ Split bars from the light panel: possession, xG, shots, on target, passes, pass 
 
 ## 4. Shot map
 
-A team's shots on the attacking half, coloured by outcome, goals larger with a line to goal; the shot an AI card points
-to pulses. Size is fixed until per-shot xG reaches the screen (`heavy.shots`, not in the contract yet).
+A team's shots on the attacking half, coloured by outcome, goals with a line to goal; the shot an AI card points to
+pulses. **Size by xG** (area proportional to xG) from `heavy.shots` (`CONTRACTS.md` §7.4); panels without it keep
+fixed sizes.
 
 ## 5. Heatmap
 
@@ -63,3 +64,28 @@ observed density; each selection is normalised to its own maximum, so colour is 
 The panel labels its observations explicitly: it only knows tracking delivered during this viewing session (including
 any replayed frames). Never claim full-match coverage or total distance from this grid. No observations gives an
 empty state. Team density includes all observed players, including substitutes while on the pitch.
+
+## 11. xG race (revamp S3)
+
+Cumulative xG for both teams against the match minute, as two step lines from `heavy.shots`, with each goal marked
+on its team's line. The end values equal the light panel's team xG.
+
+## 12. Attacking channels (revamp S3)
+
+The share of each team's touches in the attacking half down its left, centre and right (zones channels 0–2, columns
+3–5), as three bars per team. Read from the heavy block's `zones`.
+
+## 13. PPDA against press height (revamp S3; league style map S4)
+
+A dot per team (the two teams in a match, or all clubs in the season): press height across, pressing rate or PPDA up.
+
+## 14. Season charts (revamp S4–S5)
+
+- **Deserved table, title race, goal timing:** from the season document.
+- **Radar:** the group's radar values as percentiles, 0–100 on every spoke, the group median as a ring.
+- **Percentile bars:** a bar per value, its percentile as the length, the per-90 value written on it.
+- **Attribute panel:** the twelve attributes in four groups. Each value is coloured on a five-step scale
+  (≤ 40, 41–55, 56–70, 71–85, 86+).
+
+**Look:** follows `design-system.md`. The visual treatment of the maps, heatmaps and radar is being redesigned in
+the revamp (plan D-05). These sections fix what each chart shows, not its styling.

@@ -20,7 +20,6 @@ import { PitchOverlay, PitchUnderlay } from "./PitchOverlay";
 import { PlayerFocus } from "./PlayerFocus";
 import { ReplayBar } from "./ReplayBar";
 import { ScoreHeader } from "./ScoreHeader";
-import { TrackingHeatPanel } from "./TrackingHeatPanel";
 import { ViewerBar } from "./ViewerBar";
 
 /** Watch is the clean pitch; Analyse adds the story director's overlays. */
@@ -56,11 +55,7 @@ export function MatchScreen({ intro, initialSpeed }: { intro?: ReactNode; initia
   const highlight = [current?.visual?.highlight?.player_id, prefs.player].filter((x): x is string => Boolean(x));
 
   const showChart = (component: string, eventId?: string) => {
-    // A heatmap card opens the tracking heatmap under the pitch
-    if (component === "heatmap_zones") {
-      document.getElementById("heatmap")?.scrollIntoView({ behavior: "smooth", block: "start" });
-      return;
-    }
+    // Every card opens the analysis tab of its visual (a heatmap card: Players, with the tracking heatmap)
     const tab = TAB_FOR_COMPONENT[component];
     if (tab) setFocus({ tab, eventId, nonce: Date.now() });
     document.getElementById("analytics")?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -86,9 +81,6 @@ export function MatchScreen({ intro, initialSpeed }: { intro?: ReactNode; initia
             </PitchStage>
           </div>
           <PitchUnderlay />
-          <div id="heatmap" className="scroll-mt-20">
-            <TrackingHeatPanel />
-          </div>
         </div>
         <aside className="flex min-w-0 flex-col gap-4">
           <ViewerBar />

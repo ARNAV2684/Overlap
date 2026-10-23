@@ -422,7 +422,8 @@ Sent by the stats engine once per match second on `match-events` (properties `ki
 - `low_sample` lists fields sent as `null` because their sample is too small (`metrics.md` §7). Charts show them as
   "not enough data", never as zero.
 - On the panel at every whole minute and at each `PeriodEnd`, an extra `heavy` object holds `momentum_buckets`,
-  `pass_network`, `pressing_grid`, `zones` and, with tracking, `players` (shapes in `publishing.md` §2).
+  `pass_network`, `pressing_grid`, `zones`, `shots` (every shot so far with its xG) and, with tracking, `players`
+  (shapes in `publishing.md` §2). Panels archived before `shots` existed don't have it; consumers treat it as optional.
 - Numbers on panels are for screens. Agents cite only evidence-pack facts (§5).
 
 ---
@@ -659,3 +660,43 @@ These extend §10.3–§10.4 for the layer-5 build. Where they differ from §10.
   by the web app's route on Azure.
 - **Recap.** At full time, one `kind = "recap"` envelope per audience group; `data` is a set of §5.1 lines built from
   the match's moments and final `match_state`, checked like any overlay.
+
+---
+
+## 11. Season document (stats engine → web app; later the MCP `season` tool)
+
+One JSON document per finished season run, built by `python main.py season <run folder>` in `stats/`. Rules for every
+number: [`stats/specs/season.md`](stats/specs/season.md). The web app serves it from a committed file
+(`web/data/season/season-<id>.json`) through `/api/season/*` ([`web/specs/realtime.md`](web/specs/realtime.md) §7).
+The schema is `seasonDocumentSchema` in `web/src/lib/contracts.ts`.
+
+```json
+{ "id": "season-S1", "kind": "season", "schema_version": 1, "season_id": "S1", "world_version": 4,
+  "built_from": { "run": "S1", "seed": 1, "matches": 90, "world": true },
+  "hidden_teams": ["CAL", "DTN"],
+  "rules": { "min_minutes_for_percentiles": 450, "groups": { "CB": "centre_backs" }, "radar": { "attackers": ["goals", "npxg"] } },
+  "dna_correlations": { "press_intensity": 0.9, "press_height": 0.98 },
+  "matchweeks": [1, 2, 3],
+  "teams": [ { "team_id": "KES", "name": "Kestlebury United", "table": { "position": 4, "points": 31 }, "xpts": 35.2,
+               "form": ["W", "D", "L", "W", "D"], "season": { "pressures_per_opp_pass": 0.81 },
+               "dna": [ { "dial": "press_intensity", "designed": 0.85, "designed_rank": 1, "measured_key": "pressures_per_opp_pass",
+                          "measured_label": "Pressures per opponent pass", "measured": 0.81, "measured_rank": 2 } ],
+               "pressing_grid": [[0]], "zones": [[0]], "goals_by_15min": { "for": [5, 4, 6, 3, 7, 6], "against": [2, 3, 4, 3, 5, 4] },
+               "shots_for": [ { "match_id": "SYN-0001", "player_id": "KES-09", "x": 88.0, "y": 47.0, "xg": 0.21, "outcome": "saved", "situation": "open_play" } ],
+               "shots_against": [] } ],
+  "matches": [ { "match_id": "SYN-0001", "matchweek": 1, "home": "KES", "away": "CAL", "score": { "home": 0, "away": 1 },
+                 "xg": { "home": 0.7, "away": 0.57 }, "xpts": { "home": 1.44, "away": 1.15 },
+                 "win_probability": { "home": 0.347, "draw": 0.402, "away": 0.251 } } ],
+  "players": [ { "player_id": "KES-09", "team_id": "KES", "name": "…", "pos": "ST", "group": "attackers", "role": "pressing_forward",
+                 "attr": { "finishing": 81 }, "minutes": 1619, "totals": { "goals": 23 }, "per90": { "goals": 1.28 },
+                 "rates": { "shot_accuracy_pct": 48 }, "percentiles": { "goals": 100 }, "low_sample": false,
+                 "shots": [], "touch_zones": [[0]], "defensive_zones": [[0]] } ] }
+```
+
+- **Frames:** all coordinates and grids are in the acting team's frame (§1.1), like the stat panel's heavy block.
+- **Immutable:** a document is immutable per `season_id` and `world_version`. Rebuilding the same run gives the same
+  bytes.
+- **Missing values:** a value below its minimum sample is `null`. A player under 450 minutes has
+  `percentiles: null` and `low_sample: true`.
+- **Reference clubs:** clubs in `hidden_teams` stay in `teams` and `matches`, but their players are not in `players`
+  and they get no club or player page (`season.md` §6).

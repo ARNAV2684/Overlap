@@ -5,7 +5,8 @@
 # Outputs: a JSON-ready summary of the match so far
 # Spec:    stats/specs/metrics.md §4–§7
 #
-# The pass network, zones, pressing grid and momentum buckets are the stat panel's heavy block (publishing.md §2).
+# The pass network, zones, pressing grid, momentum buckets and shot list are the stat panel's heavy block
+# (publishing.md §2).
 
 from __future__ import annotations
 
@@ -131,12 +132,27 @@ def current_bucket(state: MatchState) -> dict:
     return out
 
 
+def shot_list(state: MatchState) -> dict:
+    """Every shot so far per team, oldest first, in the shooting team's frame (publishing.md §2)."""
+    out: dict[str, list[dict]] = {s: [] for s in SIDES}
+    for s in state.shots:
+        side = state.side_of.get(s.get("team_id"))
+        if side is None:
+            continue
+        out[side].append({"event_id": s["event_id"], "player_id": s.get("player_id"), "period": s["period"],
+                          "match_ms": s["match_ms"], "x": s["x"], "y": s["y"], "xg": round(s["xg"], 2),
+                          "outcome": s["shot_outcome"], "situation": s.get("situation", "open_play"),
+                          "body_part": s.get("body_part")})
+    return out
+
+
 def heavy(state: MatchState) -> dict:
     out = {
         "momentum_buckets": momentum_buckets(state),
         "pass_network": {s: pass_network(state, s) for s in SIDES},
         "pressing_grid": {s: [row[:] for row in state.teams[s].pressing_grid] for s in SIDES},
         "zones": {s: [row[:] for row in state.teams[s].zones] for s in SIDES},
+        "shots": shot_list(state),
     }
     if state.has_tracking():
         out["players"] = {pid: {"distance_km": round(p.motion.distance_m / 1000, 2),

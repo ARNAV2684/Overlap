@@ -9,7 +9,7 @@
 // Every chart is drawn in a TEAM frame (attacking left → right), so a team's picture reads the same in both halves:
 // events already are (CONTRACTS.md §1.1); tracking-based heat is turned per period with teamToPitch's inverse.
 
-import type { MatchEvent, MatchSetup, MomentumBucket, StatPanel } from "@/lib/contracts";
+import type { HeavyBlock, HeavyShot, MatchEvent, MatchSetup, MomentumBucket, StatPanel } from "@/lib/contracts";
 import { attacksEast, type Side } from "@/lib/coordinates";
 import { HEAT_COLS, HEAT_ROWS, type MatchMemory } from "@/lib/live/match-memory";
 
@@ -206,4 +206,95 @@ export function playerNumbers(events: readonly MatchEvent[], playerId: string, p
     topSpeedKmh: t?.top_speed_kmh ?? null,
     sprints: t?.sprints ?? null,
   };
+}
+
+// --- Analysis tabs (charts.md §4, §9, §11–§13): read from the heavy block, never recomputed ---------------------
+
+/** Every shot of one side with its xG (heavy.shots), or null when the panel predates it. */
+export function xgShots(heavy: HeavyBlock | null | undefined, side: Side): HeavyShot[] | null {
+  return heavy?.shots?.[side] ?? null;
+}
+
+export type XgStep = { minute: number; total: number; goal: boolean; shotId: string | null };
+
+/** Cumulative xG by match minute, a step per shot, starting at 0 and ending at `untilMinute`. */
+export function xgRace(shots: readonly HeavyShot[], untilMinute: number): XgStep[] {
+  const out: XgStep[] = [{ minute: 0, total: 0, goal: false, shotId: null }];
+  let total = 0;
+  for (const s of [...shots].sort((a, b) => a.match_ms - b.match_ms)) {
+    total += s.xg;
+    out.push({ minute: s.match_ms / 60_000, total: Math.round(total * 100) / 100, goal: s.outcome === "goal", shotId: s.event_id });
+  }
+  out.push({ minute: Math.max(untilMinute, out[out.length - 1].minute), total: Math.round(total * 100) / 100, goal: false, shotId: null });
+  return out;
+}
+
+const sum = (xs: readonly number[]) => xs.reduce((a, b) => a + b, 0);
+
+/** Shares of a pressing grid ([col][row], 9 columns from own goal) in the own, middle and final thirds. */
+export function thirds(grid: readonly (readonly number[])[]): { own: number; middle: number; final: number; total: number } {
+  const third = (from: number) => sum(grid.slice(from, from + 3).flat());
+  const total = sum(grid.flat());
+  if (!total) return { own: 0, middle: 0, final: 0, total: 0 };
+  return { own: third(0) / total, middle: third(3) / total, final: third(6) / total, total };
+}
+
+const THIRD = ["Own third", "Middle third", "Final third"];
+const LANE = ["Left wing", "Left half-space", "Centre", "Centre", "Right half-space", "Right wing"];
+
+/** The busiest cells of a [col][row] grid as football zones ("Middle third · Centre"), most first. */
+export function busiestZones(grid: readonly (readonly number[])[], n = 3): { key: string; label: string; count: number }[] {
+  const cols = grid.length;
+  const rows = grid[0]?.length ?? 0;
+  const cells: { key: string; label: string; count: number }[] = [];
+  grid.forEach((col, c) =>
+    col.forEach((v, r) => {
+      if (v <= 0) return;
+      const third = THIRD[Math.min(2, Math.floor((c / cols) * 3))];
+      const lane = rows === 6 ? LANE[r] : ["Left", "Centre", "Right"][Math.min(2, Math.floor((r / rows) * 3))];
+      cells.push({ key: `${c}:${r}`, label: `${third} · ${lane}`, count: v });
+    }),
+  );
+  return cells.sort((a, b) => b.count - a.count || a.key.localeCompare(b.key)).slice(0, n);
+}
+
+/** Touch zones [channel][col] turned into the [col][row] layout the zone grid draws. */
+export function zonesByColumn(zones: readonly (readonly number[])[]): number[][] {
+  const cols = zones[0]?.length ?? 0;
+  return Array.from({ length: cols }, (_, c) => zones.map((channel) => channel[c]));
+}
+
+export type Flank = { channel: 0 | 1 | 2; label: string; touchShare: number; shots: number; xg: number };
+
+/** Attack by flank: the share of attacking-half touches down the left, centre and right, with shots and xG there. */
+export function flanks(zones: readonly (readonly number[])[], shots: readonly HeavyShot[] | null): Flank[] {
+  const attacking = zones.map((channel) => sum(channel.slice(Math.floor(channel.length / 2))));
+  const total = sum(attacking);
+  const labels = ["Left", "Centre", "Right"] as const;
+  return ([0, 1, 2] as const).map((ch) => {
+    const mine = (shots ?? []).filter((s) => Math.min(2, Math.floor(s.y / (100 / 3))) === ch);
+    return {
+      channel: ch,
+      label: labels[ch],
+      touchShare: total ? attacking[ch] / total : 0,
+      shots: mine.length,
+      xg: Math.round(sum(mine.map((s) => s.xg)) * 100) / 100,
+    };
+  });
+}
+
+/**
+ * Zone dominance: for each of the 18 touch zones, the home side's share of both teams' touches there, in the home
+ * team's frame ([col][row]; the away zones are turned 180° into it). null where neither team has touched the ball.
+ */
+export function dominance(home: readonly (readonly number[])[], away: readonly (readonly number[])[]): (number | null)[][] {
+  const channels = home.length;
+  const cols = home[0]?.length ?? 0;
+  return Array.from({ length: cols }, (_, c) =>
+    Array.from({ length: channels }, (_, ch) => {
+      const h = home[ch][c];
+      const a = away[channels - 1 - ch][cols - 1 - c];
+      return h + a ? h / (h + a) : null;
+    }),
+  );
 }

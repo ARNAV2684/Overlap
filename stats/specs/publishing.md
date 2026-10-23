@@ -70,6 +70,10 @@ the next event arrives, usually 1–3 seconds of match time later, about 0.1 s o
 - `pressing_grid`: per team, 9 × 6 counts.
 - `zones`: per team, 18 touch counts.
 - `players`: per player, `{player_id, distance_km, top_speed_kmh, sprints}` when tracking is present.
+- `shots`: per team, every shot so far, oldest first: `{event_id, player_id, period, match_ms, x, y, xg, outcome,
+  situation, body_part}`. Coordinates are in the shooting team's frame (`x` = 100 is the goal it attacks). `xg` is the
+  engine's (`metrics.md` §1, 2 decimals) and `outcome` is the event's `shot_outcome`. About 25 shots a match, about
+  2 KB. Added in `PLAN_web_football-revamp` for the xG race and shots sized by xG.
 
 A panel is about 1 KB; with the heavy block, about 6 KB.
 
