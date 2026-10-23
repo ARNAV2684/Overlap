@@ -3,15 +3,17 @@
 // LiveRail.tsx — The live numbers beside the pitch
 //
 // Purpose: the match's key numbers as a broadcast rail, updating as the stat panels arrive (about once a second):
-//          xG and shots as big mono numbers, a mini xG race, possession, and how hard and high each side presses,
-//          with the side that leads each row picked out
-// Inputs:  the match experience (latest stat panel and its heavy block) and the setup
+//          xG and shots as big mono numbers, a mini xG race, possession, how hard and high each side presses, with
+//          the side that leads each row picked out, and each team's attack by flank over the last few minutes
+// Inputs:  the match experience (latest stat panel and its heavy block, and the events for the flanks) and the setup
 // Outputs: UI
 // Spec:    web/specs/screens.md §2.7; web/specs/design-system.md §4.1
 
 import { useMemo } from "react";
 import type { MatchSetup, StatPanel } from "@/lib/contracts";
+import type { Side } from "@/lib/coordinates";
 import { xgRace, xgShots } from "@/lib/live/charts";
+import { CHANNELS, flankShares, LANE_WINDOW_MS, type Channel } from "@/lib/live/story";
 import { useScoreboard } from "@/lib/store-hooks";
 import { useExperience } from "@/providers/MatchExperience";
 import { overlayColour } from "@/components/pitch3d/scene/stage";
@@ -62,19 +64,80 @@ function MiniRace({ home, away, minute, colours }: { home: ReturnType<typeof xgR
   );
 }
 
+type Flanks = Record<Side, Record<Channel, number> | null>;
+
+/**
+ * Attack by flank for both teams: each lane's share of the team's final-third actions over the last few minutes
+ * (left, centre, right as each team faces the goal it attacks), the main lane in the team's colour.
+ */
+function FlankRow({ setup, flanks, colours }: { setup: MatchSetup; flanks: Flanks; colours: { home: string; away: string } }) {
+  return (
+    <div aria-label="Attack by flank">
+      <div className="flex items-baseline justify-between text-[11.5px] text-ink/50">
+        <span>Attack by flank</span>
+        <span className="font-mono text-[10px] tabular">last {LANE_WINDOW_MS / 60_000}′</span>
+      </div>
+      <div className="mt-1.5 flex flex-col gap-1">
+        {(["home", "away"] as const).map((side) => {
+          const shares = flanks[side];
+          const top = shares ? CHANNELS.reduce((a, b) => (shares[b] > shares[a] ? b : a)) : null;
+          return (
+            <div key={side} className="grid grid-cols-[52px_1fr_1fr_1fr] items-center gap-1">
+              <span className="flex items-center gap-1.5 font-mono text-[10.5px] font-bold text-ink/60">
+                <span className="h-2 w-2 shrink-0 rounded-full ring-1 ring-ink/25" style={{ background: colours[side] }} />
+                {setup.teams[side].team_id}
+              </span>
+              {CHANNELS.map((c) => (
+                <span
+                  key={c}
+                  className={`flex items-baseline justify-between rounded-[6px] px-1.5 py-0.5 font-mono text-[10px] tabular ${
+                    c === top ? "font-black text-ink" : "bg-ink/[0.05] font-bold text-ink/55"
+                  }`}
+                  style={c === top ? { background: `color-mix(in srgb, ${colours[side]} 28%, transparent)` } : undefined}
+                >
+                  <span className="text-[8.5px] uppercase tracking-[1px] opacity-70">{c === "centre" ? "Mid" : c}</span>
+                  <span>{shares ? `${shares[c]}%` : "–"}</span>
+                </span>
+              ))}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export function LiveRail() {
-  const { memory, tick } = useExperience();
+  const { memory, tick, playheadMs } = useExperience();
   const { setup } = useScoreboard();
   const panels = useMemo(() => {
     void tick;
     return { panel: memory.latestPanel(), heavy: memory.heavyPanel() };
   }, [memory, tick]);
+  // Counted at the picture's playhead, so a replay never shows the flanks of minutes still to come
+  const flanks = useMemo(() => {
+    void tick;
+    return flankShares(memory.events(), memory.setup(), playheadMs);
+  }, [memory, tick, playheadMs]);
   if (!setup) return null;
-  return <LiveRailView setup={setup} panel={panels.panel} heavyPanel={panels.heavy} />;
+  return <LiveRailView setup={setup} panel={panels.panel} heavyPanel={panels.heavy} flanks={flanks} />;
 }
 
-/** The rail for one moment of the match: the latest panel and the latest panel with a heavy block. */
-export function LiveRailView({ setup, panel, heavyPanel }: { setup: MatchSetup; panel: StatPanel | null; heavyPanel: StatPanel | null }) {
+/**
+ * The rail for one moment of the match: the latest panel, the latest panel with a heavy block, and attack by flank
+ * (left out when not given).
+ */
+export function LiveRailView({
+  setup,
+  panel,
+  heavyPanel,
+  flanks,
+}: {
+  setup: MatchSetup;
+  panel: StatPanel | null;
+  heavyPanel: StatPanel | null;
+  flanks?: Flanks;
+}) {
   const minute = (panel?.match_ms ?? 0) / 60_000;
   const hs = xgShots(heavyPanel?.heavy, "home");
   const as = xgShots(heavyPanel?.heavy, "away");
@@ -120,6 +183,7 @@ export function LiveRailView({ setup, panel, heavyPanel }: { setup: MatchSetup; 
         {rows.map((r) => (
           <Bar key={r.label} row={r} colours={colours} />
         ))}
+        {flanks && <FlankRow setup={setup} flanks={flanks} colours={colours} />}
       </div>
     </section>
   );
