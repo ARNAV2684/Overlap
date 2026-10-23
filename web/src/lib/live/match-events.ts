@@ -77,12 +77,19 @@ export function bookingsAt(fieldEvents: readonly FieldEvent[], playheadMs: numbe
   return out;
 }
 
+/** One minute on a score sheet entry, with a note such as "pen" or "2nd yellow". */
+export type SheetMinute = { minute: string; note?: string };
+
+/** One player's goals, or one player's red card, on a team's score sheet. */
 export type SheetEntry = {
+  /** Stable per player and kind, e.g. "goal:NBR-09". */
   id: string;
-  kind: "goal" | "yellow" | "red";
-  minute: string;
+  kind: "goal" | "red";
   name: string;
-  note?: string;
+  /** Every minute, in match order: `Sartori 6′ 45′ 90′`. */
+  minutes: SheetMinute[];
+  /** match_ms of the newest minute, so the entry that just changed can rise in. */
+  lastMs: number;
 };
 
 /** "62:14" → "62′", "45+2:10" → "45+2′". */
@@ -91,7 +98,11 @@ export const minuteOf = (clock: string) => `${clock.split(":")[0]}′`;
 /** The surname, or the whole name for one-word names. */
 export const shortName = (name: string) => name.trim().split(/\s+/).slice(-1)[0] ?? name;
 
-/** Goals and cards per team up to the playhead, in match order. */
+/**
+ * Goals and red cards per team up to the playhead. One entry per player and kind, holding all their minutes, in the
+ * order each player first appears. Yellow cards stay on the pitch and in Key events, not here; a second yellow shows
+ * as a red card with the note "2nd yellow".
+ */
 export function scoreSheet(
   fieldEvents: readonly FieldEvent[],
   setup: MatchSetup | null,
@@ -102,23 +113,33 @@ export function scoreSheet(
   const names = new Map<string, string>();
   for (const t of [setup.teams.home, setup.teams.away]) for (const p of [...t.lineup, ...t.bench]) names.set(p.player_id, p.name);
   const yellows = new Set<string>();
+  const entries = new Map<string, SheetEntry>();
+  const add = (side: Side, kind: SheetEntry["kind"], f: FieldEvent, note?: string) => {
+    const who = f.playerId ?? f.id;
+    const id = `${kind}:${who}`;
+    let entry = entries.get(id);
+    if (!entry) {
+      entry = { id, kind, name: shortName(names.get(f.playerId ?? "") ?? f.playerId ?? ""), minutes: [], lastMs: f.ms };
+      entries.set(id, entry);
+      sheet[side].push(entry);
+    }
+    entry.minutes.push(note ? { minute: minuteOf(f.clock), note } : { minute: minuteOf(f.clock) });
+    entry.lastMs = f.ms;
+  };
   for (const f of [...fieldEvents].sort((a, b) => a.ms - b.ms)) {
     if (f.ms > playheadMs || (f.kind !== "goal" && f.kind !== "card")) continue;
     const side: Side = f.teamId === setup.teams.home.team_id ? "home" : "away";
-    const name = shortName(names.get(f.playerId ?? "") ?? f.playerId ?? "");
     if (f.kind === "goal") {
-      sheet[side].push({ id: f.id, kind: "goal", minute: minuteOf(f.clock), name, note: f.penalty ? "pen" : undefined });
+      add(side, "goal", f, f.penalty ? "pen" : undefined);
       continue;
     }
-    const second = f.card === "second_yellow" || (f.card === "yellow" && yellows.has(f.playerId ?? ""));
-    if (f.card === "yellow" && !second) yellows.add(f.playerId ?? "");
-    sheet[side].push({
-      id: f.id,
-      kind: f.card === "yellow" && !second ? "yellow" : "red",
-      minute: minuteOf(f.clock),
-      name,
-      note: second ? "2nd yellow" : undefined,
-    });
+    const player = f.playerId ?? "";
+    const second = f.card === "second_yellow" || (f.card === "yellow" && yellows.has(player));
+    if (f.card === "yellow" && !second) {
+      yellows.add(player);
+      continue;
+    }
+    add(side, "red", f, second ? "2nd yellow" : undefined);
   }
   return sheet;
 }
