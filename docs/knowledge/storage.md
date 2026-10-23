@@ -22,7 +22,7 @@ Specifications: [`archiver/specs/storage.md`](../../archiver/specs/storage.md), 
 
 ## Status and evidence
 
-Local emulators and relay/archive stores exist. Stats moments land in Cosmos `moments` live exactly as in replay (F2, SYN-0507, 20 Oct). The storage spec is marked agreed in PR #59 (open). The local Cosmos emulator can corrupt its data if killed under memory pressure; recreate the container (`docker compose up -d --force-recreate cosmos` in `infra/local/`): it holds no persistent volume. Cloud composition is placeholder; `overlays`, `season` and `viewer_profiles` have no working producer yet.
+Local emulators and relay/archive stores exist. Azure (A2, 24 Oct): `infra/modules/cosmos.bicep` deployed (free tier, local auth off, database `live` 1,000 RU/s shared, all eight containers); a 20× match archived to Azure Cosmos and Blob read back identical to its recording. Stats moments land in Cosmos `moments` live exactly as in replay (F2, SYN-0507, 20 Oct). The storage spec is marked agreed in PR #59 (open). The local Cosmos emulator can corrupt its data if killed under memory pressure; recreate the container (`docker compose up -d --force-recreate cosmos` in `infra/local/`): it holds no persistent volume. Cloud composition is placeholder; `overlays`, `season` and `viewer_profiles` have no working producer yet.
 
 Evidence / checks to inspect: [`archiver/tests/test_archiver.py`](../../archiver/tests/test_archiver.py), [`mcp_server/tests/test_cosmos.py`](../../mcp_server/tests/test_cosmos.py). Existing recorded tests are attributed to their handover; no runtime suite was re-run for these notes.
 

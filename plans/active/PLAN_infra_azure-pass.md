@@ -10,7 +10,7 @@
 | Review coordinator | Arnav |
 | Affected component owners | Generator, stats engine: Azeem · Event Hubs, Cosmos, Web PubSub, relay, archiver, agents, MCP: Arnav (Pranav helping) · Web app: Arnav, Azeem · Other infrastructure and `azure.yaml`: unassigned (Arnav decides) |
 | Proposal version and date | v1.1 · 23 Oct 2026 (D-01, D-03, D-10 decided; A0 in progress) |
-| Status | In progress: A0 deployed 24 Oct (specs merged in #85; identities, storage, monitoring live in `rg-overlap`); A1 next |
+| Status | In progress: A0 done (#85, #89); A1 Event Hubs and A2 Cosmos DB deployed and proven 24 Oct (`infra/azure-data`); A3–A5 next |
 | Plan tier and file | Full · `plans/active/PLAN_infra_azure-pass.md` |
 | Repository | [ARNAV2684/Overlap](https://github.com/ARNAV2684/Overlap) |
 | Reviewed branch and commit | main · 0c73c59 |
@@ -393,4 +393,23 @@ and the web app deployed with `web/data/season/season-S1.json` (A9). Because Aze
 
 ### Handover after implementation
 
-Pending implementation.
+**A0 (24 Oct, #89):** resource group `rg-overlap` (Sweden Central), four identities, storage (shared keys off),
+monitoring (0.5 GB/day cap); provision twice with no changes (AC-02); storage reachable by Entra sign-in only.
+
+**A1 + A2 (24 Oct, branch `infra/azure-data`):**
+- **Deployed:** Event Hubs Standard (1 TU, local auth off, TLS 1.2), `match-events` and `match-tracking` with 4
+  partitions and the `relay`, `stats`, `archiver` groups; Cosmos DB free tier (local auth off), database `live` at
+  1,000 RU/s shared, the 7 match containers on `/match_id` and `leases` on `/id`; data roles per `security.md` §1.
+  Second `azd provision`: no changes.
+- **AC-03 (A1):** the laptop generator streamed SYN-2501 at 20× into Azure Event Hubs with a developer sign-in (no
+  keys); the laptop relay, stats engine and archiver read it from Azure with settings changed only (namespace instead
+  of the emulator connection). 32,983 messages sent; 0 invalid at every reader.
+- **AC-04 (A2):** the archiver wrote SYN-2501 to Azure Cosmos (`matches`, `events`, `stats`) and Azure Blob
+  (`tracking`) with Entra sign-in; `archiver/tests/check_archive.py SYN-2501` against Azure: identical to the
+  recording (2,363 events, 30,619 frames, 6–0, finished, no problems).
+- **Found:**
+  - The generator's Azure path (`azure.identity.aio`) needs `aiohttp`, which is not in `generator/pyproject.toml`; the
+    run used `uv run --with aiohttp`. Needed before A10 (generator job); generator folder owner's agreement.
+  - From the laptop (India to Sweden, ~150 ms per send) the generator runs nearer 12× than 20×, and the stats engine's
+    one-by-one panel sends fall behind (1,476 queued at the 55% mark). Inside Azure (A6, A7) this latency is gone;
+    re-measure in A8.
