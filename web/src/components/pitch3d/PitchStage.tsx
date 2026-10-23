@@ -339,7 +339,7 @@ export function PitchStage({ highlight = [], children }: { highlight?: readonly 
       <div ref={goalRef} className="ov-goal pointer-events-none absolute inset-0" aria-hidden="true" />
       <div
         ref={tickerRef}
-        className="ov-ticker pointer-events-none absolute left-1/2 top-[58px] -translate-x-1/2 sm:top-[64px]"
+        className="ov-ticker pointer-events-none absolute left-1/2 top-[58px] -translate-x-1/2 sm:left-auto sm:right-4 sm:top-[108px] sm:translate-x-0"
         role="status"
         aria-live="polite"
         data-on="false"
