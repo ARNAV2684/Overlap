@@ -14,6 +14,7 @@ import { Suspense, useSyncExternalStore } from "react";
 const LINKS = [
   { href: "/", label: "Live" },
   { href: "/matches", label: "Matches" },
+  { href: "/league", label: "League" },
   { href: "/how-it-works", label: "How it works" },
 ] as const;
 

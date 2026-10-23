@@ -49,6 +49,11 @@ export type Story = {
   /** Attack: the lane, in the attacking team's own frame. */
   channel?: Channel;
   channelShare?: number;
+  /**
+   * Attack by flank, live: each lane's share of the team's recent final-third actions, with the shots and xG it has
+   * produced so far this match (heavy.shots; null without it). Left, centre, right in the team's own frame.
+   */
+  flanks?: { channel: Channel; share: number; shots: number | null; xg: number | null }[];
 };
 
 const teamName = (setup: MatchSetup | null, side: Side) => setup?.teams[side].name ?? (side === "home" ? "Home" : "Away");
@@ -79,7 +84,11 @@ export function territoryFront(balls: readonly BallSample[], nowMs: number, peri
 }
 
 /** Which lane a team attacks through: its final-third actions, by channel of its own frame. */
-export function attackChannel(events: readonly MatchEvent[], teamId: string, nowMs: number): { channel: Channel; share: number } | null {
+export function attackChannel(
+  events: readonly MatchEvent[],
+  teamId: string,
+  nowMs: number,
+): { channel: Channel; share: number; shares: Record<Channel, number> } | null {
   const counts: Record<Channel, number> = { left: 0, centre: 0, right: 0 };
   let total = 0;
   for (let i = events.length - 1; i >= 0; i--) {
@@ -96,7 +105,8 @@ export function attackChannel(events: readonly MatchEvent[], teamId: string, now
   }
   if (total < 4) return null;
   const channel = (Object.keys(counts) as Channel[]).reduce((a, b) => (counts[b] > counts[a] ? b : a));
-  return { channel, share: Math.round((counts[channel] / total) * 100) };
+  const shares = { left: Math.round((counts.left / total) * 100), centre: Math.round((counts.centre / total) * 100), right: Math.round((counts.right / total) * 100) };
+  return { channel, share: shares[channel], shares };
 }
 
 /** The team in possession: the team of the latest on-ball event in the last 10 match seconds. */
@@ -247,6 +257,18 @@ export function directStory(memory: MatchMemory, sample: MotionSample, pinned: S
       metric: lane ? { value: `${lane.share}%`, label: `${lane.channel} lane` } : null,
       channel: lane?.channel,
       channelShare: lane?.share,
+      flanks: lane
+        ? (["left", "centre", "right"] as const).map((channel) => {
+            const shots = memory.heavyPanel()?.heavy.shots?.[side];
+            const mine = shots?.filter((s) => (s.y < 33.3 ? "left" : s.y > 66.7 ? "right" : "centre") === channel) ?? null;
+            return {
+              channel,
+              share: lane.shares[channel],
+              shots: mine ? mine.length : null,
+              xg: mine ? Math.round(mine.reduce((t, s) => t + s.xg, 0) * 100) / 100 : null,
+            };
+          })
+        : undefined,
     };
   }
 

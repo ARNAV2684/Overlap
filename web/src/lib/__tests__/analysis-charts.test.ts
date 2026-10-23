@@ -46,7 +46,7 @@ describe("pressing thirds and busiest zones", () => {
     expect(t.final).toBe(0);
   });
   it("names the busiest zone in football terms", () => {
-    expect(busiestZones(grid, 1)).toEqual([{ key: "4:2", label: "Middle third · Centre", count: 10 }]);
+    expect(busiestZones(grid, 1)).toEqual([{ key: "4:2", label: "Middle third · Centre-left", count: 10 }]);
   });
   it("is empty without actions", () => {
     expect(thirds([[0]]).total).toBe(0);

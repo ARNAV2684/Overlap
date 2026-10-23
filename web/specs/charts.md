@@ -1,5 +1,8 @@
 # Charts
 
+> **Status: agreed.** Owners Arnav and Azeem; merged for [`PLAN_web_live-home`](../../plans/active/PLAN_web_live-home.md) and extended for
+> [`PLAN_web_football-revamp`](../../plans/active/PLAN_web_football-revamp.md) (agreed by Azeem, 23 Oct 2026).
+
 Owners: Arnav, Azeem. Written 24 Oct for [`PLAN_web_live-home`](../../plans/active/PLAN_web_live-home.md). Built in
 `src/components/charts/`, with the data shaped by pure functions in `src/lib/live/charts.ts` (tested in
 `__tests__/charts-data.test.ts`). The earlier chart specs are kept in [`vedant-frontend/`](../../vedant-frontend/README.md).

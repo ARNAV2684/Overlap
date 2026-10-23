@@ -1,3 +1,11 @@
+// story.test.ts — The story director
+//
+// Purpose: each pitch story (territory, protect, shape, attack with its live flank strip) is chosen and filled from
+//          the match memory as specified
+// Inputs:  hand-made setups, events and tracking frames (fixtures.ts)
+// Outputs: pass / fail
+// Spec:    web/specs/pitch.md
+
 import { describe, expect, it } from "vitest";
 import type { ParsedEnvelope, TrackingFrame } from "@/lib/contracts";
 import { createMatchMemory, metresFromOwnGoal } from "@/lib/live/match-memory";
@@ -87,6 +95,10 @@ describe("attack story", () => {
     expect(story.side).toBe("home");
     expect(story.channel).toBe("right");
     expect(story.metric?.value).toBe("100%");
+    // Attack by flank, live: all three lanes, shares adding up; no shots or xG without heavy.shots
+    expect(story.flanks?.map((f) => f.channel)).toEqual(["left", "centre", "right"]);
+    expect(story.flanks?.reduce((t, f) => t + f.share, 0)).toBe(100);
+    expect(story.flanks?.every((f) => f.shots === null && f.xg === null)).toBe(true);
   });
 
   it("returns no lane with too few actions", () => {

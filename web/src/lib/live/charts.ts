@@ -240,7 +240,7 @@ export function thirds(grid: readonly (readonly number[])[]): { own: number; mid
 }
 
 const THIRD = ["Own third", "Middle third", "Final third"];
-const LANE = ["Left wing", "Left half-space", "Centre", "Centre", "Right half-space", "Right wing"];
+const LANE = ["Left wing", "Left half-space", "Centre-left", "Centre-right", "Right half-space", "Right wing"];
 
 /** The busiest cells of a [col][row] grid as football zones ("Middle third · Centre"), most first. */
 export function busiestZones(grid: readonly (readonly number[])[], n = 3): { key: string; label: string; count: number }[] {

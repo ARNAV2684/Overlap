@@ -124,6 +124,21 @@ function CaptionCard({
         )}
       </div>
       <p className="mt-1 text-[12px] leading-snug text-white/75 [text-shadow:0_1px_4px_rgb(0_0_0/0.5)]">{story.detail}</p>
+      {story.flanks && (
+        <div className="mt-2 grid grid-cols-3 gap-1" aria-label="Attack by flank">
+          {story.flanks.map((f) => (
+            <div key={f.channel} className={`rounded-[8px] px-2 py-1.5 ${f.channel === story.channel ? "bg-white/[0.16]" : "bg-white/[0.06]"}`}>
+              <p className="font-mono text-[8px] font-bold uppercase tracking-[1.4px] text-white/50">{f.channel}</p>
+              <p className="font-mono text-[14px] font-black leading-tight tabular">{f.share}%</p>
+              {f.shots !== null && (
+                <p className="font-mono text-[9px] text-white/60 tabular">
+                  {f.shots} sh · {f.xg?.toFixed(2)} xG
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
