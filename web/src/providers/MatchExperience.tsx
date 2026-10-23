@@ -4,7 +4,7 @@
 //
 // Purpose: inside a MatchStreamProvider (live) or ReplayProvider (replay), keep the smooth motion, the match memory,
 //          the story director's current story and the viewer's insight feed, and share them with the screen
-// Inputs:  the match store from context; the viewer's preferences
+// Inputs:  the match store from context; the viewer's preferences (a favourite club steers the team stories)
 // Outputs: MatchExperienceProvider; useExperience(), useFeed()
 // Spec:    web/specs/screens.md §2; web/specs/pitch.md §3–§4; web/specs/realtime.md §4
 //
@@ -27,6 +27,7 @@ import { createMotion, type Motion, type MotionSample } from "@/lib/live/motion"
 import { createGroupSocket, createInsightFeed, parseInsight, type FeedState, type InsightFeed } from "@/lib/live/insights";
 import { directStory, type Story, type StoryKind } from "@/lib/live/story";
 import { audienceGroup, effectiveMode, type Mode } from "@/lib/preferences";
+import type { Side } from "@/lib/coordinates";
 import { useMatchStore, useScoreboard } from "@/lib/store-hooks";
 import { useStreamSource, type StreamSource } from "@/lib/stream-source";
 import { usePreferences } from "@/providers/PreferencesProvider";
@@ -53,6 +54,11 @@ type Experience = {
   showEvents: boolean;
   setShowEvents(on: boolean): void;
   mode: Mode;
+  /**
+   * The viewer's favourite club, when it plays in this match: the pitch's team stories follow it and the per-team
+   * analysis shows it only. Null without one.
+   */
+  myClub: Side | null;
   /** The latest interpolated sample, refreshed a few times a second for panels (the stage samples on its own). */
   sampleRef: React.RefObject<MotionSample | null>;
   /** Bumped when the memory changes enough for panels to redraw (about once a second). */
@@ -118,6 +124,9 @@ export function MatchExperienceProvider({ children }: { children: ReactNode }) {
     if (setup) memory.setSetup(setup);
   }, [setup, memory]);
 
+  const myClub: Side | null =
+    setup && prefs.club ? (prefs.club === setup.teams.home.team_id ? "home" : prefs.club === setup.teams.away.team_id ? "away" : null) : null;
+
   // Twice a second: refresh the sample panels read, and re-direct the story with hysteresis
   const candidate = useRef<{ kind: StoryKind; since: number } | null>(null);
   const shownAt = useRef(0);
@@ -132,7 +141,7 @@ export function MatchExperienceProvider({ children }: { children: ReactNode }) {
       }
       if (!sample) return;
       setPlayheadMs(Math.floor(sample.matchMs / 1000) * 1000);
-      const next = directStory(memory, sample, pinned);
+      const next = directStory(memory, sample, pinned, myClub);
       const now = performance.now();
       setStory((current) => {
         if (!current || pinned || current.kind === next.kind) {
@@ -156,7 +165,7 @@ export function MatchExperienceProvider({ children }: { children: ReactNode }) {
       });
     }, 500);
     return () => clearInterval(id);
-  }, [motion, memory, pinned]);
+  }, [motion, memory, pinned, myClub]);
 
   // The viewer's audience: a fresh feed per group
   const teamIds = setup ? [setup.teams.home.team_id, setup.teams.away.team_id] : [];
@@ -234,11 +243,12 @@ export function MatchExperienceProvider({ children }: { children: ReactNode }) {
       analysis,
       setAnalysis,
       mode,
+      myClub,
       sampleRef,
       tick,
       playheadMs,
     }),
-    [store.matchId, source, motion, ballTrack, memory, feed, story, pinned, view, showEvents, analysis, mode, tick, playheadMs],
+    [store.matchId, source, motion, ballTrack, memory, feed, story, pinned, view, showEvents, analysis, mode, myClub, tick, playheadMs],
   );
   return <ExperienceContext.Provider value={value}>{children}</ExperienceContext.Provider>;
 }

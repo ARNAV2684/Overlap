@@ -1,7 +1,8 @@
 // story.test.ts — The story director
 //
 // Purpose: each pitch story (territory, protect, shape, attack with its live flank strip) is chosen and filled from
-//          the match memory as specified
+//          the match memory as specified, follows the viewer's favourite club when there is one, and attack by flank
+//          is counted for both teams
 // Inputs:  hand-made setups, events and tracking frames (fixtures.ts)
 // Outputs: pass / fail
 // Spec:    web/specs/pitch.md
@@ -10,7 +11,7 @@ import { describe, expect, it } from "vitest";
 import type { ParsedEnvelope, TrackingFrame } from "@/lib/contracts";
 import { createMatchMemory, metresFromOwnGoal } from "@/lib/live/match-memory";
 import type { MotionSample } from "@/lib/live/motion";
-import { attackChannel, directStory, formationLines, territoryFront } from "@/lib/live/story";
+import { attackChannel, channelOf, directStory, flankShares, formationLines, territoryFront } from "@/lib/live/story";
 import { MATCH, eventEnv, makeFrame, makeSetup, statusEnv } from "./fixtures";
 
 const setup = makeSetup();
@@ -103,6 +104,67 @@ describe("attack story", () => {
 
   it("returns no lane with too few actions", () => {
     expect(attackChannel([], "NBR", 0)).toBeNull();
+  });
+});
+
+/** Thirty seconds of home pressure down the right, with a few away passes down their left. */
+function homePressure() {
+  const memory = createMatchMemory();
+  memory.ingest(statusEnv(1, "live", { home: 0, away: 0 }, { setup }, 0));
+  let seq = 2;
+  for (let s = 0; s < 30; s++) {
+    memory.ingest(posEnvelope(seq++, shapeFrame(s * 1000, 40, 85)));
+    memory.ingest(eventEnv(seq++, { type: "Pass", team_id: "NBR", x: 70, y: 80, end_x: 85, end_y: 85, period: 1 }, s * 1000 + 300));
+    if (s % 5 === 0) memory.ingest(eventEnv(seq++, { type: "Pass", team_id: "HBA", x: 70, y: 20, end_x: 80, end_y: 10, period: 1 }, s * 1000 + 600));
+  }
+  return memory;
+}
+
+describe("attack by flank for both teams", () => {
+  it("reads lanes in each team's own frame", () => {
+    expect([channelOf(10), channelOf(50), channelOf(90)]).toEqual(["left", "centre", "right"]);
+  });
+
+  it("counts each team's final-third actions by lane, and says nothing for a team with too few", () => {
+    const memory = homePressure();
+    const flanks = flankShares(memory.events(), setup, 30_000);
+    expect(flanks.home).toEqual({ left: 0, centre: 0, right: 100 });
+    expect(flanks.away).toEqual({ left: 100, centre: 0, right: 0 });
+    // Older than the lane window: nothing to say
+    expect(flankShares(memory.events(), setup, 30_000 + 7 * 60_000)).toEqual({ home: null, away: null });
+    expect(flankShares(memory.events(), null, 30_000)).toEqual({ home: null, away: null });
+  });
+});
+
+describe("favourite club", () => {
+  it("only the club's attacks start an attack story", () => {
+    const memory = homePressure();
+    const sample = sampleOf(shapeFrame(29_500, 40, 85));
+    expect(directStory(memory, sample, null, "home")).toMatchObject({ kind: "attack", side: "home" });
+    // The away fan's pitch is not taken over by the home team's pressure
+    expect(directStory(memory, sample, null, "away").kind).toBe("territory");
+  });
+
+  it("a pinned team story is about the club", () => {
+    const memory = homePressure();
+    const sample = sampleOf(shapeFrame(29_500, 40, 85));
+    const attack = directStory(memory, sample, "attack", "away");
+    expect(attack).toMatchObject({ kind: "attack", side: "away", channel: "left" });
+    expect(attack.flanks?.find((f) => f.channel === "left")?.share).toBe(100);
+    expect(directStory(memory, sample, "protect", "away")).toMatchObject({ kind: "protect", side: "away" });
+  });
+
+  it("only the club's goals start a team-shape story", () => {
+    const memory = createMatchMemory();
+    memory.ingest(statusEnv(1, "live", { home: 0, away: 0 }, { setup }, 0));
+    let seq = 2;
+    for (let s = 0; s < 60; s++) memory.ingest(posEnvelope(seq++, shapeFrame(s * 1000, 40)));
+    memory.ingest(eventEnv(seq++, { type: "Shot", shot_outcome: "goal", situation: "open_play", team_id: "NBR", player_id: "NBR-09", period: 1 }, 60_000));
+    for (let s = 61; s < 90; s++) memory.ingest(posEnvelope(seq++, shapeFrame(s * 1000, 30)));
+    const sample = sampleOf(shapeFrame(89_000, 30));
+    expect(directStory(memory, sample, null, "home")).toMatchObject({ kind: "protect", side: "home" });
+    expect(directStory(memory, sample, null, null)).toMatchObject({ kind: "protect", side: "home" });
+    expect(directStory(memory, sample, null, "away").kind).not.toBe("protect");
   });
 });
 

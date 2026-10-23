@@ -3,15 +3,17 @@
 // TrackingHeatPanel.tsx — The match, mapped
 //
 // Purpose: where a team, or one player, has been, for the whole session or one half, as zones on the blue ramp,
-//          with how much tracking it is built from. Team, half and player are picked with chips, not dropdowns
-// Inputs:  the match memory's per-player heat (charts.ts heatGrid does the density, direction and smoothing)
+//          with how much tracking it is built from. Team, half and player are picked with chips, not dropdowns; in
+//          my-club mode the team is the favourite club, with a badge in place of the team toggle
+// Inputs:  the match memory's per-player heat (charts.ts heatGrid does the density, direction and smoothing); the
+//          favourite club's side and its badge (AnalysisPanel), when there is one
 // Outputs: a viz card
 // Spec:    web/specs/charts.md §10
 //
 // The panel only knows the tracking this page has received: a viewer who joins late sees less, and it never claims
 // full-match coverage.
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import type { Side } from "@/lib/coordinates";
 import { heatGrid } from "@/lib/live/charts";
 import { useScoreboard } from "@/lib/store-hooks";
@@ -26,10 +28,11 @@ const PERIODS = [
   { id: "2", label: "Second half" },
 ] as const;
 
-export function TrackingHeatPanel() {
+export function TrackingHeatPanel({ club = null, badge = null }: { club?: Side | null; badge?: ReactNode } = {}) {
   const { memory, tick } = useExperience();
   const { setup } = useScoreboard();
-  const [side, setSide] = useState<Side>("home");
+  const [picked, setSide] = useState<Side>("home");
+  const side = club ?? picked;
   const [player, setPlayer] = useState("");
   const [period, setPeriod] = useState<(typeof PERIODS)[number]["id"]>("0");
   const team = setup?.teams[side];
@@ -83,7 +86,9 @@ export function TrackingHeatPanel() {
             value={period}
             onChange={setPeriod}
           />
-          {setup && (
+          {club ? (
+            badge
+          ) : setup ? (
             <Toggle
               label="Heatmap team"
               value={side}
@@ -93,7 +98,7 @@ export function TrackingHeatPanel() {
               }}
               options={(["home", "away"] as const).map((s) => ({ id: s, label: setup.teams[s].team_id, dot: overlayColour(setup.teams[s].colours) }))}
             />
-          )}
+          ) : null}
         </>
       }
       aside={
