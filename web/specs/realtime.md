@@ -431,3 +431,37 @@ _Answer:_
 - **Contract drift rule:** if a message from the stream fails validation, that is drift to report, not a reason to
   loosen a schema silently. The fix is in `CONTRACTS.md` or its producer, in the same PR, with the producer and consumer owners
   agreeing.
+
+## 7. Season routes
+
+- How do the league, club and player pages get their numbers?
+
+_Answer:_
+
+From the season document the stats engine builds ([`CONTRACTS.md`](../../CONTRACTS.md) §11,
+[`stats/specs/season.md`](../../stats/specs/season.md)). It is a committed file, `web/data/season/season-<id>.json`,
+rebuilt with `python main.py season` in `stats/` whenever the season run or the world changes. The server reads it
+from `OVERLAP_SEASON_DIR` (default `web/data/season`), checks it against `seasonDocumentSchema` once, and keeps it
+until the file changes (`src/lib/server/season-store.ts`). No database is involved, so it works the same on Azure.
+
+| Route | Answers | Shape (`src/lib/season.ts`) |
+|---|---|---|
+| `GET /api/season/<id>` | The league: table with expected points, title race lines, each club's season values and style, every result, a row per player | `LeagueView` |
+| `GET /api/season/<id>/team/<teamId>` | One club: everything above for it, plus its shots for and against, pressing grid, zones, goal timing, its results and squad, and every club's season values for comparison | `TeamView` |
+| `GET /api/season/<id>/player/<playerId>` | One player: attributes, role, totals, per 90, rates, percentiles, shots, touch and defensive zones; their peers and the group median of each radar value | `PlayerView` |
+
+- **Answers:** `200` with `Cache-Control: public, max-age=300` (a finished season doesn't change).
+- **Errors:** `{ error }` with `Cache-Control: no-store`.
+
+  | Error | Status | When |
+  |---|---|---|
+  | `bad_season_id` | 400 | The id isn't `S<n>` |
+  | `bad_team_id` | 400 | The team id isn't three capitals |
+  | `bad_player_id` | 400 | The player id isn't `AAA-00` |
+  | `not_found` | 404 | No such club or player, or a reference club or its players (`season.md` §6) |
+  | `season_unavailable` | 503 | No document for that season |
+  | `season_invalid` | 500 | The file fails the schema; the server logs the first issue's path |
+
+- **No new numbers:** the views only pick, sort and join. The group median, a summary of values already in the
+  document, is the one figure they work out themselves.
+- **Tests:** `src/lib/__tests__/season.test.ts`.

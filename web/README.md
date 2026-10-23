@@ -50,6 +50,8 @@ or the relay, archiver and insights poller separately, the stats engine, then a 
 - `/` plays the live match (or, with nothing live, replays the newest finished match at 5×) on the 3D pitch, with the
   story, the moment cards and the analytics.
 - `/match/<id>` opens one match, live or replayed; `/replay/<id>` always replays (1×, 5×, 20×, pause, restart).
+- `/api/season/S1` (and `/team/<id>`, `/player/<id>`) serve the season document in `data/season/`, built by the stats
+  engine (`specs/realtime.md` §7); no settings needed.
 - `/matches` lists the archive; `/match/<id>/recap` shows the final score, the recap and every moment;
   `/how-it-works` explains the pipeline.
 
