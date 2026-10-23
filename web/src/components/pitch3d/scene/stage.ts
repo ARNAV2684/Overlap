@@ -15,7 +15,7 @@ import type { Booking, FieldEvent } from "@/lib/live/match-events";
 import type { MatchMemory } from "@/lib/live/match-memory";
 import type { BallPoint } from "@/lib/live/ball-flight";
 import { renderedTravel, type MotionSample } from "@/lib/live/motion";
-import { formationLines, territoryFront, type Story } from "@/lib/live/story";
+import { formationLines, type Story } from "@/lib/live/story";
 import { BallTrail, BookingCards, BURST_S, EventMarkers, GoalBurst } from "./effects";
 import { createFigure, disposeFigureAssets, type Figure } from "./figure";
 import { Discs, Hull, LaneBand, Ribbons, TerritoryTide, type Segment } from "./overlays";
@@ -305,11 +305,8 @@ export function createStage(canvas: HTMLCanvasElement): Stage {
       return p ? toWorld(p.x, p.y) : null;
     };
 
-    // Territory tide: always there, strongest when it is the story
-    const front = territoryFront(u.memory.balls(), sample.matchMs, sample.period);
-    const homeEast = attacksEast("home", sample.period) ?? true;
-    const westSide: Side = homeEast ? "home" : "away"; // the team defending the west goal attacks east
-    tide.set(toWorld(front.frontX, 50).x, colourOf(westSide), colourOf(westSide === "home" ? "away" : "home"), u.time, kind === "territory" ? 0.5 : 0.16);
+    // No territory tide on the grass (Azeem, 23 Oct): the wave hid the play. Territory stays a caption story only
+    tide.set(0, "#ffffff", "#ffffff", u.time, 0);
 
     const lineSegs: Segment[] = [];
     const linkSegs: Segment[] = [];

@@ -79,11 +79,11 @@ function NavBar({ path }: { path: string | null }) {
     path !== null && (href === "/" ? path === "/" || path.startsWith("/match/") : path.startsWith(href));
   return (
     <header className="sticky top-0 z-30 border-b border-ink/[0.06] bg-canvas/80 backdrop-blur-xl">
-      <nav className="mx-auto flex h-14 max-w-[1400px] items-center gap-4 px-4 sm:gap-6 sm:px-6" aria-label="Main">
+      <nav className="mx-auto flex h-14 max-w-[1400px] items-center gap-3 px-4 sm:gap-6 sm:px-6" aria-label="Main">
         <Link href="/" className="text-[19px] sm:text-[21px]" aria-label="Overlap home">
           <Wordmark />
         </Link>
-        <div className="flex items-center gap-3 sm:gap-5">
+        <div className="flex min-w-0 items-center gap-3 overflow-x-auto sm:gap-5 [scrollbar-width:none]">
           {LINKS.map((link) => (
             <Link
               key={link.href}
@@ -97,7 +97,7 @@ function NavBar({ path }: { path: string | null }) {
             </Link>
           ))}
         </div>
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex shrink-0 items-center gap-2">
           <ThemeToggle />
         </div>
       </nav>

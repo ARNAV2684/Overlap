@@ -285,7 +285,7 @@ export function LeagueScreen({ view }: { view: LeagueView }) {
       </header>
       <Table view={view} />
       <TitleRace view={view} />
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <StyleMap view={view} />
         <Leaders view={view} />
       </div>

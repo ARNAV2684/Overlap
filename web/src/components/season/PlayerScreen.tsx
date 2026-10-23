@@ -63,7 +63,7 @@ function ScoutCard({ view }: { view: PlayerView }) {
         >
           {p.shirt ?? ""}
         </span>
-        <div className="min-w-0 flex-1">
+        <div className="min-w-[220px] flex-1">
           <p className="ov-eyebrow text-ink/45">
             Scout card · season {view.meta.season_id}
           </p>
@@ -262,7 +262,7 @@ export function PlayerScreen({ view }: { view: PlayerView }) {
         </Link>
       </div>
       <ScoutCard view={view} />
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-4 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
         <Radar view={view} />
         <Per90 view={view} />
       </div>

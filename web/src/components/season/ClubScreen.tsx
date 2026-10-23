@@ -40,7 +40,7 @@ function Header({ view }: { view: TeamView }) {
   return (
     <header className="viz-card flex flex-wrap items-center gap-5">
       <span className="h-14 w-14 shrink-0 rounded-full" style={{ background: t.colours.primary, boxShadow: `inset 0 0 0 5px ${t.colours.secondary}` }} />
-      <div className="min-w-0 flex-1">
+      <div className="min-w-[220px] flex-1">
         <p className="ov-eyebrow text-ink/45">
           Season {view.meta.season_id} · {t.formation ?? ""}
         </p>
@@ -49,7 +49,7 @@ function Header({ view }: { view: TeamView }) {
           {ordinal(t.table.position)} with {t.table.points} points · {t.table.won} won, {t.table.drawn} drawn, {t.table.lost} lost · goals {t.table.goals_for}–{t.table.goals_against}
         </p>
       </div>
-      <dl className="flex gap-6">
+      <dl className="flex w-full gap-6 sm:w-auto">
         {[
           { v: t.xpts.toFixed(1), l: "xPts", f: true },
           { v: t.xg_for.toFixed(1), l: "xG for" },
@@ -315,7 +315,7 @@ export function ClubScreen({ view }: { view: TeamView }) {
       <Header view={view} />
       <Dna view={view} />
       <Pressing view={view} />
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <Chances view={view} />
         <GoalTiming view={view} />
       </div>

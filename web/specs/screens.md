@@ -75,6 +75,14 @@ a player picker (whole team or one player) and a period picker (all observed, ei
 the heatmap with its legend; beside it on desktop the position samples and players observed, and "Defend → Attack".
 A footer says it is built only from the tracking this page has received.
 
+### 2.7 Live numbers rail
+
+`components/match/LiveRail.tsx`, in the side column under the viewer bar: both teams' xG as big mono numbers with
+their shots, a mini xG race from `heavy.shots` (goals as dots), and split bars for possession, shots on target, pass
+accuracy, momentum share, PPDA and press height (the last three over 10 minutes). The side that leads a row is
+brighter; for PPDA, lower leads. It updates with every stat panel (once a match second) and shows "–" for values
+sent as null.
+
 ## 3. Your match (preferences)
 
 `components/match/ViewerBar.tsx`, kept by `providers/PreferencesProvider.tsx` in this browser:
