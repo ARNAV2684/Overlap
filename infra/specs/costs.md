@@ -22,8 +22,11 @@ _Answer:_
 
 | Budget | Scope | Amount | Alerts at | Receives |
 |---|---|---|---|---|
-| Overall | Resource group `rg-overlap` | $200 (the credit) for the project, monthly reset | 25 %, 50 %, 80 %, 100 % of actual cost; 100 % of forecast | Arnav (address set as the `azd` parameter `budgetContactEmail`, never in the repository) |
+| Overall: eight budgets `overlap-budget-025` … `overlap-budget-200` (**created 23 Oct**) | Subscription | $25, $50, $75, $100, $125, $150, $175, $200; quarterly (1 Oct – 31 Dec), so spend adds up across October and November | 100 % of actual cost on each, so an email at every $25 step; the $200 budget also at 100 % of forecast | Arnav (address kept out of the repository) |
 | Model | The Foundry (AI Services) resource | **$25 hard cap** (Arnav, 20 Oct) | 50 %, 80 %, 100 % | Arnav |
+
+The overall budgets were created directly on the subscription (they cover everything, including anything outside the
+resource group); the model budget is created by Bicep with the Foundry resource (A4).
 
 Azure budgets only send alerts; they never stop spending. The $25 model cap is enforced by:
 
