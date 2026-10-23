@@ -73,7 +73,7 @@ export default function HowItWorksPage() {
       </div>
       <div className="grid gap-3 md:grid-cols-3">
         {[
-          ["Territory", "Who owns the pitch: the share of the last few minutes the ball spent in each half, in the caption."],
+          ["Territory tide", "Both teams' colours meet at a moving front on the grass: where the ball has lived over the last few minutes."],
           ["Team shape", "After a goal, the scoring team's lines are linked back to front, with how far their defensive line has dropped since."],
           ["Pass network", "When a team pins the other back: who passes to whom on the live players, and the lane they attack down."],
         ].map(([t, d]) => (

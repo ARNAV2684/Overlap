@@ -28,8 +28,10 @@ caption and chips. The tracking heatmap (§2.6) is in the Players tab.
 
 ### 2.1 Score header
 
-Competition and venue, match id, Live / Replay / Full time badge, the clock in big mono with the half, both clubs with
-kit crests, and the score, which flashes on a goal. Under each team, its **score sheet**: scorers (⚽ name minute, with
+A clean broadcast scoreboard (24 Oct): competition, venue and match id on one line with the Live / Replay / Full time
+badge; both clubs with kit crests either side of the score, which flashes on a goal; under the score the clock in mono
+with the half, and a **momentum sparkline** (one bar per 5-minute bucket, home above the line, away below, from the
+stat panels' momentum buckets). Under each team, its **score sheet**: scorers (⚽ name minute, with
 "pen" for penalties) and cards (a small yellow or red card, "2nd yellow" for a second booking), in match order up to
 what the pitch is showing; the newest rises in. Phones show the icons and minutes only.
 
@@ -44,11 +46,13 @@ the pitch and stays open.
 
 ### 2.3 The AI moment card
 
-When a card is due (`realtime.md` §4) it rises over the pitch for its duration, as light glass (50 %) and compact so the
-play shows through: the minute, "AI moment", the badge
-(**Numbers verified** only when the fact-checker passed every number; **Template · checked** for template lines), the
-chart it points to, and the text in the viewer's mode and language. The player the card is about gets a ring on the
-pitch.
+When a card is due (`realtime.md` §4) it rises over the pitch for its duration, as light glass and compact so the play
+shows through. In the visual kit's style (24 Oct): the minute and "AI moment", the badge (**Numbers verified** only
+when the fact-checker passed every number; **Template · checked** for template lines), the sentence in the viewer's
+mode and language with its **key number** picked out in the focus blue and repeated big beside it, and a small **chart
+chip** naming the chart it points to; the chip opens that chart's analysis tab below. The key number is found in the
+sentence (`keyNumber`, `lib/live/insights.ts`); it is never computed by the screen. The player the card is about gets
+a ring on the pitch.
 
 ### 2.4 Replay controls
 

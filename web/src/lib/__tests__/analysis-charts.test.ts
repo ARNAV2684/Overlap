@@ -46,7 +46,14 @@ describe("pressing thirds and busiest zones", () => {
     expect(t.final).toBe(0);
   });
   it("names the busiest zone in football terms", () => {
-    expect(busiestZones(grid, 1)).toEqual([{ key: "4:2", label: "Middle third · Centre-left", count: 10 }]);
+    expect(busiestZones(grid, 1)).toEqual([{ key: "1:2", label: "Middle third · Centre-left", count: 10 }]);
+  });
+  it("lists each zone once, summing the cells that fall in it", () => {
+    const zones = busiestZones(grid, 7);
+    expect(new Set(zones.map((z) => z.label)).size).toBe(zones.length);
+    // The own third spans three columns: each of its six lanes sums three cells of 1
+    expect(zones.slice(1)).toEqual(expect.arrayContaining([{ key: "0:0", label: "Own third · Left wing", count: 3 }]));
+    expect(zones.slice(1).every((z) => z.count === 3)).toBe(true);
   });
   it("is empty without actions", () => {
     expect(thirds([[0]]).total).toBe(0);

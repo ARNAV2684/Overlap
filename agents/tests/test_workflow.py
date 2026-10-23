@@ -121,6 +121,15 @@ def test_conflicting_source_is_terminal_and_never_overwritten(moments, clock):
     assert job["state"] == "delivery_pending"
 
 
+def test_job_without_source_hash_is_a_conflict_not_a_crash(moments, clock):
+    # A job document left by an older schema has no source_hash; the poller must skip it, not stop
+    store = MemoryStore()
+    m = shot_cluster(moments)
+    run(store.create({"id": f"job:{m['moment_id']}", "match_id": m["match_id"], "kind": "insight_job", "state": "pending"}))
+    assert run(W.process_moment(m, deps(store, clock)))["status"] == "conflict"
+    assert run(W.suppress_moment(m, deps(store, clock), "queue_overflow"))["status"] == "conflict"
+
+
 def test_invalid_moment_is_rejected_without_running_stages(moments, clock):
     store, counting = MemoryStore(), Counting()
     bad = copy.deepcopy(shot_cluster(moments))

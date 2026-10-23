@@ -74,6 +74,11 @@ current one has been up 4.5 s, except a goal, which switches at once.
 
 Every number shown is computed from tracking, events or the stat panel; nothing is invented.
 
+**Calm palette (24 Oct):** the team shape and pass network lines, rings, block tint and lane band are drawn in the
+visual kit's blue (`--color-viz-focus`, `#3b8ef0`) at reduced strength, and the pass network shows its 24 strongest
+links only; the caption names the team. The territory tide keeps both teams' colours, faint at all times (opacity 0.1)
+and fuller (0.36) only while territory is the story.
+
 ## 5. Match events on the field
 
 Built 24 Oct (`lib/live/match-events.ts`, `components/pitch3d/scene/effects.ts`, `PitchStage.tsx`). This is the visual

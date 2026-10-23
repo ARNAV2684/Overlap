@@ -15,7 +15,7 @@ import type { Booking, FieldEvent } from "@/lib/live/match-events";
 import type { MatchMemory } from "@/lib/live/match-memory";
 import type { BallPoint } from "@/lib/live/ball-flight";
 import { renderedTravel, type MotionSample } from "@/lib/live/motion";
-import { formationLines, type Story } from "@/lib/live/story";
+import { formationLines, territoryFront, type Story } from "@/lib/live/story";
 import { BallTrail, BookingCards, BURST_S, EventMarkers, GoalBurst } from "./effects";
 import { createFigure, disposeFigureAssets, type Figure } from "./figure";
 import { Discs, Hull, LaneBand, Ribbons, TerritoryTide, type Segment } from "./overlays";
@@ -296,6 +296,10 @@ export function createStage(canvas: HTMLCanvasElement): Stage {
   }
 
   const colourOf = (side: Side) => (setup ? overlayColour(setup.teams[side].colours) : side === "home" ? "#2bb3c0" : "#ff4f38");
+  // Story lines (shape, pass network, lane) use the visual kit's blue, not kit colours, and stay quieter than the
+  // play: the caption says whose story it is. Only the territory tide keeps both teams' colours
+  const STORY_BLUE = "#3b8ef0";
+  const STORY_LINKS = 24; // the strongest passing links only, so the network reads at a glance
 
   function drawStory(u: StageUpdate, sample: MotionSample) {
     const story = u.story;
@@ -305,8 +309,12 @@ export function createStage(canvas: HTMLCanvasElement): Stage {
       return p ? toWorld(p.x, p.y) : null;
     };
 
-    // No territory tide on the grass (Azeem, 23 Oct): the wave hid the play. Territory stays a caption story only
-    tide.set(0, "#ffffff", "#ffffff", u.time, 0);
+    // Territory tide: back on the grass (Arnav, 24 Oct), kept calm so the play stays readable: faint all the time,
+    // fuller only while territory is the story
+    const front = territoryFront(u.memory.balls(), sample.matchMs, sample.period);
+    const homeEast = attacksEast("home", sample.period) ?? true;
+    const westSide: Side = homeEast ? "home" : "away"; // the team defending the west goal attacks east
+    tide.set(toWorld(front.frontX, 50).x, colourOf(westSide), colourOf(westSide === "home" ? "away" : "home"), u.time, kind === "territory" ? 0.36 : 0.1);
 
     const lineSegs: Segment[] = [];
     const linkSegs: Segment[] = [];
@@ -364,7 +372,7 @@ export function createStage(canvas: HTMLCanvasElement): Stage {
       const net = heavy?.pass_network[side];
       if (net) {
         const max = Math.max(1, ...net.links.map((l) => l.count));
-        for (const link of [...net.links].sort((a, b) => b.count - a.count).slice(0, 40)) {
+        for (const link of [...net.links].sort((a, b) => b.count - a.count).slice(0, STORY_LINKS)) {
           const a = pos(link.from);
           const b = pos(link.to);
           if (a && b) linkSegs.push({ ax: a.x, az: a.z, bx: b.x, bz: b.z, width: 0.22 + (link.count / max) * 0.9 });
@@ -383,18 +391,17 @@ export function createStage(canvas: HTMLCanvasElement): Stage {
         const z = toWorld(0, pitchY).z;
         const x0 = toWorld(east ? 52 : 48, 0).x;
         const x1 = toWorld(east ? 100 : 0, 0).x;
-        lane.set(x0, x1, z, PITCH_H / 3 - 2, colourOf(side), u.time, 0.6);
+        lane.set(x0, x1, z, PITCH_H / 3 - 2, STORY_BLUE, u.time, 0.35);
         laneOn = true;
       }
     }
 
     if (!laneOn) lane.set(0, 1, 0, 1, "#ffffff", u.time, 0);
-    const teamColour = story?.side ? colourOf(story.side) : "#ffffff";
-    lines.set(lineSegs, teamColour, lineSegs.length ? 0.92 : 0);
-    links.set(linkSegs, teamColour, linkSegs.length ? 0.85 : 0);
-    markers.set(markerSegs, "#ffffff", markerSegs.length ? 0.85 : 0);
-    nodes.set(nodePts, teamColour, nodePts.length ? 0.9 : 0);
-    hull.set(hullPts, teamColour, hullPts.length >= 3 ? 0.13 : 0);
+    lines.set(lineSegs, STORY_BLUE, lineSegs.length ? 0.7 : 0);
+    links.set(linkSegs, STORY_BLUE, linkSegs.length ? 0.6 : 0);
+    markers.set(markerSegs, "#ffffff", markerSegs.length ? 0.7 : 0);
+    nodes.set(nodePts, STORY_BLUE, nodePts.length ? 0.75 : 0);
+    hull.set(hullPts, STORY_BLUE, hullPts.length >= 3 ? 0.08 : 0);
   }
 
   return {

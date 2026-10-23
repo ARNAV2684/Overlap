@@ -14,7 +14,7 @@
 
 import * as THREE from "three";
 
-export const FIGURE_SCALE = 2.2;
+export const FIGURE_SCALE = 2.45;
 
 export type Kit = {
   shirt: string;
