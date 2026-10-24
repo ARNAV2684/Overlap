@@ -30,7 +30,7 @@ _Answer:_
   no key reaches the browser, and it is never logged or rendered.
 - **Groups joined:** `match-<id>` only (events, positions, status). Audience groups (`match-<id>-<mode>-<lang>`) and
   player groups are **not joined**: this screen shows no overlays. After the connection is ready the client sends
-  `{type:"joinGroup", group, ackId}` and waits up to 3 s for the ack before asking for the snapshot anyway.
+  `{type:"joinGroup", group, ackId}` and waits up to 3 s for a successful ack. A refused or missing ack closes this attempt and retries with backoff; it never reports a working live subscription.
 - **Request headers:** none added by us. Every HTTP call goes to this app's own routes (same origin); the routes set
   `Cache-Control: no-store` on their responses.
 - **Generation guard:** each connection attempt is one generation. Every callback checks its generation is still the
@@ -148,9 +148,8 @@ _Answer:_
 - **Merge:** snapshot entries (`received = null`) and buffered live entries are merged by `seq`; where a `seq` is in both,
   the live copy wins. They are then ingested in ascending `seq`. After the merge the buffer is released and later
   messages are ingested directly.
-- **If the snapshot fails** (error, timeout, invalid response): log it, continue with live messages only, and show
-  "Earlier history is unavailable. New live messages will still appear." A new snapshot is merged again on the next
-  reconnect; the `seq` dedupe makes that safe.
+- **If the snapshot fails** (error, timeout, invalid response): log it, close the attempt and retry with backoff. Do not present live tracking indefinitely without
+  its setup and earlier score/events. A new snapshot is merged on reconnect; the `seq` dedupe makes that safe.
 - **If the stream is unreachable** on first load: "Cannot reach the stream server. Is it running?", then the retry
   schedule in §1.
 - **Stale-connection fallback to the snapshot API** (the spec's original wording) is **not decided**: today a stale
@@ -305,7 +304,7 @@ browser releases them at the chosen speed.
   until the relay and the clock handle it.
 
 - **Caching:** a finished match never changes, so the route keeps each match's periods and goals in memory (at most
-  20 matches) and answers with `Cache-Control: private, max-age=3600`.
+  20 matches) and answers with `Cache-Control: no-store`: tracking and stats may still be arriving after the events stream reaches full time. Reloading must see newly archived records. This does not establish an archive-completion signal or automatically refresh chunks already loaded by the player.
 - **Settings** (server-only, the archiver's names, values never written down): `OVERLAP_COSMOS_ENDPOINT`,
   `OVERLAP_COSMOS_DATABASE` (default `live`), `OVERLAP_COSMOS_KEY` (local emulator only; without it the route uses
   `DefaultAzureCredential`), and for Blob either `OVERLAP_ARCHIVE_STORAGE` (a connection string, local) or
@@ -517,3 +516,15 @@ than 180 wall seconds, more than 60 seconds in the future, or already full_time 
 Finished results remain unchanged. This is a conservative display filter, not archive mutation or a claim a game
 finished. Genuine long pauses can temporarily disappear; a fresh snapshot makes them eligible again. The home
 screen clears its quiet exclusion when a match's clock advances, so a resumed stream can be selected again.
+
+## Viewer recovery acceptance (24 October 2026)
+
+A socket must receive its initial Web PubSub connected message within 10 seconds. A constructor failure, silent
+handshake, failed join or closed connection invalidates that generation before retrying. Stop cancels handshake,
+join and retry timers. The status remains connecting/reconnecting through subscription and snapshot catch-up;
+only the completed catch-up is marked live (or finished if full time). A failed snapshot invalidates the attempt and reconnects with backoff; it must not leave a live screen without setup/history.
+
+`viewer-acceptance.qa.test.ts` is opt-in and loopback-only: two real socket/store clients, late join, forced
+disconnect, fresh snapshot at full time, and replay chunks compared with the independently recorded generator
+setup/events/tracking/result. Local transport evidence is separate from browser rendering and Azure behavior.
+See ../../docs/viewer-replay-acceptance.md for the checklist and recorded results.

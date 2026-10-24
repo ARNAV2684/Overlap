@@ -48,7 +48,9 @@ const STATUS: Record<ErrorCode, number> = {
 const fail = (code: ErrorCode) =>
   Response.json({ error: code }, { status: STATUS[code], headers: { "Cache-Control": "no-store" } });
 
-const ok = (body: unknown) => Response.json(body, { headers: { "Cache-Control": "private, max-age=3600" } });
+// Full time on the events stream does not mean tracking/stats have finished archiving.
+// A later request must be able to see newly archived data instead of an hour-old partial chunk.
+const ok = (body: unknown) => Response.json(body, { headers: { "Cache-Control": "no-store" } });
 
 /** The archive reader for the current settings, or null (and one log line naming the problems) without them. */
 function archiveStore(): ArchiveStore | null {
