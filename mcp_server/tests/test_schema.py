@@ -70,3 +70,65 @@ def test_document_is_not_mutated(document):
     original = copy.deepcopy(document)
     parse_moment(document)
     assert encoded(document) == encoded(original)
+
+
+# --- insight moments (CONTRACTS.md §5, §10.6) ------------------------------------------------------------------------
+
+def _fact(key, value, label, unit=None, decimals=0):
+    out = {"key": key, "value": value, "decimals": decimals, "label": label}
+    if unit:
+        out["unit"] = unit
+    return out
+
+
+def _insight(document, trigger, player_ids, facts, players=None):
+    doc = copy.deepcopy(document)
+    e = doc["evidence"]
+    e.update(trigger=trigger, player_ids=player_ids, facts=facts, window={"from_ms": 0, "to_ms": e["match_ms"]})
+    doc["context"]["players"] = players if players is not None else [
+        {"player_id": p, "name": f"Player {p[-2:]}", "pos": "ST"} for p in player_ids]
+    return doc
+
+
+H2H_FORWARD = [_fact("player_shots_match", 4, "A's shots so far"), _fact("rival_shots_match", 1, "B's shots so far"),
+               _fact("player_shots_on_target_match", 3, "A's shots on target so far"),
+               _fact("rival_shots_on_target_match", 0, "B's shots on target so far"),
+               _fact("player_xg_match", 0.84, "A's expected goals so far", "xG", 2),
+               _fact("rival_xg_match", 0.1, "B's expected goals so far", "xG", 2)]
+
+
+def test_a_head_to_head_names_its_leader_then_the_rival(document):
+    assert parse_moment(_insight(document, "head_to_head", ["KES-11", "ORR-09"], H2H_FORWARD)).evidence.trigger == \
+        "head_to_head"
+
+
+@pytest.mark.parametrize("player_ids", [["KES-11", "KES-10"], ["ORR-09", "KES-11"], ["KES-11"],
+                                        ["KES-11", "ORR-09", "ORR-10"]])
+def test_a_head_to_head_rejects_any_other_player_list(document, player_ids):
+    with pytest.raises(ValueError):
+        parse_moment(_insight(document, "head_to_head", player_ids, H2H_FORWARD))
+
+
+def test_a_head_to_head_keeps_to_one_role(document):
+    mixed = H2H_FORWARD[:4] + [_fact("player_key_passes_match", 2, "A's key passes"),
+                               _fact("rival_key_passes_match", 0, "B's key passes")]
+    with pytest.raises(ValueError):
+        parse_moment(_insight(document, "head_to_head", ["KES-11", "ORR-09"], mixed))
+    with pytest.raises(ValueError):                                     # no rival in other moments
+        parse_moment(_insight(document, "workhorse", ["ORR-09"], []))
+
+
+def test_connection_and_workhorse_packs(document):
+    pair = [_fact("pair_passes_last_15min", 9, "Passes between A and B"),
+            _fact("pair_progressive_passes_last_15min", 3, "Progressive passes between A and B"),
+            _fact("pair_final_third_passes_last_15min", 1, "Passes into the final third"),
+            _fact("pair_shot_moves_last_15min", 2, "Passes in moves that ended in a shot")]
+    assert parse_moment(_insight(document, "connection", ["KES-10", "KES-11"], pair))
+    with pytest.raises(ValueError):
+        parse_moment(_insight(document, "connection", ["KES-10"], pair))
+    work = [_fact("player_duels_won_match", 9, "A's duels won"), _fact("player_recoveries_match", 4, "A's recoveries"),
+            _fact("player_pressures_match", 31, "A's pressures"), _fact("player_interceptions_match", 1, "A's interceptions"),
+            _fact("player_distance_km", 7.4, "Distance A has covered", "km", 1)]
+    assert parse_moment(_insight(document, "workhorse", ["KES-08"], work))
+    with pytest.raises(ValueError):
+        parse_moment(_insight(document, "workhorse", ["KES-08"], work[1:]))      # duels won is required

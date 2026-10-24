@@ -29,6 +29,9 @@ _Answer:_
 | `press_change` | `pressures_per_opp_pass_last_5min` · — · 2; `pressures_per_opp_pass_previous_10min` · — · 2; `team_pressures_last_5min` · — · 0; `team_high_regains_last_5min` · — · 0; `window_duration_min` (5) · min · 0; plus `press_height_last_5min_m` · m · 0 when its sample allows | The last 5 minutes; the team's pressures in it (at most 20, the latest) |
 | `sprint` (deferred, stats S3 D-01) | `player_top_speed_kmh` · km/h · 1; `player_sprints_match` · — · 0; `player_distance_km` · km · 2 | The 10 seconds before the frame; no events required |
 | `milestone` | `player_goals_match` (2 or 3) · — · 0; `shot_xg` · xG · 2 | The goal |
+| `head_to_head` | Three pairs for the role, `player_<m>_match` and `rival_<m>_match` · — · 0 (xG: · xG · 2). Forward: m = `shots`, `shots_on_target`, `xg`. Midfielder: `passes_completed`, `progressive_passes`, `key_passes`. Defender: `duels_won`, `interceptions`, `recoveries` | From kick-off; the leader's and the rival's latest events (at most 12 each). `player_ids` = [leader, rival]: the rival is on the other team |
+| `connection` | `pair_passes_last_15min`, `pair_progressive_passes_last_15min`, `pair_final_third_passes_last_15min`, `pair_shot_moves_last_15min` · — · 0 | The last 15 minutes of the period; the pair's completed passes in it. `player_ids` = the pair, the one who passed more first |
+| `workhorse` | `player_duels_won_match`, `player_recoveries_match`, `player_pressures_match`, `player_interceptions_match` · — · 0; plus, with tracking, `player_distance_km` · km · 1 and `player_sprints_match` · — · 0 | From kick-off; the player's latest duels, interceptions and recoveries (at most 12) |
 
 **Rules:**
 - **As built (stats S3):** every pack in a replay of season S1 has exactly the keys above, `event_ids` ascending by

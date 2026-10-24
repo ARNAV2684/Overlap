@@ -12,6 +12,7 @@
 import type { HeavyBlock, HeavyShot, MatchEvent, MatchSetup, MomentumBucket, StatPanel } from "@/lib/contracts";
 import { attacksEast, type Side } from "@/lib/coordinates";
 import { HEAT_COLS, HEAT_ROWS, type MatchMemory } from "@/lib/live/match-memory";
+import { isProgressive } from "@/lib/live/live-insights";
 
 export type MomentumPoint = { period: number; bucket: number; home: number; away: number; label: string };
 
@@ -118,7 +119,7 @@ export function passLines(events: readonly MatchEvent[], filter: { playerId?: st
       ex: e.end_x!,
       ey: e.end_y!,
       ok: e.outcome !== "fail",
-      progressive: (e.end_x! - e.x!) * 1.05 >= 10 && e.end_x! > 50,
+      progressive: isProgressive(e),
       key: keyPasses.has(e.event_id),
     }));
 }

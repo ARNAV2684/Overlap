@@ -13,10 +13,10 @@ export const metadata: Metadata = { title: "How it works" };
 const PIPELINE = [
   ["01", "Generator", "Synthetic league, played possession by possession: events, plus every player's position at 5 Hz."],
   ["02", "Event Hubs", "Events and tracking stream in as they happen. The relay forwards them; the archiver keeps every match."],
-  ["03", "Stats engine", "xG, pass difficulty, pressing, momentum, control and rhythm, every match second. Spots the moments that matter."],
+  ["03", "Stats engine", "xG, pass difficulty, pressing, momentum, distance and sprints, every match second. Spots the moments that matter."],
   ["04", "Seven agents", "Spotter, analyst (through MCP), narrator, fact-checker, translator, director, recap writer."],
   ["05", "Web PubSub", "Each audience (mode, language, club, player) gets its own ordered stream of checked cards."],
-  ["06", "This screen", "A 3D pitch from the tracking, the story director's overlays, and the AI cards at the moment they matter."],
+  ["06", "This screen", "A 3D pitch from the tracking, the story director's overlays and the AI commentary, plus head-to-heads, connections, the engine room and control vs chaos, worked out live from the events."],
 ] as const;
 
 const AGENTS = [

@@ -499,6 +499,20 @@ select optgroup {
   }
 }
 
+/* A ring that fades after a moment's chart link lands on its insight card (LiveInsights.tsx) */
+@keyframes ov-flash {
+  0%,
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.ov-flash {
+  animation: ov-flash 3s ease-out both;
+}
+
 .ov-fade-in {
   animation: ov-fade 0.3s ease-out both;
 }

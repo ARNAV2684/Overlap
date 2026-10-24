@@ -70,6 +70,15 @@ DONT: dict[str, list[tuple[re.Pattern, Any, str]]] = {
                      (re.compile(r"\bhigh press|pressing high|press high", re.IGNORECASE),
                       lambda f: "press_height_last_5min_m" in f, "high_press_without_height")],
     "milestone": [],
+    "head_to_head": [(re.compile(r"\bbetter (?:player|than)|outclass|class apart|superior|\bbully|"
+                                 r"\btired|fatigue|injur", re.IGNORECASE), None, "battle_verdict")],
+    "connection": [(re.compile(r"chemistry|telepath|friendship|best friends|instinct", re.IGNORECASE), None,
+                    "connection_feelings"),
+                   (re.compile(r"possession", re.IGNORECASE), None, "connection_possession")],
+    "workhorse": [(re.compile(r"\btired|fatigue|exhaust|fitness|stamina|lungs", re.IGNORECASE), None,
+                   "work_fitness"),
+                  (re.compile(r"\bkm\b|kilomet|\bran\b|running|covered|sprint", re.IGNORECASE),
+                   lambda f: "player_distance_km" in f, "distance_without_tracking")],
 }
 ALL_TRIGGERS_DONT = [(re.compile(r"should have scored", re.IGNORECASE), None, "xg_verdict"),
                      (re.compile(r"\bhat[- ]trick\b", re.IGNORECASE),

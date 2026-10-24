@@ -20,7 +20,7 @@ PERIOD_WARMUP_MS = 300_000                   # shot clusters: no cluster in a pe
 CLUSTER_WINDOW_MS = 300_000
 CLUSTER_COOLDOWN_MS = 300_000
 LABELLED = ("goal", "red_card", "penalty", "milestone", "shot_cluster")
-NOT_LABELLED = ("big_chance", "momentum_swing", "press_change")
+NOT_LABELLED = ("big_chance", "momentum_swing", "press_change", "head_to_head", "connection", "workhorse")
 
 # Storyline answer-key signals -> moments that would show them, for the storyline's team.
 STORY_TRIGGERS = {

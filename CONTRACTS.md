@@ -256,7 +256,9 @@ The **only** source of numbers an agent may cite.
 ```
 
 - `trigger`: `goal`, `red_card`, `penalty`, `big_chance` (shot xG ≥ 0.20), `shot_cluster` (3 shots in 5 min, §10.1),
-  `momentum_swing`, `press_change`, `sprint`, `milestone`. Exact rules and cooldowns:
+  `momentum_swing`, `press_change`, `sprint`, `milestone`, and the insight moments `head_to_head` (a player clearly
+  winning the battle with the other side's leader in the same role), `connection` (a team's new top passing pair over
+  the last 15 minutes) and `workhorse` (a new hardest worker). Exact rules and cooldowns:
   [`stats/specs/triggers.md`](stats/specs/triggers.md). The facts each trigger's pack holds:
   [`stats/specs/evidence-packs.md`](stats/specs/evidence-packs.md). Every pack is stored inside a moment document
   (§10.2).
@@ -265,6 +267,9 @@ The **only** source of numbers an agent may cite.
 - **Fact key naming:** snake_case with the window and unit in the name, so a key can't be misread:
   `shots_last_5min`, `high_regains_since_55min`, `momentum_share_last_10min_pct`, `player_top_speed_kmh`.
 - `window` (in `match_ms`), `event_ids` and `player_ids` tie the moment to its evidence.
+- **Players are on the moment's team** (`team_id`), with one exception: a `head_to_head` pack has exactly two
+  `player_ids`, the leader (on `team_id`) first and the **rival** (the other side's leader in the same role) second.
+  Both are in `context.players` (§10.2), so the line may name the rival; their numbers are the `rival_*` facts.
 
 ### 5.1 Narrated line and fact-checking
 
@@ -322,7 +327,8 @@ a fallback. Translations are re-checked so every number survives unchanged.
 - `modes`: text per viewer mode (`casual`, `analyst`, `player`) and language (`en`, `hi`, `es`). English is
   always present for every mode included.
 - `visual.component` is one of `momentum_tide`, `shot_map`, `pass_network`, `pressing_zones`, `heatmap_zones`,
-  `stat_bars`, `key_events`. `window_ms` (`[from, to]`) and `highlight` (`team_id`, `player_id`, `event_id`,
+  `stat_bars`, `key_events`, and the live insight cards `head_to_head`, `connections`, `engine_room`
+  (`web/specs/screens.md` §2.8). `window_ms` (`[from, to]`) and `highlight` (`team_id`, `player_id`, `event_id`,
   `zone`) are optional.
 - `verified` is true **only** when the fact-checker passed every number; `fallback` marks template lines. A line
   is never both. `facts_checked` lists the fact keys that were verified, all from the moment's evidence pack.
@@ -625,7 +631,8 @@ accident. Model access/spending (D5) is a separate M3 gate; M1 and local MCP tes
 These extend §10.3–§10.4 for the layer-5 build. Where they differ from §10.3–§10.4, this section wins.
 
 - **Triggers.** Every trigger the stats engine writes uses the §10.2 document (with `context.players`):
-  `goal`, `red_card`, `penalty`, `big_chance`, `shot_cluster`, `momentum_swing`, `press_change`, `milestone`
+  `goal`, `red_card`, `penalty`, `big_chance`, `shot_cluster`, `momentum_swing`, `press_change`, `milestone`,
+  `head_to_head`, `connection`, `workhorse`
   ([`stats/specs/triggers.md`](stats/specs/triggers.md), [`stats/specs/evidence-packs.md`](stats/specs/evidence-packs.md)).
   `sprint` joins when the stats engine produces it. Priority (`high` for goal, red card, penalty; `normal` otherwise)
   is fixed by trigger, not stored in the document.
@@ -637,8 +644,10 @@ These extend §10.3–§10.4 for the layer-5 build. Where they differ from §10.
   `club` (the team id) for `club` mode or `player` (the player id) for `player` mode. One `overlay_id` per moment
   per audience. `visual.component` per trigger: goal, big chance, penalty → `shot_map` (or `key_events` until it
   exists); shot cluster → `key_events`; momentum swing → `momentum_tide` (highlight the team); press change →
-  `pressing_zones`; red card → `stat_bars` or `key_events`; milestone → `key_events` with a player tag. The highlight
-  is the last `event_id` (the triggering event) except for `momentum_swing`.
+  `pressing_zones`; red card → `stat_bars` or `key_events`; milestone → `key_events` with a player tag; head-to-head →
+  `head_to_head` (highlight the leader); connection → `connections` (highlight the team; the screen also draws the
+  pair on the 3D pitch); workhorse → `engine_room` (highlight the player). The highlight is the last `event_id` (the
+  triggering event) except for `momentum_swing`, `head_to_head`, `connection` and `workhorse`.
 - **Groups** (Web PubSub hub `live`; one sender per group, the insights publisher; `seq` per group):
 
   | Group | Carries |

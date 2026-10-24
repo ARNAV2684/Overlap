@@ -13,6 +13,7 @@ import * as THREE from "three";
 import type { MatchSetup } from "@/lib/contracts";
 import { attacksEast, teamToPitch, type Side } from "@/lib/coordinates";
 import type { Booking, FieldEvent } from "@/lib/live/match-events";
+import type { Connection } from "@/lib/live/live-insights";
 import type { MatchMemory } from "@/lib/live/match-memory";
 import type { BallPoint } from "@/lib/live/ball-flight";
 import { renderedTravel, type MotionSample } from "@/lib/live/motion";
@@ -59,6 +60,22 @@ export function overlayColour(colours: { primary: string; secondary: string }): 
     return `#${c.getHexString()}`;
   };
   return lift(colours.primary) ?? lift(colours.secondary) ?? "#ffffff";
+}
+
+/** World positions of the players in a team's connections, from their mean pass-start spots in the team frame. */
+export function connectionSpots(side: Side, period: number, connections: readonly Connection[]): Map<string, { x: number; z: number }> {
+  const east = attacksEast(side, period) ?? side === "home";
+  const out = new Map<string, { x: number; z: number }>();
+  for (const c of connections) {
+    for (const [id, at] of [
+      [c.a, c.at.a],
+      [c.b, c.at.b],
+    ] as const) {
+      const p = teamToPitch(at, east);
+      out.set(id, toWorld(p.x, p.y));
+    }
+  }
+  return out;
 }
 
 export type StageUpdate = {
@@ -418,6 +435,18 @@ export function createStage(canvas: HTMLCanvasElement): Stage {
         );
         flanksOn = true;
       }
+    }
+
+    if (kind === "connections" && story?.side && story.connections) {
+      // The team's top pairs at each player's mean pass-start spot (team frame, turned to the pitch for this half)
+      const spots = connectionSpots(story.side, sample.period, story.connections);
+      const max = Math.max(1, ...story.connections.map((c) => c.score));
+      story.connections.forEach((c, i) => {
+        const a = spots.get(c.a);
+        const b = spots.get(c.b);
+        if (a && b) linkSegs.push({ ax: a.x, az: a.z, bx: b.x, bz: b.z, width: 0.45 + (c.score / max) * (i === 0 ? 1.6 : 1.1) });
+      });
+      for (const p of spots.values()) nodePts.push({ ...p, r: 2.2 });
     }
 
     if (!laneOn) lane.set(0, 1, 0, 1, "#ffffff", u.time, 0);

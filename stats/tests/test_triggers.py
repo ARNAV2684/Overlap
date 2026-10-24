@@ -140,3 +140,76 @@ def test_the_fixture_fires_pranavs_shot_cluster():
     clusters = [m for m in main.replay_moments(FIXTURE)["SYN-1017"] if m["evidence"]["trigger"] == "shot_cluster"]
     ids = [m["evidence"]["event_ids"] for m in clusters]
     assert ["SYN-1017-01477", "SYN-1017-01542", "SYN-1017-01592"] in ids
+
+
+# --- insight triggers (triggers.md §2.8–§2.10) --------------------------------------------------------------------
+
+def test_head_to_head_waits_for_20_minutes_a_clear_lead_and_a_new_leader():
+    f = Feed()
+    f(1, 0, None, "PeriodStart")
+    shot(f, 1, 5 * MIN, team="BBB")                                            # Beta's forward gets going
+    for ms in (6, 7, 8):
+        assert "head_to_head" not in shot(f, 1, ms * MIN, outcome="saved")      # before 20 minutes
+    fired = shot(f, 1, 21 * MIN, outcome="saved")
+    assert "head_to_head" in fired
+    h2h = next(x for x in f.fired if x.trigger == "head_to_head")
+    assert (h2h.side, h2h.data["role"], h2h.data["player"], h2h.data["rival"]) == ("home", "forward", "AAA-09", "BBB-09")
+    assert "head_to_head" not in shot(f, 1, 22 * MIN, outcome="saved")          # same leader: nothing new
+    for ms in (23, 24, 25, 26):
+        assert "head_to_head" not in shot(f, 1, ms * MIN, team="BBB", outcome="goal")   # new leader, in the cooldown
+    assert "head_to_head" in shot(f, 1, 37 * MIN, team="BBB", outcome="goal")   # after 15 minutes, Beta's turn
+
+
+def test_connection_needs_eight_passes_in_15_minutes_and_a_new_pair():
+    f = Feed()
+    f(1, 0, None, "PeriodStart")
+
+    def pass_(ms: int, a: int = 4, b: int = 7):
+        return f(1, ms, "AAA", "Pass", player=a, x=40, y=50, end_x=70, end_y=50, outcome="success",
+                 receiver_id=f"AAA-{b:02d}", body_part="right_foot", qualifiers=[])
+
+    for i in range(7):
+        assert "connection" not in pass_(15 * MIN + i * 1000)                  # seven passes: not yet
+    assert "connection" in pass_(15 * MIN + 8000)
+    c = next(x for x in f.fired if x.trigger == "connection")
+    assert c.data["pair"] == ("AAA-04", "AAA-07") and len(c.data["passes"]) == 8
+    for i in range(10):
+        assert "connection" not in pass_(16 * MIN + i * 1000)                  # same pair: nothing new
+
+
+def test_a_connection_never_counts_passes_from_before_its_window():
+    f = Feed()
+    f(1, 0, None, "PeriodStart")
+    for i in range(6):
+        f(1, MIN + i * 1000, "AAA", "Pass", player=4, x=40, y=50, end_x=70, end_y=50, outcome="success",
+          receiver_id="AAA-07", body_part="right_foot", qualifiers=[])
+    for i in range(3):
+        fired = f(1, 20 * MIN + i * 1000, "AAA", "Pass", player=4, x=40, y=50, end_x=70, end_y=50,
+                  outcome="success", receiver_id="AAA-07", body_part="right_foot", qualifiers=[])
+        assert "connection" not in fired
+
+
+def test_workhorse_from_25_minutes_with_a_lead_and_a_cooldown():
+    f = Feed()
+    f(1, 0, None, "PeriodStart")
+    for ms in (2, 3, 4):
+        assert "workhorse" not in f(1, ms * MIN, "AAA", "Tackle", player=5, outcome="success")
+    assert "workhorse" in f(1, 26 * MIN, "AAA", "Tackle", player=5, outcome="success")
+    w = next(x for x in f.fired if x.trigger == "workhorse")
+    assert (w.side, w.data["player"]) == ("home", "AAA-05")
+    for ms in range(27, 33):
+        assert "workhorse" not in f(1, ms * MIN, "BBB", "Tackle", player=5, outcome="success")   # cooldown
+    assert "workhorse" in f(1, 42 * MIN, "BBB", "Tackle", player=5, outcome="success")
+    assert f.fired[-1].data["player"] == "BBB-05"
+
+
+def test_the_role_and_work_scores_match_the_web_cards():
+    s = MatchState(setup())
+    p = s.players["AAA-09"]
+    p.counts.update(goals=1, on_target=2, shots=3, take_ons_completed=2, key_passes=1)
+    p.xg = 0.5
+    assert triggers.role_score("forward", p) == 3 + 2 + 2 + 1.5 + 1 + 1
+    p.counts.update(tackles_won=2, aerials_won=1, recoveries=3, interceptions=1, pressures=10)
+    assert triggers.work_score(p) == 1.5 * (2 + 2 + 1) + 3 + 1 + 0.3 * 10
+    assert [triggers.role_of(x) for x in ("GK", "RWB", "AM", "LW", "??")] == \
+        ["keeper", "defender", "midfielder", "forward", "midfielder"]

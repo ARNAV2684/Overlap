@@ -1,0 +1,875 @@
+[
+ {
+  "context": {
+   "phase": "live",
+   "players": [
+    {
+     "name": "Jakub Mazur",
+     "player_id": "KES-08",
+     "pos": "CM"
+    },
+    {
+     "name": "Malte Zimmermann",
+     "player_id": "KES-10",
+     "pos": "CM"
+    }
+   ],
+   "score": {
+    "away": 0,
+    "home": 2
+   },
+   "teams": {
+    "away": {
+     "name": "Orrinford Albion",
+     "team_id": "ORR"
+    },
+    "home": {
+     "name": "Kestlebury United",
+     "team_id": "KES"
+    }
+   }
+  },
+  "evidence": {
+   "clock": "15:10",
+   "event_ids": [
+    "SYN-1017-00136",
+    "SYN-1017-00184",
+    "SYN-1017-00197",
+    "SYN-1017-00198",
+    "SYN-1017-00199",
+    "SYN-1017-00200",
+    "SYN-1017-00327",
+    "SYN-1017-00328",
+    "SYN-1017-00330",
+    "SYN-1017-00350"
+   ],
+   "facts": [
+    {
+     "decimals": 0,
+     "key": "pair_passes_last_15min",
+     "label": "Passes between Jakub Mazur and Malte Zimmermann in the last 15 minutes",
+     "value": 9
+    },
+    {
+     "decimals": 0,
+     "key": "pair_progressive_passes_last_15min",
+     "label": "Progressive passes between Jakub Mazur and Malte Zimmermann in the last 15 minutes",
+     "value": 1
+    },
+    {
+     "decimals": 0,
+     "key": "pair_final_third_passes_last_15min",
+     "label": "Passes between Jakub Mazur and Malte Zimmermann into the final third in the last 15 minutes",
+     "value": 1
+    },
+    {
+     "decimals": 0,
+     "key": "pair_shot_moves_last_15min",
+     "label": "Passes between Jakub Mazur and Malte Zimmermann in moves that ended in a shot, last 15 minutes",
+     "value": 3
+    }
+   ],
+   "match_id": "SYN-1017",
+   "match_ms": 910200,
+   "moment_id": "MO-1017-0003",
+   "period": 1,
+   "player_ids": [
+    "KES-08",
+    "KES-10"
+   ],
+   "team_id": "KES",
+   "trigger": "connection",
+   "window": {
+    "from_ms": 10200,
+    "to_ms": 910200
+   }
+  },
+  "evidence_version": 1,
+  "id": "MO-1017-0003",
+  "kind": "moment",
+  "match_id": "SYN-1017",
+  "moment_id": "MO-1017-0003",
+  "schema_version": 1,
+  "source": {
+   "event_seq": 350,
+   "match_ms": 910200,
+   "period": 1
+  }
+ },
+ {
+  "context": {
+   "phase": "live",
+   "players": [
+    {
+     "name": "Jakub Mazur",
+     "player_id": "KES-08",
+     "pos": "CM"
+    },
+    {
+     "name": "Kamil Vasić",
+     "player_id": "ORR-08",
+     "pos": "CM"
+    }
+   ],
+   "score": {
+    "away": 0,
+    "home": 2
+   },
+   "teams": {
+    "away": {
+     "name": "Orrinford Albion",
+     "team_id": "ORR"
+    },
+    "home": {
+     "name": "Kestlebury United",
+     "team_id": "KES"
+    }
+   }
+  },
+  "evidence": {
+   "clock": "20:01",
+   "event_ids": [
+    "SYN-1017-00176",
+    "SYN-1017-00178",
+    "SYN-1017-00179",
+    "SYN-1017-00197",
+    "SYN-1017-00199",
+    "SYN-1017-00201",
+    "SYN-1017-00215",
+    "SYN-1017-00223",
+    "SYN-1017-00241",
+    "SYN-1017-00264",
+    "SYN-1017-00290",
+    "SYN-1017-00292",
+    "SYN-1017-00294",
+    "SYN-1017-00306",
+    "SYN-1017-00328",
+    "SYN-1017-00331",
+    "SYN-1017-00346",
+    "SYN-1017-00372",
+    "SYN-1017-00392",
+    "SYN-1017-00393",
+    "SYN-1017-00402",
+    "SYN-1017-00405",
+    "SYN-1017-00431",
+    "SYN-1017-00437",
+    "SYN-1017-00453"
+   ],
+   "facts": [
+    {
+     "decimals": 0,
+     "key": "player_passes_completed_match",
+     "label": "Jakub Mazur's completed passes so far",
+     "value": 13
+    },
+    {
+     "decimals": 0,
+     "key": "rival_passes_completed_match",
+     "label": "Kamil Vasić's completed passes so far",
+     "value": 9
+    },
+    {
+     "decimals": 0,
+     "key": "player_progressive_passes_match",
+     "label": "Jakub Mazur's progressive passes so far",
+     "value": 5
+    },
+    {
+     "decimals": 0,
+     "key": "rival_progressive_passes_match",
+     "label": "Kamil Vasić's progressive passes so far",
+     "value": 3
+    },
+    {
+     "decimals": 0,
+     "key": "player_key_passes_match",
+     "label": "Jakub Mazur's passes leading to a shot so far",
+     "value": 1
+    },
+    {
+     "decimals": 0,
+     "key": "rival_key_passes_match",
+     "label": "Kamil Vasić's passes leading to a shot so far",
+     "value": 0
+    }
+   ],
+   "match_id": "SYN-1017",
+   "match_ms": 1201400,
+   "moment_id": "MO-1017-0006",
+   "period": 1,
+   "player_ids": [
+    "KES-08",
+    "ORR-08"
+   ],
+   "team_id": "KES",
+   "trigger": "head_to_head",
+   "window": {
+    "from_ms": 0,
+    "to_ms": 1201400
+   }
+  },
+  "evidence_version": 1,
+  "id": "MO-1017-0006",
+  "kind": "moment",
+  "match_id": "SYN-1017",
+  "moment_id": "MO-1017-0006",
+  "schema_version": 1,
+  "source": {
+   "event_seq": 453,
+   "match_ms": 1201400,
+   "period": 1
+  }
+ },
+ {
+  "context": {
+   "phase": "live",
+   "players": [
+    {
+     "name": "Yannick Koch",
+     "player_id": "KES-04",
+     "pos": "CB"
+    },
+    {
+     "name": "Marek Popescu",
+     "player_id": "ORR-02",
+     "pos": "RB"
+    }
+   ],
+   "score": {
+    "away": 0,
+    "home": 2
+   },
+   "teams": {
+    "away": {
+     "name": "Orrinford Albion",
+     "team_id": "ORR"
+    },
+    "home": {
+     "name": "Kestlebury United",
+     "team_id": "KES"
+    }
+   }
+  },
+  "evidence": {
+   "clock": "25:33",
+   "event_ids": [
+    "SYN-1017-00408",
+    "SYN-1017-00410",
+    "SYN-1017-00424",
+    "SYN-1017-00425",
+    "SYN-1017-00428",
+    "SYN-1017-00433",
+    "SYN-1017-00441",
+    "SYN-1017-00447",
+    "SYN-1017-00456",
+    "SYN-1017-00464",
+    "SYN-1017-00465",
+    "SYN-1017-00467",
+    "SYN-1017-00488",
+    "SYN-1017-00497",
+    "SYN-1017-00504",
+    "SYN-1017-00505",
+    "SYN-1017-00507",
+    "SYN-1017-00513",
+    "SYN-1017-00514",
+    "SYN-1017-00517",
+    "SYN-1017-00519",
+    "SYN-1017-00522",
+    "SYN-1017-00531",
+    "SYN-1017-00554",
+    "SYN-1017-00568"
+   ],
+   "facts": [
+    {
+     "decimals": 0,
+     "key": "player_duels_won_match",
+     "label": "Yannick Koch's duels won so far",
+     "value": 3
+    },
+    {
+     "decimals": 0,
+     "key": "rival_duels_won_match",
+     "label": "Marek Popescu's duels won so far",
+     "value": 0
+    },
+    {
+     "decimals": 0,
+     "key": "player_interceptions_match",
+     "label": "Yannick Koch's interceptions so far",
+     "value": 1
+    },
+    {
+     "decimals": 0,
+     "key": "rival_interceptions_match",
+     "label": "Marek Popescu's interceptions so far",
+     "value": 1
+    },
+    {
+     "decimals": 0,
+     "key": "player_recoveries_match",
+     "label": "Yannick Koch's ball recoveries so far",
+     "value": 1
+    },
+    {
+     "decimals": 0,
+     "key": "rival_recoveries_match",
+     "label": "Marek Popescu's ball recoveries so far",
+     "value": 4
+    }
+   ],
+   "match_id": "SYN-1017",
+   "match_ms": 1533600,
+   "moment_id": "MO-1017-0009",
+   "period": 1,
+   "player_ids": [
+    "KES-04",
+    "ORR-02"
+   ],
+   "team_id": "KES",
+   "trigger": "head_to_head",
+   "window": {
+    "from_ms": 0,
+    "to_ms": 1533600
+   }
+  },
+  "evidence_version": 1,
+  "id": "MO-1017-0009",
+  "kind": "moment",
+  "match_id": "SYN-1017",
+  "moment_id": "MO-1017-0009",
+  "schema_version": 1,
+  "source": {
+   "event_seq": 568,
+   "match_ms": 1533600,
+   "period": 1
+  }
+ },
+ {
+  "context": {
+   "phase": "live",
+   "players": [
+    {
+     "name": "Yannick Koch",
+     "player_id": "KES-04",
+     "pos": "CB"
+    }
+   ],
+   "score": {
+    "away": 0,
+    "home": 2
+   },
+   "teams": {
+    "away": {
+     "name": "Orrinford Albion",
+     "team_id": "ORR"
+    },
+    "home": {
+     "name": "Kestlebury United",
+     "team_id": "KES"
+    }
+   }
+  },
+  "evidence": {
+   "clock": "25:33",
+   "event_ids": [
+    "SYN-1017-00083",
+    "SYN-1017-00115",
+    "SYN-1017-00180",
+    "SYN-1017-00217",
+    "SYN-1017-00312",
+    "SYN-1017-00385",
+    "SYN-1017-00425",
+    "SYN-1017-00568"
+   ],
+   "facts": [
+    {
+     "decimals": 0,
+     "key": "player_duels_won_match",
+     "label": "Yannick Koch's duels won so far",
+     "value": 3
+    },
+    {
+     "decimals": 0,
+     "key": "player_recoveries_match",
+     "label": "Yannick Koch's ball recoveries so far",
+     "value": 1
+    },
+    {
+     "decimals": 0,
+     "key": "player_pressures_match",
+     "label": "Yannick Koch's pressures so far",
+     "value": 25
+    },
+    {
+     "decimals": 0,
+     "key": "player_interceptions_match",
+     "label": "Yannick Koch's interceptions so far",
+     "value": 1
+    }
+   ],
+   "match_id": "SYN-1017",
+   "match_ms": 1533600,
+   "moment_id": "MO-1017-0010",
+   "period": 1,
+   "player_ids": [
+    "KES-04"
+   ],
+   "team_id": "KES",
+   "trigger": "workhorse",
+   "window": {
+    "from_ms": 0,
+    "to_ms": 1533600
+   }
+  },
+  "evidence_version": 1,
+  "id": "MO-1017-0010",
+  "kind": "moment",
+  "match_id": "SYN-1017",
+  "moment_id": "MO-1017-0010",
+  "schema_version": 1,
+  "source": {
+   "event_seq": 568,
+   "match_ms": 1533600,
+   "period": 1
+  }
+ },
+ {
+  "context": {
+   "phase": "live",
+   "players": [
+    {
+     "name": "Kwame Kone",
+     "player_id": "KES-09",
+     "pos": "ST"
+    },
+    {
+     "name": "Bogdan Wójcik",
+     "player_id": "ORR-09",
+     "pos": "ST"
+    }
+   ],
+   "score": {
+    "away": 0,
+    "home": 2
+   },
+   "teams": {
+    "away": {
+     "name": "Orrinford Albion",
+     "team_id": "ORR"
+    },
+    "home": {
+     "name": "Kestlebury United",
+     "team_id": "KES"
+    }
+   }
+  },
+  "evidence": {
+   "clock": "30:47",
+   "event_ids": [
+    "SYN-1017-00381",
+    "SYN-1017-00438",
+    "SYN-1017-00482",
+    "SYN-1017-00484",
+    "SYN-1017-00486",
+    "SYN-1017-00506",
+    "SYN-1017-00521",
+    "SYN-1017-00532",
+    "SYN-1017-00538",
+    "SYN-1017-00541",
+    "SYN-1017-00552",
+    "SYN-1017-00557",
+    "SYN-1017-00570",
+    "SYN-1017-00572",
+    "SYN-1017-00581",
+    "SYN-1017-00592",
+    "SYN-1017-00595",
+    "SYN-1017-00598",
+    "SYN-1017-00626",
+    "SYN-1017-00635",
+    "SYN-1017-00638",
+    "SYN-1017-00666",
+    "SYN-1017-00688",
+    "SYN-1017-00705",
+    "SYN-1017-00718"
+   ],
+   "facts": [
+    {
+     "decimals": 0,
+     "key": "player_shots_match",
+     "label": "Kwame Kone's shots so far",
+     "value": 3
+    },
+    {
+     "decimals": 0,
+     "key": "rival_shots_match",
+     "label": "Bogdan Wójcik's shots so far",
+     "value": 3
+    },
+    {
+     "decimals": 0,
+     "key": "player_shots_on_target_match",
+     "label": "Kwame Kone's shots on target so far",
+     "value": 1
+    },
+    {
+     "decimals": 0,
+     "key": "rival_shots_on_target_match",
+     "label": "Bogdan Wójcik's shots on target so far",
+     "value": 3
+    },
+    {
+     "decimals": 2,
+     "key": "player_xg_match",
+     "label": "Kwame Kone's expected goals so far",
+     "unit": "xG",
+     "value": 0.6
+    },
+    {
+     "decimals": 2,
+     "key": "rival_xg_match",
+     "label": "Bogdan Wójcik's expected goals so far",
+     "unit": "xG",
+     "value": 0.11
+    }
+   ],
+   "match_id": "SYN-1017",
+   "match_ms": 1847400,
+   "moment_id": "MO-1017-0011",
+   "period": 1,
+   "player_ids": [
+    "KES-09",
+    "ORR-09"
+   ],
+   "team_id": "KES",
+   "trigger": "head_to_head",
+   "window": {
+    "from_ms": 0,
+    "to_ms": 1847400
+   }
+  },
+  "evidence_version": 1,
+  "id": "MO-1017-0011",
+  "kind": "moment",
+  "match_id": "SYN-1017",
+  "moment_id": "MO-1017-0011",
+  "schema_version": 1,
+  "source": {
+   "event_seq": 718,
+   "match_ms": 1847400,
+   "period": 1
+  }
+ },
+ {
+  "context": {
+   "phase": "live",
+   "players": [
+    {
+     "name": "Igor Petrović",
+     "player_id": "KES-07",
+     "pos": "RW"
+    },
+    {
+     "name": "Malte Zimmermann",
+     "player_id": "KES-10",
+     "pos": "CM"
+    }
+   ],
+   "score": {
+    "away": 0,
+    "home": 3
+   },
+   "teams": {
+    "away": {
+     "name": "Orrinford Albion",
+     "team_id": "ORR"
+    },
+    "home": {
+     "name": "Kestlebury United",
+     "team_id": "KES"
+    }
+   }
+  },
+  "evidence": {
+   "clock": "67:37",
+   "event_ids": [
+    "SYN-1017-01308",
+    "SYN-1017-01413",
+    "SYN-1017-01438",
+    "SYN-1017-01512",
+    "SYN-1017-01514",
+    "SYN-1017-01532",
+    "SYN-1017-01538",
+    "SYN-1017-01630"
+   ],
+   "facts": [
+    {
+     "decimals": 0,
+     "key": "pair_passes_last_15min",
+     "label": "Passes between Igor Petrović and Malte Zimmermann in the last 15 minutes",
+     "value": 8
+    },
+    {
+     "decimals": 0,
+     "key": "pair_progressive_passes_last_15min",
+     "label": "Progressive passes between Igor Petrović and Malte Zimmermann in the last 15 minutes",
+     "value": 4
+    },
+    {
+     "decimals": 0,
+     "key": "pair_final_third_passes_last_15min",
+     "label": "Passes between Igor Petrović and Malte Zimmermann into the final third in the last 15 minutes",
+     "value": 0
+    },
+    {
+     "decimals": 0,
+     "key": "pair_shot_moves_last_15min",
+     "label": "Passes between Igor Petrović and Malte Zimmermann in moves that ended in a shot, last 15 minutes",
+     "value": 4
+    }
+   ],
+   "match_id": "SYN-1017",
+   "match_ms": 4297600,
+   "moment_id": "MO-1017-0019",
+   "period": 2,
+   "player_ids": [
+    "KES-07",
+    "KES-10"
+   ],
+   "team_id": "KES",
+   "trigger": "connection",
+   "window": {
+    "from_ms": 3397600,
+    "to_ms": 4297600
+   }
+  },
+  "evidence_version": 1,
+  "id": "MO-1017-0019",
+  "kind": "moment",
+  "match_id": "SYN-1017",
+  "moment_id": "MO-1017-0019",
+  "schema_version": 1,
+  "source": {
+   "event_seq": 1630,
+   "match_ms": 4297600,
+   "period": 2
+  }
+ },
+ {
+  "context": {
+   "phase": "live",
+   "players": [
+    {
+     "name": "Malte Zimmermann",
+     "player_id": "KES-10",
+     "pos": "CM"
+    },
+    {
+     "name": "Omar Qureshi",
+     "player_id": "ORR-07",
+     "pos": "RM"
+    }
+   ],
+   "score": {
+    "away": 0,
+    "home": 3
+   },
+   "teams": {
+    "away": {
+     "name": "Orrinford Albion",
+     "team_id": "ORR"
+    },
+    "home": {
+     "name": "Kestlebury United",
+     "team_id": "KES"
+    }
+   }
+  },
+  "evidence": {
+   "clock": "68:34",
+   "event_ids": [
+    "SYN-1017-01284",
+    "SYN-1017-01285",
+    "SYN-1017-01324",
+    "SYN-1017-01461",
+    "SYN-1017-01512",
+    "SYN-1017-01515",
+    "SYN-1017-01532",
+    "SYN-1017-01539",
+    "SYN-1017-01541",
+    "SYN-1017-01542",
+    "SYN-1017-01549",
+    "SYN-1017-01551",
+    "SYN-1017-01556",
+    "SYN-1017-01558",
+    "SYN-1017-01560",
+    "SYN-1017-01565",
+    "SYN-1017-01576",
+    "SYN-1017-01587",
+    "SYN-1017-01600",
+    "SYN-1017-01620",
+    "SYN-1017-01626",
+    "SYN-1017-01631",
+    "SYN-1017-01639",
+    "SYN-1017-01643"
+   ],
+   "facts": [
+    {
+     "decimals": 0,
+     "key": "player_passes_completed_match",
+     "label": "Malte Zimmermann's completed passes so far",
+     "value": 64
+    },
+    {
+     "decimals": 0,
+     "key": "rival_passes_completed_match",
+     "label": "Omar Qureshi's completed passes so far",
+     "value": 26
+    },
+    {
+     "decimals": 0,
+     "key": "player_progressive_passes_match",
+     "label": "Malte Zimmermann's progressive passes so far",
+     "value": 14
+    },
+    {
+     "decimals": 0,
+     "key": "rival_progressive_passes_match",
+     "label": "Omar Qureshi's progressive passes so far",
+     "value": 10
+    },
+    {
+     "decimals": 0,
+     "key": "player_key_passes_match",
+     "label": "Malte Zimmermann's passes leading to a shot so far",
+     "value": 0
+    },
+    {
+     "decimals": 0,
+     "key": "rival_key_passes_match",
+     "label": "Omar Qureshi's passes leading to a shot so far",
+     "value": 0
+    }
+   ],
+   "match_id": "SYN-1017",
+   "match_ms": 4355000,
+   "moment_id": "MO-1017-0021",
+   "period": 2,
+   "player_ids": [
+    "KES-10",
+    "ORR-07"
+   ],
+   "team_id": "KES",
+   "trigger": "head_to_head",
+   "window": {
+    "from_ms": 0,
+    "to_ms": 4355000
+   }
+  },
+  "evidence_version": 1,
+  "id": "MO-1017-0021",
+  "kind": "moment",
+  "match_id": "SYN-1017",
+  "moment_id": "MO-1017-0021",
+  "schema_version": 1,
+  "source": {
+   "event_seq": 1643,
+   "match_ms": 4355000,
+   "period": 2
+  }
+ },
+ {
+  "context": {
+   "phase": "live",
+   "players": [
+    {
+     "name": "Kamil Vasić",
+     "player_id": "ORR-08",
+     "pos": "CM"
+    },
+    {
+     "name": "Mateusz Stanković",
+     "player_id": "ORR-19",
+     "pos": "CM"
+    }
+   ],
+   "score": {
+    "away": 0,
+    "home": 3
+   },
+   "teams": {
+    "away": {
+     "name": "Orrinford Albion",
+     "team_id": "ORR"
+    },
+    "home": {
+     "name": "Kestlebury United",
+     "team_id": "KES"
+    }
+   }
+  },
+  "evidence": {
+   "clock": "76:52",
+   "event_ids": [
+    "SYN-1017-01488",
+    "SYN-1017-01570",
+    "SYN-1017-01580",
+    "SYN-1017-01688",
+    "SYN-1017-01694",
+    "SYN-1017-01841",
+    "SYN-1017-01842",
+    "SYN-1017-01874"
+   ],
+   "facts": [
+    {
+     "decimals": 0,
+     "key": "pair_passes_last_15min",
+     "label": "Passes between Kamil Vasić and Mateusz Stanković in the last 15 minutes",
+     "value": 8
+    },
+    {
+     "decimals": 0,
+     "key": "pair_progressive_passes_last_15min",
+     "label": "Progressive passes between Kamil Vasić and Mateusz Stanković in the last 15 minutes",
+     "value": 2
+    },
+    {
+     "decimals": 0,
+     "key": "pair_final_third_passes_last_15min",
+     "label": "Passes between Kamil Vasić and Mateusz Stanković into the final third in the last 15 minutes",
+     "value": 2
+    },
+    {
+     "decimals": 0,
+     "key": "pair_shot_moves_last_15min",
+     "label": "Passes between Kamil Vasić and Mateusz Stanković in moves that ended in a shot, last 15 minutes",
+     "value": 2
+    }
+   ],
+   "match_id": "SYN-1017",
+   "match_ms": 4852200,
+   "moment_id": "MO-1017-0023",
+   "period": 2,
+   "player_ids": [
+    "ORR-08",
+    "ORR-19"
+   ],
+   "team_id": "ORR",
+   "trigger": "connection",
+   "window": {
+    "from_ms": 3952200,
+    "to_ms": 4852200
+   }
+  },
+  "evidence_version": 1,
+  "id": "MO-1017-0023",
+  "kind": "moment",
+  "match_id": "SYN-1017",
+  "moment_id": "MO-1017-0023",
+  "schema_version": 1,
+  "source": {
+   "event_seq": 1874,
+   "match_ms": 4852200,
+   "period": 2
+  }
+ }
+]

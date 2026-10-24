@@ -58,8 +58,11 @@ pinned Team shape or Pass network is about it. Territory still shows both teams.
 ### 2.3 The AI moment card
 
 When a card is due (`realtime.md` §4) it rises over the pitch for its duration, as light glass and compact so the play
-shows through. In the visual kit's style (24 Oct): the minute and "AI moment", the badge (**Numbers verified** only
-when the fact-checker passed every number; **Template · checked** for template lines), the sentence in the viewer's
+shows through. In the visual kit's style (24 Oct): the minute, the **kind** of moment (from the chart the director
+picked: big moment, chance, momentum, press, passing, movement, numbers, and since the insight moments head-to-head,
+connection and engine room), the badge (**AI · checked** only for a
+model-written line the fact-checker passed; **Stat line · checked** for template lines, which are never called AI;
+S8), the sentence in the viewer's
 mode and language with its **key number** picked out in the focus blue and repeated big beside it, and a small **chart
 chip** naming the chart it points to; the chip opens that chart's analysis tab below. The key number is found in the
 sentence (`keyNumber`, `lib/live/insights.ts`); it is never computed by the screen. The player the card is about gets
@@ -104,7 +107,38 @@ brighter; for PPDA, lower leads. It updates with every stat panel (once a match 
 sent as null. Last, **Attack by flank** for both teams (S7): each lane's share (left, mid, right as each team faces
 the goal it attacks) of the team's final-third actions over the last 6 minutes (`flankShares`, `lib/live/story.ts`),
 counted at the picture's playhead, the main lane tinted in the team's colour; "–" while a team has fewer than 4 such
-actions.
+actions. Since S8 the rail sits under the commentary history in the side column.
+
+### 2.8 Live commentary and live insights (S8)
+
+Right under the pitch, so they are in view while the match plays:
+
+- **Live commentary** (`MomentStrip.tsx`): the card on screen now (or the latest) large, with its minute, kind, badge
+  (§2.3), sentence with the key number and chart link, and the three before it beside it (side-scrollable on phones).
+  Replay cards stay hidden until the playhead reaches them.
+- **Live insights** (`LiveInsights.tsx`, numbers from `lib/live/live-insights.ts`, worked out in the browser from the
+  events and the heavy block; each card says so):
+  - **Head-to-head:** each side's leading player in one role (forwards, midfielders, defenders), compared on that
+    role's numbers (forwards: goals, xG, shots and on target, conversion, hardest shot, take-ons won; midfielders:
+    passes completed, completion, progressive passes, average pass, chances created, recoveries; defenders: tackles
+    won, interceptions, aerials won, duels won, clearances, progressive passes). The leader of each row is brighter.
+    It rotates role every 45 s until the viewer picks one.
+  - **Connections:** a team's top three passing pairs (both directions), ranked by passes + 2 × progressive + 1 × into
+    the final third + 3 × in moves that ended in a shot, drawn on a small pitch at each player's mean pass-start spot.
+  - **Engine room:** the top four outfield workers by 2 × km + 0.5 × sprints + 1.5 × duels won + recoveries +
+    interceptions + 0.3 × pressures, each bar split into its parts, the formula printed on the card.
+  - **Tempo (last 5 minutes):** control (6 or more completed passes per possession), chaos (3.8 or fewer) or
+    balanced; turnovers a minute; rhythm (passes a minute against the match so far, ±15 %: speeding up, steady,
+    slowing down); and which side keeps the ball longer.
+
+The replay progress line carries a mark for each moment shown so far (§2.4).
+
+**Insight moments** (`head_to_head`, `connection`, `workhorse`; `CONTRACTS.md` §10.6): their cards point to the
+`head_to_head`, `connections` and `engine_room` visuals. The chart link scrolls to that insight card and rings it: the
+head-to-head turns to the leader's role, connections to the card's team, the engine room marks the player. A
+connection card also pins the Connections story on the 3D pitch (`pitch.md` §4). The progressive passes on every card
+use the stats engine's rule (an open-play pass from x ≥ 35 ending at least 25 % closer to goal), so a card and the
+commentary quote the same number.
 
 ## 3. Your match (preferences)
 
@@ -126,14 +160,16 @@ this match fall back to casual, and the bar says so.
 
 ### 3.2 Player focus
 
-`PlayerFocus.tsx`, when a player is followed: distance, top speed and sprints (stats engine, from tracking), passes and
-accuracy, shots and goals, take-ons won. The player gets a ring and a name tag on the pitch, and the heatmap and pass
+`PlayerFocus.tsx`, when a player is followed: distance, top speed and sprints (stats engine, from tracking), then the
+numbers for the player's role (the head-to-head sets, §2.8) beside their opposite number's (the other side's leading
+player in the same role), and their last four actions (S8). The player gets a ring and a name tag on the pitch, and the heatmap and pass
 map switch to them.
 
 ## 4. AI feed
 
-`AiFeed.tsx`: every card the audience received, newest first, with its minute, priority dot, badge and a link to its
-chart; the full-time recap on top when it arrives (in a replay, at full time); the publisher's player tags. Empty
+`AiFeed.tsx`, the commentary history in the side column (after the followed player): every card the audience
+received, newest first and grouped by half, with its minute, kind, badge (§2.3) and a link to its chart, and a count of
+how many were written by the agents; the full-time recap on top when it arrives (in a replay, at full time); the publisher's player tags. Empty
 state: the agents are watching, and what makes a card.
 
 ## 5. Matches `/matches`

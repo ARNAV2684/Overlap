@@ -88,7 +88,50 @@ def template(moment: dict, mode: str) -> dict:
         name = player_name(moment, e["player_ids"][0]) if e["player_ids"] else None
         who = name or team
         return _line(mode, f"{who}: {ORDINALS.get(g['value'], str(g['value']))} goal of the match.", [_claim(g)])
+    if trig == "head_to_head":
+        leader, rival = (player_name(moment, p) for p in e["player_ids"][:2])
+        pairs = _h2h_pairs(f)
+        if analyst:
+            parts = [f"{fmt(p)} {word} to {fmt(r)}" for word, p, r in pairs]
+            return _line(mode, f"{leader} is ahead of {rival}: {', '.join(parts)}.",
+                         [_claim(x) for _, p, r in pairs for x in (p, r)])
+        # The number the leader leads on most (relative to the rival), never a tie
+        word, p, r = max(pairs, key=lambda x: (x[1]["value"] - x[2]["value"]) / max(x[2]["value"], 1))
+        return _line(mode, f"{leader} is winning the battle with {rival}: {fmt(p)} {word} to {fmt(r)}.",
+                     [_claim(p), _claim(r)])
+    if trig == "connection":
+        a, b = (player_name(moment, p) for p in e["player_ids"][:2])
+        n, prog = f["pair_passes_last_15min"], f["pair_progressive_passes_last_15min"]
+        text = f"{a} and {b} are linking up: {fmt(n)} passes to each other lately, {fmt(prog)} progressive."
+        claims = [_claim(n), _claim(prog)]
+        if analyst and f["pair_shot_moves_last_15min"]["value"]:
+            moves = f["pair_shot_moves_last_15min"]
+            text = text[:-1] + f", {fmt(moves)} in moves ending in a shot."
+            claims.append(_claim(moves))
+        return _line(mode, text, claims)
+    if trig == "workhorse":
+        name = player_name(moment, e["player_ids"][0]) if e["player_ids"] else None
+        won, rec, pr = f["player_duels_won_match"], f["player_recoveries_match"], f["player_pressures_match"]
+        claims = [_claim(won), _claim(rec), _claim(pr)]
+        text = f"{name or team} is putting in the most work: {fmt(won)} duels won, {fmt(rec)} recoveries, {fmt(pr)} pressures"
+        if analyst and "player_distance_km" in f:
+            km = f["player_distance_km"]
+            text += f", {fmt(km)} km covered"
+            claims.append(_claim(km))
+        return _line(mode, text + ".", claims)
     raise ValueError(f"no template for trigger {trig!r}")
+
+
+# The words each head-to-head number is told with, in the order the stats engine sends them
+H2H_WORDS = {"shots": "shots", "shots_on_target": "on target", "xg": "xG", "passes_completed": "completed passes",
+             "progressive_passes": "progressive passes", "key_passes": "passes leading to a shot",
+             "duels_won": "duels won", "interceptions": "interceptions", "recoveries": "recoveries"}
+
+
+def _h2h_pairs(f: dict[str, dict]) -> list[tuple[str, dict, dict]]:
+    """(words, the leader's fact, the rival's fact) for each number the pack compares."""
+    return [(word, f[f"player_{m}_match"], f[f"rival_{m}_match"]) for m, word in H2H_WORDS.items()
+            if f"player_{m}_match" in f and f"rival_{m}_match" in f]
 
 
 def templates(moment: dict, modes: tuple[str, ...]) -> list[dict]:
@@ -120,7 +163,7 @@ def target_of(line_id: str) -> str | None:
     return line_id.split(":", 1)[1] if ":" in line_id else None
 
 
-FOCAL = ("goal", "milestone", "big_chance", "penalty", "red_card")      # player_ids[0] is the moment's actor
+FOCAL = ("goal", "milestone", "big_chance", "penalty", "red_card", "workhorse")   # player_ids[0] is the actor
 
 
 def template_line(moment: dict, line_id: str) -> dict:
@@ -155,6 +198,13 @@ def template_line(moment: dict, line_id: str) -> dict:
             n = f["team_players_on_pitch"]
             return {"id": line_id, **_line("player", f"{name} is sent off. {team} are down to {fmt(n)}.",
                                            [_claim(n)])}
+        if trig == "workhorse":
+            won, rec = f["player_duels_won_match"], f["player_recoveries_match"]
+            return {"id": line_id, **_line("player", f"{name} is putting in the most work: {fmt(won)} duels won and "
+                                                     f"{fmt(rec)} recoveries.", [_claim(won), _claim(rec)])}
+    if e["trigger"] in ("head_to_head", "connection") and target in e["player_ids"]:
+        base = template(moment, "player")                 # the line already names this player
+        return {"id": line_id, **_line("player", base["text"], base["claims"])}
     base = template(moment, "player")
     return {"id": line_id, **_line("player", f"{name}: {base['text']}", base["claims"])}
 
