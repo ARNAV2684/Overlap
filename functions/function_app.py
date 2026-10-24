@@ -41,6 +41,9 @@ app = func.FunctionApp()
 # annotation"), and then loads no function at all.
 Events = typing.List[func.EventHubEvent]  # noqa: UP006
 log = logging.getLogger("screen_relay.function")
+# The Azure SDKs log every HTTP request and response at INFO; on Azure that is thousands of lines a minute into
+# Application Insights, enough to reach the workspace's daily cap mid-match. Their warnings and errors still show.
+logging.getLogger("azure").setLevel(logging.WARNING)
 _relay: R.Relay | None = None
 _archiver: archive.Archiver | None = None
 
