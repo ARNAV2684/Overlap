@@ -14,6 +14,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import json
+import logging
 import os
 import sys
 from pathlib import Path
@@ -40,6 +41,16 @@ class ContextRejected(RuntimeError):
     """The server refused the scope or returned another moment's context: an integration error."""
 
 
+log = logging.getLogger("agents.context")
+
+
+def _describe(e: BaseException) -> str:
+    """One line for the log: the error types and messages, through task groups' wrappers."""
+    if isinstance(e, BaseExceptionGroup):
+        return "; ".join(_describe(x) for x in e.exceptions)
+    return f"{type(e).__name__}: {e}"[:300]
+
+
 def mcp_python(settings: Settings) -> str:
     """The setting; else mcp_server/.venv (local development); else this Python: the Functions package ships the
     server beside the agents with the same packages, no second venv."""
@@ -53,10 +64,13 @@ def mcp_env(settings: Settings, python: str) -> dict[str, str]:
     env = {k: os.environ[k] for k in (*COSMOS_ENV, *IDENTITY_ENV) if k in os.environ} \
         if settings.mcp_source == "cosmos" else {}
     if python == sys.executable:
-        # mcp_server is a folder beside agents/, not installed. The rest of this process's import path goes along too:
-        # on Azure the packages (mcp among them) sit in the Functions build's .python_packages folder, which the worker
-        # adds to its own path but a child Python would not see (every card fell back to a template, 24 Oct)
-        extra = [p for p in sys.path if p and p != str(ROOT) and os.path.isdir(p)]
+        # mcp_server is a folder beside agents/, not installed. The package folders inside the app go along too: on
+        # Azure the packages (mcp among them) sit in the Functions build's .python_packages folder, which the worker
+        # adds to its own path but a child Python would not see (every card fell back to a template, 24 Oct). Only
+        # folders inside the app: the worker's own libraries, also on its path, must not shadow the app's packages
+        root = ROOT.resolve()
+        extra = [p for p in sys.path if p and Path(p).resolve() != root and Path(p).resolve().is_relative_to(root)
+                 and os.path.isdir(p)]
         env["PYTHONPATH"] = os.pathsep.join([str(ROOT), *extra])
     return env
 
@@ -85,6 +99,7 @@ class McpContext:
             await asyncio.wait_for(self.tool.connect(), timeout=s.mcp_timeout_s * 5)
         except Exception as e:                               # server missing, failed to start, or too slow
             await self._close()
+            log.warning("MCP server did not start for %s: %s", self.identity["moment_id"], _describe(e))
             raise ContextUnavailable("mcp_start_failed") from e
         return self
 
