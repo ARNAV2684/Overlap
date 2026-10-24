@@ -2,13 +2,15 @@
 //
 // Purpose: everything /api/start-match needs: the next free match number, a per-visitor rate limit, whether a run is
 //          already going, and starting one execution of the generator's Container Apps job with its own identity
-// Inputs:  OVERLAP_GENERATOR_JOB_ID (the job's Azure resource id), OVERLAP_GENERATOR_IMAGE (its image); the archive's
-//          recent match ids; the web app's managed identity (DefaultAzureCredential)
+// Inputs:  OVERLAP_GENERATOR_JOB_ID (the job's Azure resource id); the archive's recent match ids; the web app's managed
+//          identity (DefaultAzureCredential)
 // Outputs: nextMatchNumber(), createRateLimiter(), readStartEnv(), createJobStarter()
 // Spec:    infra/specs/security.md §3; web/specs/realtime.md §8
 //
 // Nothing from the request reaches the job: the route passes only the match number it picked itself. One run at a
-// time across the site (the job's executions are checked first), and 3 starts per visitor per hour.
+// time across the site (the job's executions are checked first), and 3 starts per visitor per hour. A start with an
+// override replaces the job's whole container, so the job's own container (image, identity, settings) is read first
+// and only OVERLAP_FIRST_MATCH is added to it.
 
 import { DefaultAzureCredential, type TokenCredential } from "@azure/identity";
 
@@ -48,13 +50,20 @@ export function createRateLimiter(limit = STARTS_PER_HOUR, windowMs = 3_600_000,
   };
 }
 
-export type StartSettings = { jobId: string; image: string };
+export type StartSettings = { jobId: string };
 
 export function readStartEnv(source: Record<string, string | undefined> = process.env): StartSettings | null {
   const jobId = source.OVERLAP_GENERATOR_JOB_ID?.trim();
-  const image = source.OVERLAP_GENERATOR_IMAGE?.trim();
-  if (!jobId || !image || !/^\/subscriptions\/[^/]+\/resourceGroups\/[^/]+\/providers\/Microsoft\.App\/jobs\/[^/]+$/i.test(jobId)) return null;
-  return { jobId, image };
+  if (!jobId || !/^\/subscriptions\/[^/]+\/resourceGroups\/[^/]+\/providers\/Microsoft\.App\/jobs\/[^/]+$/i.test(jobId)) return null;
+  return { jobId };
+}
+
+type JobContainer = { name?: string; env?: { name: string; value?: string }[] } & Record<string, unknown>;
+
+/** The job's own container with OVERLAP_FIRST_MATCH set to the match number. */
+export function withMatchNumber(container: JobContainer, matchNumber: number): JobContainer {
+  const env = (container.env ?? []).filter((e) => e.name !== "OVERLAP_FIRST_MATCH");
+  return { ...container, env: [...env, { name: "OVERLAP_FIRST_MATCH", value: String(matchNumber) }] };
 }
 
 export type JobStarter = {
@@ -82,19 +91,10 @@ export function createJobStarter(settings: StartSettings, credential: TokenCrede
       return (body.value ?? []).some((e) => ["Running", "Processing"].includes(e.properties?.status ?? ""));
     },
     async start(matchNumber) {
-      await call("/start", {
-        method: "POST",
-        body: JSON.stringify({
-          containers: [
-            {
-              name: "generator",
-              image: settings.image,
-              resources: { cpu: 0.5, memory: "1Gi" },
-              env: [{ name: "OVERLAP_FIRST_MATCH", value: String(matchNumber) }],
-            },
-          ],
-        }),
-      });
+      const job = (await (await call("")).json()) as { properties?: { template?: { containers?: JobContainer[] } } };
+      const container = job.properties?.template?.containers?.[0];
+      if (!container) throw new Error("job has no container");
+      await call("/start", { method: "POST", body: JSON.stringify({ containers: [withMatchNumber(container, matchNumber)] }) });
     },
   };
 }

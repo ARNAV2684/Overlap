@@ -471,14 +471,16 @@ until the file changes (`src/lib/server/season-store.ts`). No database is involv
 Built 24 Oct (`app/api/start-match/route.ts`, `lib/server/start-match.ts`, `components/home/StartMatchButton.tsx`).
 On Azure it starts one execution of the generator's Container Apps job, which plays `SYN-<n>` at 20×; the home page
 switches to it when its first frames arrive. `n` is one past the highest archived match id, never below 3000 (local
-runs stay below). The request body is never read and nothing from the request reaches the job.
+runs stay below). The request body is never read and nothing from the request reaches the job. A start with an
+override replaces the job's whole container, so the route reads the job's own container first and adds only
+`OVERLAP_FIRST_MATCH` (the web identity may read and start that one job and read its executions, nothing more).
 
 | Answer | When |
 |---|---|
 | `202 { match_id }` | Started |
 | `429 rate_limited` | More than 3 starts from one address in an hour (per web replica, in memory) |
 | `429 match_running` | An execution of the job is still running: one match at a time across the site |
-| `503 start_unavailable` | No job settings (`OVERLAP_GENERATOR_JOB_ID`, `OVERLAP_GENERATOR_IMAGE`) or archive settings; locally |
+| `503 start_unavailable` | No job setting (`OVERLAP_GENERATOR_JOB_ID`) or archive settings; locally |
 | `502 start_failed` | The archive or Azure call failed |
 
 The web app's identity holds a custom role that can only read and start that job (`infra/specs/security.md` §3).
