@@ -55,3 +55,44 @@ async def live(match_id: str) -> dict:
         await overlays.close()
     gaps = [sent[m] - written[m] for m in sent if m in written]
     return {"match_id": match_id, "moment_to_send_s": stats(gaps)}
+
+
+def job_timings(jobs: list[dict]) -> dict:
+    """Milliseconds from saved job audits, not browser latency or model-card success.
+
+    Legacy missing values are excluded, never interpreted as zero. Stage times include
+    context/model work but exclude save_stage, queueing and downstream publication.
+    """
+    stages: dict[str, list[float]] = {}
+    attempts: dict[str, dict[str, list[float]]] = {}
+
+    def valid(value):
+        return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value) and value >= 0
+
+    for job in jobs:
+        for name, output in job.get("stage_outputs", {}).items():
+            elapsed = output.get("duration_ms")
+            if valid(elapsed):
+                stages.setdefault(name, []).append(elapsed)
+            for call in output.get("calls", []):
+                elapsed = call.get("duration_ms")
+                if valid(elapsed) and isinstance(call.get("ok"), bool):
+                    group = attempts.setdefault(call["agent"], {"success": [], "failure": []})
+                    group["success" if call["ok"] else "failure"].append(elapsed)
+    return {"unit": "ms", "stages": {k: stats(v) for k, v in stages.items()},
+            "model_attempts": {k: {status: stats(v) for status, v in groups.items()}
+                               for k, groups in attempts.items()}}
+
+
+if __name__ == "__main__":
+    import argparse
+    import json
+    from pathlib import Path
+
+    parser = argparse.ArgumentParser(description="Summarize a local JSON array of saved insight job documents.")
+    parser.add_argument("jobs", type=Path)
+    args = parser.parse_args()
+    documents = json.loads(args.jobs.read_text(encoding="utf-8"))
+    if not isinstance(documents, list):
+        parser.error("expected a JSON array of job documents")
+    print(json.dumps(job_timings(documents), indent=2))

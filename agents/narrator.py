@@ -1,6 +1,6 @@
 # narrator.py — Narrator
 #
-# Purpose: one model call writes the English lines for every requested audience text: casual, analyst, a club line
+# Purpose: at most two parallel model calls write the English lines for every requested audience text: casual, analyst, a club line
 #          for each team and a player line for each followed player; a rewrite call fixes only the failed lines
 # Inputs:  facts, names, the analyst's interpretation, the line ids and their limits
 # Outputs: {lines: [{id, mode, lang: "en", text, claims}], fallback, model_ids}
@@ -10,6 +10,8 @@
 # the wrong shape) use their template at once; the fact-checker decides about the rest.
 
 from __future__ import annotations
+
+import asyncio
 
 from pydantic import BaseModel, Field
 
@@ -71,10 +73,21 @@ async def run(run: RunState) -> dict:
         return {"lines": template_lines(m, ids), "fallback": True, "model_ids": []}
     payload = {"moment": evidence_view(m), "interpretation": analysis.get("interpretation"),
                "key_facts": analysis.get("key_facts"), "lines": requested(m, ids)}
-    try:
-        got = _accept(await run.ask("narrator", payload, Lines), ids)
-    except ModelFailed:
-        return {"lines": template_lines(m, ids), "fallback": True, "model_ids": []}
+    # At most two bounded calls: shorter outputs run concurrently under the existing
+    # durable model budget and deadline. Each chunk can fall back independently.
+    midpoint = (len(ids) + 1) // 2
+    chunks = [part for part in (ids[:midpoint], ids[midpoint:]) if part]
+
+    async def draft(part):
+        try:
+            result = await run.ask("narrator", {**payload, "lines": requested(m, part)}, Lines)
+            return _accept(result, part)
+        except ModelFailed:
+            return {}
+
+    got = {}
+    for lines_by_id in await asyncio.gather(*(draft(part) for part in chunks)):
+        got.update(lines_by_id)
     lines = [got.get(i) or template_line(m, i) for i in ids]
     return {"lines": lines, "fallback": not got, "model_ids": [i for i in ids if i in got]}
 

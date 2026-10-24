@@ -126,3 +126,11 @@ The live screen and archive replay share the same viewer. No extra packages or a
 The pitch has worn turf, corded nets, floodlight masts, detailed kits and contact shadows. Running steps follow rendered travel on the shared tracking clock. The ball flies in 3D: tracked heights for lofted balls, and shots flown from their events to the exact point they cross the goal line, with a trail ([`specs/pitch.md`](specs/pitch.md) §6). Tracking coordinates, match events and backend contracts are unchanged; exact foot-to-ball contact remains limited by the source tracking and procedural models.
 
 Git shares the viewer code, not another teammate's running services or recorded matches. Use your own local match ID; no developer-specific ports, recordings, database contents or secrets are needed from the author.
+
+## Durable public starts (local release patch)
+Set `OVERLAP_LIVE_ENABLED=true` only with a configured generator job and provisioned `match-control` Blob container.
+The web identity needs the container-scoped writer role added in infra/modules/storage.bicep. Without it starts
+fail closed; GET availability is only a preliminary existence check. No raw IPs are stored. POST limits are shared
+across replicas (3 per hashed network visitor and 6 globally/hour). Unknown ARM outcomes block further starts for
+operator reconciliation; don't retry or clear the coordination blob blindly. See specs/realtime.md for recovery.
+Stale live rows are filtered read-only; neither the matches nor replay data are edited.

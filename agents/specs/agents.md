@@ -82,3 +82,8 @@ prompt quality is judged on the Azure model.
 
 Agent Framework runs the agents and attaches the MCP server as a tool. Pin its packages, and the provider SDK's,
 when M1 is implemented (verify current names and versions on Microsoft Learn then).
+
+## Local release fix: narrator execution
+Initial English narration uses up to two parallel disjoint line batches, each checked against its own requested
+IDs. Partial success preserves those lines; missing lines use labelled templates. No evidence or fact-check rule
+changes. Recap/rewrite call strategies remain unchanged. See workflow.md for unchanged hard budgets and deadlines.

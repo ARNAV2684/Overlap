@@ -111,3 +111,18 @@ export function buildMatchList(rows: readonly StoredRow[], states: ReadonlyMap<s
     }),
   };
 }
+
+/** Omit stale live candidates without changing archived status or fabricating results.
+ * Cosmos _ts is seconds. Recent setup gets a grace period before the first stats snapshot.
+ */
+export const LIVE_FRESHNESS_MS = 180_000;
+export function currentMatchRows(rows: readonly StoredRow[], states: ReadonlyMap<string, unknown>, now = Date.now()) {
+  return rows.filter((row) => {
+    if (row.status === "finished") return true;
+    const state = states.get(row.match_id) as { _ts?: unknown; phase?: unknown } | undefined;
+    if (state?.phase === "full_time") return false; // wait for the archive's real final result
+    const updated = typeof state?._ts === "number" ? state._ts : row._ts;
+    const age = now - updated * 1000;
+    return Number.isFinite(age) && age >= -60_000 && age <= LIVE_FRESHNESS_MS;
+  });
+}
