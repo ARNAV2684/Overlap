@@ -140,6 +140,9 @@ resource apps 'Microsoft.Web/sites@2024-04-01' = [for a in appsToRun: {
         { name: 'OVERLAP_TRANSLATOR', value: 'azure' }
         { name: 'OVERLAP_TRANSLATOR_ENDPOINT', value: translatorEndpoint }
         { name: 'OVERLAP_MCP_SOURCE', value: 'cosmos' }
+        // A fresh MCP server process per job needs 4-5 s to start on Azure under match load; its request timeout is
+        // twice this (default 2 s), so 4 s lets it answer while the job stays inside its 15 s deadline
+        { name: 'OVERLAP_MCP_TIMEOUT_S', value: '4' }
       ], map(a.off, f => { name: 'AzureWebJobs.${f}.Disabled', value: 'true' }))
     }
   }
