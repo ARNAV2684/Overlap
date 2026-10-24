@@ -60,6 +60,9 @@ param livePipeline string = 'true'
 ])
 param webMinReplicas string = '1'
 
+@description('Cosmos DB shared RU/s: "4000" during a live run (about $0.24 an hour above the free 1,000), "1000" otherwise.')
+param cosmosThroughput string = '1000'
+
 @description('Container images (<registry>/<name>:<tag>); empty runs the public placeholder until the first push.')
 param webImage string = ''
 param statsImage string = ''
@@ -139,6 +142,7 @@ module cosmos 'modules/cosmos.bicep' = {
     statsPrincipalId: identity.outputs.stats.principalId
     webPrincipalId: identity.outputs.web.principalId
     developerPrincipalId: principalId
+    throughput: int(cosmosThroughput)
   }
 }
 

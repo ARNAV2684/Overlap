@@ -29,6 +29,9 @@
     "webMinReplicas": {
       "value": "${WEB_MIN_REPLICAS=1}"
     },
+    "cosmosThroughput": {
+      "value": "${COSMOS_THROUGHPUT=1000}"
+    },
     "webImage": {
       "value": "${WEB_IMAGE}"
     },
