@@ -48,7 +48,28 @@ def _describe(e: BaseException) -> str:
     """One line for the log: the error types and messages, through task groups' wrappers."""
     if isinstance(e, BaseExceptionGroup):
         return "; ".join(_describe(x) for x in e.exceptions)
-    return f"{type(e).__name__}: {e}"[:300]
+    return f"{type(e).__name__}: {e}"[:1000]
+
+
+_diagnosed = False
+
+
+async def _diagnose_once(python: str, env: dict[str, str]) -> None:
+    """The first start failure in a process: run the same Python with the same settings, import the server and log
+    what it prints. The server's own error output is otherwise lost (it goes to the Functions worker's console)."""
+    global _diagnosed
+    if _diagnosed:
+        return
+    _diagnosed = True
+    from mcp.client.stdio import get_default_environment   # what the MCP client starts the server with, plus ours
+    probe = "import sys; print(sys.executable, sys.version.split()[0]); import mcp_server.server; print('import ok')"
+    try:
+        proc = await asyncio.create_subprocess_exec(python, "-c", probe, env={**get_default_environment(), **env},
+                                                    stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.STDOUT)
+        out, _ = await asyncio.wait_for(proc.communicate(), timeout=20)
+        log.warning("MCP server probe (exit %s): %s", proc.returncode, out.decode(errors="replace")[-1500:])
+    except Exception as e:                                   # the probe itself must never break the job
+        log.warning("MCP server probe failed: %s", _describe(e))
 
 
 def mcp_python(settings: Settings) -> str:
@@ -100,6 +121,7 @@ class McpContext:
         except Exception as e:                               # server missing, failed to start, or too slow
             await self._close()
             log.warning("MCP server did not start for %s: %s", self.identity["moment_id"], _describe(e))
+            await _diagnose_once(python, mcp_env(s, python))
             raise ContextUnavailable("mcp_start_failed") from e
         return self
 
