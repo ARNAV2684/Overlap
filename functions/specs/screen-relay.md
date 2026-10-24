@@ -88,6 +88,11 @@ _Answer:_
   time.
 - **Stats:** a `kind=stats` message on `match-events` is forwarded as a `stats` envelope with the panel unchanged.
 - **Send:** through the Web PubSub service API (`send_to_group`, JSON). Locally the same call goes to the stand-in.
+  Each send is one HTTP call, and one at a time held the relay well below 20× on Azure (24 Oct: about 30 frames/s
+  against the 113 a 20× match makes). So the Functions app sends `positions` and `stats` envelopes side by side
+  (8 at once; the browser keeps the newest of those by `match_ms`, `web/specs/realtime.md` §2), while `event` and
+  `status` envelopes still leave one by one in `seq` order. A commit's sends all finish before the match's lock is
+  released, so one commit never overtakes another. The local runner and the tests send one at a time.
 - **Save first, then send:** each envelope is written to the store before it is sent. If sending fails it is retried
   (3 attempts, 0.5 s → 1 s → 2 s); if it still fails, it is logged and the browser gets it from the snapshot on its next
   reconnect.

@@ -44,6 +44,8 @@ log = logging.getLogger("screen_relay.function")
 # The Azure SDKs log every HTTP request and response at INFO; on Azure that is thousands of lines a minute into
 # Application Insights, enough to reach the workspace's daily cap mid-match. Their warnings and errors still show.
 logging.getLogger("azure").setLevel(logging.WARNING)
+# Web PubSub sends in flight at once for positions and stats (screen_relay.UNORDERED_KINDS); events stay in order
+SEND_WORKERS = 8
 _relay: R.Relay | None = None
 _archiver: archive.Archiver | None = None
 
@@ -52,7 +54,7 @@ def relay() -> R.Relay:
     global _relay
     if _relay is None:
         store, sender = from_env()
-        _relay = R.Relay(store, sender)
+        _relay = R.Relay(store, sender, send_workers=SEND_WORKERS)
     return _relay
 
 
