@@ -6,6 +6,7 @@
 //            Discs          rings under players, sized by involvement (pass network nodes)
 //            Hull           a translucent fill over a team's block
 //            LaneBand       an animated arrow band down one attacking lane
+//            FlankLanes     the three lanes of an attacking third, each as bright as its share of the attack
 // Inputs:  world coordinates (metres, X east, Z south) and colours
 // Outputs: the classes below; each has an `object` to add to the scene and a dispose()
 // Spec:    web/specs/pitch.md §4
@@ -287,7 +288,7 @@ export class LaneBand {
           float u = uDir > 0.0 ? vUv.x : 1.0 - vUv.x;
           float across = abs(vUv.y - 0.5) * 2.0;
           // Chevrons: stripes bent into arrows, moving towards the goal
-          float chevron = fract((u - across * 0.18) * 7.0 - uTime * 0.9);
+          float chevron = fract((u + across * 0.18) * 7.0 - uTime * 0.9);
           float stripe = smoothstep(0.0, 0.08, chevron) * (1.0 - smoothstep(0.32, 0.42, chevron));
           float edge = 1.0 - smoothstep(0.8, 1.0, across);
           float fade = smoothstep(0.0, 0.25, u);
@@ -317,5 +318,86 @@ export class LaneBand {
   dispose() {
     this.object.geometry.dispose();
     (this.object.material as THREE.Material).dispose();
+  }
+}
+
+/** One lane of an attacking third: world x from the third's start to the goal line, centred on z. */
+export type FlankLane = { x0: number; x1: number; z: number; width: number; share: number };
+
+/**
+ * Attack by flank on the grass: three stripes over the attacking third (left, centre, right), each lit by its share
+ * of the team's final-third actions, brightest at the goal end. The labels with the numbers are HTML (PitchStage).
+ */
+export class FlankLanes {
+  readonly object = new THREE.Group();
+  private readonly meshes: THREE.Mesh[] = [];
+  private readonly uniforms: { uColour: { value: THREE.Color }; uOpacity: { value: number }; uDir: { value: number } }[] = [];
+  private readonly opacity = [0, 0, 0];
+  /** The last lanes drawn, so the stripes fade out in place when the story moves on. */
+  private last: readonly FlankLane[] = [];
+
+  constructor() {
+    for (let i = 0; i < 3; i++) {
+      const uniforms = { uColour: { value: new THREE.Color("#ffffff") }, uOpacity: { value: 0 }, uDir: { value: 1 } };
+      const material = new THREE.ShaderMaterial({
+        uniforms,
+        transparent: true,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+        vertexShader: /* glsl */ `
+          varying vec2 vUv;
+          void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+        fragmentShader: /* glsl */ `
+          uniform float uOpacity; uniform float uDir; uniform vec3 uColour;
+          varying vec2 vUv;
+          void main() {
+            float u = uDir > 0.0 ? vUv.x : 1.0 - vUv.x;
+            float across = abs(vUv.y - 0.5) * 2.0;
+            // A soft fill that brightens towards the goal, with a crisp edge so the three lanes read apart
+            float fill = 0.35 + 0.65 * smoothstep(0.0, 1.0, u);
+            float edge = smoothstep(0.86, 0.94, across) * (1.0 - smoothstep(0.96, 1.0, across));
+            float inside = 1.0 - smoothstep(0.94, 1.0, across);
+            float a = uOpacity * (inside * fill * 0.55 + edge * 0.9);
+            gl_FragColor = vec4(uColour, a);
+          }`,
+      });
+      const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), material);
+      mesh.rotation.x = -Math.PI / 2;
+      mesh.position.y = Y + 0.001;
+      mesh.renderOrder = 2;
+      this.meshes.push(mesh);
+      this.uniforms.push(uniforms);
+      this.object.add(mesh);
+    }
+  }
+
+  /** Lanes in any order (shares in %); `opacity` is the brightest lane's, the others scale by their share. */
+  set(lanes: readonly FlankLane[], colour: string, opacity: number) {
+    if (lanes.length) this.last = lanes;
+    const top = Math.max(1, ...this.last.map((l) => l.share));
+    let any = false;
+    this.meshes.forEach((mesh, i) => {
+      const lane = this.last[i];
+      const target = lane && lanes.length ? opacity * (0.15 + 0.85 * (lane.share / top)) : 0;
+      this.opacity[i] += (target - this.opacity[i]) * 0.08;
+      mesh.visible = this.opacity[i] > 0.01 && lane !== undefined;
+      if (!lane) return;
+      any ||= mesh.visible;
+      mesh.position.x = (lane.x0 + lane.x1) / 2;
+      mesh.position.z = lane.z;
+      mesh.scale.set(Math.abs(lane.x1 - lane.x0), lane.width, 1);
+      const u = this.uniforms[i];
+      u.uDir.value = lane.x1 > lane.x0 ? 1 : -1;
+      u.uColour.value.set(colour);
+      u.uOpacity.value = this.opacity[i];
+    });
+    this.object.visible = any;
+  }
+
+  dispose() {
+    for (const mesh of this.meshes) {
+      mesh.geometry.dispose();
+      (mesh.material as THREE.Material).dispose();
+    }
   }
 }

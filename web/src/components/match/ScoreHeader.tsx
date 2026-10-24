@@ -4,7 +4,7 @@
 //
 // Purpose: the top of the match screen as a clean broadcast scoreboard: both clubs with their kit crests, the score
 //          in big mono digits with the clock, phase and a live momentum sparkline under it, whether this is live or a
-//          replay, and each team's score sheet (scorers and cards) underneath. A goal makes the score flash
+//          replay, and each team's score sheet (scorers and red cards) underneath. A goal makes the score flash
 // Inputs:  the match store's scoreboard and connection; the stream source; the match memory at the playhead
 // Outputs: UI
 // Spec:    web/specs/screens.md §2.1
@@ -39,34 +39,54 @@ function phaseLabel(phase: Phase | null, period: number): string {
   return period === 1 ? "1st half" : period === 2 ? "2nd half" : period >= 3 && period <= 4 ? "Extra time" : "Penalties";
 }
 
-/** The full name from tablets up; phones show the crest's three-letter code only, so names never break mid-word. */
-function TeamName({ name }: { name: string }) {
-  return <span className="hidden sm:inline">{name}</span>;
+/** "Calverholme Athletic" → ["Calverholme", "Athletic"]: the first word, then the rest (empty for one-word names). */
+export function splitTeamName(name: string): [string, string] {
+  const words = name.trim().split(/\s+/);
+  return [words[0] ?? "", words.slice(1).join(" ")];
+}
+
+/**
+ * A club's name on two stacked lines, the first word and then the rest, the same way for both teams and mirrored:
+ * the home name reads from its crest on the left, the away name from its crest on the right. Each line truncates
+ * rather than wrapping, so the two sides always line up.
+ */
+function TeamName({ name, align }: { name: string; align: "left" | "right" }) {
+  const [first, rest] = splitTeamName(name);
+  return (
+    <span
+      className={`flex min-w-0 max-w-full flex-col text-[12px] font-extrabold leading-[1.15] text-ink/90 sm:text-[19px] ${align === "right" ? "items-end text-right" : "items-start text-left"}`}
+    >
+      <span className="block max-w-full truncate">{first}</span>
+      <span className={`block max-w-full truncate ${rest ? "text-ink/60" : "invisible"}`} aria-hidden={rest ? undefined : true}>
+        {rest || "\u00a0"}
+      </span>
+    </span>
+  );
 }
 
 function SheetIcon({ kind }: { kind: SheetEntry["kind"] }) {
   if (kind === "goal") return <span aria-label="Goal" className="text-[11px] leading-none">⚽</span>;
-  return (
-    <span
-      aria-label={kind === "yellow" ? "Yellow card" : "Red card"}
-      className={`inline-block h-[11px] w-[8px] shrink-0 rounded-[2px] ${kind === "yellow" ? "bg-[#f5c518]" : "bg-[#e5383b]"}`}
-    />
-  );
+  return <span aria-label="Red card" className="inline-block h-[11px] w-[8px] shrink-0 rounded-[2px] bg-[#e5383b]" />;
 }
 
-/** One team's scorers and cards, in match order; the newest one rises in. Phones show icons and minutes only. */
+/**
+ * One team's scorers and red cards: one entry per player with all their minutes (`Sartori 6′ 45′ 90′`), in the order
+ * each player first appears; the entry that changed last rises in. Phones show the icons and minutes only.
+ */
 function Sheet({ entries, align }: { entries: readonly SheetEntry[]; align: "left" | "right" }) {
   if (!entries.length) return <div />;
-  const newest = entries[entries.length - 1]?.id;
+  const newest = entries.reduce((a, b) => (b.lastMs > a.lastMs ? b : a)).id;
   return (
     <ul className={`flex flex-wrap gap-x-3 gap-y-1 ${align === "right" ? "justify-end text-right" : ""}`}>
       {entries.map((e) => (
-        <li key={e.id} className={`flex items-center gap-1.5 text-[12px] font-semibold text-ink/65 ${e.id === newest ? "ov-rise" : ""}`}>
+        <li
+          key={e.id}
+          className={`flex items-center gap-1.5 text-[12px] font-semibold text-ink/65 ${e.id === newest ? "ov-rise" : ""}`}
+        >
           <SheetIcon kind={e.kind} />
           <span className="hidden sm:inline">{e.name}</span>
           <span className="font-mono text-[11px] font-bold text-ink/45">
-            {e.minute}
-            {e.note ? ` ${e.note}` : ""}
+            {e.minutes.map((m) => (m.note ? `${m.minute} ${m.note}` : m.minute)).join(" ")}
           </span>
         </li>
       ))}
@@ -166,9 +186,9 @@ export function ScoreHeader() {
         </span>
       </div>
       <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 sm:gap-6">
-        <div className="flex min-w-0 items-center gap-3">
+        <div className="flex min-w-0 flex-col items-start gap-1.5 sm:flex-row sm:items-center sm:gap-3">
           <Crest team={home} size={48} />
-          <span className="line-clamp-2 min-w-0 text-[13px] font-extrabold leading-tight text-ink/90 sm:text-[19px]"><TeamName name={home?.name ?? "Home"} /></span>
+          <TeamName name={home?.name ?? "Home"} align="left" />
         </div>
         <div className="flex flex-col items-center">
           <div key={flash} className={`flex items-baseline gap-1.5 font-mono text-[34px] font-black leading-none tabular sm:gap-2 sm:text-[52px] ${flash ? "ov-flash-score" : ""}`}>
@@ -186,8 +206,8 @@ export function ScoreHeader() {
             </div>
           )}
         </div>
-        <div className="flex min-w-0 items-center justify-end gap-3">
-          <span className="line-clamp-2 min-w-0 text-right text-[13px] font-extrabold leading-tight text-ink/90 sm:text-[19px]"><TeamName name={away?.name ?? "Away"} /></span>
+        <div className="flex min-w-0 flex-col-reverse items-end gap-1.5 sm:flex-row sm:items-center sm:justify-end sm:gap-3">
+          <TeamName name={away?.name ?? "Away"} align="right" />
           <Crest team={away} size={48} />
         </div>
       </div>

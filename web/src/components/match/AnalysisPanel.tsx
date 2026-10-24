@@ -5,12 +5,14 @@
 // Purpose: the match told in five football questions, one tab each: Story (momentum and key events), Attack (xG
 //          race, shot map, attack by flank), Possession (pass network, zone dominance, pass map), Defence (pressing
 //          zones, team stats) and Players (the tracking heatmap and the match player table). Per-team visuals have
-//          a team toggle. An AI card can open the tab of the visual it refers to
+//          a team toggle; with a favourite club (my-club mode) they show that club only, under a "Your club" badge,
+//          and the side-by-side cards keep both teams with the club picked out. An AI card can open the tab of the
+//          visual it refers to
 // Inputs:  the match experience (memory, tick) and preferences; `focus` from the feed (component + event)
 // Outputs: UI
 // Spec:    web/specs/charts.md; web/specs/screens.md §2.5
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import type { Side } from "@/lib/coordinates";
 import { keyEvents, momentumSeries, passLines, playerNumbers, teamShots, xgShots } from "@/lib/live/charts";
 import { useScoreboard } from "@/lib/store-hooks";
@@ -52,12 +54,27 @@ export const TAB_FOR_COMPONENT: Record<string, TabId> = {
 
 export type Focus = { tab: TabId; eventId?: string; nonce: number } | null;
 
+/** In place of the team toggle in my-club mode: whose numbers these are, and where to change it. */
+export function YourClubBadge({ teamId, colour }: { teamId: string; colour: string }): ReactNode {
+  return (
+    <span
+      className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-ink/10 bg-ink/[0.04] px-2.5 py-1 font-mono text-[10px] font-black uppercase tracking-[1.2px] text-ink/70"
+      title="Your favourite club. Change it with Club in the viewer bar"
+    >
+      <span className="h-2 w-2 rounded-full ring-1 ring-ink/25" style={{ background: colour }} />
+      Your club · {teamId}
+    </span>
+  );
+}
+
 export function AnalysisPanel({ focus }: { focus: Focus }) {
-  const { memory, tick } = useExperience();
+  const { memory, tick, myClub } = useExperience();
   const { setup } = useScoreboard();
   const [prefs] = usePreferences();
   const [tab, setTab] = useState<TabId>("story");
-  const [side, setSide] = useState<Side>("home");
+  const [picked, setSide] = useState<Side>("home");
+  // My-club mode: the per-team visuals are the favourite club's, whatever was picked before
+  const side = myClub ?? picked;
   const [highlight, setHighlight] = useState<string | null>(null);
 
   // A card asked for its visual: switch to it once per request (state adjusted during render, not in an effect)
@@ -109,14 +126,18 @@ export function AnalysisPanel({ focus }: { focus: Focus }) {
     };
   }, [tick, memory, team, side, followed, setup]);
 
-  const teamToggle = setup ? (
+  const teamToggle = !setup ? null : myClub ? (
+    <YourClubBadge teamId={setup.teams[myClub].team_id} colour={colours[myClub]} />
+  ) : (
     <Toggle
       label="Team"
       value={side}
       onChange={setSide}
       options={(["home", "away"] as const).map((s) => ({ id: s, label: setup.teams[s].team_id, dot: colours[s] }))}
     />
-  ) : null;
+  );
+  // Side by side in my-club mode: both teams stay, the opponent's bars fade so the club reads first
+  const faded = (s: Side) => (myClub && s !== myClub ? `color-mix(in srgb, ${colours[s]} 35%, transparent)` : colours[s]);
   const teamName = team?.name ?? "";
   const who = followed && followed.side === side ? followed.name : teamName;
 
@@ -178,7 +199,18 @@ export function AnalysisPanel({ focus }: { focus: Focus }) {
           />
           <VizCard eyebrow="Team stats · this match" title="Side by side" subtitle="From the stats engine's panel; 10′ values cover the last 10 minutes">
             <div className="mx-auto max-w-[720px]">
-              <StatBars panel={data.panel} homeColour={colours.home} awayColour={colours.away} />
+              {setup && myClub && (
+                <div className="mb-3 flex items-center justify-between font-mono text-[10px] font-black uppercase tracking-[1.2px]">
+                  {(["home", "away"] as const).map((s) => (
+                    <span key={s} className={`flex items-center gap-1.5 ${s === myClub ? "text-ink" : "text-ink/40"}`}>
+                      <span className="h-2 w-2 rounded-full" style={{ background: faded(s) }} />
+                      {setup.teams[s].team_id}
+                      {s === myClub && <span className="text-viz-focus">· your club</span>}
+                    </span>
+                  ))}
+                </div>
+              )}
+              <StatBars panel={data.panel} homeColour={faded("home")} awayColour={faded("away")} />
             </div>
           </VizCard>
         </>
@@ -187,7 +219,7 @@ export function AnalysisPanel({ focus }: { focus: Focus }) {
       {tab === "players" && (
         <>
           <div id="heatmap" className="scroll-mt-20">
-            <TrackingHeatPanel />
+            <TrackingHeatPanel club={myClub} badge={teamToggle && myClub ? teamToggle : null} />
           </div>
           <VizCard eyebrow="Players · this match" title={`${teamName} player by player`} subtitle="Counted from this match's events; distance and speed from tracking" controls={teamToggle}>
             {data.table.length === 0 ? (
