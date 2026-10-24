@@ -1,6 +1,7 @@
 # Viewer and replay acceptance
 
 Status: Local implementation and bounded acceptance complete; cloud validation and immediate archive readiness not claimed. User authorized implementation on 24 October 2026.
+Review: https://github.com/ARNAV2684/Overlap/pull/98 (open; stacked on #97).
 Branch: web/viewer-replay-acceptance, based on 074440c (PR #97); main b18297f is an ancestor.
 Registry owners: web Arnav/Azeem; relay/archiver Arnav; generator/stats Azeem. No owner approval claimed.
 
