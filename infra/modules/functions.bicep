@@ -135,8 +135,11 @@ resource apps 'Microsoft.Web/sites@2024-04-01' = [for a in appsToRun: {
         { name: 'OVERLAP_MODEL_PROVIDER', value: empty(openAiDeployment) ? 'off' : 'azure' }
         { name: 'OVERLAP_AZURE_OPENAI_ENDPOINT', value: openAiEndpoint }
         { name: 'OVERLAP_AZURE_OPENAI_DEPLOYMENT', value: openAiDeployment }
-        // In-region calls with minimal reasoning stay inside the 4 s request timeout (agents/specs/workflow.md §3)
+        // Minimal reasoning keeps each call short (agents/specs/workflow.md §3)
         { name: 'OVERLAP_REASONING_EFFORT', value: 'minimal' }
+        // The narrator writes every audience's line in one call: about 300 tokens, 3-11 s on gpt-5-mini (24 Oct), so
+        // the 4 s default timed every one out. The 15 s moment deadline still bounds the whole job
+        { name: 'OVERLAP_MODEL_TIMEOUT_S', value: '8' }
         { name: 'OVERLAP_TRANSLATOR', value: 'azure' }
         { name: 'OVERLAP_TRANSLATOR_ENDPOINT', value: translatorEndpoint }
         { name: 'OVERLAP_MCP_SOURCE', value: 'cosmos' }
