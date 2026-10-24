@@ -11,7 +11,8 @@
 // held the relay to one core and it fell 80–120 s behind a 20x match (24 Oct). The relay stays in one process, so its
 // per-match lock still keeps each match's envelopes in order. One instance, never scaled out (resources.md §2.6). Every
 // connection signs in with the functions identity; no connection string or key is stored. The code is deployed
-// separately (az functionapp deployment source config-zip, infra/README.md), so a provision never touches it.
+// separately (a zip with Linux packages, az functionapp deployment source config-zip, infra/README.md), so a
+// provision never touches it.
 
 @description('Azure region for the plan and app.')
 param location string
@@ -101,7 +102,10 @@ resource apps 'Microsoft.Web/sites@2024-04-01' = [for a in appsToRun: {
       appSettings: concat([
         { name: 'FUNCTIONS_EXTENSION_VERSION', value: '~4' }
         { name: 'FUNCTIONS_WORKER_RUNTIME', value: 'python' }
-        { name: 'SCM_DO_BUILD_DURING_DEPLOYMENT', value: 'true' }
+        // Run from the deployed zip (packages built for Linux beforehand, infra/README.md), mounted locally: from the
+        // network share the agents' MCP server took over 4 s to import its packages and every card fell back (24 Oct)
+        { name: 'WEBSITE_RUN_FROM_PACKAGE', value: '1' }
+        { name: 'SCM_DO_BUILD_DURING_DEPLOYMENT', value: 'false' }
         // The relay, archiver and timers are synchronous and mostly wait on the network; the default pool (CPUs + 4,
         // so 6 on B2) queued relay batches behind archive batches during a 20x match
         { name: 'PYTHON_THREADPOOL_THREAD_COUNT', value: '16' }
