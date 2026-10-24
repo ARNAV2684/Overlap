@@ -1,5 +1,6 @@
 """The moment trigger (functions/moment_trigger.py): moments only, each once, and the store it opens is closed."""
 import asyncio
+import os
 import sys
 from pathlib import Path
 
@@ -157,8 +158,12 @@ def test_mcp_runs_on_this_python_when_there_is_no_server_venv(tmp_path, monkeypa
     monkeypatch.setenv("OVERLAP_COSMOS_ENDPOINT", "https://x.documents.azure.com:443/")
     monkeypatch.setenv("IDENTITY_ENDPOINT", "http://localhost:42356/msi/token")
     monkeypatch.setenv("UNRELATED_SECRET", "no")
+    packages = tmp_path / ".python_packages"            # where the Functions build installs the packages
+    packages.mkdir()
+    monkeypatch.setattr(sys, "path", [*sys.path, str(packages)])
     env = C.mcp_env(s, sys.executable)
-    assert env["PYTHONPATH"] == str(tmp_path)
+    path = env["PYTHONPATH"].split(os.pathsep)
+    assert path[0] == str(tmp_path) and str(packages) in path
     assert env["IDENTITY_ENDPOINT"] and env["OVERLAP_COSMOS_ENDPOINT"] and "UNRELATED_SECRET" not in env
     assert "PYTHONPATH" not in C.mcp_env(s, "/elsewhere/python")
 
