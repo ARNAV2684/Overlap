@@ -22,6 +22,21 @@
     },
     "webPubSubSku": {
       "value": "${WEBPUBSUB_SKU=Standard_S1}"
+    },
+    "livePipeline": {
+      "value": "${LIVE_PIPELINE=true}"
+    },
+    "webMinReplicas": {
+      "value": "${WEB_MIN_REPLICAS=1}"
+    },
+    "webImage": {
+      "value": "${WEB_IMAGE}"
+    },
+    "statsImage": {
+      "value": "${STATS_IMAGE}"
+    },
+    "generatorImage": {
+      "value": "${GENERATOR_IMAGE}"
     }
   }
 }
