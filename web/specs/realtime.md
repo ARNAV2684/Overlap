@@ -210,9 +210,9 @@ stays the only sender on `match-<id>`; the insights publisher the only sender on
 
 **Catch-up (live).** After the group is joined, `GET /api/match/<id>/insights/snapshot?mode=&lang=(&club=|&player=)`
 returns the two newest live cards and the group cursor. Locally the route forwards to the Web PubSub stand-in, which
-serves this endpoint from Cosmos `overlays`; on Azure it answers `501 not_implemented` until the route reads `overlays`
-itself, and the screen then shows live cards only. Errors: `400 bad_match_id | bad_audience`, `503
-insights_unavailable`.
+serves this endpoint from Cosmos `overlays`; on Azure the route reads `overlays` and `match_state` itself
+(`lib/server/insights-snapshot.ts`) with the same rule and answer (24 Oct). Errors: `400 bad_match_id | bad_audience`,
+`404 unknown_match`, `503 insights_unavailable | playhead_unknown`, `502 storage_error`.
 
 **History (replay).** `GET /api/match/<id>/insights/history?group=<audience group>` returns every envelope the
 publisher numbered for that group (`overlays`, `kind = audience_delivery`, in seq order; deliveries that expired
@@ -465,3 +465,20 @@ until the file changes (`src/lib/server/season-store.ts`). No database is involv
 - **No new numbers:** the views only pick, sort and join. The group median, a summary of values already in the
   document, is the one figure they work out themselves.
 - **Tests:** `src/lib/__tests__/season.test.ts`.
+
+## 8. Start a match `POST /api/start-match`
+
+Built 24 Oct (`app/api/start-match/route.ts`, `lib/server/start-match.ts`, `components/home/StartMatchButton.tsx`).
+On Azure it starts one execution of the generator's Container Apps job, which plays `SYN-<n>` at 20×; the home page
+switches to it when its first frames arrive. `n` is one past the highest archived match id, never below 3000 (local
+runs stay below). The request body is never read and nothing from the request reaches the job.
+
+| Answer | When |
+|---|---|
+| `202 { match_id }` | Started |
+| `429 rate_limited` | More than 3 starts from one address in an hour (per web replica, in memory) |
+| `429 match_running` | An execution of the job is still running: one match at a time across the site |
+| `503 start_unavailable` | No job settings (`OVERLAP_GENERATOR_JOB_ID`, `OVERLAP_GENERATOR_IMAGE`) or archive settings; locally |
+| `502 start_failed` | The archive or Azure call failed |
+
+The web app's identity holds a custom role that can only read and start that job (`infra/specs/security.md` §3).
