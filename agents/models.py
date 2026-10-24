@@ -254,9 +254,14 @@ class Models:
         if approx_tokens(instructions) + approx_tokens(message) > self.settings.max_input_tokens:
             raise ModelFailed("input_too_large")              # never truncate evidence silently
         from agent_framework import Agent
-        options: dict[str, Any] = {"max_tokens": self.settings.max_output_tokens, "temperature": 0.2}
+        options: dict[str, Any] = {"max_tokens": self.settings.max_output_tokens}
         if self.settings.provider == "azure":
+            # The Azure model is a GPT-5 reasoning model: it rejects temperature, and the Agent Framework sends
+            # max_tokens as max_completion_tokens (which also covers its reasoning tokens)
             options["response_format"] = schema            # structured outputs on Azure OpenAI
+            options["reasoning_effort"] = self.settings.reasoning_effort
+        else:
+            options["temperature"] = 0.2
         agent = Agent(self.client, instructions, name=name)
         if not self.breaker.allow(self.clock()):
             raise ModelFailed("breaker_open")

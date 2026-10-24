@@ -6,14 +6,17 @@
   },
   "extensions": {
     "eventHubs": {
-      "maxEventBatchSize": 100,
-      "prefetchCount": 300,
+      "maxEventBatchSize": 300,
+      "prefetchCount": 900,
       "batchCheckpointFrequency": 1
     }
   },
   "logging": {
     "logLevel": {
       "default": "Information",
+      "Azure.Core": "Warning",
+      "Azure.Identity": "Warning",
+      "Azure.Messaging.EventHubs": "Warning",
       "Host.Results": "Information",
       "Function": "Information"
     }

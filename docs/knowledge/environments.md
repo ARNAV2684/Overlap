@@ -1,6 +1,6 @@
 # Local development and Azure deployment
 
-Last verified: 2026-10-24 · branch `infra/azure-foundation` · A0 provisioned and checked on Azure.
+Last verified: 2026-10-24 · branch `infra/azure-wave2` · every module deployed, A8 run, then paused.
 
 ## Purpose
 
@@ -22,7 +22,7 @@ Specifications: [`infra/specs/local-development.md`](../../infra/specs/local-dev
 
 ## Status and evidence
 
-Local Compose/stand-in/tooling exist. Azure: sprint A0 is deployed (resource group `rg-overlap`, Sweden Central: four managed identities, a storage account with shared keys off, Log Analytics with a 0.5 GB daily cap, Application Insights). Event Hubs, Cosmos DB, Web PubSub, Foundry, Translator, the Functions app and Container Apps follow in sprints A1–A10 ([`PLAN_infra_azure-pass`](../../plans/active/PLAN_infra_azure-pass.md)); their modules are still placeholders.
+Local Compose/stand-in/tooling exist. Azure (Sweden Central, `rg-overlap`): every module is deployed and a full 20× match ran entirely on Azure on 24 Oct (SYN-3000 to SYN-3008: archives identical to the recordings, every reader 0–3 s behind, no failed runs). The relay and the archiver/agents run as two Functions apps on one B3 plan; web, stats and the generator job on Container Apps. Paused after A8: the hourly-billed parts are deleted and the public link (`ca-overlap-web…azurecontainerapps.io`) serves replays. Runbook: [`infra/README.md`](../../infra/README.md); results: [`PLAN_infra_azure-pass`](../../plans/active/PLAN_infra_azure-pass.md) handover.
 
 Evidence / checks to inspect: [`infra/local/webpubsub_standin/check_standin.py`](../../infra/local/webpubsub_standin/check_standin.py), [`infra/local/check_cosmos.py`](../../infra/local/check_cosmos.py). Existing recorded tests are attributed to their handover; no runtime suite was re-run for these notes.
 
@@ -36,7 +36,7 @@ Connections include planned dependencies; status above determines whether a conn
 
 ## Next work
 
-Use approved local instructions. Do not start cloud resources or consume paid services for this knowledge-map milestone.
+Resume for a demo or judging run with the five settings in `infra/README.md` (Pause and resume). Agents at 20× still publish checked templates only: see the plan's A8 notes.
 
 ## Work and coordination record
 

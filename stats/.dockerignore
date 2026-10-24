@@ -1,0 +1,17 @@
+# Kept out of the image build (the build context is this folder; az acr build reads this file from it).
+# Top-level names are listed too: az acr build does not match **/ against the context root.
+.venv
+.next
+node_modules
+**/.venv
+**/__pycache__
+**/.pytest_cache
+**/node_modules
+**/.next
+**/*.log
+**/.env
+**/.env.*
+**/local.settings.json
+**/tests
+**/__tests__
+**/dist

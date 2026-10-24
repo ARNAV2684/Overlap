@@ -13,6 +13,33 @@
     },
     "principalType": {
       "value": "${AZURE_PRINCIPAL_TYPE=User}"
+    },
+    "budgetContactEmail": {
+      "value": "${BUDGET_CONTACT_EMAIL}"
+    },
+    "deployModel": {
+      "value": "${DEPLOY_MODEL=true}"
+    },
+    "webPubSubSku": {
+      "value": "${WEBPUBSUB_SKU=Standard_S1}"
+    },
+    "livePipeline": {
+      "value": "${LIVE_PIPELINE=true}"
+    },
+    "webMinReplicas": {
+      "value": "${WEB_MIN_REPLICAS=1}"
+    },
+    "cosmosThroughput": {
+      "value": "${COSMOS_THROUGHPUT=1000}"
+    },
+    "webImage": {
+      "value": "${WEB_IMAGE}"
+    },
+    "statsImage": {
+      "value": "${STATS_IMAGE}"
+    },
+    "generatorImage": {
+      "value": "${GENERATOR_IMAGE}"
     }
   }
 }

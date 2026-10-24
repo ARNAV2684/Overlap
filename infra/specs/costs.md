@@ -58,12 +58,13 @@ before A1, then replaced by measured cost after A8):
 |---|---|
 | Event Hubs Standard, 1 TU | $0.75 |
 | Web PubSub Standard, 1 unit | $1.6 |
-| App Service plan B2 (Functions) | $0.9 |
+| App Service plan B3 (both Functions apps) | $1.8 |
+| Cosmos DB at 4,000 RU/s during live runs (3,000 above the free tier) | $5.8 while set; set it back to 1,000 between runs |
 | Container Apps (stats + web at 1 replica each) | $1–2 |
 | Container registry Basic | $0.17 |
 | Log Analytics (0.5 GB daily cap) | ≤ $1.4 (normally far less) |
 | Cosmos DB free tier, Storage, Translator F0 | ~$0 |
-| **Total** | **about $4.5–7** |
+| **Total** | **about $5.5–8**, plus Cosmos while at 4,000 RU/s |
 
 From 24 Oct to 10 Nov (18 days): **about $80–125, plus up to $25 of model calls**, inside the $200 credit if the
 credit carries over the upgrade. Main cost drivers: Web PubSub, Container Apps, Event Hubs.
