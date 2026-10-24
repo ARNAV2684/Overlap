@@ -10,10 +10,12 @@
 
 import { useEffect, useState } from "react";
 import { keyNumber, overlayText } from "@/lib/live/insights";
+import { CHART_LABEL } from "@/lib/live/live-insights";
 import type { Story, StoryKind } from "@/lib/live/story";
 import { useScoreboard } from "@/lib/store-hooks";
 import { useExperience, useFeed } from "@/providers/MatchExperience";
 import { usePreferences } from "@/providers/PreferencesProvider";
+import { KindChip, SourceBadge } from "./MomentStrip";
 
 const STORY_LABEL: Record<StoryKind, string> = { territory: "Territory", protect: "Team shape", attack: "Pass network" };
 const STORY_HINT: Record<StoryKind, string> = {
@@ -21,30 +23,6 @@ const STORY_HINT: Record<StoryKind, string> = {
   protect: "Lines linked, back to front",
   attack: "Who passes to whom, and the lane",
 };
-
-export const COMPONENT_LABEL: Record<string, string> = {
-  shot_map: "Shot map",
-  key_events: "Key events",
-  momentum_tide: "Momentum",
-  pressing_zones: "Pressing",
-  stat_bars: "Team stats",
-  pass_network: "Pass network",
-  heatmap_zones: "Heatmap",
-};
-
-export function VerifiedBadge({ verified, fallback }: { verified: boolean; fallback: boolean }) {
-  if (verified)
-    return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-[#4ade80]/15 px-2 py-0.5 font-mono text-[9px] font-black uppercase tracking-[1px] text-[#4ade80]">
-        ✓ Numbers verified
-      </span>
-    );
-  return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2 py-0.5 font-mono text-[9px] font-black uppercase tracking-[1px] text-white/60">
-      {fallback ? "Template · checked" : "Unverified"}
-    </span>
-  );
-}
 
 /**
  * Attack by flank, folded: three small lanes (left, centre, right as the team faces the goal), each filled to its
@@ -245,10 +223,9 @@ function MomentPopup({ onShowChart }: { onShowChart?: (component: string, eventI
       <div className={`h-[3px] ${high ? "bg-accent" : "bg-viz-focus"}`} />
       <div className="p-3.5">
         <div className="flex flex-wrap items-center gap-2">
-          <span className={`font-mono text-[9px] font-black uppercase tracking-[1.6px] ${high ? "text-accent" : "text-white/60"}`}>
-            {current.clock.split(":")[0]}′ · AI moment
-          </span>
-          <VerifiedBadge verified={current.verified} fallback={current.fallback} />
+          <span className={`font-mono text-[11px] font-black tabular ${high ? "text-accent" : "text-white/80"}`}>{current.clock.split(":")[0]}′</span>
+          <KindChip card={current} tone="dark" />
+          <SourceBadge card={current} tone="dark" />
         </div>
         <div className="mt-2 flex items-start gap-3">
           <p className="min-w-0 flex-1 text-[14px] font-semibold leading-snug [text-shadow:0_1px_6px_rgb(0_0_0/0.5)]">
@@ -272,7 +249,7 @@ function MomentPopup({ onShowChart }: { onShowChart?: (component: string, eventI
             title="Open this chart in the analysis below"
           >
             <ChartGlyph />
-            {COMPONENT_LABEL[visual.component] ?? visual.component}
+            {CHART_LABEL[visual.component] ?? visual.component}
             <span aria-hidden="true">→</span>
           </button>
         )}
