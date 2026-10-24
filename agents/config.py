@@ -54,6 +54,7 @@ ENV = {
     "OVERLAP_SKIP_STALE": "skip_stale",
     "OVERLAP_MCP_PYTHON": "mcp_python",
     "OVERLAP_MCP_SOURCE": "mcp_source",
+    "OVERLAP_MCP_TRANSPORT": "mcp_transport",
     "OVERLAP_MCP_FIXTURE_DIR": "mcp_fixture_dir",
     "OVERLAP_MCP_TIMEOUT_S": "mcp_timeout_s",
     "OVERLAP_TAG_TOP_SPEED_KMH": "tag_top_speed_kmh",
@@ -98,6 +99,7 @@ class Settings:
     max_queued_per_match: int = 2              # normal moments waiting behind the running one (workflow.md §3)
     skip_stale: bool = True                    # live: suppress a moment the match has already moved past (off for replays)
     mcp_python: str = ""                       # the MCP server's Python; default: mcp_server/.venv
+    mcp_transport: str = "embedded"            # real MCP over in-memory streams; stdio remains selectable
     mcp_source: str = "cosmos"                 # cosmos (local emulator or Azure) or fixture
     mcp_fixture_dir: str = ""
     mcp_timeout_s: float = 2.0
@@ -159,6 +161,8 @@ class Settings:
             raise SettingsError(f"OVERLAP_LANGUAGES must include en and use only {', '.join(LANGUAGES)}")
         if not self.modes or not set(self.modes) <= set(MODES):
             raise SettingsError(f"OVERLAP_MODES must use only {', '.join(MODES)}")
+        if self.mcp_transport not in ("embedded", "stdio"):
+            raise SettingsError("OVERLAP_MCP_TRANSPORT must be embedded or stdio")
         if self.mcp_source not in ("cosmos", "fixture"):
             raise SettingsError("OVERLAP_MCP_SOURCE must be cosmos or fixture")
         if self.mcp_source == "fixture" and not self.mcp_fixture_dir:
