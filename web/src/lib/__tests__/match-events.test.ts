@@ -52,22 +52,54 @@ describe("bookingsAt", () => {
   });
 });
 
+const goal = (id: string, playerId: string, ms: number, clock: string, teamId = "NBR", penalty?: boolean): FieldEvent => ({
+  id,
+  kind: "goal",
+  ms,
+  period: ms < 2_820_000 ? 1 : 2,
+  clock,
+  teamId,
+  playerId,
+  x: 90,
+  y: 50,
+  ...(penalty ? { penalty } : {}),
+});
+
 describe("scoreSheet", () => {
-  it("lists goals and cards under each team in match order, up to the playhead", () => {
-    const events: FieldEvent[] = [
-      { ...card("y1", "HBA-04", 1_140_000, "yellow", "HBA") },
-      { id: "g1", kind: "goal", ms: 360_000, period: 1, clock: "6:03", teamId: "NBR", playerId: "NBR-09", x: 90, y: 50 },
-      { id: "g2", kind: "goal", ms: 3_000_000, period: 2, clock: "50:00", teamId: "NBR", playerId: "NBR-09", x: 89, y: 50, penalty: true },
-      { ...card("y2", "HBA-04", 2_400_000, "yellow", "HBA") },
+  it("groups a player's goals into one entry with every minute, up to the playhead", () => {
+    const events = [
+      goal("g3", "NBR-09", 5_500_000, "90:40"),
+      goal("g1", "NBR-09", 360_000, "6:03"),
+      goal("g2", "NBR-09", 2_700_000, "45:00"),
+      goal("g4", "NBR-10", 3_000_000, "50:00", "NBR", true),
     ];
-    const at40 = scoreSheet(events, setup, 2_400_000);
-    expect(at40.home).toEqual([{ id: "g1", kind: "goal", minute: "6′", name: "9", note: undefined }]);
-    expect(at40.away.map((e) => [e.kind, e.note])).toEqual([
-      ["yellow", undefined],
-      ["red", "2nd yellow"],
+    const at50 = scoreSheet(events, setup, 3_000_000).home;
+    expect(at50.map((e) => [e.kind, e.minutes])).toEqual([
+      ["goal", [{ minute: "6′" }, { minute: "45′" }]],
+      ["goal", [{ minute: "50′", note: "pen" }]],
     ]);
-    expect(scoreSheet(events, setup, 4_000_000).home[1]).toMatchObject({ kind: "goal", note: "pen" });
-    expect(scoreSheet(events, null, 4_000_000)).toEqual({ home: [], away: [] });
+    const final = scoreSheet(events, setup, 6_000_000).home;
+    expect(final).toHaveLength(2);
+    expect(final[0]).toMatchObject({ id: "goal:NBR-09", lastMs: 5_500_000 });
+    expect(final[0].minutes.map((m) => m.minute)).toEqual(["6′", "45′", "90′"]);
+    expect(scoreSheet(events, null, 6_000_000)).toEqual({ home: [], away: [] });
+  });
+
+  it("shows red cards only: a yellow is left out, a second yellow shows as red", () => {
+    const events = [
+      card("y1", "HBA-04", 1_140_000, "yellow", "HBA"),
+      card("y2", "HBA-04", 2_400_000, "yellow", "HBA"),
+      card("y3", "HBA-06", 1_500_000, "yellow", "HBA"),
+      card("r1", "NBR-05", 1_800_000, "red"),
+      card("s1", "HBA-08", 2_000_000, "second_yellow", "HBA"),
+    ];
+    expect(scoreSheet(events, setup, 1_700_000)).toEqual({ home: [], away: [] });
+    const sheet = scoreSheet(events, setup, 3_000_000);
+    expect(sheet.home.map((e) => [e.id, e.kind, e.minutes])).toEqual([["red:NBR-05", "red", [{ minute: "30′" }]]]);
+    expect(sheet.away.map((e) => [e.id, e.minutes])).toEqual([
+      ["red:HBA-08", [{ minute: "33′", note: "2nd yellow" }]],
+      ["red:HBA-04", [{ minute: "40′", note: "2nd yellow" }]],
+    ]);
   });
 
   it("formats minutes, stoppage time included", () => {

@@ -8,23 +8,23 @@
 // Outputs: UI
 // Spec:    web/specs/screens.md §3
 
+import { useId } from "react";
+import { Select, type SelectOption } from "@/components/ui/Select";
 import { LANG_LABELS, LANGS, MODE_LABELS, MODES, type Lang, type Mode } from "@/lib/preferences";
 import { useScoreboard } from "@/lib/store-hooks";
 import { useExperience } from "@/providers/MatchExperience";
 import { usePreferences } from "@/providers/PreferencesProvider";
 
-const selectCls =
-  "w-full appearance-none rounded-[10px] border border-ink/10 bg-ink/[0.03] px-3 py-2 pr-8 text-[13px] font-semibold text-ink outline-none transition-colors hover:border-ink/20 focus-visible:border-accent";
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+/** A labelled picker: the label names the dropdown for screen readers (Select's aria-labelledby). */
+function Field({ label, children }: { label: string; children: (labelId: string) => React.ReactNode }) {
+  const labelId = useId();
   return (
-    <label className="flex min-w-0 flex-col gap-1.5">
-      <span className="ov-sub">{label}</span>
-      <span className="relative">
-        {children}
-        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-ink/40">▼</span>
+    <div className="flex min-w-0 flex-col gap-1.5">
+      <span id={labelId} className="ov-sub">
+        {label}
       </span>
-    </label>
+      {children(labelId)}
+    </div>
   );
 }
 
@@ -34,6 +34,13 @@ export function ViewerBar() {
   const { mode } = useExperience();
   const teams = setup ? [setup.teams.home, setup.teams.away] : [];
   const fellBack = mode !== prefs.mode;
+  const langOptions: SelectOption[] = LANGS.map((l) => ({ value: l, label: LANG_LABELS[l] }));
+  const clubOptions: SelectOption[] = [{ value: "", label: "None" }, ...teams.map((t) => ({ value: t.team_id, label: t.name }))];
+  // The starting elevens, under each club's name
+  const playerOptions: SelectOption[] = [
+    { value: "", label: "Nobody" },
+    ...teams.flatMap((t) => t.lineup.map((p) => ({ value: p.player_id, label: `${p.shirt} · ${p.name} (${p.pos})`, group: t.name }))),
+  ];
 
   return (
     <div className="ov-card p-4">
@@ -59,37 +66,30 @@ export function ViewerBar() {
       </div>
       <div className="grid grid-cols-3 gap-2">
         <Field label="Language">
-          <select className={selectCls} value={prefs.lang} onChange={(e) => update({ lang: e.target.value as Lang })}>
-            {LANGS.map((l) => (
-              <option key={l} value={l}>
-                {LANG_LABELS[l]}
-              </option>
-            ))}
-          </select>
+          {(labelId) => (
+            <Select labelledBy={labelId} value={prefs.lang} options={langOptions} onChange={(v) => update({ lang: v as Lang })} />
+          )}
         </Field>
         <Field label="Club">
-          <select className={selectCls} value={prefs.club ?? ""} onChange={(e) => update({ club: e.target.value || null, ...(e.target.value ? { mode: "club" as Mode } : {}) })}>
-            <option value="">None</option>
-            {teams.map((t) => (
-              <option key={t.team_id} value={t.team_id}>
-                {t.name}
-              </option>
-            ))}
-          </select>
+          {(labelId) => (
+            <Select
+              labelledBy={labelId}
+              value={prefs.club ?? ""}
+              options={clubOptions}
+              onChange={(v) => update({ club: v || null, ...(v ? { mode: "club" as Mode } : {}) })}
+            />
+          )}
         </Field>
         <Field label="Follow">
-          <select className={selectCls} value={prefs.player ?? ""} onChange={(e) => update({ player: e.target.value || null, ...(e.target.value ? { mode: "player" as Mode } : {}) })}>
-            <option value="">Nobody</option>
-            {teams.map((t) => (
-              <optgroup key={t.team_id} label={t.name}>
-                {t.lineup.map((p) => (
-                  <option key={p.player_id} value={p.player_id}>
-                    {p.shirt} · {p.name} ({p.pos})
-                  </option>
-                ))}
-              </optgroup>
-            ))}
-          </select>
+          {(labelId) => (
+            <Select
+              labelledBy={labelId}
+              align="end"
+              value={prefs.player ?? ""}
+              options={playerOptions}
+              onChange={(v) => update({ player: v || null, ...(v ? { mode: "player" as Mode } : {}) })}
+            />
+          )}
         </Field>
       </div>
       {fellBack && (
