@@ -484,3 +484,36 @@ override replaces the job's whole container, so the route reads the job's own co
 | `502 start_failed` | The archive or Azure call failed |
 
 The web app's identity holds a custom role that can only read and start that job (`infra/specs/security.md` §3).
+
+## Local release fix to §8: durable admission and availability
+`OVERLAP_LIVE_ENABLED=true` AND a valid job ID are required. Missing/false disables POST even with a stale job ID.
+GET /api/start-match is uncached, read-only and returns `{available: boolean}` after checking job and control
+container existence. It returns unavailable on failures; it does not promise every downstream service is healthy.
+The button stays hidden until true, polls every 30 seconds and hides again on unavailable.
+
+POST rejects a cross-site Origin/Sec-Fetch-Site before admission. A 60-second Blob lease on
+`match-control/starts.json` serializes all web replicas. The durable document contains a version, monotonic last
+number, rolling attempt timestamps with hashed network visitor identifiers, and a pending execution reservation.
+The web identity has Blob Data Contributor only on this new container, not on archived tracking.
+
+Within the lease: reconcile any pending named execution (only Succeeded/Failed/Stopped releases it), check
+running executions, enforce at most 3 admitted attempts per visitor/hour and 6 globally/hour, allocate an unused
+number above persisted and archived IDs, SAVE the reservation, then invoke ARM once. Store the execution name
+when returned. Timeouts/lost responses or save failures retain the reservation: no automatic retry. HTTP 409
+`start_pending` means operator reconciliation is required; 409 `match_running` includes competing lease holders;
+429 `rate_limited`; 503 `start_unavailable` on missing state/permissions/invalid control data. Responses are uncached.
+The network identifier is not user authentication; rotating/spoofing it still cannot bypass the global cap.
+Admitted failed/unknown starts consume quota. Historical entries expire logically after one hour and are pruned
+on later admission; no raw IP is stored. Do not delete/reset the coordination blob as routine recovery.
+
+A pending unnamed execution is deliberately fail-closed until an operator checks ARM and records the correct
+execution name, or proves no execution can still start before clearing pending under a lease. Preserve lastNumber
+and attempts. Never automatically unlock an unknown start merely because time elapsed. No operator mutation is
+implemented or performed by this patch.
+
+### Live-list freshness (§5.3)
+GET /api/matches excludes live candidates whose match_state `_ts` (or initial matches `_ts` when absent) is older
+than 180 wall seconds, more than 60 seconds in the future, or already full_time without an archived final result.
+Finished results remain unchanged. This is a conservative display filter, not archive mutation or a claim a game
+finished. Genuine long pauses can temporarily disappear; a fresh snapshot makes them eligible again. The home
+screen clears its quiet exclusion when a match's clock advances, so a resumed stream can be selected again.

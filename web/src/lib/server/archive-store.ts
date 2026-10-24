@@ -260,3 +260,17 @@ export function createMatchListStore(settings: ArchiveSettings): MatchListStore 
       }),
   };
 }
+
+/** Seed durable public allocation from the highest archived ID, not only the newest 100 writes. */
+export async function highestArchivedMatchId(settings: ArchiveSettings): Promise<string | null> {
+  const matches = cosmosContainers(settings.cosmos).matches;
+  return guarded("highest match id", async (signal) => {
+    const { resources } = await matches.items.query<{ match_id: string }>({
+      query: "SELECT TOP 1 c.match_id FROM c WHERE STARTSWITH(c.match_id, @prefix) ORDER BY c.match_id DESC",
+      parameters: [{ name: "@prefix", value: "SYN-" }],
+    }, { abortSignal: signal }).fetchAll();
+    const id = resources[0]?.match_id;
+    if (id !== undefined && !/^SYN-\d{4}$/.test(id)) throw new Error("Invalid archive match identity");
+    return id ?? null;
+  });
+}

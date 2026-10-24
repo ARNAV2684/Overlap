@@ -147,6 +147,7 @@ resource web 'Microsoft.App/containerApps@2024-03-01' = {
             { name: 'OVERLAP_ARCHIVE_BLOB_ENDPOINT', value: archiveBlobEndpoint }
             // The start button: present only while the generator job exists
             { name: 'OVERLAP_GENERATOR_JOB_ID', value: deployLive ? generatorJobId : '' }
+            { name: 'OVERLAP_LIVE_ENABLED', value: deployLive ? 'true' : 'false' }
           ]
         }
       ]

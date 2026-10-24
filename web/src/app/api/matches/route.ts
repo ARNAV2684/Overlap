@@ -10,7 +10,7 @@
 // logged. Settings and keys never appear in a response or a log line; storage errors are logged by operation only.
 
 import { connection } from "next/server";
-import { buildMatchList, liveMatchIds, MATCH_LIST_LIMIT, parseMatchRows } from "@/lib/match-list";
+import { buildMatchList, currentMatchRows, liveMatchIds, MATCH_LIST_LIMIT, parseMatchRows } from "@/lib/match-list";
 import { describeArchiveEnvProblems, readArchiveEnv } from "@/lib/server/archive-env";
 import { ArchiveStoreError, createMatchListStore, type MatchListStore } from "@/lib/server/archive-store";
 
@@ -61,7 +61,7 @@ export async function GET() {
       else console.error(`match list ${ids[i]}: match state read failed`);
     });
 
-    return Response.json(buildMatchList(rows, states), { headers: NO_STORE });
+    return Response.json(buildMatchList(currentMatchRows(rows, states), states), { headers: NO_STORE });
   } catch (error) {
     if (error instanceof ArchiveStoreError) {
       console.error(`match list: ${error.message}`);

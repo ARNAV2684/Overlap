@@ -97,3 +97,22 @@ describe("buildMatchList", () => {
     expect(matchListSchema.safeParse(list).success).toBe(true);
   });
 });
+
+// Read-only liveness: old archive rows never become invented finished results.
+describe("live freshness", () => {
+  it("omits stale live rows but keeps recently active and genuinely finished matches", async () => {
+    const { currentMatchRows, parseMatchRows } = await import("@/lib/match-list");
+    const base = { home_id: "KES", home_name: "Kes", away_id: "ORR", away_name: "Orr", _ts: 1 };
+    const { rows } = parseMatchRows([
+      { ...base, match_id: "SYN-3000", status: "live" },
+      { ...base, match_id: "SYN-3001", status: "live" },
+      { ...base, match_id: "SYN-3002", status: "finished", result: { score: { home: 1, away: 0 } } },
+      { ...base, _ts: 999, match_id: "SYN-3003", status: "live" },
+    ]);
+    const states = new Map([["SYN-3001", { _ts: 999 }]]);
+    const selected = currentMatchRows(rows, states, 1_000_000);
+    expect(selected.map((r) => r.match_id)).toEqual(["SYN-3001", "SYN-3002", "SYN-3003"]);
+    expect(rows).toHaveLength(4); // no mutation
+    expect(rows[0].status).toBe("live");
+  });
+});
