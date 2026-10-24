@@ -28,6 +28,19 @@ _Answer:_
 | `press_change` | Any `Pressure`, `Tackle`, `Interception`, `Foul` or `BallRecovery` of the team | The team's pressing rate (pressures per opponent pass, `metrics.md` §4) is ≥ 1.5 × the baseline (`higher`) or ≤ 1 ÷ 1.5 of it (`deeper`), with ≥ 20 opponent passes in the recent window and ≥ 40 in the baseline; needs `period_ms ≥ 15 min` | 10 min per team per period |
 | `sprint` | A tracking frame | **Deferred (stats S3, D-01): not fired yet.** When built: a player reaches ≥ 34.0 km/h, the highest speed in the match so far, after the 10th minute | 15 min per match |
 | `milestone` | `Shot` with `shot_outcome = goal` | The scorer's 2nd or 3rd goal of the match | None |
+| `head_to_head` | Any event by an outfield player | From 20′. In the actor's role (defender: CB, LB, RB, LWB, RWB; forward: LW, RW, ST; midfielder: the rest but GK), each side's leader is the player with the highest role score (below). The battle is led when the higher score is ≥ 3 and ≥ 1.25 × the other side's. Fires when the leading player differs from the last one announced for that role; never two head-to-heads within 5 minutes. The moment's team is the leader's; `player_ids` = [leader, rival] (§4 below) | 15 min per role per period |
+| `connection` | A `Pass` or `Shot` of the team | From 15′ of the period. The team's top passing pair (both directions) over the last 15 minutes of the period, by passes + 2 × progressive + 1 × into the final third + 3 × in moves that ended in a team shot, with ≥ 8 completed passes and (≥ 2 progressive or ≥ 1 in a shot move). Fires when that pair differs from the last announced for the team | 20 min per team per period |
+| `workhorse` | A `Tackle`, `TakeOn`, `Aerial`, `Interception`, `BallRecovery` or `Pressure` | From 25′. The outfield player with the highest work score (below) leads the next by ≥ 10 %; fires when that player differs from the last announced. The moment's team is the player's | 15 min per period |
+
+**Insight scores** (the same formulas as the web's head-to-head and engine-room cards, `web/specs/screens.md` §2.8):
+- **Role score.** Forward: 3 × goals + 4 × xG + shots on target + 0.5 × shots + 0.5 × take-ons won + key passes.
+  Midfielder: 0.05 × completed passes + 0.6 × progressive passes + 1.5 × key passes + 0.4 × recoveries + 2 × goals.
+  Defender: tackles won + interceptions + aerials won + 0.5 × clearances + 0.5 × recoveries + 0.2 × progressive passes.
+- **Work score.** 2 × km + 0.5 × sprints + 1.5 × duels won (tackles, take-ons and aerials won) + recoveries +
+  interceptions + 0.3 × pressures. km and sprints come from tracking; replays without tracking count the rest.
+- **Volume**, measured on three generated KES v ORR matches (seeds 7, 11, 23): 9–14 insight moments a match
+  (head-to-head 4–5, connection 4–8, workhorse 1–2). A 6-pass, 15-minute-cooldown connection rule fired 9–12
+  connections alone and was tightened.
 
 **Notes:**
 - **Direction.** `press_change` has a `direction`: `higher` (pressing more) or `deeper` (pressing less). It is named
@@ -89,7 +102,7 @@ is. The spotter and director look it up by `trigger`:
 | Priority | Triggers |
 |---|---|
 | `high` | `goal`, `red_card`, `penalty` |
-| `normal` | `big_chance`, `shot_cluster`, `momentum_swing`, `press_change`, `milestone` |
+| `normal` | `big_chance`, `shot_cluster`, `momentum_swing`, `press_change`, `milestone`, `head_to_head`, `connection`, `workhorse` (in that order) |
 | `low` | `sprint` |
 
 Within one priority, the newer moment comes first.
