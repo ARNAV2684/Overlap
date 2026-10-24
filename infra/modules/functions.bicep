@@ -92,6 +92,9 @@ resource app 'Microsoft.Web/sites@2024-04-01' = {
         { name: 'FUNCTIONS_EXTENSION_VERSION', value: '~4' }
         { name: 'FUNCTIONS_WORKER_RUNTIME', value: 'python' }
         { name: 'SCM_DO_BUILD_DURING_DEPLOYMENT', value: 'true' }
+        // The relay, archiver and timers are synchronous and mostly wait on the network; the default pool (CPUs + 4,
+        // so 6 on B2) queued relay batches behind archive batches during a 20x match
+        { name: 'PYTHON_THREADPOOL_THREAD_COUNT', value: '16' }
         { name: 'APPLICATIONINSIGHTS_CONNECTION_STRING', value: appInsightsConnectionString }
         { name: 'AZURE_CLIENT_ID', value: identity.clientId }
         // Host storage and trigger connections, identity-based (no keys)

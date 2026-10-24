@@ -22,8 +22,9 @@ _Answer:_
 
 - **Ordering:** partition key `match_id`, so each match's messages arrive in order **within one hub**. The two hubs are
   independent: a frame can arrive before an event of the same instant. Nothing assumes order across hubs.
-- **Batches:** the Event Hubs trigger delivers up to 100 messages per call (`maxEventBatchSize: 100` in `host.json`);
-  the local runner uses the same size. Each batch is processed in order, then the state is saved, then the checkpoint
+- **Batches:** the Event Hubs trigger delivers up to 300 messages per call (`maxEventBatchSize: 300` in `host.json`;
+  100 left the relay's tracking reader 80 s behind a 20× match on Azure, 24 Oct, because one match is one partition and
+  its batches run one after another); the local runner reads 100 at a time. Each batch is processed in order, then the state is saved, then the checkpoint
   moves.
 - **Validation (strict, per `CONTRACTS.md`):** the body must be valid JSON matching §2, §3 or §4 exactly (unknown fields
   rejected); `kind` and `match_id` properties must agree with the body. An invalid message is **logged** (hub,

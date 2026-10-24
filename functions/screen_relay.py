@@ -417,12 +417,14 @@ class Relay:
                 log.warning("invalid message %s: match_id property and body disagree", m.where or m.hub)
                 continue
             by_match.setdefault(m.match_id, []).append(m)
+        ms = {"wait": 0.0, "load": 0.0, "apply": 0.0, "save": 0.0, "send": 0.0}   # per stage, for the batch's log line
         for match_id, msgs in by_match.items():
             for i in range(0, len(msgs), CHUNK):
                 chunk = msgs[i:i + CHUNK]
-                out = self._commit(match_id, lambda match, chunk=chunk: [match.apply(x) for x in chunk])
+                out = self._commit(match_id, lambda match, chunk=chunk: [match.apply(x) for x in chunk], ms)
                 totals["envelopes"] += len(out.envelopes)
                 totals["invalid"] += len(out.invalid)
+        totals["ms"] = {k: round(v) for k, v in ms.items()}
         return totals
 
     def tick(self) -> int:
@@ -432,21 +434,36 @@ class Relay:
             sent += len(self._commit(match_id, lambda match: match.tick()).envelopes)
         return sent
 
-    def _commit(self, match_id: str, work) -> Outcome:
+    def _commit(self, match_id: str, work, ms: dict | None = None) -> Outcome:
+        ms = ms if ms is not None else {}
+        t = time.perf_counter()
         with self._lock(match_id):
-            return self._commit_locked(match_id, work)
+            ms["wait"] = ms.get("wait", 0.0) + (time.perf_counter() - t) * 1000   # behind another reader of this match
+            return self._commit_locked(match_id, work, ms)
 
-    def _commit_locked(self, match_id: str, work) -> Outcome:
+    def _commit_locked(self, match_id: str, work, ms: dict) -> Outcome:
+        def lap(stage: str, since: float) -> float:
+            now = time.perf_counter()
+            ms[stage] = ms.get(stage, 0.0) + (now - since) * 1000
+            return now
+
         for attempt in range(SAVE_ATTEMPTS):
+            t = time.perf_counter()
             state, version = self.store.load(match_id)
+            t = lap("load", t)
             match = Match(state if state is not None else new_state(match_id), self.clock())
             before = digest(match.s)
             work(match)
             match.s["open_work"] = bool(match.s["bundle"] or match.s["held"])
-            if state is not None and digest(match.s) == before:
+            unchanged = state is not None and digest(match.s) == before
+            t = lap("apply", t)
+            if unchanged:
                 return match.out
-            if self.store.save(match_id, match.s, version, match.out.envelopes):
+            saved = self.store.save(match_id, match.s, version, match.out.envelopes)
+            t = lap("save", t)
+            if saved:
                 self._send(match_id, match.out.envelopes, match.s)
+                lap("send", t)
                 return match.out
             log.info("state of %s changed meanwhile; re-applying (attempt %d)", match_id, attempt + 1)
         raise RuntimeError(f"could not save state for {match_id} after {SAVE_ATTEMPTS} attempts")
