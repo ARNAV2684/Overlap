@@ -14,14 +14,14 @@ import { cardMinute, cardSource, CHART_LABEL } from "@/lib/live/live-insights";
 import { useScoreboard } from "@/lib/store-hooks";
 import { useExperience, useFeed } from "@/providers/MatchExperience";
 import { usePreferences } from "@/providers/PreferencesProvider";
-import { CardText, KindChip, SourceBadge, useVisibleCards } from "./MomentStrip";
+import { CardText, KindChip, SourceBadge, useVisibleCards, type ShowChart } from "./MomentStrip";
 
 /** The half a card belongs to: its period when it has one, else its minute. */
 function halfOf(card: Overlay): number {
   return card.period ?? (cardMinute(card.clock) >= 45 ? 2 : 1);
 }
 
-export function AiFeed({ onShowChart }: { onShowChart?: (component: string, eventId?: string) => void }) {
+export function AiFeed({ onShowChart }: { onShowChart?: ShowChart }) {
   const { current, recap, tags } = useFeed();
   const { mode, source } = useExperience();
   const [prefs] = usePreferences();
@@ -87,7 +87,7 @@ export function AiFeed({ onShowChart }: { onShowChart?: (component: string, even
                       {card.visual && onShowChart && (
                         <button
                           type="button"
-                          onClick={() => onShowChart(card.visual!.component, card.visual!.highlight?.event_id)}
+                          onClick={() => onShowChart(card.visual!.component, card.visual!.highlight?.event_id, card.visual!.highlight)}
                           className="ml-auto font-mono text-[9.5px] font-bold uppercase tracking-[1px] text-ink/40 hover:text-accent"
                         >
                           {CHART_LABEL[card.visual.component] ?? card.visual.component} →

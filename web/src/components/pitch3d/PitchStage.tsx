@@ -22,7 +22,7 @@ import { flightAt, shotFlight, type BallPoint, type ShotFlight } from "@/lib/liv
 import { bookingsAt, FIELD_EVENT_LABELS, minuteOf, shortName, type FieldEvent } from "@/lib/live/match-events";
 import { useExperience } from "@/providers/MatchExperience";
 import { usePreferences } from "@/providers/PreferencesProvider";
-import { attackingThird, createStage, toWorld, type Stage } from "./scene/stage";
+import { attackingThird, connectionSpots, createStage, toWorld, type Stage } from "./scene/stage";
 import { PITCH_H, PITCH_W } from "./scene/pitch";
 import { CARD_Y } from "./scene/effects";
 import { FIGURE_SCALE } from "./scene/figure";
@@ -308,6 +308,18 @@ export function PitchStage({ highlight = [], children }: { highlight?: readonly 
             const el = label(`f:${f.channel}`, "ov-flank");
             el.innerHTML = `<b>${f.share}%</b>${f.channel}`;
             el.dataset.top = String(f.channel === s.channel);
+            el.style.transform = `translate(${at.x}px, ${at.y}px) translate(-50%, -50%)`;
+          }
+        }
+        // Connections: each player's shirt number over their spot
+        if (e.analysis && s?.kind === "connections" && s.side && s.connections) {
+          for (const [id, w] of connectionSpots(s.side, sample.period, s.connections)) {
+            const at = stage.project(w.x, 0, w.z);
+            if (!at) continue;
+            const el = label(`c:${id}`, "ov-flank");
+            const m = e.memory.players().get(id);
+            el.innerHTML = `<b>${m?.shirt ?? "?"}</b>${m ? shortName(m.name) : ""}`;
+            el.dataset.top = String(id === s.connections[0]?.a || id === s.connections[0]?.b);
             el.style.transform = `translate(${at.x}px, ${at.y}px) translate(-50%, -50%)`;
           }
         }

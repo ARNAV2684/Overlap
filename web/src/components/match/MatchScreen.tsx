@@ -16,9 +16,10 @@ import { useExperience, useFeed } from "@/providers/MatchExperience";
 import { usePreferences } from "@/providers/PreferencesProvider";
 import { PitchStage } from "@/components/pitch3d/PitchStage";
 import { AiFeed } from "./AiFeed";
-import { LiveInsights } from "./LiveInsights";
+import { INSIGHT_CARD } from "@/lib/live/live-insights";
+import { LiveInsights, type InsightFocus } from "./LiveInsights";
 import { LiveRail } from "./LiveRail";
-import { MomentStrip } from "./MomentStrip";
+import { MomentStrip, type ShowChart } from "./MomentStrip";
 import { AnalysisPanel, TAB_FOR_COMPONENT, type Focus } from "./AnalysisPanel";
 import { PitchOverlay, PitchUnderlay } from "./PitchOverlay";
 import { PlayerFocus } from "./PlayerFocus";
@@ -50,16 +51,28 @@ function ModeSwitch() {
 }
 
 export function MatchScreen({ intro, initialSpeed }: { intro?: ReactNode; initialSpeed?: ReplaySpeed }) {
-  const { source } = useExperience();
+  const { source, setPinned, setAnalysis } = useExperience();
   const { current } = useFeed();
   const [prefs] = usePreferences();
   const [focus, setFocus] = useState<Focus>(null);
+  const [insightFocus, setInsightFocus] = useState<InsightFocus | null>(null);
 
   // Ring the player the current AI card is about, and the followed player
   const highlight = [current?.visual?.highlight?.player_id, prefs.player].filter((x): x is string => Boolean(x));
 
-  const showChart = (component: string, eventId?: string) => {
-    // Every card opens the analysis tab of its visual (a heatmap card: Players, with the tracking heatmap)
+  const showChart: ShowChart = (component, eventId, highlight) => {
+    // An insight moment opens its live card under the pitch, on the card's player or team; a connection also draws
+    // the team's connections on the pitch
+    if (INSIGHT_CARD.has(component)) {
+      setInsightFocus({ component, playerId: highlight?.player_id, teamId: highlight?.team_id, nonce: Date.now() });
+      if (component === "connections") {
+        setAnalysis(true);
+        setPinned("connections");
+      }
+      document.getElementById(`insight-${component}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+    // Every other card opens the analysis tab of its visual (a heatmap card: Players, with the tracking heatmap)
     const tab = TAB_FOR_COMPONENT[component];
     if (tab) setFocus({ tab, eventId, nonce: Date.now() });
     document.getElementById("analytics")?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -86,7 +99,7 @@ export function MatchScreen({ intro, initialSpeed }: { intro?: ReactNode; initia
           </div>
           <PitchUnderlay />
           <MomentStrip onShowChart={showChart} />
-          <LiveInsights />
+          <LiveInsights focus={insightFocus} />
         </div>
         <aside className="flex min-w-0 flex-col gap-4">
           <ViewerBar />

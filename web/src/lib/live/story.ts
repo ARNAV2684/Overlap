@@ -4,6 +4,8 @@
 //            protect  a team that just scored drops into shape: its lines, and how far deeper its block now sits
 //            attack   a team pinning the other back: its pass network on the live players and the lane it uses
 //            territory the default: who owns the pitch, as a tide line between the two halves
+//            connections a team's top three passing pairs at their mean pass-start spots, when pinned or while a
+//                     connection moment is on screen
 // Inputs:  the match memory, the current interpolated sample, and the viewer's favourite club (a preferred side)
 // Outputs: directStory(), formationLines(), attackChannel(), flankShares(), territoryFront(); Story
 // Spec:    web/specs/pitch.md §4
@@ -15,8 +17,9 @@ import type { MatchEvent, MatchSetup } from "@/lib/contracts";
 import { attacksEast, type Side } from "@/lib/coordinates";
 import type { BallSample, Goal, MatchMemory, ShapeSample } from "@/lib/live/match-memory";
 import type { MotionSample } from "@/lib/live/motion";
+import { topConnections, type Connection } from "@/lib/live/live-insights";
 
-export const STORY_KINDS = ["territory", "protect", "attack"] as const;
+export const STORY_KINDS = ["territory", "protect", "attack", "connections"] as const;
 export type StoryKind = (typeof STORY_KINDS)[number];
 
 /** After a goal, the scoring team's shape is the story for this long (match ms), within the same period. */
@@ -54,6 +57,8 @@ export type Story = {
    * produced so far this match (heavy.shots; null without it). Left, centre, right in the team's own frame.
    */
   flanks?: { channel: Channel; share: number; shots: number | null; xg: number | null }[];
+  /** Connections: the team's top three pairs (live-insights.ts `topConnections`), team frame. */
+  connections?: Connection[];
 };
 
 const teamName = (setup: MatchSetup | null, side: Side) => setup?.teams[side].name ?? (side === "home" ? "Home" : "Away");
@@ -225,6 +230,8 @@ export function directStory(
   sample: MotionSample,
   pinned: StoryKind | null = null,
   preferred: Side | null = null,
+  /** The team of a connection moment on screen now: its connections become the story. */
+  connectionsFor: Side | null = null,
 ): Story {
   const setup = memory.setup();
   const now = sample.matchMs;
@@ -247,7 +254,24 @@ export function directStory(
     }
   }
 
-  const want: StoryKind = pinned ?? (recentGoal ? "protect" : attacker ? "attack" : "territory");
+  const want: StoryKind = pinned ?? (connectionsFor ? "connections" : recentGoal ? "protect" : attacker ? "attack" : "territory");
+
+  if (want === "connections") {
+    const side = connectionsFor ?? preferred ?? poss ?? "home";
+    const links = topConnections(events, setup?.teams[side].team_id ?? "", 3);
+    const top = links[0];
+    const shirt = (id: string) => memory.players().get(id)?.shirt ?? "?";
+    return {
+      kind: "connections",
+      side,
+      title: `${teamName(setup, side)}'s top connections`,
+      detail: top
+        ? "The pairs driving their play. Thicker lines: more passes, more progressive ones, more ending in a shot."
+        : "No pair has combined twice yet.",
+      metric: top ? { value: `${top.passes}`, label: `passes ${shirt(top.a)} ⇄ ${shirt(top.b)}` } : null,
+      connections: links,
+    };
+  }
 
   if (want === "protect") {
     const goal = recentGoal ?? lastGoal;

@@ -5,6 +5,7 @@ import {
   cardSource,
   CARD_SOURCE_LABEL,
   cardMinute,
+  goalDistance,
   isProgressive,
   metres,
   momentKind,
@@ -78,10 +79,15 @@ describe("playerLines", () => {
     expect(lines.get("NBR-11")).toMatchObject({ distanceKm: 7.21, sprints: 14, topSpeedKmh: 33.4 });
   });
 
-  it("measures in metres and only calls forward passes into the other half progressive", () => {
+  it("measures in metres and uses the stats engine's progressive rule", () => {
     expect(metres(0, 0, 100, 0)).toBeCloseTo(105);
-    expect(isProgressive(makeEvent({ x: 20, end_x: 40 }))).toBe(false);
-    expect(isProgressive(makeEvent({ x: 45, end_x: 60 }))).toBe(true);
+    const pass = (over: Partial<MatchEvent>) => makeEvent({ y: 50, end_y: 50, ...over });
+    expect(isProgressive(pass({ x: 40, end_x: 70 }))).toBe(true); // 63 m from goal to 31.5 m
+    expect(isProgressive(pass({ x: 30, end_x: 70 }))).toBe(false); // starts before x = 35
+    expect(isProgressive(pass({ x: 45, end_x: 50 }))).toBe(false); // not 25 % closer
+    expect(isProgressive(pass({ x: 40, end_x: 70, qualifiers: ["free_kick"] }))).toBe(false); // a set piece
+    expect(isProgressive(pass({ x: 40, end_x: 70, outcome: "fail", receiver_id: undefined }))).toBe(false);
+    expect(goalDistance(100, 50)).toBe(0.5);
   });
 });
 
@@ -203,6 +209,9 @@ describe("AI moment cards", () => {
   it("names a card's kind from its chart and reads its minute", () => {
     expect(momentKind({ visual: { component: "shot_map" } })).toBe("chance");
     expect(momentKind({ visual: undefined })).toBe("moment");
+    expect(momentKind({ visual: { component: "head_to_head" } })).toBe("head_to_head");
+    expect(momentKind({ visual: { component: "connections" } })).toBe("connection");
+    expect(momentKind({ visual: { component: "engine_room" } })).toBe("workhorse");
     expect(cardMinute("62:14")).toBe(62);
   });
 });

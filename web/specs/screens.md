@@ -59,7 +59,8 @@ pinned Team shape or Pass network is about it. Territory still shows both teams.
 
 When a card is due (`realtime.md` §4) it rises over the pitch for its duration, as light glass and compact so the play
 shows through. In the visual kit's style (24 Oct): the minute, the **kind** of moment (from the chart the director
-picked: big moment, chance, momentum, press, passing, movement, numbers), the badge (**AI · checked** only for a
+picked: big moment, chance, momentum, press, passing, movement, numbers, and since the insight moments head-to-head,
+connection and engine room), the badge (**AI · checked** only for a
 model-written line the fact-checker passed; **Stat line · checked** for template lines, which are never called AI;
 S8), the sentence in the viewer's
 mode and language with its **key number** picked out in the focus blue and repeated big beside it, and a small **chart
@@ -131,6 +132,13 @@ Right under the pitch, so they are in view while the match plays:
     slowing down); and which side keeps the ball longer.
 
 The replay progress line carries a mark for each moment shown so far (§2.4).
+
+**Insight moments** (`head_to_head`, `connection`, `workhorse`; `CONTRACTS.md` §10.6): their cards point to the
+`head_to_head`, `connections` and `engine_room` visuals. The chart link scrolls to that insight card and rings it: the
+head-to-head turns to the leader's role, connections to the card's team, the engine room marks the player. A
+connection card also pins the Connections story on the 3D pitch (`pitch.md` §4). The progressive passes on every card
+use the stats engine's rule (an open-play pass from x ≥ 35 ending at least 25 % closer to goal), so a card and the
+commentary quote the same number.
 
 ## 3. Your match (preferences)
 

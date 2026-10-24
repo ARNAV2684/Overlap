@@ -14,6 +14,9 @@ import { cardSource, CARD_SOURCE_LABEL, CHART_LABEL, MOMENT_KIND_GLYPH, MOMENT_K
 import { useExperience, useFeed } from "@/providers/MatchExperience";
 import { usePreferences } from "@/providers/PreferencesProvider";
 
+/** Opens what a card points to: an analysis tab, or a live insight card (with the card's player or team). */
+export type ShowChart = (component: string, eventId?: string, highlight?: { team_id?: string; player_id?: string }) => void;
+
 /** The cards this audience has received that have happened by the playhead, newest first. */
 export function useVisibleCards(): readonly Overlay[] {
   const { cards } = useFeed();
@@ -84,7 +87,7 @@ export function CardText({ text, className }: { text: string; className: string 
   );
 }
 
-export function MomentStrip({ onShowChart }: { onShowChart?: (component: string, eventId?: string) => void }) {
+export function MomentStrip({ onShowChart }: { onShowChart?: ShowChart }) {
   const visible = useVisibleCards();
   const { current } = useFeed();
   const { mode } = useExperience();
@@ -137,7 +140,7 @@ export function MomentStrip({ onShowChart }: { onShowChart?: (component: string,
               {lead.visual && onShowChart && (
                 <button
                   type="button"
-                  onClick={() => onShowChart(lead.visual!.component, lead.visual!.highlight?.event_id)}
+                  onClick={() => onShowChart(lead.visual!.component, lead.visual!.highlight?.event_id, lead.visual!.highlight)}
                   className="mt-2 inline-flex items-center gap-1 font-mono text-[9.5px] font-black uppercase tracking-[1.2px] text-ink/45 hover:text-accent"
                 >
                   {CHART_LABEL[lead.visual.component] ?? lead.visual.component} <span aria-hidden="true">→</span>

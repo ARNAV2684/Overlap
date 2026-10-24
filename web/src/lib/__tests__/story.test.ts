@@ -188,6 +188,31 @@ describe("territory", () => {
   });
 });
 
+describe("connections", () => {
+  it("draws the team of a connection card, with its top pairs and their spots", () => {
+    const memory = createMatchMemory();
+    memory.ingest(statusEnv(1, "live", { home: 0, away: 0 }, { setup }, 0));
+    let seq = 2;
+    for (let i = 0; i < 4; i++) {
+      memory.ingest(eventEnv(seq++, { type: "Pass", team_id: "HBA", player_id: "HBA-06", receiver_id: "HBA-10", x: 40, y: 30, end_x: 70, end_y: 40, period: 1 }, 10_000 + i * 1000));
+    }
+    memory.ingest(posEnvelope(seq++, shapeFrame(20_000, 40)));
+    const sample = sampleOf(shapeFrame(20_000, 40));
+    const story = directStory(memory, sample, null, null, "away");
+    expect(story).toMatchObject({ kind: "connections", side: "away", metric: { value: "4", label: "passes 6 ⇄ 10" } });
+    expect(story.connections?.[0]).toMatchObject({ a: "HBA-06", b: "HBA-10", passes: 4, at: { a: { x: 40, y: 30 } } });
+  });
+
+  it("can be pinned, and gives way when no card asks for it", () => {
+    const memory = createMatchMemory();
+    memory.ingest(statusEnv(1, "live", { home: 0, away: 0 }, { setup }, 0));
+    memory.ingest(posEnvelope(2, shapeFrame(1000, 40)));
+    const sample = sampleOf(shapeFrame(1000, 40));
+    expect(directStory(memory, sample, "connections")).toMatchObject({ kind: "connections", connections: [], metric: null });
+    expect(directStory(memory, sample).kind).toBe("territory");
+  });
+});
+
 describe("formationLines", () => {
   it("groups outfield players into the formation's lines, deepest first", () => {
     const memory = createMatchMemory();

@@ -18,6 +18,7 @@ import type { MatchSetup } from "@/lib/contracts";
 import type { Side } from "@/lib/coordinates";
 import {
   battle,
+  roleOf,
   playerLines,
   ROLE_LABEL,
   tempo,
@@ -43,6 +44,14 @@ const ROTATE_MS = 45_000;
 
 type Colours = Record<Side, string>;
 
+/** Which insight card a moment's chart link opened, and on whom (MatchScreen's showChart). */
+export type InsightFocus = { component: string; playerId?: string; teamId?: string; nonce: number };
+
+/** The focus when it is for this card, so the card can ring and turn to it (a newer manual pick wins). */
+function focusFor(focus: InsightFocus | null, component: string): InsightFocus | null {
+  return focus?.component === component ? focus : null;
+}
+
 function useInsightData() {
   const { memory, tick } = useExperience();
   const { setup } = useScoreboard();
@@ -54,9 +63,31 @@ function useInsightData() {
   }, [memory, tick, setup]);
 }
 
-function CardShell({ eyebrow, title, controls, children, note }: { eyebrow: string; title: string; controls?: React.ReactNode; children: React.ReactNode; note: string }) {
+function CardShell({
+  id,
+  flash = null,
+  eyebrow,
+  title,
+  controls,
+  children,
+  note,
+}: {
+  id?: string;
+  /** A chart link landed here: the nonce restarts the ring's fade. */
+  flash?: number | null;
+  eyebrow: string;
+  title: string;
+  controls?: React.ReactNode;
+  children: React.ReactNode;
+  note: string;
+}) {
   return (
-    <section className="ov-card flex min-w-0 flex-col p-4" aria-label={title}>
+    <section
+      id={id}
+      className="ov-card relative flex min-w-0 scroll-mt-24 flex-col p-4"
+      aria-label={title}
+    >
+      {flash !== null && <span key={flash} className="ov-flash pointer-events-none absolute inset-0 z-10 rounded-[inherit] ring-[3px] ring-inset ring-accent" aria-hidden="true" />}
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="ov-eyebrow">{eyebrow}</p>
@@ -133,9 +164,15 @@ export function BattleCard({ b, colours, setup }: { b: Battle; colours: Colours;
   );
 }
 
-function HeadToHead({ data, colours }: { data: ReturnType<typeof useInsightData>; colours: Colours }) {
-  const [picked, setPicked] = useState<Role | null>(null);
+function HeadToHead({ data, colours, focus }: { data: ReturnType<typeof useInsightData>; colours: Colours; focus: InsightFocus | null }) {
+  const [manual, setManual] = useState<{ role: Role; at: number } | null>(null);
   const [auto, setAuto] = useState(0);
+  const mine = focusFor(focus, "head_to_head");
+  // A head-to-head moment's link shows the leader's role, unless the viewer picked one after it
+  const linked = mine?.playerId ? data.players.get(mine.playerId) : undefined;
+  const linkedRole = linked && BATTLE_ROLES.includes(roleOf(linked.pos)) ? roleOf(linked.pos) : null;
+  const picked = linkedRole && mine && (!manual || mine.nonce > manual.at) ? linkedRole : (manual?.role ?? null);
+  const setPicked = (role: Role) => setManual({ role, at: Date.now() });
   useEffect(() => {
     if (picked) return;
     const id = setInterval(() => setAuto((i) => (i + 1) % BATTLE_ROLES.length), ROTATE_MS);
@@ -146,6 +183,8 @@ function HeadToHead({ data, colours }: { data: ReturnType<typeof useInsightData>
   if (!data.setup) return null;
   return (
     <CardShell
+      id="insight-head_to_head"
+      flash={mine?.nonce ?? null}
       eyebrow={picked ? "Head-to-head" : "Head-to-head · rotating"}
       title={`${ROLE_LABEL[role]}: who is winning their battle`}
       note="From the event data and the stats engine · best player in the role on each side"
@@ -211,9 +250,14 @@ function ConnectionPitch({ links, players, colour }: { links: Connection[]; play
   );
 }
 
-function Connections({ data, colours }: { data: ReturnType<typeof useInsightData>; colours: Colours }) {
+function Connections({ data, colours, focus }: { data: ReturnType<typeof useInsightData>; colours: Colours; focus: InsightFocus | null }) {
   const { myClub } = useExperience();
-  const [side, setSide] = useState<Side>(myClub ?? "home");
+  const [manual, setManual] = useState<{ side: Side; at: number } | null>(null);
+  const mine = focusFor(focus, "connections");
+  // A connection moment's link shows its team, unless the viewer switched after it
+  const linkedSide: Side | null = mine?.teamId && data.setup ? (mine.teamId === data.setup.teams.away.team_id ? "away" : "home") : null;
+  const side: Side = linkedSide && mine && (!manual || mine.nonce > manual.at) ? linkedSide : (manual?.side ?? myClub ?? "home");
+  const setSide = (s: Side) => setManual({ side: s, at: Date.now() });
   const teamId = data.setup?.teams[side].team_id;
   // `data` is rebuilt every tick; the events array itself is the same object as it grows
   const links = useMemo(() => (teamId ? topConnections(data.events, teamId) : []), [data, teamId]);
@@ -224,6 +268,8 @@ function Connections({ data, colours }: { data: ReturnType<typeof useInsightData
   };
   return (
     <CardShell
+      id="insight-connections"
+      flash={mine?.nonce ?? null}
       eyebrow="Connections"
       title="The partnerships shaping the game"
       note="Ranked by passes + 2 × progressive + 1 × into the final third + 3 × in moves that ended in a shot"
@@ -269,13 +315,16 @@ const PART_COLOUR: Record<keyof typeof WORK_WEIGHTS, string> = {
   pressures: "#94a3b8",
 };
 
-function EngineRoom({ data, colours }: { data: ReturnType<typeof useInsightData>; colours: Colours }) {
+function EngineRoom({ data, colours, focus }: { data: ReturnType<typeof useInsightData>; colours: Colours; focus: InsightFocus | null }) {
+  const mine = focusFor(focus, "engine_room");
   const top: Workhorse[] = useMemo(() => workhorses(data.lines, data.players, 4), [data.lines, data.players]);
   const hasTracking = top.some((w) => w.parts.find((p) => p.key === "distanceKm")!.value > 0);
   const max = Math.max(1, ...top.map((w) => w.score));
   const w = WORK_WEIGHTS;
   return (
     <CardShell
+      id="insight-engine_room"
+      flash={mine?.nonce ?? null}
       eyebrow="Engine room"
       title="Who is putting the work in"
       note={`Score = ${w.distanceKm} × km + ${w.sprints} × sprints + ${w.duelsWon} × duels won + ${w.recoveries} × recoveries + ${w.interceptions} × interceptions + ${w.pressures} × pressures`}
@@ -289,7 +338,7 @@ function EngineRoom({ data, colours }: { data: ReturnType<typeof useInsightData>
             const won = wh.parts.find((p) => p.key === "duelsWon")!.value;
             const km = wh.parts.find((p) => p.key === "distanceKm")!.value;
             return (
-              <li key={wh.playerId}>
+              <li key={wh.playerId} className={mine?.playerId === wh.playerId ? "-mx-2 rounded-[10px] bg-accent/[0.07] px-2 py-1" : undefined}>
                 <div className="flex items-baseline gap-2">
                   <span className="font-mono text-[11px] font-black text-ink/35">{i + 1}</span>
                   <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: meta ? colours[meta.side] : "gray" }} />
@@ -393,15 +442,15 @@ function TempoCard({ data, colours }: { data: ReturnType<typeof useInsightData>;
   );
 }
 
-export function LiveInsights() {
+export function LiveInsights({ focus = null }: { focus?: InsightFocus | null }) {
   const data = useInsightData();
   if (!data.setup) return null;
   const colours = { home: overlayColour(data.setup.teams.home.colours), away: overlayColour(data.setup.teams.away.colours) };
   return (
     <div className="grid gap-4 md:grid-cols-2" aria-label="Live insights">
-      <HeadToHead data={data} colours={colours} />
-      <Connections data={data} colours={colours} />
-      <EngineRoom data={data} colours={colours} />
+      <HeadToHead data={data} colours={colours} focus={focus} />
+      <Connections data={data} colours={colours} focus={focus} />
+      <EngineRoom data={data} colours={colours} focus={focus} />
       <TempoCard data={data} colours={colours} />
     </div>
   );

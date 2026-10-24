@@ -18,8 +18,13 @@ import type { PlayerMeta } from "./match-memory";
 /** Pitch size in metres, for turning the 0–100 frame into distances. */
 const PITCH_X_M = 105;
 const PITCH_Y_M = 68;
-/** The final third starts here, in the team frame. */
-const FINAL_THIRD_X = 200 / 3;
+/** The final third starts here, in the team frame (the stats engine's pass_difficulty.FINAL_THIRD_X). */
+const FINAL_THIRD_X = 66.7;
+/** A progressive pass starts at least this far up (team frame) and ends at most this share as far from goal. */
+const PROGRESSIVE_FROM_X = 35;
+const PROGRESSIVE_SHARE = 0.75;
+/** Passes from these restarts are never progressive (the stats engine's SET_PIECE_QUALIFIERS). */
+const SET_PIECES = new Set(["corner", "free_kick", "goal_kick", "throw_in"]);
 
 // ---------------------------------------------------------------------------------------------------------------
 // Roles
@@ -50,7 +55,7 @@ export type PlayerLine = {
   playerId: string;
   passes: number;
   passesCompleted: number;
-  /** Completed passes that move the ball at least 10 m towards goal and end in the opposition half. */
+  /** Completed open-play passes that end at least 25 % closer to goal (the stats engine's rule). */
   progressivePasses: number;
   /** Mean length of a completed pass, metres (null before the first). */
   passDistanceM: number | null;
@@ -116,16 +121,20 @@ export function metres(x: number, y: number, ex: number, ey: number): number {
   return Math.hypot(((ex - x) * PITCH_X_M) / 100, ((ey - y) * PITCH_Y_M) / 100);
 }
 
-/** A completed pass that moves the ball at least 10 m towards goal and ends in the opposition half. */
+/** Metres from a point (team frame) to the centre of the goal it attacks, never under half a metre. */
+export function goalDistance(x: number, y: number): number {
+  return Math.max(Math.hypot(PITCH_X_M - (x * PITCH_X_M) / 100, PITCH_Y_M / 2 - (y * PITCH_Y_M) / 100), 0.5);
+}
+
+/**
+ * The stats engine's progressive pass (stats/pass_difficulty.py `is_progressive`), so cards and commentary quote the
+ * same number: a completed open-play pass from x ≥ 35 that ends at least 25 % closer to the goal centre.
+ */
 export function isProgressive(e: MatchEvent): boolean {
-  return (
-    e.type === "Pass" &&
-    e.outcome !== "fail" &&
-    e.x !== undefined &&
-    e.end_x !== undefined &&
-    ((e.end_x - e.x) * PITCH_X_M) / 100 >= 10 &&
-    e.end_x > 50
-  );
+  if (e.type !== "Pass" || e.outcome !== "success" || e.x === undefined || e.y === undefined) return false;
+  if (e.end_x === undefined || e.end_y === undefined || e.x < PROGRESSIVE_FROM_X) return false;
+  if ((e.qualifiers ?? []).some((q) => SET_PIECES.has(q))) return false;
+  return goalDistance(e.end_x, e.end_y) <= PROGRESSIVE_SHARE * goalDistance(e.x, e.y);
 }
 
 /** Every player's match so far, from the events, with xG and tracking from the heavy block when it has them. */
@@ -558,7 +567,18 @@ export function cardSource(card: Pick<Overlay, "verified" | "fallback">): CardSo
 
 export const CARD_SOURCE_LABEL: Record<CardSource, string> = { ai: "AI · checked", stat_line: "Stat line · checked", unchecked: "Unchecked" };
 
-export type MomentKind = "big_moment" | "chance" | "momentum" | "press" | "passing" | "movement" | "numbers" | "moment";
+export type MomentKind =
+  | "big_moment"
+  | "chance"
+  | "momentum"
+  | "press"
+  | "passing"
+  | "movement"
+  | "numbers"
+  | "head_to_head"
+  | "connection"
+  | "workhorse"
+  | "moment";
 
 export const MOMENT_KIND_LABEL: Record<MomentKind, string> = {
   big_moment: "Big moment",
@@ -568,6 +588,9 @@ export const MOMENT_KIND_LABEL: Record<MomentKind, string> = {
   passing: "Passing",
   movement: "Movement",
   numbers: "Numbers",
+  head_to_head: "Head-to-head",
+  connection: "Connection",
+  workhorse: "Engine room",
   moment: "Moment",
 };
 
@@ -580,6 +603,9 @@ export const MOMENT_KIND_GLYPH: Record<MomentKind, string> = {
   passing: "⇄",
   movement: "◌",
   numbers: "▤",
+  head_to_head: "✕",
+  connection: "⇌",
+  workhorse: "▲",
   moment: "•",
 };
 
@@ -592,7 +618,13 @@ export const CHART_LABEL: Record<string, string> = {
   stat_bars: "Team stats",
   pass_network: "Pass network",
   heatmap_zones: "Heatmap",
+  head_to_head: "Head-to-head",
+  connections: "Connections",
+  engine_room: "Engine room",
 };
+
+/** The visuals that point at a live insight card under the pitch rather than an analysis tab. */
+export const INSIGHT_CARD = new Set(["head_to_head", "connections", "engine_room"]);
 
 /** What a card is about, from the chart the director picked for it. */
 export function momentKind(card: Pick<Overlay, "visual">): MomentKind {
@@ -611,6 +643,12 @@ export function momentKind(card: Pick<Overlay, "visual">): MomentKind {
       return "movement";
     case "stat_bars":
       return "numbers";
+    case "head_to_head":
+      return "head_to_head";
+    case "connections":
+      return "connection";
+    case "engine_room":
+      return "workhorse";
     default:
       return "moment";
   }
