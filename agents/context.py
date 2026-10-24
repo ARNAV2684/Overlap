@@ -61,14 +61,15 @@ async def _diagnose_once(python: str, env: dict[str, str]) -> None:
     if _diagnosed:
         return
     _diagnosed = True
-    from mcp.client.stdio import get_default_environment   # what the MCP client starts the server with, plus ours
+    from mcp.client.stdio import get_default_environment  # what the MCP client starts the server with, plus ours
+
     probe = "import sys; print(sys.executable, sys.version.split()[0]); import mcp_server.server; print('import ok')"
     try:
         proc = await asyncio.create_subprocess_exec(python, "-c", probe, env={**get_default_environment(), **env},
                                                     stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.STDOUT)
         out, _ = await asyncio.wait_for(proc.communicate(), timeout=20)
         log.warning("MCP server probe (exit %s): %s", proc.returncode, out.decode(errors="replace")[-1500:])
-    except Exception as e:                                   # the probe itself must never break the job
+    except Exception as e:  # noqa: BLE001  the probe itself must never break the job
         log.warning("MCP server probe failed: %s", _describe(e))
 
 
