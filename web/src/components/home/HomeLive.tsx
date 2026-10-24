@@ -17,6 +17,7 @@ import { listMatches } from "@/lib/api";
 import type { MatchListItem } from "@/lib/match-list";
 import { MatchSession } from "@/components/match/MatchSession";
 import { Wordmark } from "@/components/shell/TopNav";
+import { StartMatchButton } from "./StartMatchButton";
 
 const POLL_MS = 8000;
 const QUIET_MS = 9000;
@@ -128,6 +129,11 @@ export function HomeLive() {
                 ? "Check the archive settings in web/.env.local and that the local stack is running."
                 : "Start one with the generator: uv run python cli.py live --hubs emulator --speed 20"}
             </p>
+            {!error && matches && (
+              <div className="mt-4 flex justify-center">
+                <StartMatchButton />
+              </div>
+            )}
           </div>
         </div>
       </main>
@@ -145,9 +151,12 @@ export function HomeLive() {
         <>
           {intro}
           {choice.source === "replay" && (
-            <p className="-mt-1 text-[13px] text-ink/45">
-              No match is live right now, so here is the latest one again. It switches to live as soon as a match kicks off.
-            </p>
+            <div className="-mt-1 flex flex-col gap-2">
+              <p className="text-[13px] text-ink/45">
+                No match is live right now, so here is the latest one again. It switches to live as soon as a match kicks off.
+              </p>
+              <StartMatchButton />
+            </div>
           )}
         </>
       }

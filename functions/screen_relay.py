@@ -17,6 +17,7 @@ import logging
 import re
 import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from typing import Protocol
 
@@ -34,6 +35,9 @@ RECENT_EVENT_HASHES = 300
 SEND_ATTEMPTS = 3
 SEND_BACKOFF_S = (0.5, 1.0, 2.0)
 SAVE_ATTEMPTS = 8
+# Kinds the browser keeps newest-by-match_ms (web/specs/realtime.md §2), so they may leave in any order; event and
+# status envelopes are shown in arrival order and always leave one by one in seq order.
+UNORDERED_KINDS = ("positions", "stats")
 
 # ----------------------------------------------------------------------------------------------- contract checks
 
@@ -380,11 +384,15 @@ def parse(hub: str, body: str | bytes | dict, properties: dict | None, where: st
 
 
 class Relay:
-    def __init__(self, store: Store, sender: Sender, clock_fn=time.monotonic, sleep_fn=time.sleep):
+    def __init__(self, store: Store, sender: Sender, clock_fn=time.monotonic, sleep_fn=time.sleep,
+                 send_workers: int = 1):
         self.store = store
         self.sender = sender
         self.clock = clock_fn
         self.sleep = sleep_fn
+        # send_workers > 1: positions and stats envelopes are sent side by side (each send is one HTTP call to Web
+        # PubSub, and one at a time held the relay below 20x on Azure); events and status still go one by one, in order
+        self._pool = ThreadPoolExecutor(send_workers, thread_name_prefix="relay-send") if send_workers > 1 else None
         # One lock per match around load → save → send, so a match's envelopes leave in seq order even when the
         # events reader, the tracking reader and the timer run at the same time. (Across processes the ETag check
         # keeps numbering correct; on Azure the app runs on one instance so order holds there too.)
@@ -409,12 +417,14 @@ class Relay:
                 log.warning("invalid message %s: match_id property and body disagree", m.where or m.hub)
                 continue
             by_match.setdefault(m.match_id, []).append(m)
+        ms = {"wait": 0.0, "load": 0.0, "apply": 0.0, "save": 0.0, "send": 0.0}   # per stage, for the batch's log line
         for match_id, msgs in by_match.items():
             for i in range(0, len(msgs), CHUNK):
                 chunk = msgs[i:i + CHUNK]
-                out = self._commit(match_id, lambda match, chunk=chunk: [match.apply(x) for x in chunk])
+                out = self._commit(match_id, lambda match, chunk=chunk: [match.apply(x) for x in chunk], ms)
                 totals["envelopes"] += len(out.envelopes)
                 totals["invalid"] += len(out.invalid)
+        totals["ms"] = {k: round(v) for k, v in ms.items()}
         return totals
 
     def tick(self) -> int:
@@ -424,34 +434,60 @@ class Relay:
             sent += len(self._commit(match_id, lambda match: match.tick()).envelopes)
         return sent
 
-    def _commit(self, match_id: str, work) -> Outcome:
+    def _commit(self, match_id: str, work, ms: dict | None = None) -> Outcome:
+        ms = ms if ms is not None else {}
+        t = time.perf_counter()
         with self._lock(match_id):
-            return self._commit_locked(match_id, work)
+            ms["wait"] = ms.get("wait", 0.0) + (time.perf_counter() - t) * 1000   # behind another reader of this match
+            return self._commit_locked(match_id, work, ms)
 
-    def _commit_locked(self, match_id: str, work) -> Outcome:
+    def _commit_locked(self, match_id: str, work, ms: dict) -> Outcome:
+        def lap(stage: str, since: float) -> float:
+            now = time.perf_counter()
+            ms[stage] = ms.get(stage, 0.0) + (now - since) * 1000
+            return now
+
         for attempt in range(SAVE_ATTEMPTS):
+            t = time.perf_counter()
             state, version = self.store.load(match_id)
+            t = lap("load", t)
             match = Match(state if state is not None else new_state(match_id), self.clock())
             before = digest(match.s)
             work(match)
             match.s["open_work"] = bool(match.s["bundle"] or match.s["held"])
-            if state is not None and digest(match.s) == before:
+            unchanged = state is not None and digest(match.s) == before
+            t = lap("apply", t)
+            if unchanged:
                 return match.out
-            if self.store.save(match_id, match.s, version, match.out.envelopes):
+            saved = self.store.save(match_id, match.s, version, match.out.envelopes)
+            t = lap("save", t)
+            if saved:
                 self._send(match_id, match.out.envelopes, match.s)
+                lap("send", t)
                 return match.out
             log.info("state of %s changed meanwhile; re-applying (attempt %d)", match_id, attempt + 1)
         raise RuntimeError(f"could not save state for {match_id} after {SAVE_ATTEMPTS} attempts")
 
     def _send(self, match_id: str, envelopes: list[dict], state: dict):
         group = f"match-{match_id}"
-        for env in envelopes:
-            for attempt in range(SEND_ATTEMPTS):
-                try:
-                    self.sender.send(group, env)
-                    break
-                except Exception as ex:  # noqa: BLE001  saved already; the browser recovers from the snapshot
-                    if attempt == SEND_ATTEMPTS - 1:
-                        log.error("send failed for %s seq %d: %s", group, env["seq"], ex)
-                    else:
-                        self.sleep(SEND_BACKOFF_S[attempt])
+        if self._pool is None:
+            for env in envelopes:
+                self._send_one(group, env)
+            return
+        ordered = [e for e in envelopes if e["kind"] not in UNORDERED_KINDS]
+        futures = [self._pool.submit(self._send_one, group, e) for e in envelopes if e["kind"] in UNORDERED_KINDS]
+        for env in ordered:
+            self._send_one(group, env)
+        for f in futures:  # every send is done before the match's lock is released, so commits never overtake
+            f.result()
+
+    def _send_one(self, group: str, env: dict):
+        for attempt in range(SEND_ATTEMPTS):
+            try:
+                self.sender.send(group, env)
+                return
+            except Exception as ex:  # noqa: BLE001  saved already; the browser recovers from the snapshot
+                if attempt == SEND_ATTEMPTS - 1:
+                    log.error("send failed for %s seq %d: %s", group, env["seq"], ex)
+                else:
+                    self.sleep(SEND_BACKOFF_S[attempt])

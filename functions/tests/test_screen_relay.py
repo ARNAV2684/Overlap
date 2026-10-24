@@ -291,3 +291,23 @@ def test_parallel_readers_send_in_seq_order():
         t.join()
     seqs = [e["seq"] for _, e in sender.sent]
     assert seqs == list(range(1, len(seqs) + 1))
+
+
+def test_send_workers_keep_events_in_order_and_send_everything():
+    class SlowSender(RecordingSender):
+        def send(self, group, envelope):
+            time.sleep(0.001)
+            super().send(group, envelope)
+
+    store, sender = MemoryStore(), SlowSender()
+    r = R.Relay(store, sender, sleep_fn=lambda s: None, send_workers=4)
+    events = [msg("event", event(s, "Pass", s * 1000)) for s in range(2, 40)]
+    frames = [msg("tracking", frame(ms)) for ms in range(0, 40_000, 200)]
+    r.handle([msg("setup", SETUP), msg("event", event(1, "PeriodStart", 0))])
+    for i in range(0, len(frames), 20):
+        r.handle(events[i // 20 * 4:i // 20 * 4 + 4] + frames[i:i + 20])
+    seqs = sorted(e["seq"] for _, e in sender.sent)
+    assert seqs == list(range(1, len(seqs) + 1))          # every envelope sent exactly once
+    ordered = [e["seq"] for _, e in sender.sent if e["kind"] not in R.UNORDERED_KINDS]
+    assert ordered == sorted(ordered)                     # events and status leave in seq order
+    assert sum(e["kind"] == "positions" for _, e in sender.sent) == len(frames) // R.BUNDLE_SIZE

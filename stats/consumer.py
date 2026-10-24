@@ -156,9 +156,16 @@ class Runner:
 
 
 def checkpoint_store():
+    """Reading positions in Blob storage: OVERLAP_CHECKPOINT_BLOB_ENDPOINT (https://<account>.blob.core.windows.net)
+    signs in with the managed identity, the container already made by Bicep (infra/modules/storage.bicep); otherwise
+    the AzureWebJobsStorage connection string, Azurite by default."""
     from azure.core.exceptions import ResourceExistsError
     from azure.eventhub.extensions.checkpointstoreblob import BlobCheckpointStore
     from azure.storage.blob import BlobServiceClient
+    endpoint = os.environ.get("OVERLAP_CHECKPOINT_BLOB_ENDPOINT")
+    if endpoint:
+        from azure.identity import DefaultAzureCredential
+        return BlobCheckpointStore(endpoint, CHECKPOINT_CONTAINER, credential=DefaultAzureCredential())
     conn = os.environ.get("AzureWebJobsStorage", "UseDevelopmentStorage=true")
     if conn.strip().rstrip(";") == "UseDevelopmentStorage=true":
         conn = AZURITE
