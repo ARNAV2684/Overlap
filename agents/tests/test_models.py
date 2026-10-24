@@ -163,6 +163,20 @@ def test_ask_uses_structured_outputs_on_azure(monkeypatch):
     assert ScriptedAgent.seen[0][1]["options"]["response_format"] is Out
 
 
+def test_azure_call_suits_a_reasoning_model(monkeypatch):
+    # GPT-5 models reject temperature; they take a reasoning effort and max completion tokens instead
+    m = models_with(monkeypatch, '{"decision": "admit"}', provider="azure")
+    ask(m)
+    options = ScriptedAgent.seen[0][1]["options"]
+    assert "temperature" not in options and options["reasoning_effort"] == "low" and options["max_tokens"] == 800
+
+
+def test_local_call_keeps_a_low_temperature(monkeypatch):
+    ask(m := models_with(monkeypatch, '{"decision": "admit"}'))
+    assert ScriptedAgent.seen[0][1]["options"]["temperature"] == 0.2 and "reasoning_effort" not in ScriptedAgent.seen[0][1]["options"]
+    assert m.settings.provider == "local"
+
+
 @pytest.mark.parametrize("text", ["", "not json", '{"other": 1}', "[1, 2]"])
 def test_ask_refuses_unusable_replies(monkeypatch, text):
     with pytest.raises(ModelFailed) as e:

@@ -51,6 +51,12 @@ def test_azure_request_and_reply():
     assert out == ["Kestlebury United ha realizado 3 tiros en los últimos 5 minutos."]
 
 
+def test_azure_reply_from_sdk_1_names_the_language_to():
+    # azure-ai-translation-text 1.0 (API 3.0, what the custom-domain endpoint serves) calls the field `to`
+    stub = StubClient([SimpleNamespace(translations=[SimpleNamespace(to="fr", text="Bonjour")])])
+    assert run(AzureTranslator("https://example", client=stub).translate(["Hello"], "fr")) == ["Bonjour"]
+
+
 @pytest.mark.parametrize("reply", [[], [item("fr", "x")], [item("es", " ")], [item("es", "a"), item("es", "b")]])
 def test_azure_unusable_replies_fail(reply):
     with pytest.raises(TranslationError):
