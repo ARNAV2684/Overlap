@@ -3,8 +3,9 @@
 // MatchScreen.tsx — The match, live or replayed
 //
 // Purpose: lay out the whole match experience: the score header, the Watch / Analyse switch, the 3D pitch with its
-//          story and AI card, replay controls, the tracking heatmap, the viewer's choices, the AI feed, the followed
-//          player, and the analytics under the pitch
+//          story and AI card, replay controls, the live commentary right under the pitch, the live insights
+//          (head-to-head, connections, engine room, tempo), the viewer's choices, the followed player, the commentary
+//          history, the live numbers, and the analytics below
 // Inputs:  providers above it (a stream or replay provider, then MatchExperienceProvider); `intro` above the header
 // Outputs: UI
 // Spec:    web/specs/screens.md §2
@@ -15,7 +16,9 @@ import { useExperience, useFeed } from "@/providers/MatchExperience";
 import { usePreferences } from "@/providers/PreferencesProvider";
 import { PitchStage } from "@/components/pitch3d/PitchStage";
 import { AiFeed } from "./AiFeed";
+import { LiveInsights } from "./LiveInsights";
 import { LiveRail } from "./LiveRail";
+import { MomentStrip } from "./MomentStrip";
 import { AnalysisPanel, TAB_FOR_COMPONENT, type Focus } from "./AnalysisPanel";
 import { PitchOverlay, PitchUnderlay } from "./PitchOverlay";
 import { PlayerFocus } from "./PlayerFocus";
@@ -82,12 +85,14 @@ export function MatchScreen({ intro, initialSpeed }: { intro?: ReactNode; initia
             </PitchStage>
           </div>
           <PitchUnderlay />
+          <MomentStrip onShowChart={showChart} />
+          <LiveInsights />
         </div>
         <aside className="flex min-w-0 flex-col gap-4">
           <ViewerBar />
-          <LiveRail />
           <PlayerFocus />
           <AiFeed onShowChart={showChart} />
+          <LiveRail />
         </aside>
       </div>
       <div id="analytics" className="scroll-mt-20">
