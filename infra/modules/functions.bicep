@@ -1,14 +1,17 @@
-// functions.bicep — Functions app
+// functions.bicep — Functions apps
 //
-// Purpose: the Python Functions app that runs the relay, the archiver, the moment and recap triggers and the insights
-//          publisher, on a dedicated plan with exactly one instance
+// Purpose: the Python Functions code on a dedicated plan with exactly one instance, as two apps: `live` runs the screen
+//          relay alone; `insights` runs the archiver, the moment and recap triggers and the insights publisher
 // Inputs:  location, name token, tags, the functions identity and every service endpoint from main.bicep
-// Outputs: app name and default host name
+// Outputs: both app names
 // Spec:    infra/specs/resources.md §2.6, infra/specs/security.md §1–§2, functions/specs/
 //
-// One instance, never scaled out: the relay keeps its per-match state in one process (resources.md §2.6). Every
+// Both apps get the same package (functions/package.py) and each switches off the other's functions
+// (AzureWebJobs.<name>.Disabled). Two apps means two Python worker processes: in one, the agents' work and the archiver
+// held the relay to one core and it fell 80–120 s behind a 20x match (24 Oct). The relay stays in one process, so its
+// per-match lock still keeps each match's envelopes in order. One instance, never scaled out (resources.md §2.6). Every
 // connection signs in with the functions identity; no connection string or key is stored. The code is deployed
-// separately (functions/package.py, then `func azure functionapp publish`), so a provision never touches it.
+// separately (az functionapp deployment source config-zip, infra/README.md), so a provision never touches it.
 
 @description('Azure region for the plan and app.')
 param location string
@@ -47,8 +50,8 @@ param translatorEndpoint string
 @description('Application Insights connection string.')
 param appInsightsConnectionString string
 
-@description('App Service plan SKU: B2 (2 cores) holds the relay and the agents at 20x.')
-param planSku string = 'B2'
+@description('App Service plan SKU: B3 (4 cores, 7 GB) holds both apps and the MCP server processes of the agents at 20x.')
+param planSku string = 'B3'
 
 resource plan 'Microsoft.Web/serverfarms@2024-04-01' = {
   name: 'asp-overlap-${token}'
@@ -69,10 +72,17 @@ var identitySettings = {
   clientId: identity.clientId
 }
 
-resource app 'Microsoft.Web/sites@2024-04-01' = {
-  name: 'func-overlap-${token}'
+var relayFunctions = ['relay_events', 'relay_tracking', 'relay_tick']
+var insightsFunctions = ['archive_events', 'archive_tracking', 'moment_trigger', 'recap_trigger', 'insights_publisher']
+var appsToRun = [
+  { name: 'func-overlap-${token}', service: 'functions', off: insightsFunctions }
+  { name: 'func-overlap-insights-${token}', service: 'functions-insights', off: relayFunctions }
+]
+
+resource apps 'Microsoft.Web/sites@2024-04-01' = [for a in appsToRun: {
+  name: a.name
   location: location
-  tags: union(tags, { 'azd-service-name': 'functions' })
+  tags: union(tags, { 'azd-service-name': a.service })
   kind: 'functionapp,linux'
   identity: {
     type: 'UserAssigned'
@@ -88,7 +98,7 @@ resource app 'Microsoft.Web/sites@2024-04-01' = {
       alwaysOn: true
       minTlsVersion: '1.2'
       ftpsState: 'Disabled'
-      appSettings: [
+      appSettings: concat([
         { name: 'FUNCTIONS_EXTENSION_VERSION', value: '~4' }
         { name: 'FUNCTIONS_WORKER_RUNTIME', value: 'python' }
         { name: 'SCM_DO_BUILD_DURING_DEPLOYMENT', value: 'true' }
@@ -126,10 +136,10 @@ resource app 'Microsoft.Web/sites@2024-04-01' = {
         { name: 'OVERLAP_TRANSLATOR', value: 'azure' }
         { name: 'OVERLAP_TRANSLATOR_ENDPOINT', value: translatorEndpoint }
         { name: 'OVERLAP_MCP_SOURCE', value: 'cosmos' }
-      ]
+      ], map(a.off, f => { name: 'AzureWebJobs.${f}.Disabled', value: 'true' }))
     }
   }
-}
+}]
 
-output name string = app.name
-output hostName string = app.properties.defaultHostName
+output name string = apps[0].name
+output insightsName string = apps[1].name

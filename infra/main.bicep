@@ -238,5 +238,6 @@ output OVERLAP_TRANSLATOR_ENDPOINT string = foundry.outputs.translatorEndpoint
 output AZURE_CONTAINER_REGISTRY_NAME string = containerApps.outputs.registryName
 output AZURE_CONTAINER_REGISTRY_ENDPOINT string = containerApps.outputs.registryServer
 output AZURE_FUNCTIONS_APP_NAME string = live ? 'func-overlap-${token}' : ''
+output AZURE_FUNCTIONS_INSIGHTS_APP_NAME string = live ? 'func-overlap-insights-${token}' : ''
 output OVERLAP_WEB_URL string = containerApps.outputs.webUrl
 output OVERLAP_GENERATOR_JOB_ID string = containerApps.outputs.generatorJobId
