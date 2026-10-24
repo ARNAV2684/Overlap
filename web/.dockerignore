@@ -1,0 +1,13 @@
+# Kept out of every image build (each build's context is one service folder; az acr build reads this from the context)
+**/.venv
+**/__pycache__
+**/.pytest_cache
+**/node_modules
+**/.next
+**/*.log
+**/.env
+**/.env.*
+**/local.settings.json
+**/tests
+**/__tests__
+**/dist
