@@ -56,6 +56,16 @@ Both apps run from one zip on one B3 plan (4 cores, 1 instance):
 
 Batches of 300 messages and 16 worker threads keep up with a 20× match (about 113 tracking frames a second).
 
+## Observability
+
+- **Every app** sends logs and requests to Application Insights and Log Analytics (0.5 GB daily cap).
+- **Every card** has one trace from the agents: the job, a span per agent, each model call and each MCP tool call,
+  with the match, moment and agent on every span and no line text. On Azure the traces of SYN-3010 matched the jobs'
+  records in Cosmos exactly ([`agents/specs/observability.md`](../agents/specs/observability.md)).
+- **Every job** also keeps its own record in Cosmos `moments`: each stage's output, model calls, durations and
+  fact-check rounds, so a card can be explained after the match.
+- **Line quality** is scored with Azure AI Evaluation on the Foundry deployment ([`evaluation.md`](evaluation.md)).
+
 ## Latency
 
 | Measure | Result | Where |
@@ -65,12 +75,15 @@ Batches of 300 messages and 16 worker threads keep up with a 20× match (about 1
 | Full match at 20× | 6 min 40 s | same |
 | Moment written → card sent, template cards (local live runs) | 1 s p50, 3 s p95 | [`round-1 report`](../agents/evals/results/round-1/report.md) |
 | Moment written → card sent, model cards (local small model) | 10 s p50, 13 s p95 | [`live-SYN-0702`](../agents/evals/results/live-SYN-0702/report.md) |
-| Cards expired (SYN-3003, Azure) | 45 of 566 (8%) | A8 handover |
+| Cards expired (SYN-3003, Azure, 24 Oct) | 45 of 566 (8%) | A8 handover |
+| Moment written → card sent, model cards (SYN-3010, Azure, 25 Oct) | 16 s p50, 24 s p95 | [`live-SYN-3010`](../agents/evals/results/live-SYN-3010/report.md) |
+| Deliveries expired (SYN-3010, Azure) | 206, against 167 sent | same |
 
 At 20× a card is live for 15 real seconds. On Azure on 24 Oct a fresh MCP process per job (4–5 s) plus the narrator's
-single structured call (3–11 s on gpt-5-mini) rarely fitted, so most cards were checked templates. In-process MCP
-sessions (`agents/embedded_context.py`) and two parallel narrator calls are on `main` and are measured in the next
-Azure run ([`evaluation.md`](evaluation.md)).
+single structured call (3–11 s on gpt-5-mini) rarely fitted, so most cards were checked templates. On 25 Oct four
+matches each removed one more cause (in-process MCP sessions, two jobs per match at once, a fact-checker lenient on
+precision) and the model-written share was 5–16%; a late model line still expires and its template takes its place.
+The runs are in [`evaluation.md`](evaluation.md#live-ai-share-on-azure-25-oct).
 
 ## Security
 
@@ -114,7 +127,7 @@ From [`infra/specs/costs.md`](../infra/specs/costs.md):
 
 ## Pause and resume
 
-**Paused now** (since 24 Oct): Event Hubs, the Functions plan and both apps, the stats engine, the generator job and
+**Paused now** (since the 25 Oct runs): Event Hubs, the Functions plan and both apps, the stats engine, the generator job and
 the model deployment are deleted; Web PubSub is on Free, Cosmos DB on its free 1,000 RU/s, and the web app scales to
 zero. The public link still serves the home page and every replay; the start button is hidden.
 

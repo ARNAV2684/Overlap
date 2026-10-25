@@ -31,8 +31,8 @@ of cards.
 
 | Try | What changes |
 |---|---|
-| **Mode → Casual** | Short plain lines for any fan |
-| **Mode → Analyst** | The same moment with the tactical numbers (xG, pressures per pass, momentum share) |
+| **Mode → Casual** | A different screen for any fan: the clean pitch, short plain lines with at most one number, each insight card as one sentence, three live numbers (xG, possession, shots on target), and the analysis behind **Show the numbers** |
+| **Mode → Analyst** | The data screen: the story overlays on the pitch, the same moment with the tactical numbers (xG, pressures per pass, momentum share), a ✓ chip for each fact the fact-checker verified, every live number and the analysis open |
 | **Club** → pick one of the two clubs (switches to **My club**) | The moment told from that club's side |
 | **Follow** → pick a player (switches to **Player focus**) | Lines about that player, a Player focus panel (distance, top speed, sprints, role numbers against their opposite number, last actions), a ring and name tag on the pitch, and the heatmap and pass map switch to them |
 | **Language → हिन्दी**, Español or Français | The same cards translated, names kept, numbers unchanged |
@@ -53,8 +53,8 @@ The badge says who wrote the line:
 | **AI · checked** | Written by the narrator agent (gpt-5-mini) and passed by the fact-checker: every number matched the evidence in code and a separate model call judged the meaning |
 | **Stat line · checked** | A template line filled from the evidence and checked in code. Used when the agents' own line did not arrive in time or did not pass the fact-checker. Never called AI |
 
-In the 24 Oct Azure replays almost every card is a **Stat line · checked**; see the known gap in
-[`evaluation.md`](evaluation.md).
+In the Azure replays so far most cards are **Stat line · checked** (5–16% were model-written in the 25 Oct runs); see
+[`evaluation.md`](evaluation.md#live-ai-share-on-azure-25-oct).
 
 **Live commentary** (under the pitch): the card on screen now, large, with the three before it. In a replay, cards
 stay hidden until the playhead reaches them.

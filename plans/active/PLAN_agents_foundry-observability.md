@@ -5,7 +5,7 @@
 | Change | Agent Framework OpenTelemetry to Application Insights (job, stage, model-call and MCP tool-call spans); an Azure AI Evaluation script for published lines; an optional Content Safety screen of verified model lines |
 | Why | Workstream W4 of the 25 Oct parallel workstreams brief: show the multi-agent flow in Foundry and Application Insights, and add an independent quality judge, for the submission |
 | Author / owner | Arnav (layer 5 · Agents, from `plans/REGISTRY.md`) |
-| Status | Built; PR open for review (#100). Run once on Azure (25 Oct, SYN-3010): tracing and the evaluation checked |
+| Status | Done — merged into `main` in #100 (25 Oct). Run once on Azure (SYN-3010): tracing and the evaluation checked. `OVERLAP_TRACING=azure` is now in `infra/modules/functions.bicep`, so every provision keeps tracing on |
 | Reviewed commit | main · 924292e |
 | Branch | `agents/foundry-observability` |
 | Governing spec | [`agents/specs/observability.md`](../../agents/specs/observability.md) (new; status "built, not yet run on Azure", not yet agreed) |

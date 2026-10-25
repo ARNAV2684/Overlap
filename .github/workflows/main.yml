@@ -1,0 +1,114 @@
+# Every check on the whole of main after each merge, so the README badge shows the state of main itself. The pull
+# request workflows check only what a pull request changed. Also runs on a pull request that changes this file, and on
+# demand.
+name: Main
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+    paths: [".github/workflows/main.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: main-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  projects:
+    name: Find Python projects
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      projects: ${{ steps.p.outputs.projects }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - id: p
+        run: |
+          projects=$(git ls-files '*/pyproject.toml' | grep -v '^vedant-frontend/' | xargs -n1 dirname \
+            | python3 -c 'import json, sys; print(json.dumps(sorted(l.strip() for l in sys.stdin if l.strip())))')
+          echo "projects=${projects}" >> "$GITHUB_OUTPUT"
+          echo "Python projects: ${projects}"
+
+  ruff:
+    name: Lint (ruff, whole repository)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+        with:
+          version: "0.13.4"
+      - run: uvx ruff@0.17.0 check --output-format=github .
+
+  tests:
+    name: Tests (${{ matrix.project }})
+    needs: projects
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        project: ${{ fromJSON(needs.projects.outputs.projects) }}
+    defaults:
+      run:
+        working-directory: ${{ matrix.project }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+        with:
+          version: "0.13.4"
+      - run: uv sync --locked
+      - name: pytest (if the project has tests)
+        run: |
+          if ls tests/test_*.py test_*.py >/dev/null 2>&1 || [ -d tests ]; then
+            uv run --with pytest pytest -q
+          else
+            echo "No tests in ${{ matrix.project }}."
+          fi
+      - name: Mock contract validation
+        if: matrix.project == 'mock'
+        run: uv run mock validate
+
+  web:
+    name: Web (lint, typecheck, tests, build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # Public settings read by web/src/lib/env.ts. URLs and ids only, never secrets. Same values as web/.env.example.
+    env:
+      NEXT_PUBLIC_STREAM_BASE_URL: http://localhost:8787
+      NEXT_PUBLIC_DEFAULT_MATCH_ID: SYN-9001
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npm run lint
+      - run: npx --no-install tsc --noEmit
+      - run: npx --no-install vitest run
+      - run: npm run build
+
+  bicep:
+    name: Bicep (build, lint)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      BICEP_VERSION: v0.48.1
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install Bicep
+        run: |
+          curl -sSfL -o bicep "https://github.com/Azure/bicep/releases/download/${BICEP_VERSION}/bicep-linux-x64"
+          chmod +x bicep && sudo mv bicep /usr/local/bin/bicep
+      - name: Build and lint the whole template
+        run: |
+          bicep build infra/main.bicep --stdout > /dev/null
+          bicep lint infra/main.bicep

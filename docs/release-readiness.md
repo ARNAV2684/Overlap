@@ -43,9 +43,10 @@ when the pipeline is actually resumed. Rebuild/deploy Functions for embedded MCP
 for admission/UI changes, after review. Publication for review is authorized; merging and deployment remain excluded.
 
 ## Recovery and remaining validation
-Unknown start outcomes intentionally stop further public starts. An operator must inspect ARM and the pending
-record under a lease, correlate or prove no execution remains possible, and preserve counter/quota history.
-Do not delete the control blob, reset IDs, or clear pending solely because it is old.
+Unknown start outcomes stop further public starts until the reservation clears. It clears by itself under the lease
+only when both hold: the reservation is older than 35 minutes (the job stops every execution after 1,800 s) and the
+job has nothing running (PR #99; `web/specs/realtime.md` §8). Elapsed time alone never clears it, and numbering and
+quotas are kept. Do not delete the control blob or reset IDs by hand.
 
 Managed-identity authorization, real Azure ARM response/consistency, actual Foundry narration latency, translation
 quality and full-match/reconnect browser acceptance remain unverified by this local work. Run those in an approved

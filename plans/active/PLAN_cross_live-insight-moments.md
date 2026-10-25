@@ -8,7 +8,7 @@
 | Review coordinator | Arnav |
 | Affected component owners | Stats engine: Azeem. Agents, MCP server: Arnav. Web: Arnav, Azeem. `CONTRACTS.md`: producer Azeem, consumers Arnav |
 | Proposal version and date | 1.0 · 24 Oct 2026 |
-| Status | Implemented and validated locally; folded into the S8 branch, PR not opened yet |
+| Status | Done — merged into `main` with S8 in #96 (25 Oct) |
 | Plan tier and file | Full · `plans/active/PLAN_cross_live-insight-moments.md` |
 | Repository | [ARNAV2684/Overlap](https://github.com/ARNAV2684/Overlap) |
 | Reviewed branch and commit | `claude/gallant-noether-0jf0ql` · `df2db05` (main `b18297f` plus S8) |

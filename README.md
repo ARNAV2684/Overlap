@@ -1,5 +1,7 @@
 # Overlap
 
+[![Checks on main](https://github.com/ARNAV2684/Overlap/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/ARNAV2684/Overlap/actions/workflows/main.yml)
+
 **Every fan watches a different match.**
 
 Overlap is a live football match companion where seven agents on Microsoft Foundry explain each big moment as it
@@ -60,7 +62,7 @@ identity; there are no keys. Details: [`docs/architecture.md`](docs/architecture
 
 | Technology | What it does in Overlap | Where |
 |---|---|---|
-| Microsoft Foundry, gpt-5-mini | Writes, judges and ranks lines; the recap | [`agents/models.py`](agents/models.py), [`infra/modules/foundry.bicep`](infra/modules/foundry.bicep) |
+| Microsoft Foundry, gpt-5-mini | Writes, judges and ranks lines; the recap. Every agent run traced; published lines scored with Azure AI Evaluation; Content Safety ready | [`agents/models.py`](agents/models.py), [`agents/telemetry.py`](agents/telemetry.py), [`agents/evals/foundry_quality.py`](agents/evals/foundry_quality.py), [`infra/modules/foundry.bicep`](infra/modules/foundry.bicep) |
 | Microsoft Agent Framework | The seven-stage workflow, the chat client, the MCP client | [`agents/workflow.py`](agents/workflow.py), [`agents/context.py`](agents/context.py) |
 | Model Context Protocol | Our read-only match tools for the analyst | [`mcp_server/`](mcp_server), [`agents/embedded_context.py`](agents/embedded_context.py) |
 | Azure AI Translator | Spanish, Hindi and French, names kept | [`agents/translation.py`](agents/translation.py) |
@@ -70,7 +72,7 @@ identity; there are no keys. Details: [`docs/architecture.md`](docs/architecture
 | Azure Cosmos DB | Archive, moments, agent job state, overlays | [`infra/modules/cosmos.bicep`](infra/modules/cosmos.bicep) |
 | Azure Web PubSub | Live frames and per-audience cards to browsers | [`infra/modules/web-pubsub.bicep`](infra/modules/web-pubsub.bicep) |
 | Azure Blob Storage | Archived tracking, checkpoints, Functions host | [`infra/modules/storage.bicep`](infra/modules/storage.bicep) |
-| Application Insights | Logs and traces for every app | [`infra/modules/monitoring.bicep`](infra/modules/monitoring.bicep) |
+| Application Insights | Logs for every app, and one trace per card: each agent, model call and MCP call | [`infra/modules/monitoring.bicep`](infra/modules/monitoring.bicep), [`agents/specs/observability.md`](agents/specs/observability.md) |
 | Bicep + `azd` | The whole resource group as code | [`infra/main.bicep`](infra/main.bicep), [`azure.yaml`](azure.yaml) |
 | GitHub, GitHub Actions, GitHub Copilot | Repository, pull requests, 11 CI jobs on every PR, Copilot in the editor and in reviews | [`.github/workflows/`](.github/workflows) |
 
@@ -114,10 +116,17 @@ Agents bench ([`agents/evals/results/round-1/report.md`](agents/evals/results/ro
 - 24 matches, 538 moments, 100% recall on every independently labelled trigger.
 - 0 wrong numbers in 12,236 published lines; fault injection catches every numeric fault, with 0 valid lines rejected.
 
-Known gap: in the 24 Oct Azure runs most cards were templates (**Stat line · checked**): a fresh MCP process per job
-took 4–5 s and the narrator call 3–11 s, longer than a card's 15 s window at 20×. In-process MCP sessions and two
-parallel narrator calls ([`docs/release-readiness.md`](docs/release-readiness.md)) are the fix; the share of model-written
-cards after the next deploy is recorded in [`docs/evaluation.md`](docs/evaluation.md).
+Line quality on Azure (Azure AI Evaluation on the Foundry deployment, 60 lines of SYN-3010): groundedness 98.3%,
+relevance 91.7%, fluency 100% ([`docs/evaluation.md`](docs/evaluation.md#line-quality-azure-ai-evaluation)).
+
+Single agent against the seven, on gpt-5-mini (same 17 moments): the narrator alone published 65 of 109 lines that no
+check could tie to the evidence; the seven agents published none, rewrote 69 and replaced the rest with checked stat
+lines ([`docs/evaluation.md`](docs/evaluation.md#single-vs-multi-agent-w3)).
+
+Known gap: at 20× a card is live for only 15 real seconds, and on Azure most cards are still checked templates
+(**Stat line · checked**). Across four matches on 25 Oct the model-written share was 5–16%; each run removed one cause
+(a slow MCP start, one job at a time, a strict numeric check, a breaker that paused the model) and the next fix is in
+review. Every run is in [`docs/evaluation.md`](docs/evaluation.md#live-ai-share-on-azure-25-oct).
 
 ## Run locally
 
@@ -145,18 +154,22 @@ match, pause and resume). Costs and budgets: [`infra/specs/costs.md`](infra/spec
 
 ## Tests and CI
 
-| Suite | Tests on `main`, 25 Oct |
+| Suite | Tests passing on `main`, 25 Oct (opt-in tests skipped) |
 |---|---|
-| Agents | 217 |
-| MCP server | 153 |
-| Stats engine | 77 |
+| Agents | 278 |
+| MCP server | 151 (2 skipped) |
+| Stats engine | 76 (1 skipped) |
 | Functions | 20 |
-| Web app | 596 (592 run, 4 opt-in skipped) |
-| Generator | 114 |
-| Archiver | 7 |
+| Web app | 599 (4 skipped) |
+| Generator | 112 (2 skipped) |
+| Archiver | 5 (2 skipped, need the storage emulators) |
+
+1,241 tests pass in all.
 
 Python suites run with `uv run pytest` in each folder; the web app with `npx vitest run`. GitHub Actions runs 11 jobs
 on every pull request: ruff and pytest for each changed Python project, web lint, type check and build, Bicep build and lint, a secrets scan, and policy and scope checks ([`.github/workflows/`](.github/workflows)).
+After every merge, [`main.yml`](.github/workflows/main.yml) runs everything on the whole of `main` (every Python
+project's tests, ruff, the web tests and build, the Bicep template); the badge above shows its result.
 
 ## Repository
 

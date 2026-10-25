@@ -53,6 +53,17 @@ rejected ([`evaluation.md`](evaluation.md)).
 - Each job records the prompt version and the model that wrote its lines ([`agents/prompts/`](../agents/prompts)).
 - A card that arrives too late for its moment expires instead of showing out of context.
 
+## Traced, scored and screened
+
+- **Every agent run is traced** in Application Insights, one trace per card, with no prompt, payload or line text on
+  any span ([`agents/specs/observability.md`](../agents/specs/observability.md)).
+- **Published lines are scored** by Azure AI Evaluation: groundedness 98.3% on 60 lines of an Azure match
+  ([`evaluation.md`](evaluation.md#line-quality-azure-ai-evaluation)).
+- **Content safety is ready but off:** with `OVERLAP_CONTENT_SAFETY=azure`, Azure AI Content Safety screens each
+  verified model line, and a flagged line, a failed screen or a timeout falls back to the template
+  ([`agents/safety.py`](../agents/safety.py)). It needs a Content Safety resource, which is not deployed; the lines
+  are short, factual and built from invented clubs and players.
+
 ## Translation, and the Hindi drop rule
 
 [`agents/translator.py`](../agents/translator.py), [`agents/translation.py`](../agents/translation.py):

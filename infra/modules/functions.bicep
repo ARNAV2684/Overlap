@@ -110,6 +110,9 @@ resource apps 'Microsoft.Web/sites@2024-04-01' = [for a in appsToRun: {
         // so 6 on B2) queued relay batches behind archive batches during a 20x match
         { name: 'PYTHON_THREADPOOL_THREAD_COUNT', value: '16' }
         { name: 'APPLICATIONINSIGHTS_CONNECTION_STRING', value: appInsightsConnectionString }
+        // One trace per card in Application Insights: every agent stage, model call and MCP call, no line text
+        // (agents/specs/observability.md). Only the agents start tracing, so the relay app ignores it
+        { name: 'OVERLAP_TRACING', value: 'azure' }
         { name: 'AZURE_CLIENT_ID', value: identity.clientId }
         // Host storage and trigger connections, identity-based (no keys)
         { name: 'AzureWebJobsStorage__accountName', value: storageAccountName }

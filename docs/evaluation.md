@@ -84,25 +84,44 @@ Full 20× matches SYN-3000 to SYN-3008, every service on Azure in Sweden Central
 **Known gap.** Every card in these runs was a checked template (**Stat line · checked**), not a model line: a fresh
 MCP process per job took 4–5 s and the narrator's single structured call 3–11 s on gpt-5-mini, and at 20× a card is
 live for only 15 real seconds. An 8 s model timeout was tried and reverted (1 narrator call of 12 succeeded). The
-fix on `main`: in-process MCP sessions and at most two parallel narrator calls
-([`release-readiness.md`](release-readiness.md)). Hindi lines were often dropped on purpose (see
+fixes since, and the share each run reached, are in
+[Live AI share on Azure](#live-ai-share-on-azure-25-oct). Hindi lines were often dropped on purpose (see
 [`responsible-ai.md`](responsible-ai.md)).
 
-## Live AI share (block A)
+## Live AI share on Azure (25 Oct)
 
-> **To be filled after the next Azure run** with the fixes deployed.
+Four full 20× matches on Azure, each after one more fix. "AI · checked" means a line gpt-5-mini wrote and the
+fact-checker passed; the rest of the cards were checked templates ("Stat line · checked"). At 20× a card is live for
+15 real seconds, so a model line that is late is replaced by its template.
 
-| Measure | Result |
-|---|---|
-| Match id(s) | _to be filled_ |
-| Cards published | _to be filled_ |
-| Share **AI · checked** (model line passed by the fact-checker) | _to be filled_ |
-| Share **Stat line · checked** (template) | _to be filled_ |
-| Lines rewritten by the fact-checker / refused | _to be filled_ |
-| Moment written → card sent, p50 / p95 | _to be filled_ |
-| Cards expired | _to be filled_ |
-| Hindi lines dropped | _to be filled_ |
-| Model tokens and cost per match | _to be filled_ |
+| Match | Code on Azure | Cards "AI · checked" | What held it back | Source |
+|---|---|---|---|---|
+| SYN-3009 | In-process MCP, two parallel narrator calls (#99) | 16% | One job at a time per match: of 40 jobs, 13 went stale and 10 expired waiting; a cap of 12 model jobs a match | #103 |
+| SYN-3010 | Same, with tracing (#100) | 9 of 167 sent (5%) | 10 of 32 jobs expired and 206 deliveries expired against 167 sent; model moments took 16 s p50, 24 s p95 to their card | [`live-SYN-3010`](../agents/evals/results/live-SYN-3010/report.md) |
+| SYN-3011 | Two jobs per match at once, parallel translation, 30 model jobs (#103) | 14% | Model lines failed the numeric check on form (264 `text_differs`, 163 `unit_wrong`), and the rewrites ran 27 of 47 jobs past 15 s | #106 |
+| SYN-3012 | Fact-checker lenient on precision, strict on meaning (#106) | 48 of 291 (16%) | The fact-check fell to 14 ms p50 and one round, but the model breaker kept opening: 22 narrator, 11 analyst and 8 spotter calls skipped as `breaker_open` | #108 |
+
+Each run removed one cause and exposed the next. The next fix counts only full-length timeouts towards the breaker
+(#108); its share is added here after its run. Still to measure on Azure: Hindi lines dropped since numbers go to
+Translator as placeholders (#107), and the model-written recap (the recap writer timed out in SYN-3010).
+
+## Line quality: Azure AI Evaluation
+
+Published lines from one Azure match (SYN-3010, 25 Oct), scored by Azure AI Evaluation's evaluators on the Foundry
+deployment (gpt-5-mini as the judge), each against the moment's evidence (facts, names, clock) and the audience it was
+written for. Scores are 1–5; a line passes at 3 or above. Code:
+[`agents/evals/foundry_quality.py`](../agents/evals/foundry_quality.py); full report:
+[`foundry-1/`](../agents/evals/results/foundry-1/report.md).
+
+| Metric | Lines | Mean | Pass rate |
+|---|---|---|---|
+| Groundedness | 59 (1 judge reply had no score) | 4.14 | 98.3% |
+| Relevance | 60 | 3.10 | 91.7% |
+| Fluency | 60 | 3.12 | 100% |
+
+The sample is all 25 model-written lines of the match and 35 templates. Model lines: groundedness 4.20, relevance
+2.92, fluency 3.20; templates: 4.09, 3.23, 3.06. Groundedness is what the fact-checker protects; relevance is the
+weaker score, model lines a little below templates, and is where the narrator's prompt can still improve.
 
 ## Single vs multi-agent (W3)
 
@@ -150,5 +169,5 @@ moves numbers between slots as Azure did, `main` before this change dropped 3, 9
 published 3, 7 and 16 wrong ones (at swap shares of 25%, 50% and 100%). It also dropped 1 line with no swaps at all,
 from a re-check bug with two facts of equal value. After the change: 0 dropped and 0 wrong at every share, and the
 translator saw no digits
-([`hindi-numbers/`](../agents/evals/results/hindi-numbers/report.md)). The real Azure drop rate is the block A row
-above.
+([`hindi-numbers/`](../agents/evals/results/hindi-numbers/report.md)). The real Azure drop rate is still to be measured
+([Live AI share on Azure](#live-ai-share-on-azure-25-oct)).
