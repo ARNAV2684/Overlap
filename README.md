@@ -60,7 +60,7 @@ identity; there are no keys. Details: [`docs/architecture.md`](docs/architecture
 
 | Technology | What it does in Overlap | Where |
 |---|---|---|
-| Microsoft Foundry, gpt-5-mini | Writes, judges and ranks lines; the recap | [`agents/models.py`](agents/models.py), [`infra/modules/foundry.bicep`](infra/modules/foundry.bicep) |
+| Microsoft Foundry, gpt-5-mini | Writes, judges and ranks lines; the recap. Every agent run traced; published lines scored with Azure AI Evaluation; Content Safety ready | [`agents/models.py`](agents/models.py), [`agents/telemetry.py`](agents/telemetry.py), [`agents/evals/foundry_quality.py`](agents/evals/foundry_quality.py), [`infra/modules/foundry.bicep`](infra/modules/foundry.bicep) |
 | Microsoft Agent Framework | The seven-stage workflow, the chat client, the MCP client | [`agents/workflow.py`](agents/workflow.py), [`agents/context.py`](agents/context.py) |
 | Model Context Protocol | Our read-only match tools for the analyst | [`mcp_server/`](mcp_server), [`agents/embedded_context.py`](agents/embedded_context.py) |
 | Azure AI Translator | Spanish, Hindi and French, names kept | [`agents/translation.py`](agents/translation.py) |
@@ -70,7 +70,7 @@ identity; there are no keys. Details: [`docs/architecture.md`](docs/architecture
 | Azure Cosmos DB | Archive, moments, agent job state, overlays | [`infra/modules/cosmos.bicep`](infra/modules/cosmos.bicep) |
 | Azure Web PubSub | Live frames and per-audience cards to browsers | [`infra/modules/web-pubsub.bicep`](infra/modules/web-pubsub.bicep) |
 | Azure Blob Storage | Archived tracking, checkpoints, Functions host | [`infra/modules/storage.bicep`](infra/modules/storage.bicep) |
-| Application Insights | Logs and traces for every app | [`infra/modules/monitoring.bicep`](infra/modules/monitoring.bicep) |
+| Application Insights | Logs for every app, and one trace per card: each agent, model call and MCP call | [`infra/modules/monitoring.bicep`](infra/modules/monitoring.bicep), [`agents/specs/observability.md`](agents/specs/observability.md) |
 | Bicep + `azd` | The whole resource group as code | [`infra/main.bicep`](infra/main.bicep), [`azure.yaml`](azure.yaml) |
 | GitHub, GitHub Actions, GitHub Copilot | Repository, pull requests, 11 CI jobs on every PR, Copilot in the editor and in reviews | [`.github/workflows/`](.github/workflows) |
 
@@ -113,6 +113,9 @@ Agents bench ([`agents/evals/results/round-1/report.md`](agents/evals/results/ro
 
 - 24 matches, 538 moments, 100% recall on every independently labelled trigger.
 - 0 wrong numbers in 12,236 published lines; fault injection catches every numeric fault, with 0 valid lines rejected.
+
+Line quality on Azure (Azure AI Evaluation on the Foundry deployment, 60 lines of SYN-3010): groundedness 98.3%,
+relevance 91.7%, fluency 100% ([`docs/evaluation.md`](docs/evaluation.md#line-quality-azure-ai-evaluation)).
 
 Known gap: in the 24 Oct Azure runs most cards were templates (**Stat line · checked**): a fresh MCP process per job
 took 4–5 s and the narrator call 3–11 s, longer than a card's 15 s window at 20×. In-process MCP sessions and two

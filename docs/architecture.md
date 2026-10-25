@@ -56,6 +56,16 @@ Both apps run from one zip on one B3 plan (4 cores, 1 instance):
 
 Batches of 300 messages and 16 worker threads keep up with a 20× match (about 113 tracking frames a second).
 
+## Observability
+
+- **Every app** sends logs and requests to Application Insights and Log Analytics (0.5 GB daily cap).
+- **Every card** has one trace from the agents: the job, a span per agent, each model call and each MCP tool call,
+  with the match, moment and agent on every span and no line text. On Azure the traces of SYN-3010 matched the jobs'
+  records in Cosmos exactly ([`agents/specs/observability.md`](../agents/specs/observability.md)).
+- **Every job** also keeps its own record in Cosmos `moments`: each stage's output, model calls, durations and
+  fact-check rounds, so a card can be explained after the match.
+- **Line quality** is scored with Azure AI Evaluation on the Foundry deployment ([`evaluation.md`](evaluation.md)).
+
 ## Latency
 
 | Measure | Result | Where |

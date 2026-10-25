@@ -26,6 +26,27 @@ Foundry Local (on-device, OpenAI-compatible) or with the model off, when every s
 - [`agents/prompts/`](../agents/prompts): each agent's instructions, versioned; every job records the prompt
   version and the model it used.
 
+### Tracing, evaluation and content safety
+
+Foundry does more than host the model: every agent run is traced, and the published lines are scored by Foundry's
+evaluators.
+
+- **Tracing.** Agent Framework's OpenTelemetry exports to Application Insights, one trace per card: the job, a span
+  for each of the seven agents, each model call (with Agent Framework's own `invoke_agent` and `chat` spans, tokens and
+  model) and each MCP tool call. No prompt, payload or line text is ever put on a span, and a test checks it. On Azure
+  (SYN-3010, 25 Oct) one match gave 29 traces whose model-call outcomes matched the jobs' records in Cosmos exactly.
+  [`agents/telemetry.py`](../agents/telemetry.py), on with `OVERLAP_TRACING=azure`
+  ([`infra/modules/functions.bicep`](../infra/modules/functions.bicep)); queries in
+  [`agents/specs/observability.md`](../agents/specs/observability.md) §2.1.
+- **Evaluation.** Azure AI Evaluation's groundedness, relevance and fluency evaluators, run on the Foundry deployment
+  with Entra ID, over a sample of published lines and their evidence. On 60 lines of SYN-3010 (all 25 model lines and
+  35 templates): groundedness 98.3%, relevance 91.7%, fluency 100%
+  ([`evaluation.md`](evaluation.md#line-quality-azure-ai-evaluation)).
+  [`agents/evals/foundry_quality.py`](../agents/evals/foundry_quality.py); a dry run unless `--run` is given.
+- **Content safety (built, off).** With `OVERLAP_CONTENT_SAFETY=azure`, Azure AI Content Safety screens each verified
+  model line after the fact-checker; a flagged line, a failed screen or a timeout falls back to the template.
+  [`agents/safety.py`](../agents/safety.py). It needs a Content Safety resource, which is not deployed yet.
+
 ## Microsoft Agent Framework
 
 **What it does.** Runs the seven agents for each moment as one workflow, and gives each model agent its chat client
@@ -87,7 +108,7 @@ in [`infra/modules/foundry.bicep`](../infra/modules/foundry.bicep).
 | **Cosmos DB** (free tier) | Database `live`: `screen`, `matches`, `events`, `stats`, `match_state`, `moments`, `overlays`, plus `leases` | Per-match partitions, the change feed that starts the agents, transactional batches for card sequence numbers | [`infra/modules/cosmos.bicep`](../infra/modules/cosmos.bicep) |
 | **Web PubSub** | Hub `live`: match frames to every viewer, and one group per audience (mode, language, club, player) for cards | Managed WebSockets with groups, so each viewer gets only their audience's cards | [`infra/modules/web-pubsub.bicep`](../infra/modules/web-pubsub.bicep) |
 | **Blob Storage** (shared keys off) | Archived tracking for replays, stats checkpoints, the Functions host | Cheap storage for the large tracking stream | [`infra/modules/storage.bicep`](../infra/modules/storage.bicep) |
-| **Application Insights**, Log Analytics | Logs and request traces of every app (0.5 GB daily cap) | One place to see a run end to end | [`infra/modules/monitoring.bicep`](../infra/modules/monitoring.bicep) |
+| **Application Insights**, Log Analytics | Logs and request traces of every app, and one trace per card from the agents (0.5 GB daily cap) | One place to see a run end to end, down to each agent and model call | [`infra/modules/monitoring.bicep`](../infra/modules/monitoring.bicep) |
 | **Managed identities** | Four user-assigned identities (functions, stats, generator, web), each with only its roles | No keys anywhere | [`infra/modules/identity.bicep`](../infra/modules/identity.bicep), [`infra/specs/security.md`](../infra/specs/security.md) |
 | **Bicep and `azd`** | The whole resource group; `azd provision` is safe to repeat | Repeatable deploy, pause and resume | [`infra/main.bicep`](../infra/main.bicep), [`azure.yaml`](../azure.yaml), [`infra/README.md`](../infra/README.md) |
 

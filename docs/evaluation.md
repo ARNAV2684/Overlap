@@ -104,6 +104,24 @@ fix on `main`: in-process MCP sessions and at most two parallel narrator calls
 | Hindi lines dropped | _to be filled_ |
 | Model tokens and cost per match | _to be filled_ |
 
+## Line quality: Azure AI Evaluation
+
+Published lines from one Azure match (SYN-3010, 25 Oct), scored by Azure AI Evaluation's evaluators on the Foundry
+deployment (gpt-5-mini as the judge), each against the moment's evidence (facts, names, clock) and the audience it was
+written for. Scores are 1–5; a line passes at 3 or above. Code:
+[`agents/evals/foundry_quality.py`](../agents/evals/foundry_quality.py); full report:
+[`foundry-1/`](../agents/evals/results/foundry-1/report.md).
+
+| Metric | Lines | Mean | Pass rate |
+|---|---|---|---|
+| Groundedness | 59 (1 judge reply had no score) | 4.14 | 98.3% |
+| Relevance | 60 | 3.10 | 91.7% |
+| Fluency | 60 | 3.12 | 100% |
+
+The sample is all 25 model-written lines of the match and 35 templates. Model lines: groundedness 4.20, relevance
+2.92, fluency 3.20; templates: 4.09, 3.23, 3.06. Groundedness is what the fact-checker protects; relevance is the
+weaker score, model lines a little below templates, and is where the narrator's prompt can still improve.
+
 ## Single vs multi-agent (W3)
 
 [`agents/evals/single_vs_multi.py`](../agents/evals/single_vs_multi.py) runs the same 17 moments of the fixture
