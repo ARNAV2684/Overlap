@@ -14,6 +14,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { listMatches } from "@/lib/api";
+import { pickHomeMatch, type HomeChoice } from "@/lib/home-choice";
 import type { MatchListItem } from "@/lib/match-list";
 import { MatchSession } from "@/components/match/MatchSession";
 import { Wordmark } from "@/components/shell/TopNav";
@@ -22,13 +23,11 @@ import { StartMatchButton } from "./StartMatchButton";
 const POLL_MS = 8000;
 const QUIET_MS = 9000;
 
-type Choice = { matchId: string; source: "live" | "replay" } | null;
-
 export function HomeLive() {
   const [matches, setMatches] = useState<MatchListItem[] | null>(null);
   const [error, setError] = useState(false);
   const [quiet, setQuiet] = useState<ReadonlySet<string>>(new Set());
-  const [choice, setChoice] = useState<Choice>(null);
+  const [choice, setChoice] = useState<HomeChoice>(null);
   const lastFrame = useRef(0);
   // Clock per match at the previous poll: a live match whose clock moved is really being played
   const clocks = useRef(new Map<string, string | null>());
@@ -63,23 +62,13 @@ export function HomeLive() {
     };
   }, []);
 
-  // Choose: a live match that is not quiet, else the newest finished match as a replay
+  // Choose: a live match that is not quiet, else the newest finished match as a replay (home-choice.ts)
   useEffect(() => {
     if (!matches) return;
-    // Prefer a match whose clock is moving; otherwise the highest match number (the newest run)
-    const candidates = matches
-      .filter((m) => m.status === "live" && !quiet.has(m.match_id))
-      .sort((a, b) => Number(moving.has(b.match_id)) - Number(moving.has(a.match_id)) || b.match_id.localeCompare(a.match_id));
-    const live = candidates[0];
-    const finished = matches.find((m) => m.status === "finished");
     setChoice((current) => {
-      if (live) {
-        if (current?.matchId === live.match_id && current.source === "live") return current;
-        lastFrame.current = performance.now();
-        return { matchId: live.match_id, source: "live" };
-      }
-      if (current?.source === "replay") return current; // keep playing the replay already chosen
-      return finished ? { matchId: finished.match_id, source: "replay" } : null;
+      const next = pickHomeMatch(matches, quiet, moving, current);
+      if (next !== current && next?.source === "live") lastFrame.current = performance.now();
+      return next;
     });
   }, [matches, quiet, moving]);
 
