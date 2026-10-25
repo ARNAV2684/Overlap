@@ -9,6 +9,9 @@ import { nextMatchNumber, type JobStarter } from "./start-match";
 
 export const GLOBAL_STARTS_PER_HOUR = 6;
 export const VISITOR_STARTS_PER_HOUR = 3;
+/** The generator job stops every execution after 1,800 s (container-apps.bicep, replicaTimeout); past this age, with
+ * nothing running, no execution from a reservation can still be playing, so an unconfirmed one may be cleared. */
+export const PENDING_RECOVERY_MS = 35 * 60_000;
 const HOUR = 3_600_000;
 export type ControlState = {
   version: 1;
@@ -38,10 +41,17 @@ export async function admitStart(store: ControlStore, starter: JobStarter, recen
   try {
     return await store.exclusive(async (lock) => {
       const state = lock.state;
-      // The previous ARM response may have been lost. Never assume an unknown submission failed.
+      // The previous ARM response may have been lost. Never assume an unknown submission failed while it could still
+      // be running; once it is older than the job's own timeout and nothing runs, it cannot be, so it is cleared.
       if (state.pending) {
-        if (!state.pending.execution) return fail("start_pending", 409);
-        if (await starter.execution(state.pending.execution) !== "terminal") return fail("match_running", 409);
+        const expired = now() - state.pending.at > PENDING_RECOVERY_MS;
+        if (!state.pending.execution) {
+          if (!expired || await starter.running()) return fail("start_pending", 409);
+        } else {
+          const status = await starter.execution(state.pending.execution);
+          if (status === "active") return fail("match_running", 409);
+          if (status === "unknown" && (!expired || await starter.running())) return fail("match_running", 409);
+        }
         state.pending = null;
         await lock.save(state);
       }

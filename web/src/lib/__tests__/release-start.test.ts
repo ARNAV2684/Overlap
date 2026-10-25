@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { admitStart, ControlBusy, initialControl, type ControlState, type ControlStore } from "../server/start-control";
+import { admitStart, ControlBusy, initialControl, PENDING_RECOVERY_MS, type ControlState, type ControlStore } from "../server/start-control";
 import { readStartEnv, type JobStarter } from "../server/start-match";
 
 class SharedBlob {
@@ -55,6 +55,30 @@ describe("durable start admission", () => {
     expect((await admitStart(shared.client(), j.starter, archive, "v")).body.error).toBe("start_pending");
     expect((await admitStart(shared.client(), job().starter, archive, "other")).body.error).toBe("start_pending");
     expect(j.numbers).toHaveLength(1);
+  });
+  it("an unconfirmed start is cleared once older than the job timeout with nothing running", async () => {
+    const shared = new SharedBlob(), j = job();
+    j.starter.start = async (n) => { j.numbers.push(n); throw new Error("response lost after acceptance"); };
+    expect((await admitStart(shared.client(), j.starter, archive, "v", () => 0)).body.error).toBe("start_pending");
+    const later = job();
+    expect((await admitStart(shared.client(), later.starter, archive, "w", () => PENDING_RECOVERY_MS)).body.error).toBe("start_pending");
+    const after = await admitStart(shared.client(), later.starter, archive, "w", () => PENDING_RECOVERY_MS + 1);
+    expect(after.status).toBe(202);
+    expect(later.numbers).toEqual([3007]);                 // numbering continues past the lost reservation
+  });
+  it("an expired unconfirmed start stays blocked while any execution is still running", async () => {
+    const shared = new SharedBlob(), j = job();
+    j.starter.start = async () => { throw new Error("timeout"); };
+    await admitStart(shared.client(), j.starter, archive, "v", () => 0);
+    const busy = job(); busy.starter.running = async () => true;
+    expect((await admitStart(shared.client(), busy.starter, archive, "w", () => PENDING_RECOVERY_MS + 1)).body.error).toBe("start_pending");
+  });
+  it("a named execution whose status cannot be read is cleared only after the timeout with nothing running", async () => {
+    const shared = new SharedBlob(), j = job();
+    await admitStart(shared.client(), j.starter, archive, "v", () => 0);
+    j.unknown();
+    expect((await admitStart(shared.client(), j.starter, archive, "w", () => 60_000)).body.error).toBe("match_running");
+    expect((await admitStart(shared.client(), j.starter, archive, "w", () => PENDING_RECOVERY_MS + 1)).status).toBe(202);
   });
   it("a lost save after ARM accepts keeps the earlier reservation", async () => {
     const shared = new SharedBlob(), j = job(); shared.failWrite = 2;

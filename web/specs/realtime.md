@@ -499,16 +499,19 @@ Within the lease: reconcile any pending named execution (only Succeeded/Failed/S
 running executions, enforce at most 3 admitted attempts per visitor/hour and 6 globally/hour, allocate an unused
 number above persisted and archived IDs, SAVE the reservation, then invoke ARM once. Store the execution name
 when returned. Timeouts/lost responses or save failures retain the reservation: no automatic retry. HTTP 409
-`start_pending` means operator reconciliation is required; 409 `match_running` includes competing lease holders;
+`start_pending` means the reservation is not yet confirmed (see below); 409 `match_running` includes competing lease holders;
 429 `rate_limited`; 503 `start_unavailable` on missing state/permissions/invalid control data. Responses are uncached.
 The network identifier is not user authentication; rotating/spoofing it still cannot bypass the global cap.
 Admitted failed/unknown starts consume quota. Historical entries expire logically after one hour and are pruned
 on later admission; no raw IP is stored. Do not delete/reset the coordination blob as routine recovery.
 
-A pending unnamed execution is deliberately fail-closed until an operator checks ARM and records the correct
-execution name, or proves no execution can still start before clearing pending under a lease. Preserve lastNumber
-and attempts. Never automatically unlock an unknown start merely because time elapsed. No operator mutation is
-implemented or performed by this patch.
+A pending unnamed execution (or a named one whose status cannot be read) is fail-closed while it could still be
+playing. It is cleared under the lease only when **both** hold: the reservation is older than 35 minutes
+(`PENDING_RECOVERY_MS`; the generator job stops every execution after 1,800 s, `replicaTimeout`) **and** the job
+has no running execution. Then no execution from it can still be playing, and the worst case of a lost ARM
+response is one extra synthetic match. Without this, one failed start would lock the button for the rest of a
+judging window. Elapsed time alone never unlocks; lastNumber and attempts are preserved, so numbering and quotas
+are unchanged. An operator may still reconcile sooner by recording the execution name.
 
 ### Live-list freshness (§5.3)
 GET /api/matches excludes live candidates whose match_state `_ts` (or initial matches `_ts` when absent) is older
