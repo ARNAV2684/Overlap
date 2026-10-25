@@ -32,27 +32,10 @@ export function nextMatchNumber(recentIds: readonly string[], floor = AZURE_FIRS
   return next > MAX_MATCH_NUMBER ? null : next;
 }
 
-/** In-memory, per web replica: at most `limit` starts per key in any rolling hour. */
-export function createRateLimiter(limit = STARTS_PER_HOUR, windowMs = 3_600_000, now: () => number = Date.now) {
-  const seen = new Map<string, number[]>();
-  return {
-    allow(key: string): boolean {
-      const t = now();
-      const recent = (seen.get(key) ?? []).filter((at) => t - at < windowMs);
-      if (recent.length >= limit) {
-        seen.set(key, recent);
-        return false;
-      }
-      recent.push(t);
-      seen.set(key, recent);
-      return true;
-    },
-  };
-}
-
 export type StartSettings = { jobId: string };
 
 export function readStartEnv(source: Record<string, string | undefined> = process.env): StartSettings | null {
+  if (source.OVERLAP_LIVE_ENABLED !== "true") return null;
   const jobId = source.OVERLAP_GENERATOR_JOB_ID?.trim();
   if (!jobId || !/^\/subscriptions\/[^/]+\/resourceGroups\/[^/]+\/providers\/Microsoft\.App\/jobs\/[^/]+$/i.test(jobId)) return null;
   return { jobId };
@@ -70,7 +53,9 @@ export type JobStarter = {
   /** True while an execution of the job is still running or about to. */
   running(): Promise<boolean>;
   /** Start one execution that plays match SYN-<number>. */
-  start(matchNumber: number): Promise<void>;
+  start(matchNumber: number): Promise<string | null>;
+  execution(name: string): Promise<"active" | "terminal" | "unknown">;
+  available(): Promise<boolean>;
 };
 
 export function createJobStarter(settings: StartSettings, credential: TokenCredential = new DefaultAzureCredential()): JobStarter {
@@ -86,6 +71,18 @@ export function createJobStarter(settings: StartSettings, credential: TokenCrede
     return response;
   };
   return {
+    async available() {
+      try { await call(""); return true; } catch { return false; }
+    },
+    async execution(name) {
+      if (!/^[a-zA-Z0-9_-]+$/.test(name)) return "unknown";
+      try {
+        const body = await (await call(`/executions/${name}`)).json() as { properties?: { status?: string } };
+        const status = body.properties?.status;
+        if (["Succeeded", "Failed", "Stopped"].includes(status ?? "")) return "terminal";
+        return ["Running", "Processing"].includes(status ?? "") ? "active" : "unknown";
+      } catch { return "unknown"; }
+    },
     async running() {
       const body = (await (await call("/executions")).json()) as { value?: { properties?: { status?: string } }[] };
       return (body.value ?? []).some((e) => ["Running", "Processing"].includes(e.properties?.status ?? ""));
@@ -94,7 +91,10 @@ export function createJobStarter(settings: StartSettings, credential: TokenCrede
       const job = (await (await call("")).json()) as { properties?: { template?: { containers?: JobContainer[] } } };
       const container = job.properties?.template?.containers?.[0];
       if (!container) throw new Error("job has no container");
-      await call("/start", { method: "POST", body: JSON.stringify({ containers: [withMatchNumber(container, matchNumber)] }) });
+      const started = await (await call("/start", {
+        method: "POST", body: JSON.stringify({ containers: [withMatchNumber(container, matchNumber)] }),
+      })).json() as { name?: string };
+      return typeof started.name === "string" && /^[a-zA-Z0-9_-]+$/.test(started.name) ? started.name : null;
     },
   };
 }

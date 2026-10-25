@@ -61,3 +61,11 @@ _Answer:_
 
 Data: everything is synthetic (`CALIBRATION.md`); there are no user accounts, and no personal data is collected or
 stored (viewer preferences stay in the browser).
+
+## Local release proposal: shared start admission
+Web receives Blob Data Contributor on the dedicated `match-control` container only. Tracking/replay stays
+read-only. This additional role is defined locally, not applied by the patch. All replicas share the same blob
+lease and durable reservations; IP-derived visitor hashes are best-effort identifiers, backed by a global cap.
+Cross-site starts are rejected; missing permissions and uncertain ARM outcomes fail closed. Public start availability
+requires explicit OVERLAP_LIVE_ENABLED=true. This does not add public authentication or a guarantee against denial
+of service: a public visitor can consume the shared start allowance. Review before unattended public use.

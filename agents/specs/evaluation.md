@@ -79,3 +79,11 @@ Azeem reviews agent behaviour with football judgement, per agent, on real moment
 - **Report per round:** spotter agreement with his keep/drop, line acceptance rate and median score per mode and
   language, numeric errors (must be zero), template and suppression rates, and the changes made from his answers.
 - Answer keys still never reach any agent input; Azeem sees them only where they help him judge recall.
+
+## Release timing audit
+Completed stage outputs retain monotonic `duration_ms`, excluding queue wait, save_stage and publication.
+Model call audits include successful and handled-failure invocation duration (including internal retries).
+Resuming a completed stage keeps its original timing; missing historical measurements are not zero latency.
+`python -m evals.latency jobs.json` summarizes these local exported job documents. Model-call success is not
+proof that its words passed checking or reached the browser. Compare stdio and embedded using the same fixture,
+separately reporting first-call import cost and later calls; cloud Cosmos/model performance needs its own test.

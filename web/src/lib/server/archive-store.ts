@@ -32,6 +32,8 @@ export type StoredMatch = {
   status: unknown;
   setup: unknown;
   result: unknown;
+  /** When the document was last written (Cosmos `_ts`), in ms; absent when unknown. */
+  updated_ms?: number;
 };
 
 /** One tracking file, decompressed. `frames` are in file order, which can repeat a frame after a redelivery. */
@@ -161,7 +163,9 @@ export function createArchiveStore(settings: ArchiveSettings): ArchiveStore {
       guarded("match document", async (signal) => {
         const { resource } = await cosmos.matches.item(matchId, matchId).read<StoredDoc>({ abortSignal: signal });
         if (!resource) return null;
-        return { match_id: matchId, status: resource.status, setup: resource.setup, result: resource.result };
+        const ts = resource._ts;
+        return { match_id: matchId, status: resource.status, setup: resource.setup, result: resource.result,
+          ...(typeof ts === "number" ? { updated_ms: ts * 1000 } : {}) };
       }),
 
     periodMarkers: (matchId) =>
@@ -259,4 +263,18 @@ export function createMatchListStore(settings: ArchiveSettings): MatchListStore 
         return resource ?? null;
       }),
   };
+}
+
+/** Seed durable public allocation from the highest archived ID, not only the newest 100 writes. */
+export async function highestArchivedMatchId(settings: ArchiveSettings): Promise<string | null> {
+  const matches = cosmosContainers(settings.cosmos).matches;
+  return guarded("highest match id", async (signal) => {
+    const { resources } = await matches.items.query<{ match_id: string }>({
+      query: "SELECT TOP 1 c.match_id FROM c WHERE STARTSWITH(c.match_id, @prefix) ORDER BY c.match_id DESC",
+      parameters: [{ name: "@prefix", value: "SYN-" }],
+    }, { abortSignal: signal }).fetchAll();
+    const id = resources[0]?.match_id;
+    if (id !== undefined && !/^SYN-\d{4}$/.test(id)) throw new Error("Invalid archive match identity");
+    return id ?? null;
+  });
 }

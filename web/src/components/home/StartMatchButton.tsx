@@ -8,27 +8,41 @@
 // Outputs: UI (hidden where starting is not available, e.g. locally)
 // Spec:    web/specs/realtime.md §8
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type Phase = { kind: "idle" } | { kind: "starting" } | { kind: "started"; matchId: string } | { kind: "error"; text: string };
 
 const MESSAGES: Record<string, string> = {
   match_running: "A match is already being played. It will show here in a moment.",
   rate_limited: "That's enough kick-offs for now. Try again in a little while.",
+  start_pending: "The start is awaiting confirmation. Please wait; another match will not be started.",
   start_failed: "The match couldn't start. Try again in a minute.",
 };
 
 export function StartMatchButton() {
   const [phase, setPhase] = useState<Phase>({ kind: "idle" });
-  const [hidden, setHidden] = useState(false);
-  if (hidden) return null;
+  const [available, setAvailable] = useState(false);
+  useEffect(() => {
+    let stopped = false;
+    const refresh = async () => {
+      try {
+        const response = await fetch("/api/start-match", { cache: "no-store" });
+        const body = await response.json();
+        if (!stopped) setAvailable(response.ok && body.available === true);
+      } catch { if (!stopped) setAvailable(false); }
+    };
+    void refresh();
+    const timer = setInterval(refresh, 30_000);
+    return () => { stopped = true; clearInterval(timer); };
+  }, []);
+  if (!available) return null;
 
   const start = async () => {
     setPhase({ kind: "starting" });
     try {
       const response = await fetch("/api/start-match", { method: "POST" });
       const body = (await response.json().catch(() => ({}))) as { match_id?: string; error?: string };
-      if (response.status === 503) return setHidden(true);
+      if (response.status === 503) return setAvailable(false);
       if (response.ok && body.match_id) return setPhase({ kind: "started", matchId: body.match_id });
       setPhase({ kind: "error", text: MESSAGES[body.error ?? ""] ?? MESSAGES.start_failed });
     } catch {

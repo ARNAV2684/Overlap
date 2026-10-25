@@ -199,3 +199,12 @@ Exact framework APIs/version compatibility are verified and pinned in M2/M3; thi
   This is an offline M2 handoff, not narrated output, an overlay, or a running Agent Framework workflow.
 - SDK/dependency versions are locked in this project. MCP 1.30.0 uses the supported v1 maintenance API; no claim of
   compatibility with future Agent Framework versions is made. Evaluate/pin that adapter during M3.
+
+## Embedded transport (local release fix)
+The bundled workflow may select `OVERLAP_MCP_TRANSPORT=embedded` (default) instead of `stdio`. This uses the
+pinned Python SDK's `create_connected_server_and_client_session` memory transport with the same low-level server,
+Identity schemas and bound tools. It avoids OS process startup. The operating-system process separation of stdio
+is not present in this mode: both components are trusted application code, not an untrusted public MCP client.
+One fresh session/reader per moment retains scope and retry isolation; source access stays read-only. No public
+port, cross-moment cache, dynamic rebinding or broad permission is added. Stdio remains available for a separate
+process boundary. Fixtures must exercise real MCP initialize and tools/call, including out-of-scope denial.

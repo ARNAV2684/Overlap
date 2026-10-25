@@ -126,3 +126,25 @@ The live screen and archive replay share the same viewer. No extra packages or a
 The pitch has worn turf, corded nets, floodlight masts, detailed kits and contact shadows. Running steps follow rendered travel on the shared tracking clock. The ball flies in 3D: tracked heights for lofted balls, and shots flown from their events to the exact point they cross the goal line, with a trail ([`specs/pitch.md`](specs/pitch.md) §6). Tracking coordinates, match events and backend contracts are unchanged; exact foot-to-ball contact remains limited by the source tracking and procedural models.
 
 Git shares the viewer code, not another teammate's running services or recorded matches. Use your own local match ID; no developer-specific ports, recordings, database contents or secrets are needed from the author.
+
+## Durable public starts (local release patch)
+Set `OVERLAP_LIVE_ENABLED=true` only with a configured generator job and provisioned `match-control` Blob container.
+The web identity needs the container-scoped writer role added in infra/modules/storage.bicep. Without it starts
+fail closed; GET availability is only a preliminary existence check. No raw IPs are stored. POST limits are shared
+across replicas (3 per hashed network visitor and 6 globally/hour). Unknown ARM outcomes block further starts for
+operator reconciliation; don't retry or clear the coordination blob blindly. See specs/realtime.md for recovery.
+Stale live rows are filtered read-only; neither the matches nor replay data are edited.
+
+## Viewer-to-replay acceptance (local only)
+
+Start the documented local stack and this web app. Choose a new generator match ID and run the check before the
+generator. It does not start a match or spend Azure credits. All app and negotiated socket endpoints must be loopback.
+
+```sh
+QA_VIEWER=1 QA_APP_URL=http://127.0.0.1:3000 QA_MATCH=SYN-8424 QA_RECORDING=/absolute/path/to/Overlap/data/generated/matches/SYN-8424 npm test -- viewer-acceptance.qa
+```
+
+Then, in generator's environment, run `python cli.py live --home CAL --away DTN --seed 8424 --first-match 8424 --hubs emulator --speed 20 --record`.
+Use the same ID in both commands; archive and checkpoint storage must be configured for this run. Keep generated
+data local. The check allows bounded archive catch-up (up to four minutes) before exact comparison; this is not an immediate-replay readiness guarantee. It tests independent clients and archive content, not rendered pixels. Manual browser checks and
+evidence are in [viewer acceptance](../docs/viewer-replay-acceptance.md).

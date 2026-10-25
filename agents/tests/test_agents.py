@@ -57,7 +57,7 @@ def test_a_good_model_verifies_every_line_in_every_language(moments, clock):
     d = deps(store, clock)
     result = process(cluster, d)
     assert result["status"] == "delivery_pending" and result["verified"] is True and result["fallback"] is False
-    assert agents_called(d) == ["spotter", "analyst", "narrator", "fact_checker", "translator", "translator",
+    assert agents_called(d) == ["spotter", "analyst", "narrator", "narrator", "fact_checker", "translator", "translator",
                                 "translator"]
     intent = outbox(store, "MO-1017-0013")
     ids = {(a["mode"], a.get("club") or a.get("player"), a["lang"]) for a in intent["audiences"]}
@@ -228,7 +228,8 @@ def test_a_wrong_line_is_rewritten_once_and_then_verified(moments, clock):
         reply = good(agent, payload)
         if agent == "narrator" and "lines" in payload:
             attempts["n"] += 1
-            reply["lines"][0]["claims"][0]["value"] = 99
+            if attempts["n"] == 1:
+                reply["lines"][0]["claims"][0]["value"] = 99
         return reply
     store = MemoryStore()
     d = deps(store, clock, once_wrong)
