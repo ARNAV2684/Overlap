@@ -31,9 +31,14 @@ caption and chips. The tracking heatmap (§2.6) is in the Players tab.
 A clean broadcast scoreboard (24 Oct): competition, venue and match id on one line with the Live / Replay / Full time
 badge; both clubs with kit crests either side of the score, which flashes on a goal; under the score the clock in mono
 with the half, and a **momentum sparkline** (one bar per 5-minute bucket, home above the line, away below, from the
-stat panels' momentum buckets). Under each team, its **score sheet**: scorers (⚽ name minute, with
-"pen" for penalties) and cards (a small yellow or red card, "2nd yellow" for a second booking), in match order up to
-what the pitch is showing; the newest rises in. Phones show the icons and minutes only.
+stat panels' momentum buckets). Each club's name sits on **two stacked lines**, the first word and then the rest
+(`Northbridge` / `FC`), the same way for both teams and mirrored about the score: the home name reads from its crest,
+the away name towards its crest; each line truncates rather than wrapping (S7). On phones the crest sits above the
+name. Under each team, its **score sheet**: scorers and red cards only (`scoreSheet`, `lib/live/match-events.ts`).
+One line per player and kind with every minute, in the order each player first appears: `⚽ Sartori 6′ 45′ 90′`, with
+"pen" after a penalty's minute; a red card shows a small red card, and a second yellow shows as a red card with
+"2nd yellow". Yellow cards are left out here: they stay on the pitch (the card above the player) and in Key events.
+Up to what the pitch is showing; the line that just changed rises in. Phones show the icons and minutes only.
 
 ### 2.2 The 3D pitch and the story
 
@@ -42,13 +47,22 @@ ticker, the goal celebration) in §5 there. Over it: the story caption, story ch
 network), the camera (Wide, Close, Top) and the Events switch. Auto lets the story director choose; a chip pins a
 story. The caption is light glass (45 %) and folds to a one-line pill (`Territory · Territory tide 61%`) 5 s after
 each new story, so the field stays visible; hovering, focusing or tapping it opens it again. On phones it sits under
-the pitch and stays open.
+the pitch and stays open. In the attack story the folded pill keeps a **mini flank bar**: three small lanes (L, C, R
+as the team faces the goal), each filled to its share of the attack, the main lane in the focus blue; the open card
+shows the full flank strip (share, shots and xG per lane).
+
+With a **favourite club** (§3) the story director follows that club (`directStory(…, preferred)`,
+`lib/live/story.ts`): only its goals start a team-shape story and only its attacks start an attack story, and a
+pinned Team shape or Pass network is about it. Territory still shows both teams.
 
 ### 2.3 The AI moment card
 
 When a card is due (`realtime.md` §4) it rises over the pitch for its duration, as light glass and compact so the play
-shows through. In the visual kit's style (24 Oct): the minute and "AI moment", the badge (**Numbers verified** only
-when the fact-checker passed every number; **Template · checked** for template lines), the sentence in the viewer's
+shows through. In the visual kit's style (24 Oct): the minute, the **kind** of moment (from the chart the director
+picked: big moment, chance, momentum, press, passing, movement, numbers, and since the insight moments head-to-head,
+connection and engine room), the badge (**AI · checked** only for a
+model-written line the fact-checker passed; **Stat line · checked** for template lines, which are never called AI;
+S8), the sentence in the viewer's
 mode and language with its **key number** picked out in the focus blue and repeated big beside it, and a small **chart
 chip** naming the chart it points to; the chip opens that chart's analysis tab below. The key number is found in the
 sentence (`keyNumber`, `lib/live/insights.ts`); it is never computed by the screen. The player the card is about gets
@@ -61,7 +75,11 @@ Over the pitch for replays: play / pause, 1× · 5× · 20×, a progress line an
 ### 2.5 Analytics
 
 **From `PLAN_web_football-revamp` S3** the analytics are five tabs, each answering one football question, with a
-team toggle on the per-team visuals (no dropdowns):
+team toggle on the per-team visuals (no dropdowns). **My-club mode (S7):** with a favourite club of this match, the
+per-team visuals (shot map, attack by flank, pass network, pass map, pressing zones, the tracking heatmap and the
+player table) show that club only, and a **Your club · NBR** badge takes the team toggle's place. The comparisons
+keep both teams: the xG race, momentum, zone dominance, and the side-by-side Team stats card, where the club is
+picked out (named "your club" above the bars, the opponent's bars faded).
 
 | Tab | The question | Visuals ([`charts.md`](charts.md)) |
 |---|---|---|
@@ -74,7 +92,8 @@ team toggle on the per-team visuals (no dropdowns):
 
 ### 2.6 Tracking heatmap
 
-`components/match/TrackingHeatPanel.tsx`, a card under the pitch ([`charts.md`](charts.md) §10): a home/away switch,
+`components/match/TrackingHeatPanel.tsx`, a card under the pitch ([`charts.md`](charts.md) §10): a home/away switch
+(the Your club badge in my-club mode, §2.5),
 a player picker (whole team or one player) and a period picker (all observed, either half, either half of extra time);
 the heatmap with its legend; beside it on desktop the position samples and players observed, and "Defend → Attack".
 A footer says it is built only from the tracking this page has received.
@@ -85,7 +104,41 @@ A footer says it is built only from the tracking this page has received.
 their shots, a mini xG race from `heavy.shots` (goals as dots), and split bars for possession, shots on target, pass
 accuracy, momentum share, PPDA and press height (the last three over 10 minutes). The side that leads a row is
 brighter; for PPDA, lower leads. It updates with every stat panel (once a match second) and shows "–" for values
-sent as null.
+sent as null. Last, **Attack by flank** for both teams (S7): each lane's share (left, mid, right as each team faces
+the goal it attacks) of the team's final-third actions over the last 6 minutes (`flankShares`, `lib/live/story.ts`),
+counted at the picture's playhead, the main lane tinted in the team's colour; "–" while a team has fewer than 4 such
+actions. Since S8 the rail sits under the commentary history in the side column.
+
+### 2.8 Live commentary and live insights (S8)
+
+Right under the pitch, so they are in view while the match plays:
+
+- **Live commentary** (`MomentStrip.tsx`): the card on screen now (or the latest) large, with its minute, kind, badge
+  (§2.3), sentence with the key number and chart link, and the three before it beside it (side-scrollable on phones).
+  Replay cards stay hidden until the playhead reaches them.
+- **Live insights** (`LiveInsights.tsx`, numbers from `lib/live/live-insights.ts`, worked out in the browser from the
+  events and the heavy block; each card says so):
+  - **Head-to-head:** each side's leading player in one role (forwards, midfielders, defenders), compared on that
+    role's numbers (forwards: goals, xG, shots and on target, conversion, hardest shot, take-ons won; midfielders:
+    passes completed, completion, progressive passes, average pass, chances created, recoveries; defenders: tackles
+    won, interceptions, aerials won, duels won, clearances, progressive passes). The leader of each row is brighter.
+    It rotates role every 45 s until the viewer picks one.
+  - **Connections:** a team's top three passing pairs (both directions), ranked by passes + 2 × progressive + 1 × into
+    the final third + 3 × in moves that ended in a shot, drawn on a small pitch at each player's mean pass-start spot.
+  - **Engine room:** the top four outfield workers by 2 × km + 0.5 × sprints + 1.5 × duels won + recoveries +
+    interceptions + 0.3 × pressures, each bar split into its parts, the formula printed on the card.
+  - **Tempo (last 5 minutes):** control (6 or more completed passes per possession), chaos (3.8 or fewer) or
+    balanced; turnovers a minute; rhythm (passes a minute against the match so far, ±15 %: speeding up, steady,
+    slowing down); and which side keeps the ball longer.
+
+The replay progress line carries a mark for each moment shown so far (§2.4).
+
+**Insight moments** (`head_to_head`, `connection`, `workhorse`; `CONTRACTS.md` §10.6): their cards point to the
+`head_to_head`, `connections` and `engine_room` visuals. The chart link scrolls to that insight card and rings it: the
+head-to-head turns to the leader's role, connections to the card's team, the engine room marks the player. A
+connection card also pins the Connections story on the 3D pitch (`pitch.md` §4). The progressive passes on every card
+use the stats engine's rule (an open-play pass from x ≥ 35 ending at least 25 % closer to goal), so a card and the
+commentary quote the same number.
 
 ## 3. Your match (preferences)
 
@@ -95,19 +148,28 @@ sent as null.
 - **Language:** English, Español, हिन्दी, Français.
 - **Club** (picking one switches to My club) and **Follow** (picking a player switches to Player focus).
 
+The three pickers are the site's own dropdown (`components/ui/Select.tsx`, S7), never the browser's list: a button
+showing the choice and a themed list (dark and light), Follow's players grouped under their club. It is an ARIA
+select-only combobox: ↓/↑ open and move, Home/End and Page Up/Down jump, Enter or Space choose, Escape and Tab close,
+typing letters jumps to the next option that starts with them, and a click outside closes. The list stays within the
+screen at phone width (Follow's opens towards the left edge). `globals.css` sets `color-scheme` on form controls as a
+fallback for any native control left.
+
 Changing any of them switches the AI cards to that audience at once. Club or player modes without a club or player of
 this match fall back to casual, and the bar says so.
 
 ### 3.2 Player focus
 
-`PlayerFocus.tsx`, when a player is followed: distance, top speed and sprints (stats engine, from tracking), passes and
-accuracy, shots and goals, take-ons won. The player gets a ring and a name tag on the pitch, and the heatmap and pass
+`PlayerFocus.tsx`, when a player is followed: distance, top speed and sprints (stats engine, from tracking), then the
+numbers for the player's role (the head-to-head sets, §2.8) beside their opposite number's (the other side's leading
+player in the same role), and their last four actions (S8). The player gets a ring and a name tag on the pitch, and the heatmap and pass
 map switch to them.
 
 ## 4. AI feed
 
-`AiFeed.tsx`: every card the audience received, newest first, with its minute, priority dot, badge and a link to its
-chart; the full-time recap on top when it arrives (in a replay, at full time); the publisher's player tags. Empty
+`AiFeed.tsx`, the commentary history in the side column (after the followed player): every card the audience
+received, newest first and grouped by half, with its minute, kind, badge (§2.3) and a link to its chart, and a count of
+how many were written by the agents; the full-time recap on top when it arrives (in a replay, at full time); the publisher's player tags. Empty
 state: the agents are watching, and what makes a card.
 
 ## 5. Matches `/matches`

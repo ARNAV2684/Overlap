@@ -13,6 +13,7 @@ from collections import Counter
 from dataclasses import dataclass, field
 
 import per_event
+from pass_difficulty import FINAL_THIRD_X
 
 SIDES = ("home", "away")
 OWNING_TYPES = frozenset({"Pass", "Carry", "TakeOn", "Shot"})
@@ -63,6 +64,8 @@ class Team:
     first_sub_ms: int | None = None
     pass_nodes: dict[str, list[float]] = field(default_factory=dict)      # player_id -> [sum x, sum y, passes]
     pass_links: Counter = field(default_factory=Counter)                   # (passer, receiver) -> completed passes
+    # Every completed pass with a receiver, whole match, for the connection trigger (triggers.md §2.9)
+    pair_log: list[dict] = field(default_factory=list)
     zones: list[list[int]] = field(default_factory=lambda: [[0] * ZONE_COLS for _ in range(ZONE_CHANNELS)])
     pressing_grid: list[list[int]] = field(default_factory=lambda: [[0] * GRID_ROWS for _ in range(GRID_COLS)])
 
@@ -91,6 +94,7 @@ class MatchState:
         self.phase = "pre_match"
         self.passes: dict[str, dict] = {}            # event_id -> Pass, so a shot can find its key pass
         self.event_players: dict[str, str] = {}      # event_id -> player_id, for evidence
+        self.event_types: dict[str, str] = {}        # event_id -> type, for evidence
         self.shots: list[dict] = []                   # shot events with their numbers, in order
         self.momentum_log: list[tuple[int, int, int, str, float]] = []   # (match_ms, period, period_ms, side, weight)
         self.period_ms = 0
@@ -160,6 +164,7 @@ class MatchState:
         self.match_ms = event["match_ms"]
         if event.get("player_id"):
             self.event_players[event["event_id"]] = event["player_id"]
+            self.event_types[event["event_id"]] = event["type"]
         self.period = event["period"]
         self.period_ms = event["period_ms"]
         self.clock = event["clock"]
@@ -203,6 +208,14 @@ class MatchState:
                 node[2] += 1
                 if done and event.get("receiver_id"):
                     team.pass_links[(player.player_id, event["receiver_id"])] += 1
+            if done and player is not None and event.get("receiver_id") and x is not None:
+                end_x = event.get("end_x", x)
+                team.pair_log.append({"event_id": event["event_id"], "period": event["period"],
+                                      "match_ms": event["match_ms"], "possession_id": event.get("possession_id"),
+                                      "pair": tuple(sorted((player.player_id, event["receiver_id"]))),
+                                      "passer": player.player_id,
+                                      "progressive": bool(numbers.get("progressive", False)),
+                                      "final_third": x < FINAL_THIRD_X <= end_x})
             quals = set(event.get("qualifiers", ()))
             for c in (tc, pc):
                 c["passes"] += 1
@@ -260,10 +273,12 @@ class MatchState:
                 tc["high_regains"] += 1
                 team.log("high_regains", event)
         elif kind == "Clearance":
-            tc["clearances"] += 1
+            for c in (tc, pc):
+                c["clearances"] += 1
         elif kind == "Aerial":
-            tc["aerials"] += 1
-            tc["aerials_won"] += event.get("outcome") == "success"
+            for c in (tc, pc):
+                c["aerials"] += 1
+                c["aerials_won"] += event.get("outcome") == "success"
         elif kind == "Pressure":
             for c in (tc, pc):
                 c["pressures"] += 1

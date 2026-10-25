@@ -23,7 +23,10 @@ KEYS = {
                        "window_duration_min"},
     "press_change": {"pressures_per_opp_pass_last_5min", "pressures_per_opp_pass_previous_10min",
                      "team_pressures_last_5min", "team_high_regains_last_5min", "window_duration_min"},
+    "connection": {"pair_passes_last_15min", "pair_progressive_passes_last_15min",
+                   "pair_final_third_passes_last_15min", "pair_shot_moves_last_15min"},
 }
+INSIGHT_TRIGGERS = ("head_to_head", "connection", "workhorse")
 
 
 @pytest.fixture(scope="module")
@@ -68,7 +71,10 @@ def test_every_pack_has_its_trigger_keys_and_well_formed_ids(moments):
         seqs = [int(i[-5:]) for i in e["event_ids"]]
         assert seqs == sorted(seqs) and len(set(seqs)) == len(seqs)
         assert seqs[-1] == m["source"]["event_seq"]                            # ends with the triggering event
-        assert all(p.startswith(e["team_id"]) for p in e["player_ids"])
+        if e["trigger"] == "head_to_head":                                      # the rival rule (CONTRACTS.md §5)
+            assert e["player_ids"][0].startswith(e["team_id"]) and not e["player_ids"][1].startswith(e["team_id"])
+        else:
+            assert all(p.startswith(e["team_id"]) for p in e["player_ids"])
         assert e["window"]["from_ms"] <= e["window"]["to_ms"] == e["match_ms"]
         for f in e["facts"]:
             assert f.get("unit", "set") is not None                            # never "unit": null
@@ -89,3 +95,23 @@ def test_a_red_card_counts_the_players_left(moments):
     reds = [m for m in moments if m["evidence"]["trigger"] == "red_card"]
     facts = {f["key"]: f["value"] for f in reds[0]["evidence"]["facts"]}
     assert facts["team_players_on_pitch"] == 10
+
+
+def test_the_fixture_fires_each_insight_moment_with_sound_packs(moments):
+    seen = {m["evidence"]["trigger"] for m in moments}
+    assert set(INSIGHT_TRIGGERS) <= seen
+    for m in moments:
+        e = m["evidence"]
+        facts = {f["key"]: f["value"] for f in e["facts"]}
+        if e["trigger"] == "head_to_head":
+            assert len(e["player_ids"]) == 2 and len(facts) == 6
+            assert {k.split("_", 1)[1] for k in facts if k.startswith("player_")} == \
+                {k.split("_", 1)[1] for k in facts if k.startswith("rival_")}
+            assert [p["player_id"] for p in m["context"]["players"]] == e["player_ids"]   # the rival can be named
+        elif e["trigger"] == "connection":
+            assert len(e["player_ids"]) == 2 and facts["pair_passes_last_15min"] >= 8
+            assert len(e["event_ids"]) >= facts["pair_passes_last_15min"]
+            assert e["window"]["to_ms"] - e["window"]["from_ms"] <= 15 * 60_000
+        elif e["trigger"] == "workhorse":
+            assert len(e["player_ids"]) == 1 and e["match_ms"] >= 25 * 60_000
+            assert {"player_duels_won_match", "player_recoveries_match", "player_pressures_match"} <= set(facts)

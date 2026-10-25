@@ -10,38 +10,47 @@
 
 import { useEffect, useState } from "react";
 import { keyNumber, overlayText } from "@/lib/live/insights";
-import type { StoryKind } from "@/lib/live/story";
+import { CHART_LABEL } from "@/lib/live/live-insights";
+import type { Story, StoryKind } from "@/lib/live/story";
 import { useScoreboard } from "@/lib/store-hooks";
 import { useExperience, useFeed } from "@/providers/MatchExperience";
 import { usePreferences } from "@/providers/PreferencesProvider";
+import { KindChip, SourceBadge, type ShowChart } from "./MomentStrip";
 
-const STORY_LABEL: Record<StoryKind, string> = { territory: "Territory", protect: "Team shape", attack: "Pass network" };
+const STORY_LABEL: Record<StoryKind, string> = {
+  territory: "Territory",
+  protect: "Team shape",
+  attack: "Pass network",
+  connections: "Connections",
+};
 const STORY_HINT: Record<StoryKind, string> = {
   territory: "Who owns the pitch",
   protect: "Lines linked, back to front",
   attack: "Who passes to whom, and the lane",
+  connections: "The three passing pairs driving the team",
 };
 
-export const COMPONENT_LABEL: Record<string, string> = {
-  shot_map: "Shot map",
-  key_events: "Key events",
-  momentum_tide: "Momentum",
-  pressing_zones: "Pressing",
-  stat_bars: "Team stats",
-  pass_network: "Pass network",
-  heatmap_zones: "Heatmap",
-};
-
-export function VerifiedBadge({ verified, fallback }: { verified: boolean; fallback: boolean }) {
-  if (verified)
-    return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-[#4ade80]/15 px-2 py-0.5 font-mono text-[9px] font-black uppercase tracking-[1px] text-[#4ade80]">
-        ✓ Numbers verified
-      </span>
-    );
+/**
+ * Attack by flank, folded: three small lanes (left, centre, right as the team faces the goal), each filled to its
+ * share, the main lane brightest, so the split stays readable after the caption folds.
+ */
+export function FlankBar({ flanks, channel }: { flanks: NonNullable<Story["flanks"]>; channel?: Story["channel"] }) {
+  const label = flanks.map((f) => `${f.channel} ${f.share}%`).join(", ");
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2 py-0.5 font-mono text-[9px] font-black uppercase tracking-[1px] text-white/60">
-      {fallback ? "Template · checked" : "Unverified"}
+    <span className="flex shrink-0 items-end gap-[3px]" role="img" aria-label={`Attack by flank: ${label}`} title={`Attack by flank: ${label}`}>
+      {flanks.map((f) => (
+        <span key={f.channel} className="flex flex-col items-center gap-[2px]">
+          <span className="relative block h-[14px] w-[7px] overflow-hidden rounded-[2px] bg-white/[0.14]">
+            <span
+              className={`absolute inset-x-0 bottom-0 rounded-[2px] ${f.channel === channel ? "bg-viz-focus" : "bg-white/55"}`}
+              style={{ height: `${Math.max(8, f.share)}%` }}
+            />
+          </span>
+          <span className={`font-mono text-[7px] font-black leading-none ${f.channel === channel ? "text-white" : "text-white/45"}`}>
+            {f.channel[0].toUpperCase()}
+          </span>
+        </span>
+      ))}
     </span>
   );
 }
@@ -98,6 +107,7 @@ function CaptionCard({
         {dot}
         <span className="truncate text-[12px] font-bold">{story.title}</span>
         {story.metric && <span className="font-mono text-[12px] font-black text-accent tabular">{story.metric.value}</span>}
+        {story.flanks && <FlankBar flanks={story.flanks} channel={story.channel} />}
       </button>
     );
   }
@@ -200,7 +210,7 @@ function ChartGlyph() {
  * The AI moment card in the visual kit's style: the minute and badge, the plain sentence with its key number picked
  * out in the focus blue (and shown big beside it), and a small chip for the chart it points to.
  */
-function MomentPopup({ onShowChart }: { onShowChart?: (component: string, eventId?: string) => void }) {
+function MomentPopup({ onShowChart }: { onShowChart?: ShowChart }) {
   const { current } = useFeed();
   const { mode } = useExperience();
   const [prefs] = usePreferences();
@@ -219,10 +229,9 @@ function MomentPopup({ onShowChart }: { onShowChart?: (component: string, eventI
       <div className={`h-[3px] ${high ? "bg-accent" : "bg-viz-focus"}`} />
       <div className="p-3.5">
         <div className="flex flex-wrap items-center gap-2">
-          <span className={`font-mono text-[9px] font-black uppercase tracking-[1.6px] ${high ? "text-accent" : "text-white/60"}`}>
-            {current.clock.split(":")[0]}′ · AI moment
-          </span>
-          <VerifiedBadge verified={current.verified} fallback={current.fallback} />
+          <span className={`font-mono text-[11px] font-black tabular ${high ? "text-accent" : "text-white/80"}`}>{current.clock.split(":")[0]}′</span>
+          <KindChip card={current} tone="dark" />
+          <SourceBadge card={current} tone="dark" />
         </div>
         <div className="mt-2 flex items-start gap-3">
           <p className="min-w-0 flex-1 text-[14px] font-semibold leading-snug [text-shadow:0_1px_6px_rgb(0_0_0/0.5)]">
@@ -241,12 +250,12 @@ function MomentPopup({ onShowChart }: { onShowChart?: (component: string, eventI
         {visual && (
           <button
             type="button"
-            onClick={() => onShowChart?.(visual.component, visual.highlight?.event_id)}
+            onClick={() => onShowChart?.(visual.component, visual.highlight?.event_id, visual.highlight)}
             className="mt-2.5 inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.06] px-2.5 py-1 font-mono text-[9px] font-black uppercase tracking-[1.2px] text-white/75 transition-colors hover:bg-white/[0.14] hover:text-white"
             title="Open this chart in the analysis below"
           >
             <ChartGlyph />
-            {COMPONENT_LABEL[visual.component] ?? visual.component}
+            {CHART_LABEL[visual.component] ?? visual.component}
             <span aria-hidden="true">→</span>
           </button>
         )}
@@ -256,7 +265,7 @@ function MomentPopup({ onShowChart }: { onShowChart?: (component: string, eventI
 }
 
 /** Over the pitch on tablets and up; on phones the chips and caption sit under the pitch (PitchUnderlay). */
-export function PitchOverlay({ onShowChart }: { onShowChart?: (component: string, eventId?: string) => void } = {}) {
+export function PitchOverlay({ onShowChart }: { onShowChart?: ShowChart } = {}) {
   return (
     <>
       <div className="pointer-events-none absolute inset-x-3 top-3 flex items-start justify-between gap-3 sm:inset-x-4 sm:top-4">

@@ -1,6 +1,6 @@
 """Strict moment document and tool schemas. Spec: mcp_server/specs/tools.md §§2–4.
 
-Accepts every moment the stats engine writes (stats/agents-guide.md §5): eight triggers, their fact keys,
+Accepts every moment the stats engine writes (stats/agents-guide.md §5): eleven triggers, their fact keys,
 context.players and 1–500 event ids. Anything else is still rejected."""
 
 from __future__ import annotations
@@ -31,7 +31,7 @@ Reason = Literal[
     "source_timeout", "response_too_large", "source_error", "outside_scope",
 ]
 Trigger = Literal["goal", "red_card", "penalty", "big_chance", "shot_cluster", "momentum_swing", "press_change",
-                  "milestone"]
+                  "milestone", "head_to_head", "connection", "workhorse"]
 Position = Literal["GK", "CB", "LB", "RB", "LWB", "RWB", "DM", "CM", "AM", "LM", "RM", "LW", "RW", "ST"]
 FIVE_MIN_MS = 300000
 
@@ -46,7 +46,21 @@ FACT_SPECS: dict[str, tuple[str | None, int]] = {
     "pressures_per_opp_pass_last_5min": (None, 2), "pressures_per_opp_pass_previous_10min": (None, 2),
     "team_pressures_last_5min": (None, 0), "team_high_regains_last_5min": (None, 0),
     "press_height_last_5min_m": ("m", 0),
+    # Insight moments (stats/specs/evidence-packs.md §1): head-to-head pairs, connections, workhorses
+    **{f"{who}_{m}_match": (("xG", 2) if m == "xg" else (None, 0))
+       for who in ("player", "rival")
+       for m in ("shots", "shots_on_target", "xg", "passes_completed", "progressive_passes", "key_passes",
+                 "duels_won", "interceptions", "recoveries")},
+    "pair_passes_last_15min": (None, 0), "pair_progressive_passes_last_15min": (None, 0),
+    "pair_final_third_passes_last_15min": (None, 0), "pair_shot_moves_last_15min": (None, 0),
+    "player_pressures_match": (None, 0), "player_distance_km": ("km", 1), "player_sprints_match": (None, 0),
 }
+# head_to_head: three player_/rival_ pairs of one role's numbers
+HEAD_TO_HEAD_ROLES = (
+    frozenset({"shots", "shots_on_target", "xg"}),
+    frozenset({"passes_completed", "progressive_passes", "key_passes"}),
+    frozenset({"duels_won", "interceptions", "recoveries"}),
+)
 # Trigger -> (required fact keys, optional fact keys).
 TRIGGER_FACTS: dict[str, tuple[frozenset[str], frozenset[str]]] = {
     "goal": (frozenset({"shot_xg", "shot_distance_m", "team_goals_match", "opponent_goals_match",
@@ -61,6 +75,15 @@ TRIGGER_FACTS: dict[str, tuple[frozenset[str], frozenset[str]]] = {
                                 "team_pressures_last_5min", "team_high_regains_last_5min",
                                 "window_duration_min"}), frozenset({"press_height_last_5min_m"})),
     "milestone": (frozenset({"player_goals_match", "shot_xg"}), frozenset()),
+    # head_to_head's keys depend on the role: checked against HEAD_TO_HEAD_ROLES in Evidence.consistent
+    "head_to_head": (frozenset(), frozenset(k for k in FACT_SPECS if k.startswith(("player_", "rival_"))
+                                            and k.endswith("_match") and k[k.index("_") + 1:-6] in
+                                            {m for role in HEAD_TO_HEAD_ROLES for m in role})),
+    "connection": (frozenset({"pair_passes_last_15min", "pair_progressive_passes_last_15min",
+                              "pair_final_third_passes_last_15min", "pair_shot_moves_last_15min"}), frozenset()),
+    "workhorse": (frozenset({"player_duels_won_match", "player_recoveries_match", "player_pressures_match",
+                             "player_interceptions_match"}),
+                  frozenset({"player_distance_km", "player_sprints_match"})),
 }
 FIVE_MINUTE_WINDOW = frozenset({"shot_cluster", "momentum_swing", "press_change"})
 
@@ -192,8 +215,19 @@ class Evidence(StrictModel):
             raise ValueError("Facts do not match the trigger's evidence pack")
         if len(set(self.player_ids)) != len(self.player_ids):
             raise ValueError("Duplicate player id")
-        if any(p[:3] != self.team_id for p in self.player_ids):
+        if self.trigger == "head_to_head":                  # CONTRACTS.md §5: the leader, then the rival
+            if len(self.player_ids) != 2 or self.player_ids[0][:3] != self.team_id \
+                    or self.player_ids[1][:3] == self.team_id:
+                raise ValueError("A head-to-head names its leader and the other side's rival")
+            roles = {k[k.index("_") + 1:-6] for k in keys}
+            if roles not in HEAD_TO_HEAD_ROLES or len(keys) != 6:
+                raise ValueError("Facts do not match the trigger's evidence pack")
+        elif any(p[:3] != self.team_id for p in self.player_ids):
             raise ValueError("Player belongs to a different team")
+        if self.trigger in ("connection",) and len(self.player_ids) != 2:
+            raise ValueError("A connection names its two players")
+        if self.trigger == "workhorse" and len(self.player_ids) != 1:
+            raise ValueError("A workhorse names one player")
         if any(e[:8] != self.match_id for e in self.event_ids):
             raise ValueError("Event belongs to a different match")
         seqs = [int(e[-5:]) for e in self.event_ids]

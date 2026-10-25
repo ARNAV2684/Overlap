@@ -5,6 +5,10 @@ Spec: mcp_server/specs/tools.md §2; stats/agents-guide.md §5 (D-02).
 `data/SYN-1017-moments.json` is the stats engine's output for its fixture match (KES v ORR, seed 1017):
     cd stats && uv run python main.py replay tests/fixtures/SYN-1017 --moments
 Regenerate it whenever the stats engine's packs change.
+
+`data/SYN-1017-insight-moments.json` holds the head_to_head, connection and workhorse moments the same replay writes
+since those triggers were added (their ordinals count every moment, so they overlap the older file's ids). The older
+file is kept as it was so the agents' tests keep their moment ids.
 """
 import copy
 import json
@@ -15,6 +19,7 @@ from mcp_server.schema import TRIGGER_FACTS, Fact, parse_moment, projection
 
 DATA = Path(__file__).parent / "data" / "SYN-1017-moments.json"
 MOMENTS = json.loads(DATA.read_text(encoding="utf-8"))
+INSIGHTS = json.loads((Path(__file__).parent / "data" / "SYN-1017-insight-moments.json").read_text(encoding="utf-8"))
 
 
 def first(trigger):
@@ -50,7 +55,17 @@ def test_real_cluster_matches_the_constructed_sample(document):
 
 def test_every_trigger_has_a_pack():
     assert set(TRIGGER_FACTS) == {"goal", "red_card", "penalty", "big_chance", "shot_cluster", "momentum_swing",
-                                  "press_change", "milestone"}
+                                  "press_change", "milestone", "head_to_head", "connection", "workhorse"}
+
+
+@pytest.mark.parametrize("doc", INSIGHTS, ids=[f"{m['id']}-{m['evidence']['trigger']}" for m in INSIGHTS])
+def test_every_engine_insight_moment_parses(doc):
+    moment = parse_moment(doc)
+    assert [p.player_id for p in moment.context.players] == doc["evidence"]["player_ids"]
+
+
+def test_the_insight_file_holds_all_three_new_triggers():
+    assert {m["evidence"]["trigger"] for m in INSIGHTS} == {"head_to_head", "connection", "workhorse"}
 
 
 def _set(doc, path, value):

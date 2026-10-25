@@ -4,8 +4,10 @@
 //            protect  a team that just scored drops into shape: its lines, and how far deeper its block now sits
 //            attack   a team pinning the other back: its pass network on the live players and the lane it uses
 //            territory the default: who owns the pitch, as a tide line between the two halves
-// Inputs:  the match memory and the current interpolated sample
-// Outputs: directStory(), formationLines(), attackChannel(), territoryFront(); Story
+//            connections a team's top three passing pairs at their mean pass-start spots, when pinned or while a
+//                     connection moment is on screen
+// Inputs:  the match memory, the current interpolated sample, and the viewer's favourite club (a preferred side)
+// Outputs: directStory(), formationLines(), attackChannel(), flankShares(), territoryFront(); Story
 // Spec:    web/specs/pitch.md §4
 //
 // Pure functions. Thresholds are named below so they can be tuned in one place. Every number shown to the viewer is
@@ -15,8 +17,9 @@ import type { MatchEvent, MatchSetup } from "@/lib/contracts";
 import { attacksEast, type Side } from "@/lib/coordinates";
 import type { BallSample, Goal, MatchMemory, ShapeSample } from "@/lib/live/match-memory";
 import type { MotionSample } from "@/lib/live/motion";
+import { topConnections, type Connection } from "@/lib/live/live-insights";
 
-export const STORY_KINDS = ["territory", "protect", "attack"] as const;
+export const STORY_KINDS = ["territory", "protect", "attack", "connections"] as const;
 export type StoryKind = (typeof STORY_KINDS)[number];
 
 /** After a goal, the scoring team's shape is the story for this long (match ms), within the same period. */
@@ -54,6 +57,8 @@ export type Story = {
    * produced so far this match (heavy.shots; null without it). Left, centre, right in the team's own frame.
    */
   flanks?: { channel: Channel; share: number; shots: number | null; xg: number | null }[];
+  /** Connections: the team's top three pairs (live-insights.ts `topConnections`), team frame. */
+  connections?: Connection[];
 };
 
 const teamName = (setup: MatchSetup | null, side: Side) => setup?.teams[side].name ?? (side === "home" ? "Home" : "Away");
@@ -83,6 +88,12 @@ export function territoryFront(balls: readonly BallSample[], nowMs: number, peri
   return { frontX: xSum / wSum, homeShare: Math.round((homeIn / wSum) * 100) };
 }
 
+/** The lane a team-frame y (0–100, left = small y facing the opponent) falls in. */
+export const channelOf = (y: number): Channel => (y < 33.3 ? "left" : y > 66.7 ? "right" : "centre");
+/** The middle of each lane, team-frame y. */
+export const LANE_Y: Record<Channel, number> = { left: 16.7, centre: 50, right: 83.3 };
+export const CHANNELS: readonly Channel[] = ["left", "centre", "right"];
+
 /** Which lane a team attacks through: its final-third actions, by channel of its own frame. */
 export function attackChannel(
   events: readonly MatchEvent[],
@@ -99,14 +110,26 @@ export function attackChannel(
     const x = e.end_x ?? e.x;
     const y = e.end_y ?? e.y;
     if (x === undefined || y === undefined || x < 66) continue;
-    const lane: Channel = y < 33.3 ? "left" : y > 66.7 ? "right" : "centre";
-    counts[lane]++;
+    counts[channelOf(y)]++;
     total++;
   }
   if (total < 4) return null;
   const channel = (Object.keys(counts) as Channel[]).reduce((a, b) => (counts[b] > counts[a] ? b : a));
   const shares = { left: Math.round((counts.left / total) * 100), centre: Math.round((counts.centre / total) * 100), right: Math.round((counts.right / total) * 100) };
   return { channel, share: shares[channel], shares };
+}
+
+/**
+ * Attack by flank for both teams: each lane's share (%) of the team's final-third actions over the last
+ * LANE_WINDOW_MS, or null for a team with too few actions to say.
+ */
+export function flankShares(
+  events: readonly MatchEvent[],
+  setup: MatchSetup | null,
+  nowMs: number,
+): Record<Side, Record<Channel, number> | null> {
+  const of = (side: Side) => (setup ? (attackChannel(events, setup.teams[side].team_id, nowMs)?.shares ?? null) : null);
+  return { home: of("home"), away: of("away") };
 }
 
 /** The team in possession: the team of the latest on-ball event in the last 10 match seconds. */
@@ -198,21 +221,30 @@ function protectStory(memory: MatchMemory, goal: Goal, sample: MotionSample): St
 
 /**
  * The story for now. `pinned` forces a kind (the viewer chose it); otherwise: a recent goal wins, then a sustained
- * attack, then territory.
+ * attack, then territory. With a `preferred` side (the viewer's favourite club), the team stories follow that club:
+ * only its goals start a team-shape story, only its attacks start an attack story, and a pinned team story is about
+ * it. Territory always shows both teams.
  */
-export function directStory(memory: MatchMemory, sample: MotionSample, pinned: StoryKind | null = null): Story {
+export function directStory(
+  memory: MatchMemory,
+  sample: MotionSample,
+  pinned: StoryKind | null = null,
+  preferred: Side | null = null,
+  /** The team of a connection moment on screen now: its connections become the story. */
+  connectionsFor: Side | null = null,
+): Story {
   const setup = memory.setup();
   const now = sample.matchMs;
   const events = memory.events();
   const goals = memory.goals();
-  const lastGoal = [...goals].reverse().find((g) => g.ms <= now);
+  const lastGoal = [...goals].reverse().find((g) => g.ms <= now && (preferred === null || g.side === preferred));
   const recentGoal = lastGoal && lastGoal.period === sample.period && now - lastGoal.ms <= PROTECT_FOR_MS ? lastGoal : null;
 
   // Attack candidate: possession plus time in the final third, or the stats engine's momentum share
   const poss = possessionSide(events, setup, now);
   let attacker: Side | null = null;
   const recentBalls = memory.balls().filter((b) => b.ms > now - ATTACK_WINDOW_MS && b.period === sample.period);
-  for (const side of ["home", "away"] as const) {
+  for (const side of preferred ? [preferred] : (["home", "away"] as const)) {
     const east = attacksEast(side, sample.period) ?? side === "home";
     const inThird = recentBalls.filter((b) => (east ? b.x > 66.7 : b.x < 33.3)).length;
     const share = recentBalls.length >= 6 ? inThird / recentBalls.length : 0;
@@ -222,13 +254,30 @@ export function directStory(memory: MatchMemory, sample: MotionSample, pinned: S
     }
   }
 
-  const want: StoryKind = pinned ?? (recentGoal ? "protect" : attacker ? "attack" : "territory");
+  const want: StoryKind = pinned ?? (connectionsFor ? "connections" : recentGoal ? "protect" : attacker ? "attack" : "territory");
+
+  if (want === "connections") {
+    const side = connectionsFor ?? preferred ?? poss ?? "home";
+    const links = topConnections(events, setup?.teams[side].team_id ?? "", 3);
+    const top = links[0];
+    const shirt = (id: string) => memory.players().get(id)?.shirt ?? "?";
+    return {
+      kind: "connections",
+      side,
+      title: `${teamName(setup, side)}'s top connections`,
+      detail: top
+        ? "The pairs driving their play. Thicker lines: more passes, more progressive ones, more ending in a shot."
+        : "No pair has combined twice yet.",
+      metric: top ? { value: `${top.passes}`, label: `passes ${shirt(top.a)} ⇄ ${shirt(top.b)}` } : null,
+      connections: links,
+    };
+  }
 
   if (want === "protect") {
     const goal = recentGoal ?? lastGoal;
     if (goal) return protectStory(memory, goal, sample);
     if (pinned) {
-      const side = poss ?? "home";
+      const side = preferred ?? poss ?? "home";
       return {
         kind: "protect",
         side,
@@ -240,7 +289,7 @@ export function directStory(memory: MatchMemory, sample: MotionSample, pinned: S
   }
 
   if (want === "attack") {
-    const side = attacker ?? poss ?? "home";
+    const side = preferred ?? attacker ?? poss ?? "home";
     const teamId = setup?.teams[side].team_id ?? "";
     const lane = attackChannel(events, teamId, now);
     const name = teamName(setup, side);
@@ -258,9 +307,9 @@ export function directStory(memory: MatchMemory, sample: MotionSample, pinned: S
       channel: lane?.channel,
       channelShare: lane?.share,
       flanks: lane
-        ? (["left", "centre", "right"] as const).map((channel) => {
+        ? CHANNELS.map((channel) => {
             const shots = memory.heavyPanel()?.heavy.shots?.[side];
-            const mine = shots?.filter((s) => (s.y < 33.3 ? "left" : s.y > 66.7 ? "right" : "centre") === channel) ?? null;
+            const mine = shots?.filter((s) => channelOf(s.y) === channel) ?? null;
             return {
               channel,
               share: lane.shares[channel],

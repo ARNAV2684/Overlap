@@ -19,8 +19,10 @@ from models import ModelFailed, _maybe
 from runtime import RunState
 
 PRIORITY = {"goal": "high", "red_card": "high", "penalty": "high"}                   # everything else: normal
-ORDER = ("goal", "red_card", "penalty", "big_chance", "shot_cluster", "momentum_swing", "press_change", "milestone")
-COMPARISON = ("momentum_swing", "press_change")
+ORDER = ("goal", "red_card", "penalty", "big_chance", "shot_cluster", "momentum_swing", "press_change", "milestone",
+         "head_to_head", "connection", "workhorse")
+# Thinned when the budget is tight: the comparison triggers and the insight moments (head-to-head, connection, workhorse)
+COMPARISON = ("momentum_swing", "press_change", "head_to_head", "connection", "workhorse")
 THIN_WINDOW_MS = 600_000                                     # one comparison card per team per 10 match minutes
 
 

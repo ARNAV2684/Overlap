@@ -76,15 +76,20 @@ engine writes ([`stats/agents-guide.md`](../../stats/agents-guide.md) §2–§5,
 [`stats/specs/evidence-packs.md`](../../stats/specs/evidence-packs.md)) and rejects everything else.
 
 - **Triggers:** `goal`, `red_card`, `penalty`, `big_chance`, `shot_cluster`, `momentum_swing`, `press_change`,
-  `milestone`. `sprint` is not accepted until the stats engine produces it (deferred, stats D-01).
+  `milestone`, `head_to_head`, `connection`, `workhorse`. `sprint` is not accepted until the stats engine produces it (deferred, stats D-01).
 - **Facts:** 2–7 per pack, unique keys, exactly the trigger's required keys plus its optional ones (only
-  `press_height_last_5min_m` for `press_change`). Each key has a fixed unit (`xG`, `m`, `min`, `%`, or none — then
-  the `unit` field is absent) and fixed `decimals` (0 or 2). Values are finite, non-negative and already at their
+  `press_height_last_5min_m` for `press_change`, and `player_distance_km` and `player_sprints_match` for
+  `workhorse`). A `head_to_head` has exactly three `player_<m>_match` / `rival_<m>_match` pairs of one role's
+  numbers (forward: shots, shots on target, xG; midfielder: completed, progressive and key passes; defender: duels
+  won, interceptions, recoveries). Each key has a fixed unit (`xG`, `m`, `min`, `%`, or none — then
+  the `unit` field is absent) and fixed `decimals` (0, 1 for `player_distance_km` in km, or 2). Values are finite, non-negative and already at their
   decimals; whole-number facts are integers; `%` ≤ 100; `shot_xg` ≤ 1 (team totals such as `team_xg_match` can exceed 1); `shot_is_penalty` is 0 or 1;
   `shots_last_5min` ≥ 3; `window_duration_min` = 5.
 - **Events:** 1–500 `event_ids` of the same match, strictly ascending by `seq`, ending with the triggering event
   (`source.event_seq`).
-- **Players:** `player_ids` are distinct and of the moment's team; at least one for `goal`, `red_card`, `penalty`,
+- **Players:** `player_ids` are distinct and of the moment's team, except a `head_to_head`: exactly two, the leader
+  (of the moment's team) then the rival (of the other team), `CONTRACTS.md` §5. A `connection` names its two players,
+  a `workhorse` one; at least one for `goal`, `red_card`, `penalty`,
   `big_chance`, `shot_cluster` and `milestone` (comparison triggers may have none). `context.players` is optional
   (the constructed sample predates it); when present its entries are `{player_id, name, pos}`, distinct, each one of
   `player_ids`, `pos` one of the generator's positions.
@@ -92,7 +97,9 @@ engine writes ([`stats/agents-guide.md`](../../stats/agents-guide.md) §2–§5,
   `shot_cluster`, `momentum_swing` and `press_change`.
 - **Shot cluster** keeps §10.1 exactly: the shot count equals the number of events, and shooters ≤ shots.
 - **Ids:** the engine numbers moments in processing order across all triggers, so the fixture's KES cluster is
-  `MO-1017-0013`. `samples/MO-1017-0001.json` is a constructed sample from before stats S3 and stays valid.
+  `MO-1017-0013` in `tests/data/SYN-1017-moments.json`, written before the insight triggers. The same replay now
+  also writes 8 insight moments, kept in `tests/data/SYN-1017-insight-moments.json` (their ids count every moment,
+  so they overlap the older file's). `samples/MO-1017-0001.json` is a constructed sample from before stats S3 and stays valid.
 
 Evidence: `tests/test_real_moments.py` parses all 21 moments the engine writes for its fixture match
 (`tests/data/SYN-1017-moments.json`) and rejects broken variants.

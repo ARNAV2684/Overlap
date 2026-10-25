@@ -26,7 +26,9 @@ PLAN = {"goal": [("get_player_context", "actor")], "milestone": [("get_player_co
         "big_chance": [("get_player_context", "actor")], "penalty": [("get_player_context", "actor")],
         "red_card": [("get_player_context", "actor")], "shot_cluster": [("compare_periods", "team")],
         "momentum_swing": [("compare_periods", "team"), ("get_pass_network", "team")],
-        "press_change": [("get_team_pressing", "team"), ("compare_periods", "team")]}
+        "press_change": [("get_team_pressing", "team"), ("compare_periods", "team")],
+        "head_to_head": [("get_player_context", "actor")], "connection": [("get_pass_network", "team")],
+        "workhorse": [("get_player_context", "actor")]}
 CONTEXT_CHARS = 3200                         # the tool data the model sees; the evidence is never cut
 DIGIT = re.compile(r"\d")
 
