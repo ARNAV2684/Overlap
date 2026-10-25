@@ -66,7 +66,7 @@ Every resource that supports it has **local (key) authentication turned off**; s
 | Setting | Value |
 |---|---|
 | API and capacity | NoSQL, provisioned throughput, **free tier on** (one free-tier account per subscription; if already used, serverless instead) |
-| Database | `live`, shared throughput 1,000 RU/s (manual), the free-tier allowance |
+| Database | `live`, shared throughput (manual): 1,000 RU/s, the free-tier allowance, except during live runs, which need 4,000 (`COSMOS_THROUGHPUT`; 1,000 throttled a 20× match on 24 Oct) |
 | Containers | `screen`, `matches`, `events`, `stats`, `match_state`, `moments`, `overlays` on `/match_id` (`CONTRACTS.md` §4); `leases` on `/id` (the Functions change-feed triggers' lease container). All created by Bicep: with identity, the services cannot create them |
 | Other | Session consistency, single region, local auth off, periodic backup (default) |
 
@@ -78,12 +78,12 @@ Every resource that supports it has **local (key) authentication turned off**; s
 | Hub | `live`; no event handlers (browsers only receive; the relay and insights publisher send through the service API) |
 | Other | Local auth off; client tokens come from the web app's `/api/negotiate` |
 
-### 2.5 Functions app (relay, archiver, moment trigger, recap trigger, insights publisher)
+### 2.5 Functions apps (relay; archiver, moment trigger, recap trigger, insights publisher)
 
 | Setting | Value |
 |---|---|
-| Hosting | Dedicated App Service plan, Linux, **B2, exactly 1 instance, Always On**. All eight functions must share one process: the relay's open frame bundles and `seq`, and the agents' model breaker, live in memory (`functions/function_app.py`). Flex Consumption scales each trigger on its own instances and is not used |
-| Runtime | Functions 4, Python 3.12; code deployed from `functions/dist/` built by `functions/package.py` |
+| Hosting | Dedicated App Service plan, Linux, **B3, exactly 1 instance, Always On**, with **two apps** from the same package: `live` runs the three relay functions, `insights` the archiver and the agents (each switches the other's off). The relay's open frame bundles and `seq` live in memory, so the relay stays in one process; the agents' model breaker likewise stays in the insights process. One process for everything held the relay to one core and it fell 80–120 s behind a 20× match (24 Oct). Flex Consumption scales each trigger on its own instances and is not used |
+| Runtime | Functions 4, Python 3.12; code deployed from `functions/dist/` built by `functions/package.py`, with its packages installed for Linux and compiled beforehand, and run from the zip (`WEBSITE_RUN_FROM_PACKAGE=1`; `infra/README.md`) |
 | Settings (names only) | `AzureWebJobsStorage__accountName`, `AzureWebJobsStorage__credential=managedidentity`, `AzureWebJobsStorage__clientId`; `EVENTHUBS__fullyQualifiedNamespace`, `EVENTHUBS__credential`, `EVENTHUBS__clientId`; `COSMOS__accountEndpoint`, `COSMOS__credential`, `COSMOS__clientId`; `AZURE_CLIENT_ID`; `OVERLAP_EVENTS_HUB`, `OVERLAP_TRACKING_HUB`, `OVERLAP_RELAY_CONSUMER_GROUP`, `OVERLAP_ARCHIVER_CONSUMER_GROUP`; `OVERLAP_COSMOS_ENDPOINT`, `OVERLAP_COSMOS_DATABASE`, `OVERLAP_COSMOS_CONTAINER`; `OVERLAP_ARCHIVE_BLOB_ENDPOINT`; `OVERLAP_WEBPUBSUB_ENDPOINT`, `OVERLAP_WEBPUBSUB_HUB`; `OVERLAP_MODEL_PROVIDER=azure`, `OVERLAP_AZURE_OPENAI_ENDPOINT`, `OVERLAP_AZURE_OPENAI_DEPLOYMENT`, `OVERLAP_AZURE_OPENAI_API_VERSION`; `OVERLAP_TRANSLATOR=azure`, `OVERLAP_TRANSLATOR_ENDPOINT`, `OVERLAP_TRANSLATOR_REGION`; the agents' budget settings (`OVERLAP_MAX_*`); `APPLICATIONINSIGHTS_CONNECTION_STRING` |
 | Other | No HTTP functions; basic-auth publishing (FTP/SCM) off; deployment by `azd` with Entra sign-in |
 

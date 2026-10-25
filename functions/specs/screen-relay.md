@@ -22,8 +22,9 @@ _Answer:_
 
 - **Ordering:** partition key `match_id`, so each match's messages arrive in order **within one hub**. The two hubs are
   independent: a frame can arrive before an event of the same instant. Nothing assumes order across hubs.
-- **Batches:** the Event Hubs trigger delivers up to 100 messages per call (`maxEventBatchSize: 100` in `host.json`);
-  the local runner uses the same size. Each batch is processed in order, then the state is saved, then the checkpoint
+- **Batches:** the Event Hubs trigger delivers up to 300 messages per call (`maxEventBatchSize: 300` in `host.json`;
+  100 left the relay's tracking reader 80 s behind a 20× match on Azure, 24 Oct, because one match is one partition and
+  its batches run one after another); the local runner reads 100 at a time. Each batch is processed in order, then the state is saved, then the checkpoint
   moves.
 - **Validation (strict, per `CONTRACTS.md`):** the body must be valid JSON matching §2, §3 or §4 exactly (unknown fields
   rejected); `kind` and `match_id` properties must agree with the body. An invalid message is **logged** (hub,
@@ -88,6 +89,11 @@ _Answer:_
   time.
 - **Stats:** a `kind=stats` message on `match-events` is forwarded as a `stats` envelope with the panel unchanged.
 - **Send:** through the Web PubSub service API (`send_to_group`, JSON). Locally the same call goes to the stand-in.
+  Each send is one HTTP call, and one at a time held the relay well below 20× on Azure (24 Oct: about 30 frames/s
+  against the 113 a 20× match makes). So the Functions app sends `positions` and `stats` envelopes side by side
+  (8 at once; the browser keeps the newest of those by `match_ms`, `web/specs/realtime.md` §2), while `event` and
+  `status` envelopes still leave one by one in `seq` order. A commit's sends all finish before the match's lock is
+  released, so one commit never overtakes another. The local runner and the tests send one at a time.
 - **Save first, then send:** each envelope is written to the store before it is sent. If sending fails it is retried
   (3 attempts, 0.5 s → 1 s → 2 s); if it still fails, it is logged and the browser gets it from the snapshot on its next
   reconnect.

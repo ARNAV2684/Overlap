@@ -10,7 +10,7 @@
 | Review coordinator | Arnav |
 | Affected component owners | Generator, stats engine: Azeem · Event Hubs, Cosmos, Web PubSub, relay, archiver, agents, MCP: Arnav (Pranav helping) · Web app: Arnav, Azeem · Other infrastructure and `azure.yaml`: unassigned (Arnav decides) |
 | Proposal version and date | v1.1 · 23 Oct 2026 (D-01, D-03, D-10 decided; A0 in progress) |
-| Status | In progress: A0 done (#85, #89); A1 Event Hubs and A2 Cosmos DB deployed and proven 24 Oct (`infra/azure-data`); A3–A5 next |
+| Status | Built and proven 24 Oct: A0 (#85, #89), A1–A2 (`infra/azure-data`), Wave 1 A3–A5 (`infra/azure-wave1`), Wave 2 A6–A10 and A8 (`infra/azure-wave2`); paused after A8 with the replay link kept |
 | Plan tier and file | Full · `plans/active/PLAN_infra_azure-pass.md` |
 | Repository | [ARNAV2684/Overlap](https://github.com/ARNAV2684/Overlap) |
 | Reviewed branch and commit | main · 0c73c59 |
@@ -413,3 +413,59 @@ monitoring (0.5 GB/day cap); provision twice with no changes (AC-02); storage re
   - From the laptop (India to Sweden, ~150 ms per send) the generator runs nearer 12× than 20×, and the stats engine's
     one-by-one panel sends fall behind (1,476 queued at the 55% mark). Inside Azure (A6, A7) this latency is gone;
     re-measure in A8.
+
+**Wave 1, A3–A5 (24 Oct, branch `infra/azure-wave1`):**
+- **Deployed:** Web PubSub Standard S1 (hub `live`, local auth off); Foundry (AIServices) with project `overlap` and
+  gpt-5-mini (GlobalStandard 2025-08-07, 100K TPM) plus its $25 budget; Translator F0 on a custom subdomain.
+- **A3:** the relay code writes to Azure Cosmos DB and Web PubSub with Entra sign-in; the web app issues real Web
+  PubSub tokens and lists matches from the Azure archive.
+- **A4:** `Models.ask` answered from gpt-5-mini (3.0 s from the laptop) after two fixes: GPT-5 rejects `temperature`
+  (the agents now send `reasoning_effort`), and `max_tokens` is already translated by the framework.
+- **A5:** es, hi, fr translations with club names kept, after pinning `azure-ai-translation-text` to 1.0.1 (2.0 only
+  speaks an API version the custom domain answers with 404) and reading 1.0's `to` field.
+
+**Wave 2, A6–A10 (24 Oct, branch `infra/azure-wave2`):**
+- **Deployed:** a B3 plan (1 instance) with two Functions apps from one zip: `func-overlap-<token>` runs the relay
+  alone, `func-overlap-insights-<token>` the archiver and agents; Container Apps: the web app (public link), the stats
+  engine (1 replica) and the generator as a manual job; a Basic registry; three images built with `az acr build`.
+- **A9:** public link `https://ca-overlap-web.agreeablestone-46edcfef.swedencentral.azurecontainerapps.io`.
+- **A10:** **Start a live match** on that page starts the generator job (202 `SYN-3000`); a second press while it
+  plays answers 429 `match_running`; the fourth from one address in an hour answers 429 `rate_limited`.
+- **Fixed on the way** (each one commit on the branch):
+  - Cosmos DB at 1,000 RU/s throttled under a 20× match: `COSMOS_THROUGHPUT=4000` for runs (about $0.24 an hour
+    above the free 1,000), 1,000 otherwise.
+  - The relay sent one Web PubSub message at a time (about 30 frames a second against the 113 a 20× match makes):
+    positions and stats now go 8 at once; events and status stay in seq order.
+  - One Python worker held the relay, archiver and agents to one core (relay 80–120 s behind): the relay got its own
+    app; batches of 300 and 16 worker threads.
+  - The agents' MCP server could not import `mcp` (the child Python lacked the build's package path), then took over
+    4 s to start from the network share: the apps now run from a zip with Linux packages built and compiled
+    beforehand, and `OVERLAP_MCP_TIMEOUT_S=4`.
+  - SDK request logging (thousands of lines a minute into Application Insights) is off.
+
+**A8 (24 Oct): full 20× matches entirely on Azure, SYN-3000 to SYN-3008:**
+- **Data path:** every match archived **identical** to its recording (`check_archive.py`, nine of nine; SYN-3006
+  even with both apps restarted mid-match). Recordings for comparison are made in the generator's Linux image: on
+  Windows one seed in nine (SYN-3004) plays differently (floating-point differences between platforms).
+- **Latency (SYN-3008, the final run):** every reader 0 s behind Event Hubs at p50, 1 s at p95, 3 s at worst; 3,009
+  function runs, none failed. The generator plays a full match in 6 min 40 s (true 20×; about 12× from the laptop).
+- **Insights:** 75 moments → about 17–20 cards, 1 recap and 12–15 player tags a match; SYN-3003: 521 deliveries sent,
+  45 expired (8%). **Every card is still a checked template**, not a model line: the narrator writes every audience's
+  line in one structured call (about 300 tokens, 3–11 s on gpt-5-mini) and at 20× a card is live for only 15 real
+  seconds; with a fresh MCP server per job (4–5 s) the job cannot finish inside that. An 8 s model timeout was tried
+  (SYN-3008: 1 narrator call of 12 succeeded, more jobs expired) and reverted. Next (agents owner): per-audience
+  narrator calls in parallel, a warm MCP server, or a faster model for the narrator. Hindi lines are often dropped by
+  the fact-checker on purpose: Translator reorders numbers ("1–0 after 3 minutes" came back as 0–3 after 1 minute).
+- **Cost:** Azure's cost data was not yet available for the new subscription; estimate from list prices for the
+  whole of 24 Oct is about $3 (Event Hubs, Web PubSub S1, Cosmos above 1,000 RU/s, the plan, about 75K model tokens
+  a match).
+
+**Paused after A8 (24 Oct):** Event Hubs, the plan and both Functions apps, the stats engine, the generator job and
+the model deployment deleted; Web PubSub Free, Cosmos DB 1,000 RU/s (free tier), the web app at zero replicas
+(`LIVE_PIPELINE=false`, `WEB_MIN_REPLICAS=0`, `DEPLOY_MODEL=false`, `WEBPUBSUB_SKU=Free_F1`, `COSMOS_THROUGHPUT=1000`).
+The public link still serves the home page and every replay; the start button is hidden. Still billed while paused:
+the registry (about $0.17 a day) and storage and log data (cents). Resume: `infra/README.md`.
+- **Open:** SYN-2502 and SYN-2503 are aborted laptop test runs still marked live in the archive, so a visitor sees
+  "Connecting" for a few seconds before the home page falls back to a replay; removing them needs a decision (it
+  deletes data).
+

@@ -30,6 +30,7 @@ ENV = {
     "OVERLAP_AZURE_OPENAI_ENDPOINT": "azure_endpoint",
     "OVERLAP_AZURE_OPENAI_DEPLOYMENT": "azure_deployment",
     "OVERLAP_AZURE_OPENAI_API_VERSION": "azure_api_version",
+    "OVERLAP_REASONING_EFFORT": "reasoning_effort",
     "OVERLAP_MODEL_TIMEOUT_S": "request_timeout_s",
     "OVERLAP_MOMENT_DEADLINE_S": "moment_deadline_s",
     "OVERLAP_MAX_CALLS_PER_MOMENT": "max_calls_per_moment",
@@ -72,6 +73,7 @@ class Settings:
     azure_endpoint: str = ""
     azure_deployment: str = ""
     azure_api_version: str = ""
+    reasoning_effort: str = "low"               # Azure GPT-5 family: minimal | low | medium | high
     # workflow.md §3 (proposed, unmeasured defaults)
     request_timeout_s: float = 4.0
     moment_deadline_s: float = 15.0
@@ -147,6 +149,8 @@ class Settings:
                 raise SettingsError("OVERLAP_AZURE_OPENAI_ENDPOINT must be an https URL")
             if not self.azure_deployment:
                 raise SettingsError("OVERLAP_AZURE_OPENAI_DEPLOYMENT is required for the azure provider")
+            if self.reasoning_effort not in ("minimal", "low", "medium", "high"):
+                raise SettingsError("OVERLAP_REASONING_EFFORT must be minimal, low, medium or high")
         if self.translator not in TRANSLATORS:
             raise SettingsError(f"OVERLAP_TRANSLATOR must be one of {', '.join(TRANSLATORS)}")
         if self.translator == "azure" and not self.translator_endpoint.startswith("https://"):

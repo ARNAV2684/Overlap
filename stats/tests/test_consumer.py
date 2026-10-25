@@ -73,3 +73,14 @@ def test_an_unreadable_message_is_counted_not_fatal():
 
     reader.on_event(FakePartition(), Broken({}, "event", "SYN-0001"))
     assert reader.counts["invalid"] == 1
+
+
+def test_checkpoint_store_signs_in_with_identity_on_azure(monkeypatch):
+    # On Azure the container exists (Bicep) and there is no connection string: the store uses the managed identity
+    from azure.eventhub.extensions.checkpointstoreblob import BlobCheckpointStore
+
+    import consumer
+    monkeypatch.setenv("OVERLAP_CHECKPOINT_BLOB_ENDPOINT", "https://example.blob.core.windows.net")
+    monkeypatch.setenv("AzureWebJobsStorage", "not-used")
+    store = consumer.checkpoint_store()
+    assert isinstance(store, BlobCheckpointStore)

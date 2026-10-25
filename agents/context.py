@@ -14,6 +14,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import json
+import logging
 import os
 import sys
 from pathlib import Path
@@ -40,6 +41,38 @@ class ContextRejected(RuntimeError):
     """The server refused the scope or returned another moment's context: an integration error."""
 
 
+log = logging.getLogger("agents.context")
+
+
+def _describe(e: BaseException) -> str:
+    """One line for the log: the error types and messages, through task groups' wrappers."""
+    if isinstance(e, BaseExceptionGroup):
+        return "; ".join(_describe(x) for x in e.exceptions)
+    return f"{type(e).__name__}: {e}"[:1000]
+
+
+_diagnosed = False
+
+
+async def _diagnose_once(python: str, env: dict[str, str]) -> None:
+    """The first start failure in a process: run the same Python with the same settings, import the server and log
+    what it prints. The server's own error output is otherwise lost (it goes to the Functions worker's console)."""
+    global _diagnosed
+    if _diagnosed:
+        return
+    _diagnosed = True
+    from mcp.client.stdio import get_default_environment  # what the MCP client starts the server with, plus ours
+
+    probe = "import sys; print(sys.executable, sys.version.split()[0]); import mcp_server.server; print('import ok')"
+    try:
+        proc = await asyncio.create_subprocess_exec(python, "-c", probe, env={**get_default_environment(), **env},
+                                                    stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.STDOUT)
+        out, _ = await asyncio.wait_for(proc.communicate(), timeout=20)
+        log.warning("MCP server probe (exit %s): %s", proc.returncode, out.decode(errors="replace")[-1500:])
+    except Exception as e:  # noqa: BLE001  the probe itself must never break the job
+        log.warning("MCP server probe failed: %s", _describe(e))
+
+
 def mcp_python(settings: Settings) -> str:
     """The setting; else mcp_server/.venv (local development); else this Python: the Functions package ships the
     server beside the agents with the same packages, no second venv."""
@@ -53,7 +86,14 @@ def mcp_env(settings: Settings, python: str) -> dict[str, str]:
     env = {k: os.environ[k] for k in (*COSMOS_ENV, *IDENTITY_ENV) if k in os.environ} \
         if settings.mcp_source == "cosmos" else {}
     if python == sys.executable:
-        env["PYTHONPATH"] = str(ROOT)                    # mcp_server is a folder beside agents/, not installed
+        # mcp_server is a folder beside agents/, not installed. The package folders inside the app go along too: on
+        # Azure the packages (mcp among them) sit in the Functions build's .python_packages folder, which the worker
+        # adds to its own path but a child Python would not see (every card fell back to a template, 24 Oct). Only
+        # folders inside the app: the worker's own libraries, also on its path, must not shadow the app's packages
+        root = ROOT.resolve()
+        extra = [p for p in sys.path if p and Path(p).resolve() != root and Path(p).resolve().is_relative_to(root)
+                 and os.path.isdir(p)]
+        env["PYTHONPATH"] = os.pathsep.join([str(ROOT), *extra])
     return env
 
 
@@ -81,6 +121,8 @@ class McpContext:
             await asyncio.wait_for(self.tool.connect(), timeout=s.mcp_timeout_s * 5)
         except Exception as e:                               # server missing, failed to start, or too slow
             await self._close()
+            log.warning("MCP server did not start for %s: %s", self.identity["moment_id"], _describe(e))
+            await _diagnose_once(python, mcp_env(s, python))
             raise ContextUnavailable("mcp_start_failed") from e
         return self
 

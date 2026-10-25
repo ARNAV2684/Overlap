@@ -3,21 +3,23 @@
 // Purpose: catch-up for one insight audience (CONTRACTS.md §10.4/§10.6): the newest live cards and the group cursor,
 //          so a viewer who joins mid-match sees the current card at once
 // Inputs:  HTTP GET ?mode=casual|analyst|club|player&lang=en|es|hi|fr(&club=TEAM|&player=TEAM-NN)
-// Outputs: the stand-in's JSON { match_id, group, cursor, envelopes, rejected } unchanged, or { error }
+// Outputs: JSON { match_id, group, cursor, envelopes, rejected }, or { error }
 // Spec:    web/specs/realtime.md §4
 //
 // Locally the Web PubSub stand-in serves this endpoint (it reads Cosmos `overlays`), so the route forwards to it.
-// On Azure there is no stand-in; until the overlays read is built here the route answers 501 and the screen shows
-// live cards only.
+// On Azure there is no stand-in: the route reads `overlays` and `match_state` itself (insights-snapshot.ts), with the
+// same rule and answer.
 
 import { isMatchId } from "@/lib/contracts";
-import { describeStreamEnvProblems, readPubSubEnv } from "@/lib/server/stream-env";
+import { audienceGroup, createInsightsSnapshotReader, type InsightsSnapshotReader } from "@/lib/server/insights-snapshot";
+import { describeStreamEnvProblems, readPubSubEnv, readScreenEnv } from "@/lib/server/stream-env";
 
 const NO_STORE = { "Cache-Control": "no-store" };
 const fail = (error: string, status: number) => Response.json({ error }, { status, headers: NO_STORE });
 
 const MODES = new Set(["casual", "analyst", "club", "player"]);
 const LANGS = new Set(["en", "es", "hi", "fr"]);
+let reader: { key: string; reader: InsightsSnapshotReader } | null = null;
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -37,7 +39,23 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     console.warn(describeStreamEnvProblems(env.problems, "Insights snapshot"));
     return fail("insights_unavailable", 503);
   }
-  if (!env.settings.local) return fail("not_implemented", 501);
+  if (!env.settings.local) {
+    const screen = readScreenEnv();
+    if (!screen.ok) {
+      console.warn(describeStreamEnvProblems(screen.problems, "Insights snapshot"));
+      return fail("insights_unavailable", 503);
+    }
+    const key = JSON.stringify(screen.settings);
+    if (reader?.key !== key) reader = { key, reader: createInsightsSnapshotReader(screen.settings) };
+    const group = audienceGroup(id, { mode: mode as "casual" | "analyst" | "club" | "player", lang, club, player });
+    try {
+      const result = await reader.reader.read(id, group);
+      return Response.json(result.body, { status: result.status, headers: NO_STORE });
+    } catch (error) {
+      console.error(`insights snapshot: ${error instanceof Error ? error.message : "unexpected error"}`);
+      return fail("storage_error", 502);
+    }
+  }
 
   const forward = new URLSearchParams({ mode, lang });
   if (mode === "club" && club) forward.set("club", club);
