@@ -433,15 +433,15 @@ def test_the_independent_recheck_accepts_template_translations_of_verified_lines
         reply = strict(agent, payload)
         if agent == "narrator":
             for ln in reply["lines"]:
-                ln["text"] = ln["text"].replace("have taken", "keep going with")    # model wording, same facts
+                ln["text"] = ln["text"].replace("in quick succession", "in a short spell")  # model wording, same facts
         return reply
     store, cluster = MemoryStore(), by_id(moments, "MO-1017-0019")
     process(cluster, deps(store, clock, worded))
     intent = outbox(store, "MO-1017-0019")
     en = next(a for a in intent["audiences"] if a["group"] == "match-SYN-1017-casual-en")
     fr = next(a for a in intent["audiences"] if a["group"] == "match-SYN-1017-casual-fr")
-    assert en["overlay"]["verified"] and "keep going with" in en["line"]["text"]
-    assert fr["overlay"]["fallback"] and "have taken" in fr["line"]["text"]
+    assert en["overlay"]["verified"] and "in a short spell" in en["line"]["text"]
+    assert fr["overlay"]["fallback"] and "quick succession" in fr["line"]["text"]
     assert recheck(intent, cluster) == []
     fr["line"]["text"] = fr["line"]["text"].replace(" 3 ", " 4 ")                    # a real wrong number
     assert recheck(intent, cluster)

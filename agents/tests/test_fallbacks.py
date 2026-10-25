@@ -22,8 +22,10 @@ def test_every_template_passes_the_numeric_check(moments, mode):
 
 def test_template_wording(moments):
     by_id = {m["id"]: m for m in moments}
-    assert template(by_id["MO-1017-0013"], "casual")["text"] == \
+    assert template(by_id["MO-1017-0013"], "analyst")["text"] == \
         "Kestlebury United have taken 3 shots in the last 5 minutes."
+    assert template(by_id["MO-1017-0013"], "casual")["text"] == \
+        "Kestlebury United keep shooting: 3 shots in quick succession."
     assert template(by_id["MO-1017-0014"], "casual")["text"].endswith("are down to 10.")
     goal = template(by_id["MO-1017-0012"], "analyst")
     assert goal["text"].startswith("Goal for Kestlebury United:") and goal["text"].endswith("3–0.")
@@ -50,6 +52,21 @@ def test_invalid_documents_are_rejected(moments):
 
 def test_a_wrong_claim_is_caught(moments):
     m = next(x for x in moments if x["evidence"]["trigger"] == "shot_cluster")
-    line = template(m, "casual")
+    line = template(m, "analyst")                    # two numbers, so dropping a claim must fail
     assert numeric_check({**line, "text": line["text"].replace("3 shots", "4 shots")}, m)
     assert numeric_check({**line, "claims": line["claims"][:1]}, m)
+
+
+def test_casual_and_analyst_templates_differ_for_every_trigger(moments):
+    """Rule §4.1(e): the same moment reads differently for a casual fan and an analyst. Casual keeps to at most one
+    number (two for a scoreline), and analyst carries at least as many numbers as casual."""
+    seen = set()
+    for m in moments:
+        casual, analyst = template(m, "casual"), template(m, "analyst")
+        trig = m["evidence"]["trigger"]
+        seen.add(trig)
+        assert casual["text"] != analyst["text"], (m["id"], casual["text"])
+        assert len(casual["claims"]) <= (2 if trig in ("goal", "penalty", "head_to_head", "connection") else 1), casual
+        assert len(analyst["claims"]) >= len(casual["claims"]), (m["id"], analyst["text"])
+    assert {"goal", "shot_cluster", "momentum_swing", "press_change", "red_card"} <= seen
+

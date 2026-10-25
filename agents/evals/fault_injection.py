@@ -102,18 +102,19 @@ def cases(results: list[dict]) -> list[dict]:
         add(meaning, "card_reason", red, text=f"{team} are down to {n} after a second yellow.",
             claims=[{"key": "team_players_on_pitch", "value": n}], mode="casual")
     if swing:
-        line = core(template_line(swing, "casual"))
+        # the analyst line carries the numbers these faults tamper with (casual says it in words)
+        line = core(template_line(swing, "analyst"))
         add(meaning, "possession", swing, text=line["text"].replace("attacking actions", "possession"),
-            claims=line["claims"], mode="casual")
+            claims=line["claims"], mode="analyst")
         add(numeric, "percent_dropped", swing, text=line["text"].replace("%", "", 1), claims=line["claims"],
-            mode="casual")
+            mode="analyst")
     if press:
-        line = core(template_line(press, "casual"))
+        line = core(template_line(press, "analyst"))
         flipped = line["text"].replace("harder", "TMP").replace("less", "harder").replace("TMP", "less")
         add(meaning, "press_direction", press, text=flipped.replace("up from", "TMP").replace(
-            "down from", "up from").replace("TMP", "down from"), claims=line["claims"], mode="casual")
+            "down from", "up from").replace("TMP", "down from"), claims=line["claims"], mode="analyst")
         add(meaning, "press_intent", press, text=line["text"].replace(" are ", " look tired and are ", 1),
-            claims=line["claims"], mode="casual")
+            claims=line["claims"], mode="analyst")
     if big:
         line = core(template_line(big, "casual"))
         add(meaning, "xg_verdict", big, text=line["text"].rstrip(".") + ". He should have scored.",
