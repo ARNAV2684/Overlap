@@ -33,6 +33,16 @@ describe("live availability", () => {
     expect(response.headers.get("cache-control")).toBe("no-store");
     expect(mocks.starts).toBe(0);
   });
+  it("accepts its own page behind the ingress, where the server sees an internal URL", async () => {
+    const page = "https://ca-overlap-web.example.azurecontainerapps.io";
+    const request = new Request("http://0.0.0.0:3000/api/start-match", { method: "POST",
+      headers: { Origin: page, "X-Forwarded-Host": new URL(page).host, "Sec-Fetch-Site": "same-origin" } });
+    expect((await POST(request)).status).toBe(202);
+    const foreign = new Request("http://0.0.0.0:3000/api/start-match", { method: "POST",
+      headers: { Origin: "https://other.test", "X-Forwarded-Host": new URL(page).host } });
+    expect((await POST(foreign)).status).toBe(403);
+    expect(mocks.starts).toBe(1);
+  });
   it("rejects a cross-site start before accessing admission", async () => {
     const request = new Request("https://demo.test/api/start-match", { method: "POST", headers: { Origin: "https://other.test" } });
     expect((await POST(request)).status).toBe(403);
