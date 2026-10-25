@@ -71,14 +71,24 @@ async def run(run: RunState) -> dict:
     analysis = run.output("analyst")
     if not run.output("spotter").get("model") or analysis.get("context") == "unavailable":
         return {"lines": template_lines(m, ids), "fallback": True, "model_ids": []}
-    payload = {"moment": evidence_view(m), "interpretation": analysis.get("interpretation"),
-               "key_facts": analysis.get("key_facts"), "lines": requested(m, ids)}
+    got = await draft(run, ids, analysis.get("interpretation"), analysis.get("key_facts"))
+    lines = [got.get(i) or template_line(m, i) for i in ids]
+    return {"lines": lines, "fallback": not got, "model_ids": [i for i in ids if i in got]}
+
+
+async def draft(run: RunState, ids: list[str], interpretation: str | None, key_facts: list[str] | None
+                ) -> dict[str, dict]:
+    """The model's lines by id; ids it didn't return (or returned in the wrong shape) are missing. The single-agent
+    bench (evals/single_vs_multi.py) calls this with no interpretation and nothing after it."""
+    m = run.moment
+    payload = {"moment": evidence_view(m), "interpretation": interpretation, "key_facts": key_facts,
+               "lines": requested(m, ids)}
     # At most two bounded calls: shorter outputs run concurrently under the existing
     # durable model budget and deadline. Each chunk can fall back independently.
     midpoint = (len(ids) + 1) // 2
     chunks = [part for part in (ids[:midpoint], ids[midpoint:]) if part]
 
-    async def draft(part):
+    async def one(part):
         try:
             result = await run.ask("narrator", {**payload, "lines": requested(m, part)}, Lines)
             return _accept(result, part)
@@ -86,10 +96,9 @@ async def run(run: RunState) -> dict:
             return {}
 
     got = {}
-    for lines_by_id in await asyncio.gather(*(draft(part) for part in chunks)):
+    for lines_by_id in await asyncio.gather(*(one(part) for part in chunks)):
         got.update(lines_by_id)
-    lines = [got.get(i) or template_line(m, i) for i in ids]
-    return {"lines": lines, "fallback": not got, "model_ids": [i for i in ids if i in got]}
+    return got
 
 
 async def rewrite(run: RunState, failed: list[dict], agent: str = "narrator") -> dict[str, dict]:

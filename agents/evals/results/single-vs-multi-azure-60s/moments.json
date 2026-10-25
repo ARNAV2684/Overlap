@@ -1,0 +1,4515 @@
+[
+ {
+  "moment_id": "MO-1017-0001",
+  "trigger": "goal",
+  "full": {
+   "status": "delivery_pending",
+   "reason": null,
+   "seconds": 20.125,
+   "model": true,
+   "calls": 7,
+   "context": "ok",
+   "tools": [
+    "get_match_state"
+   ],
+   "interpretation": "Zimmermann opened the scoring with a close range non penalty finish, putting Kestlebury ahead and converting the team\u0019s first shot into a goal.",
+   "written": 6,
+   "first_draft": {
+    "casual": {
+     "text": "Malte Zimmermann puts Kestlebury ahead — 1–0 from their first shot.",
+     "problems": [
+      "spelled_number:first",
+      "claims_without_numbers"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": true
+    },
+    "analyst": {
+     "text": "Malte Zimmermann opened the scoring with a 12m non-penalty finish: Kestlebury 1–0 Orrinford. It was the team’s first shot, and the strike carried 0.15 xG, converting a low-xG chance into the opener.",
+     "problems": [
+      "spelled_number:first",
+      "claims_without_numbers",
+      "text_differs:team_shots_match",
+      "too_precise:team_shots_match",
+      "unit_wrong:team_shots_match",
+      "penalty_wording"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": true,
+     "other": true
+    },
+    "player:KES-10": {
+     "text": "Malte Zimmermann’s shot from 12m gave Kestlebury a 1–0 lead — his first goal of the match from the team’s first shot (not a penalty).",
+     "problems": [
+      "spelled_number:first",
+      "claims_without_numbers",
+      "penalty_wording"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": true,
+     "other": true
+    },
+    "player:KES-07": {
+     "text": "Igor Petrović: Malte Zimmermann has 1 goal in this match from 12m, not a penalty.",
+     "problems": [
+      "claims_without_numbers",
+      "penalty_wording"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": true,
+     "other": true
+    },
+    "club:KES": {
+     "text": "Kestlebury United lead 1–0 after Malte Zimmermann's 12m finish; it was their first shot of the match.",
+     "problems": [
+      "spelled_number:first",
+      "claims_without_numbers"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": true
+    },
+    "club:ORR": {
+     "text": "Orrinford Albion are 0–1 down after Malte Zimmermann's 12m non-penalty finish; it came from Kestlebury's first shot.",
+     "problems": [
+      "spelled_number:first",
+      "claims_without_numbers",
+      "score_not_from_facts",
+      "score_not_from_facts",
+      "penalty_wording"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": true,
+     "other": true
+    }
+   },
+   "rewritten": 10,
+   "meaning_rejected": 0,
+   "code_rejected": 14,
+   "verified": 2,
+   "template": 4,
+   "dropped": 0,
+   "published": {
+    "casual": {
+     "text": "Malte Zimmermann puts Kestlebury ahead — 1–0 from their 1st shot.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": true
+    },
+    "analyst": {
+     "text": "Goal for Kestlebury United: a 0.15 xG chance from 12 m. 1–0.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "player:KES-10": {
+     "text": "Malte Zimmermann scores for Kestlebury United. 1–0.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "player:KES-07": {
+     "text": "Igor Petrović: Kestlebury United score. 1–0.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "club:KES": {
+     "text": "Kestlebury United lead 1–0 after Malte Zimmermann's 12m finish; it came from the team’s 1st shot.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": true
+    },
+    "club:ORR": {
+     "text": "Kestlebury United score. 1–0.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    }
+   }
+  },
+  "single": {
+   "seconds": 3.079,
+   "calls": 2,
+   "requested": 6,
+   "written": 6,
+   "published": {
+    "casual": {
+     "text": "Malte Zimmermann puts Kestlebury United ahead: 1–0.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "analyst": {
+     "text": "Malte Zimmermann's 12m strike (0.15 xG) gives Kestlebury United a 1–0 lead; it's their first shot of the match and his first goal here.",
+     "problems": [
+      "spelled_number:first",
+      "numbers_without_claims",
+      "score_not_from_facts"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "player:KES-10": {
+     "text": "Malte Zimmermann has scored his first goal of the match, making it 1–0 for Kestlebury United; his shot came from 12m with 0.15 xG.",
+     "problems": [
+      "spelled_number:first",
+      "score_not_from_facts",
+      "text_differs:team_goals_match",
+      "score_not_from_facts"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "player:KES-07": {
+     "text": "Igor Petrović’s teammate Malte Zimmermann has 1 goal in this match after scoring from 12m (0.15 xG).",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "club:KES": {
+     "text": "Kestlebury United lead 1–0 after Malte Zimmermann’s goal; the shot was from 12m and had 0.15 xG.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "club:ORR": {
+     "text": "Orrinford Albion trail 0–1 after conceding to Malte Zimmermann, who scored from 12m (0.15 xG).",
+     "problems": [
+      "score_not_from_facts",
+      "score_not_from_facts"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    }
+   }
+  }
+ },
+ {
+  "moment_id": "MO-1017-0002",
+  "trigger": "goal",
+  "full": {
+   "status": "delivery_pending",
+   "reason": null,
+   "seconds": 17.393,
+   "model": true,
+   "calls": 8,
+   "context": "ok",
+   "tools": [
+    "get_match_state"
+   ],
+   "interpretation": "Kestlebury United doubled their lead through Kwame Kone from close range, converting a high quality chance and extending the team attacking returns in the match.",
+   "written": 6,
+   "first_draft": {
+    "casual": {
+     "text": "Kwame Kone makes it 2–0 for Kestlebury United with a close-range finish.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "analyst": {
+     "text": "Kwame Kone's 0.49 xG finish from 4 m doubles Kestlebury United's lead to 2–0, his first goal of the match and the team's 5th shot overall, underlining a clinical conversion of a high-quality chance.",
+     "problems": [
+      "spelled_number:first",
+      "score_not_from_facts",
+      "text_differs:player_goals_match",
+      "score_not_from_facts"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "player:KES-09": {
+     "text": "Kwame Kone's close 4 m strike (0.49 xG) makes it 2–0 and is his first goal of the game.",
+     "problems": [
+      "spelled_number:first",
+      "score_not_from_facts",
+      "text_differs:player_goals_match",
+      "score_not_from_facts"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "player:KES-08": {
+     "text": "Jakub Mazur’s pass led to Kwame Kone’s 2–0 finish; Kone’s shot had 0.49 xG from 4 m and is his 1st goal of the match.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "club:KES": {
+     "text": "Kestlebury United 2–0 Orrinford Albion — Kwame Kone converted from 4 m (0.49 xG), his goal taking our shot tally to 5.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "club:ORR": {
+     "text": "Orrinford Albion 0–2 Kestlebury United — Kwame Kone scored from 4 m (0.49 xG), his first of the match.",
+     "problems": [
+      "spelled_number:first",
+      "claims_without_numbers",
+      "score_not_from_facts",
+      "score_not_from_facts"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": true
+    }
+   },
+   "rewritten": 6,
+   "meaning_rejected": 1,
+   "code_rejected": 7,
+   "verified": 3,
+   "template": 3,
+   "dropped": 0,
+   "published": {
+    "casual": {
+     "text": "Kwame Kone makes it 2–0 for Kestlebury United with a close-range finish.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": true
+    },
+    "analyst": {
+     "text": "Kwame Kone's 0.49 xG finish from 4 m makes the score 2–0; it's his 1st goal and Kestlebury United's 5th shot.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": true
+    },
+    "player:KES-09": {
+     "text": "Kwame Kone scores for Kestlebury United. 2–0.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "player:KES-08": {
+     "text": "Jakub Mazur: Kestlebury United score. 2–0.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "club:KES": {
+     "text": "Kestlebury United 2–0 Orrinford Albion — Kwame Kone converted from 4 m (0.49 xG), his goal taking our shot tally to 5.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": true
+    },
+    "club:ORR": {
+     "text": "Kestlebury United score. 2–0.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    }
+   }
+  },
+  "single": {
+   "seconds": 3.686,
+   "calls": 2,
+   "requested": 6,
+   "written": 6,
+   "published": {
+    "casual": {
+     "text": "Kwame Kone puts Kestlebury United 2–0 up.",
+     "problems": [
+      "claims_without_numbers",
+      "text_differs:player_goals_match",
+      "score_not_from_facts",
+      "text_differs:team_goals_match"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": true
+    },
+    "analyst": {
+     "text": "Kwame Kone’s finish from 4 m (shot_xg 0.49 xG) makes it 2–0; it’s his 1st goal and Kestlebury have 5 shots in the match, shifting the game state in their favour.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "player:KES-09": {
+     "text": "Kwame Kone scores his 1st goal of the match to make it 2–0; his shot carried 0.49 xG from 4 m.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "player:KES-08": {
+     "text": "Jakub Mazur’s pass set up Kwame Kone’s goal; Kone now has 1 goal and the team lead is 2–0.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "club:KES": {
+     "text": "Kestlebury United lead 2–0 after Kwame Kone’s near-post finish from 4 m (shot xG 0.49).",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "club:ORR": {
+     "text": "Orrinford Albion trail 0–2 following Kwame Kone’s goal from 4 m (shot xG 0.49).",
+     "problems": [
+      "score_not_from_facts",
+      "score_not_from_facts"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    }
+   }
+  }
+ },
+ {
+  "moment_id": "MO-1017-0003",
+  "trigger": "momentum_swing",
+  "full": {
+   "status": "delivery_pending",
+   "reason": null,
+   "seconds": 15.663,
+   "model": true,
+   "calls": 8,
+   "context": "ok",
+   "tools": [
+    "get_match_state"
+   ],
+   "interpretation": "Kestlebury United have seized control of the game in the most recent phase, converting sustained attacking weight into at least one shot and overturning a balanced spell that came before.",
+   "written": 5,
+   "first_draft": {
+    "casual": {
+     "text": "Kestlebury United are on top now: 100% of the attacking weight in the last 5 min and they’ve had 1 shot.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "analyst": {
+     "text": "Kestlebury United have shifted the balance — momentum share rose from 49% to 100% in the latest 5 min, producing 1 shot in that window.",
+     "problems": [
+      "text_differs:team_shots_last_5min",
+      "unit_wrong:team_shots_last_5min",
+      "text_differs:window_duration_min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "player:KES-09": {
+     "text": "Kwame Kone’s side now hold 100% of the attacking weight in the last 5 min, with Kestlebury United firing 1 shot in that window.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "club:KES": {
+     "text": "Kestlebury United have dominated the last 5min with 100% of weighted attacking actions, after 49% in the previous 10min, producing 1 shot in that window.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:momentum_share_last_5min_pct",
+      "unit_missing:momentum_share_last_5min_pct",
+      "unit_wrong:momentum_share_last_5min_pct",
+      "text_differs:window_duration_min",
+      "unit_wrong:window_duration_min",
+      "text_differs:team_shots_last_5min",
+      "unit_wrong:team_shots_last_5min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "club:ORR": {
+     "text": "Orrinford Albion have conceded 100% of Kestlebury United’s weighted attacking actions in the last 5min (after Kestlebury had 49% in the prior 10min), leading to 1 shot in that window.",
+     "problems": [
+      "too_long",
+      "numbers_without_claims",
+      "text_differs:team_shots_last_5min",
+      "unit_wrong:team_shots_last_5min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": true
+    }
+   },
+   "rewritten": 6,
+   "meaning_rejected": 0,
+   "code_rejected": 8,
+   "verified": 3,
+   "template": 2,
+   "dropped": 0,
+   "published": {
+    "casual": {
+     "text": "Kestlebury United are on top now: 100% of the attacking weight in the last 5 min and they’ve had 1 shot.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": true
+    },
+    "analyst": {
+     "text": "Kestlebury United’s share of weighted attacking actions rose from 49% to 100% over the windows, and they had 1 shot in the last 5min.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": true
+    },
+    "player:KES-09": {
+     "text": "Kwame Kone’s side now hold 100% of the attacking weight in the last 5 min, with Kestlebury United firing 1 shot in that window.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": true
+    },
+    "club:KES": {
+     "text": "Kestlebury United have taken control of the game.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "club:ORR": {
+     "text": "Kestlebury United have taken control of the game.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    }
+   }
+  },
+  "single": {
+   "seconds": 2.762,
+   "calls": 2,
+   "requested": 5,
+   "written": 5,
+   "published": {
+    "casual": {
+     "text": "Kestlebury United are surging: 100% of the attacking action in the last 5 minutes.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "analyst": {
+     "text": "Kestlebury United’s weighted attacking share jumped from 49% to 100% over the recent windows, with 1 shot in the last 5 min, showing a clear shift in attacking momentum.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "player:KES-09": {
+     "text": "Kwame Kone is central to the swing: Kestlebury United have 100% of the attacking actions in the last 5 min while registering 1 shot in that period.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "club:KES": {
+     "text": "Kestlebury United have dominated the last 5 min: 100% share of weighted attacking actions, with 1 shot in that window.",
+     "problems": [
+      "text_differs:momentum_share_last_5min_pct",
+      "unit_missing:momentum_share_last_5min_pct",
+      "unit_wrong:momentum_share_last_5min_pct",
+      "text_differs:window_duration_min",
+      "unit_wrong:window_duration_min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "club:ORR": {
+     "text": "Orrinford Albion have seen Kestlebury United take control in the last 5 min — Kestlebury with 100% of weighted attacking actions and 1 shot in that window.",
+     "problems": [
+      "text_differs:momentum_share_last_5min_pct",
+      "unit_missing:momentum_share_last_5min_pct",
+      "unit_wrong:momentum_share_last_5min_pct",
+      "text_differs:window_duration_min",
+      "unit_wrong:window_duration_min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    }
+   }
+  }
+ },
+ {
+  "moment_id": "MO-1017-0004",
+  "trigger": "press_change",
+  "full": {
+   "status": "delivery_pending",
+   "reason": null,
+   "seconds": 7.581,
+   "model": true,
+   "calls": 5,
+   "context": "ok",
+   "tools": [
+    "get_match_state"
+   ],
+   "interpretation": "Kestlebury United have eased their defensive urgency, cutting pressures around the opponent and losing presence high up the pitch, undermining recent attempts to force turnovers near the opponent goal.",
+   "written": 7,
+   "first_draft": {
+    "casual": {
+     "text": "Kestlebury United have eased off their press: 11 pressures in the last 5 minutes, down the pitch a bit.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "analyst": {
+     "text": "Pressing has dropped: pressures per opponent pass fell from 1.07 to 0.55 over the last 5 minutes, with 11 team pressures and 0 high regains while average defensive actions sit 27m upfield — Kestlebury are generating fewer turnovers near goal.",
+     "problems": [
+      "too_long",
+      "unknown_name:Pressing",
+      "number_form:range",
+      "claims_without_numbers",
+      "text_differs:pressures_per_opp_pass_previous_10min",
+      "unit_wrong:pressures_per_opp_pass_previous_10min",
+      "text_differs:pressures_per_opp_pass_last_5min",
+      "text_differs:team_pressures_last_5min",
+      "text_differs:team_high_regains_last_5min",
+      "unit_wrong:team_high_regains_last_5min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": true
+    },
+    "player:KES-04": {
+     "text": "Yannick Koch’s side have reduced pressing: 0.55 pressures per opponent pass in the last 5 minutes and 11 team pressures, with 0 high regains.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:team_pressures_last_5min",
+      "unit_wrong:team_pressures_last_5min",
+      "text_differs:team_high_regains_last_5min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "player:KES-03": {
+     "text": "Sem Visser’s team-wide pressing has eased: 0.55 pressures per opponent pass in the last 5 minutes, 11 team pressures and average defensive actions at 27m.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:team_pressures_last_5min",
+      "unit_wrong:team_pressures_last_5min",
+      "text_differs:press_height_last_5min_m"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "player:KES-02": {
+     "text": "Jens Hellmann's team made 11 pressures in the last 5 minutes, with an average defensive action height of 27m.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:press_height_last_5min_m",
+      "unit_wrong:press_height_last_5min_m"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "club:KES": {
+     "text": "Kestlebury United have eased up: 0.55 pressures per opponent pass in the last 5 minutes, down from 1.07 in the previous 10 minutes.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:pressures_per_opp_pass_previous_10min",
+      "unit_wrong:pressures_per_opp_pass_previous_10min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "club:ORR": {
+     "text": "Orrinford Albion have seen Kestlebury United make 11 pressures in the last 5 minutes but register 0 ball wins in the opponent's half over that 5-minute window.",
+     "problems": [
+      "spelled_number:half",
+      "numbers_without_claims",
+      "text_differs:team_high_regains_last_5min",
+      "unit_wrong:team_high_regains_last_5min",
+      "text_differs:window_duration_min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    }
+   },
+   "rewritten": 0,
+   "meaning_rejected": 1,
+   "code_rejected": 6,
+   "verified": 0,
+   "template": 7,
+   "dropped": 0,
+   "published": {
+    "casual": {
+     "text": "Kestlebury United are pressing less and letting the other side play.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "analyst": {
+     "text": "Kestlebury United are pressing less: 0.55 pressures per opponent pass, down from 1.07, and 0 high regains in the last 5 minutes.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "player:KES-04": {
+     "text": "Yannick Koch: Kestlebury United are pressing less and letting the other side play.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "player:KES-03": {
+     "text": "Sem Visser: Kestlebury United are pressing less and letting the other side play.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "player:KES-02": {
+     "text": "Jens Hellmann: Kestlebury United are pressing less and letting the other side play.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "club:KES": {
+     "text": "Kestlebury United are pressing less and letting the other side play.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "club:ORR": {
+     "text": "Kestlebury United are pressing less and letting the other side play.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    }
+   }
+  },
+  "single": {
+   "seconds": 3.725,
+   "calls": 2,
+   "requested": 7,
+   "written": 7,
+   "published": {
+    "casual": {
+     "text": "Kestlebury United have pressed less: 11 pressures in the last 5 minutes.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "analyst": {
+     "text": "Kestlebury United’s pressing has eased: pressures per opponent pass fell from 1.07 to 0.55, with 11 team pressures and 0 high regains in the last 5 minutes at an average press height of 27m, so defensive actions are lower and deeper.",
+     "problems": [
+      "too_long",
+      "number_form:range",
+      "claims_without_numbers",
+      "text_differs:pressures_per_opp_pass_previous_10min",
+      "text_differs:pressures_per_opp_pass_last_5min",
+      "text_differs:team_pressures_last_5min",
+      "unit_wrong:team_pressures_last_5min",
+      "text_differs:team_high_regains_last_5min",
+      "unit_wrong:team_high_regains_last_5min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": true
+    },
+    "player:KES-04": {
+     "text": "Yannick Koch saw his side’s pressures per opponent pass drop to 0.55 in the last 5 minutes, with 11 team pressures and 0 high regains.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:team_pressures_last_5min",
+      "unit_wrong:team_pressures_last_5min",
+      "text_differs:team_high_regains_last_5min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "player:KES-03": {
+     "text": "Sem Visser’s team registered 11 pressures in the last 5 minutes at an average press height of 27m while pressures per opponent pass fell to 0.55.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:press_height_last_5min_m",
+      "unit_wrong:press_height_last_5min_m",
+      "text_differs:pressures_per_opp_pass_last_5min",
+      "unit_wrong:pressures_per_opp_pass_last_5min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "player:KES-02": {
+     "text": "Jens Hellmann — Kestlebury United have 11 pressures in the last 5 minutes with an average defensive action height of 27 m.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:press_height_last_5min_m",
+      "unit_wrong:press_height_last_5min_m"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "club:KES": {
+     "text": "Kestlebury United have recorded 11 pressures in the last 5 minutes and a press height of 27 m, down from 1.07 pressures per opponent pass previously to 0.55 now.",
+     "problems": [
+      "too_long",
+      "numbers_without_claims",
+      "text_differs:press_height_last_5min_m",
+      "unit_wrong:press_height_last_5min_m",
+      "text_differs:pressures_per_opp_pass_previous_10min",
+      "unit_wrong:pressures_per_opp_pass_previous_10min",
+      "text_differs:pressures_per_opp_pass_last_5min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": true
+    },
+    "club:ORR": {
+     "text": "Orrinford Albion have faced 11 pressures from Kestlebury United in the last 5 minutes while Kestlebury's pressures per opponent pass dropped from 1.07 to 0.55; Kestlebury's press height is 27 m.",
+     "problems": [
+      "too_long",
+      "number_form:range",
+      "claims_without_numbers",
+      "text_differs:pressures_per_opp_pass_previous_10min",
+      "unit_wrong:pressures_per_opp_pass_previous_10min",
+      "text_differs:pressures_per_opp_pass_last_5min",
+      "unit_wrong:pressures_per_opp_pass_last_5min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": true
+    }
+   }
+  }
+ },
+ {
+  "moment_id": "MO-1017-0005",
+  "trigger": "press_change",
+  "full": {
+   "status": "delivery_pending",
+   "reason": null,
+   "seconds": 16.217,
+   "model": true,
+   "calls": 8,
+   "context": "ok",
+   "tools": [
+    "get_match_state"
+   ],
+   "interpretation": "Filip Šimek is leading a clear step up in team pressure, lifting Orrinford Albion from a quieter spell into more frequent opponent pressures and pushing defensive actions noticeably higher up the pitch.",
+   "written": 7,
+   "first_draft": {
+    "casual": {
+     "text": "Orrinford are pressing harder now — 25 pressures in the last 5 minutes.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "analyst": {
+     "text": "Filip Šimek has driven a clear step-up: pressures per opponent pass rose from 0.68 to 1.04, with 25 team pressures and an average press height of 35m in the last 5 minutes, shifting defensive actions higher upfield.",
+     "problems": [
+      "number_form:range",
+      "claims_without_numbers",
+      "text_differs:pressures_per_opp_pass_previous_10min",
+      "text_differs:pressures_per_opp_pass_last_5min",
+      "unit_wrong:pressures_per_opp_pass_last_5min",
+      "text_differs:team_pressures_last_5min",
+      "unit_wrong:team_pressures_last_5min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": true
+    },
+    "player:ORR-06": {
+     "text": "Filip Šimek has upped the intensity: pressures per opponent pass are 1.04 in the last 5 minutes, with 25 team pressures and a press height of 35m.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:team_pressures_last_5min",
+      "unit_wrong:team_pressures_last_5min",
+      "text_differs:press_height_last_5min_m"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "player:ORR-05": {
+     "text": "Kwabena Nwosu is benefiting from the increased team pressure led by Filip Šimek: 25 pressures in the last 5 minutes and a press height of 35m.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:press_height_last_5min_m",
+      "unit_wrong:press_height_last_5min_m"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "player:ORR-04": {
+     "text": "Lukas Zieliński: Orrinford's pressure has increased to 1.04 pressures per opponent pass in the last 5 minutes, up from 0.68 in the prior 10 minutes.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:pressures_per_opp_pass_previous_10min",
+      "unit_wrong:pressures_per_opp_pass_previous_10min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "club:KES": {
+     "text": "Kestlebury United have faced 25 pressures from Orrinford Albion in the last 5 minutes, with their defensive actions pushed to 35 m up the pitch.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:press_height_last_5min_m",
+      "unit_wrong:press_height_last_5min_m"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "club:ORR": {
+     "text": "Orrinford Albion have upped the tempo: 1.04 pressures per opponent pass in the last 5 minutes (25 pressures total) and an average defensive action height of 35 m.",
+     "problems": [
+      "too_long",
+      "numbers_without_claims",
+      "text_differs:team_pressures_last_5min",
+      "unit_wrong:team_pressures_last_5min",
+      "text_differs:press_height_last_5min_m"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": true
+    }
+   },
+   "rewritten": 12,
+   "meaning_rejected": 0,
+   "code_rejected": 18,
+   "verified": 1,
+   "template": 6,
+   "dropped": 0,
+   "published": {
+    "casual": {
+     "text": "Orrinford are pressing harder now — 25 pressures in the last 5 minutes.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": true
+    },
+    "analyst": {
+     "text": "Orrinford Albion are pressing harder: 1.04 pressures per opponent pass, up from 0.68, and 0 high regains in the last 5 minutes.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "player:ORR-06": {
+     "text": "Filip Šimek: Orrinford Albion are pressing harder to win the ball back.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "player:ORR-05": {
+     "text": "Kwabena Nwosu: Orrinford Albion are pressing harder to win the ball back.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "player:ORR-04": {
+     "text": "Lukas Zieliński: Orrinford Albion are pressing harder to win the ball back.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "club:KES": {
+     "text": "Orrinford Albion are pressing harder to win the ball back.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "club:ORR": {
+     "text": "Orrinford Albion are pressing harder to win the ball back.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    }
+   }
+  },
+  "single": {
+   "seconds": 3.735,
+   "calls": 2,
+   "requested": 7,
+   "written": 7,
+   "published": {
+    "casual": {
+     "text": "Orrinford Albion are pressing harder: 25 pressures in the last 5 minutes.",
+     "problems": [
+      "numbers_without_claims"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "analyst": {
+     "text": "Orrinford Albion have increased the intensity — 25 pressures and 1.04 pressures per opponent pass in the last 5 minutes, up from 0.68 in the previous 10 minutes; average defensive actions sit 35 m upfield.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:pressures_per_opp_pass_previous_10min",
+      "unit_wrong:pressures_per_opp_pass_previous_10min",
+      "text_differs:press_height_last_5min_m",
+      "too_precise:press_height_last_5min_m"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "player:ORR-06": {
+     "text": "Filip Šimek’s side-wide pressing is up: he’s part of the 25 pressures and the team’s 1.04 pressures per opponent pass in the last 5 minutes.",
+     "problems": [
+      "numbers_without_claims"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "player:ORR-05": {
+     "text": "Kwabena Nwosu’s team have ramped up pressure: 25 pressures in the last 5 minutes, with the press operating around 35 m upfield.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:press_height_last_5min_m",
+      "unit_wrong:press_height_last_5min_m"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "player:ORR-04": {
+     "text": "Lukas Zieliński: Orrinford have increased pressures to 1.04 pressures per opponent pass in the last 5 minutes, up from 0.68 previously.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:pressures_per_opp_pass_previous_10min",
+      "unit_wrong:pressures_per_opp_pass_previous_10min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "club:KES": {
+     "text": "Kestlebury United have faced 25 pressures from Orrinford Albion in the last 5 minutes, with an average defensive action height of 35m.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:press_height_last_5min_m",
+      "unit_wrong:press_height_last_5min_m"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "club:ORR": {
+     "text": "Orrinford Albion have stepped up pressing: 1.04 pressures per opponent pass in the last 5 minutes (25 presses total) and an average press height of 35m.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:team_pressures_last_5min",
+      "unit_wrong:team_pressures_last_5min",
+      "text_differs:press_height_last_5min_m"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    }
+   }
+  }
+ },
+ {
+  "moment_id": "MO-1017-0006",
+  "trigger": "momentum_swing",
+  "full": {
+   "status": "delivery_pending",
+   "reason": null,
+   "seconds": 16.349,
+   "model": true,
+   "calls": 8,
+   "context": "ok",
+   "tools": [
+    "get_match_state"
+   ],
+   "interpretation": "Orrinford Albion have seized control of the match in a short spell, massively outdoing their earlier share of attacking activity and converting that surge into at least one shot.",
+   "written": 6,
+   "first_draft": {
+    "casual": {
+     "text": "Orrinford Albion have grabbed control: 83% of the attacking actions in the last 5 minutes.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "analyst": {
+     "text": "Orrinford Albion’s momentum jumped from 26% in the previous 10 minutes to 83% in the last 5 minutes, generating 1 shot in that 5 min window — a clear short‑term takeover in attacking activity.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:momentum_share_last_5min_pct",
+      "unit_missing:momentum_share_last_5min_pct",
+      "unit_wrong:momentum_share_last_5min_pct",
+      "text_differs:team_shots_last_5min",
+      "unit_wrong:team_shots_last_5min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "player:ORR-11": {
+     "text": "Nils Fjeld is part of the surge: Orrinford Albion hold 83% of attacking actions in the last 5 minutes and have had 1 shot in that spell.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "player:ORR-09": {
+     "text": "Bogdan Wójcik’s team have supplied 83% of the weighted attacking actions in the last 5 minutes, after 26% in the previous 10 minutes.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:momentum_share_previous_10min_pct",
+      "unit_missing:momentum_share_previous_10min_pct",
+      "unit_wrong:momentum_share_previous_10min_pct"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "club:KES": {
+     "text": "Kestlebury United have conceded 83% of the weighted attacking actions to Orrinford Albion in the last 5 minutes, up from 26% in the prior 10 minutes, with 1 shot recorded in that 5 min window.",
+     "problems": [
+      "too_long",
+      "numbers_without_claims",
+      "text_differs:momentum_share_previous_10min_pct",
+      "unit_missing:momentum_share_previous_10min_pct",
+      "unit_wrong:momentum_share_previous_10min_pct",
+      "text_differs:team_shots_last_5min",
+      "unit_wrong:team_shots_last_5min",
+      "text_differs:window_duration_min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": true
+    },
+    "club:ORR": {
+     "text": "Orrinford Albion have 83% of the weighted attacking actions in the last 5 minutes (up from 26% in the previous 10) and have taken 1 shot in that 5 min spell.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:momentum_share_previous_10min_pct",
+      "unit_missing:momentum_share_previous_10min_pct",
+      "unit_wrong:momentum_share_previous_10min_pct",
+      "text_differs:team_shots_last_5min",
+      "unit_wrong:team_shots_last_5min",
+      "text_differs:window_duration_min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    }
+   },
+   "rewritten": 8,
+   "meaning_rejected": 0,
+   "code_rejected": 12,
+   "verified": 2,
+   "template": 4,
+   "dropped": 0,
+   "published": {
+    "casual": {
+     "text": "Orrinford Albion have grabbed control: 83% of the attacking actions in the last 5 minutes.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": true
+    },
+    "analyst": {
+     "text": "Orrinford Albion have taken over: 83% of the attacking actions in the last 5 minutes, up from 26%, with 1 shots.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "player:ORR-11": {
+     "text": "Nils Fjeld is part of the surge: Orrinford Albion hold 83% of attacking actions in the last 5 minutes and have had 1 shot in that spell.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": true
+    },
+    "player:ORR-09": {
+     "text": "Bogdan Wójcik: Orrinford Albion have taken control of the game.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "club:KES": {
+     "text": "Orrinford Albion have taken control of the game.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "club:ORR": {
+     "text": "Orrinford Albion have taken control of the game.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    }
+   }
+  },
+  "single": {
+   "seconds": 3.785,
+   "calls": 2,
+   "requested": 6,
+   "written": 6,
+   "published": {
+    "casual": {
+     "text": "Orrinford Albion on the front foot: 83% of the attacking action in the last 5 minutes.",
+     "problems": [
+      "numbers_without_claims"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "analyst": {
+     "text": "Orrinford Albion have flipped the game: their weighted attacking actions rose to 83% in the last 5 minutes from 26% in the previous 10, with 1 shot in that 5 min window.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:momentum_share_previous_10min_pct",
+      "unit_missing:momentum_share_previous_10min_pct",
+      "unit_wrong:momentum_share_previous_10min_pct",
+      "text_differs:team_shots_last_5min",
+      "unit_wrong:team_shots_last_5min",
+      "text_differs:window_duration_min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "player:ORR-11": {
+     "text": "Nils Fjeld is central to the swing: his team account for 83% of weighted attacking actions in the last 5 minutes.",
+     "problems": [
+      "numbers_without_claims"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "player:ORR-09": {
+     "text": "Bogdan Wójcik's side have had 83% of the weighted attacking actions in the last 5 minutes, with 1 shot in that window.",
+     "problems": [
+      "text_differs:team_shots_last_5min",
+      "unit_wrong:team_shots_last_5min",
+      "text_differs:window_duration_min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "club:KES": {
+     "text": "Kestlebury United have conceded 83% of the weighted attacking actions to Orrinford Albion in the last 5 minutes, after holding 26% in the previous 10 minutes.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:momentum_share_previous_10min_pct",
+      "unit_missing:momentum_share_previous_10min_pct",
+      "unit_wrong:momentum_share_previous_10min_pct"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "club:ORR": {
+     "text": "Orrinford Albion have 83% of the weighted attacking actions in the last 5 minutes and have taken 1 shot in that 5 min window, up from a 26% share in the prior 10 minutes.",
+     "problems": [
+      "too_long",
+      "numbers_without_claims",
+      "text_differs:team_shots_last_5min",
+      "unit_wrong:team_shots_last_5min",
+      "text_differs:window_duration_min",
+      "text_differs:momentum_share_previous_10min_pct",
+      "unit_missing:momentum_share_previous_10min_pct",
+      "unit_wrong:momentum_share_previous_10min_pct"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": true
+    }
+   }
+  }
+ },
+ {
+  "moment_id": "MO-1017-0007",
+  "trigger": "momentum_swing",
+  "full": {
+   "status": "delivery_pending",
+   "reason": null,
+   "seconds": 13.217,
+   "model": true,
+   "calls": 5,
+   "context": "ok",
+   "tools": [
+    "get_match_state"
+   ],
+   "interpretation": "Kestlebury United have completely dominated the recent passage, converting a quiet spell into sustained attacking weight and creating at least one shot inside the short burst.",
+   "written": 6,
+   "first_draft": {
+    "casual": {
+     "text": "Kestlebury United have taken over: 100% of the attacking action in the last 5 minutes and a shot in that spell.",
+     "problems": [
+      "text_differs:team_shots_last_5min",
+      "unit_wrong:team_shots_last_5min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "analyst": {
+     "text": "Kestlebury United grew from a 14% share in the previous 10 minutes to 100% momentum_share_last_5min_pct in the last 5 min, producing 1 shot across that 5 min window as they turned a quiet phase into sustained attacking weight.",
+     "problems": [
+      "too_long",
+      "numbers_without_claims",
+      "text_differs:momentum_share_last_5min_pct",
+      "unit_missing:momentum_share_last_5min_pct",
+      "unit_wrong:momentum_share_last_5min_pct",
+      "text_differs:team_shots_last_5min",
+      "unit_wrong:team_shots_last_5min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": true
+    },
+    "player:KES-10": {
+     "text": "Malte Zimmermann led Kestlebury United’s surge: 100% of the team’s attacking actions in the last 5 minutes, yielding 1 shot in that 5 min spell.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:team_shots_last_5min",
+      "unit_wrong:team_shots_last_5min",
+      "text_differs:window_duration_min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "player:KES-02": {
+     "text": "Jens Hellmann’s side have 100% of weighted attacking actions in the last 5 minutes, after 14% in the previous 10 minutes.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:momentum_share_previous_10min_pct",
+      "unit_missing:momentum_share_previous_10min_pct",
+      "unit_wrong:momentum_share_previous_10min_pct"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "club:KES": {
+     "text": "Kestlebury United have 100% of weighted attacking actions over the last 5 min, up from 14% in the prior 10 min, and have registered 1 shot in that 5 min window.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:momentum_share_previous_10min_pct",
+      "unit_missing:momentum_share_previous_10min_pct",
+      "unit_wrong:momentum_share_previous_10min_pct",
+      "text_differs:team_shots_last_5min",
+      "unit_wrong:team_shots_last_5min",
+      "text_differs:window_duration_min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "club:ORR": {
+     "text": "Orrinford Albion have conceded 100% of the weighted attacking actions in the last 5 min (up from Kestlebury’s 14% in the previous 10), during which Kestlebury took 1 shot.",
+     "problems": [
+      "too_long",
+      "numbers_without_claims",
+      "text_differs:momentum_share_previous_10min_pct",
+      "unit_missing:momentum_share_previous_10min_pct",
+      "unit_wrong:momentum_share_previous_10min_pct",
+      "text_differs:team_shots_last_5min",
+      "unit_wrong:team_shots_last_5min",
+      "text_differs:window_duration_min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": true
+    }
+   },
+   "rewritten": 12,
+   "meaning_rejected": 0,
+   "code_rejected": 18,
+   "verified": 0,
+   "template": 6,
+   "dropped": 0,
+   "published": {
+    "casual": {
+     "text": "Kestlebury United have taken control of the game.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "analyst": {
+     "text": "Kestlebury United have taken over: 100% of the attacking actions in the last 5 minutes, up from 14%, with 1 shots.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "player:KES-10": {
+     "text": "Malte Zimmermann: Kestlebury United have taken control of the game.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "player:KES-02": {
+     "text": "Jens Hellmann: Kestlebury United have taken control of the game.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "club:KES": {
+     "text": "Kestlebury United have taken control of the game.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "club:ORR": {
+     "text": "Kestlebury United have taken control of the game.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    }
+   }
+  },
+  "single": {
+   "seconds": 3.082,
+   "calls": 2,
+   "requested": 6,
+   "written": 6,
+   "published": {
+    "casual": {
+     "text": "Kestlebury United are suddenly on top: 100% of the attacking action in the last 5 minutes.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "analyst": {
+     "text": "Kestlebury United have swung the momentum: their weighted attacking share rose from 14% in the prior 10 minutes to 100% in the last 5 minutes, with 1 shot in that window, showing a clear short-term shift into attack.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:momentum_share_last_5min_pct",
+      "unit_missing:momentum_share_last_5min_pct",
+      "unit_wrong:momentum_share_last_5min_pct",
+      "text_differs:team_shots_last_5min",
+      "unit_wrong:team_shots_last_5min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "player:KES-10": {
+     "text": "Malte Zimmermann has been central to the swing: Kestlebury United now hold 100% of the weighted attacking actions in the last 5 minutes.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "player:KES-02": {
+     "text": "Jens Hellmann: Kestlebury United have 100% of weighted attacking actions in the last 5 minutes, up from 14% in the previous 10 minutes.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:momentum_share_previous_10min_pct",
+      "unit_missing:momentum_share_previous_10min_pct",
+      "unit_wrong:momentum_share_previous_10min_pct"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "club:KES": {
+     "text": "Kestlebury United now have 100% of the weighted attacking actions in the last 5 minutes, compared with 14% in the previous 10 minutes; 1 shot in that 5 min window.",
+     "problems": [
+      "too_long",
+      "numbers_without_claims",
+      "text_differs:momentum_share_previous_10min_pct",
+      "unit_missing:momentum_share_previous_10min_pct",
+      "unit_wrong:momentum_share_previous_10min_pct",
+      "text_differs:team_shots_last_5min",
+      "unit_wrong:team_shots_last_5min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": true
+    },
+    "club:ORR": {
+     "text": "Orrinford Albion have seen Kestlebury United take 100% of the weighted attacking actions in the last 5 minutes, after Kestlebury had 14% in the prior 10 minutes; that period included 1 shot in the 5 min window.",
+     "problems": [
+      "too_long",
+      "numbers_without_claims",
+      "text_differs:momentum_share_previous_10min_pct",
+      "unit_missing:momentum_share_previous_10min_pct",
+      "unit_wrong:momentum_share_previous_10min_pct",
+      "text_differs:team_shots_last_5min",
+      "unit_wrong:team_shots_last_5min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": true
+    }
+   }
+  }
+ },
+ {
+  "moment_id": "MO-1017-0008",
+  "trigger": "press_change",
+  "full": {
+   "status": "delivery_pending",
+   "reason": null,
+   "seconds": 8.111,
+   "model": true,
+   "calls": 5,
+   "context": "ok",
+   "tools": [
+    "get_match_state"
+   ],
+   "interpretation": "Orrinford Albion have sharply increased their pressure intensity, more frequently challenging Kestlebury United's passes and doing so from around midfield rather than consistently in the opponent box.",
+   "written": 7,
+   "first_draft": {
+    "casual": {
+     "text": "Orrinford Albion are upping the heat: 16 pressures in the last 5 minutes.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "analyst": {
+     "text": "Orrinford Albion have increased intensity, with pressures per opponent pass rising from 0.47 to 0.8 and 16 team pressures in the last 5 minutes, carried out around 50m upfield — a clear step up in pressing.",
+     "problems": [
+      "number_form:range",
+      "claims_without_numbers",
+      "text_differs:pressures_per_opp_pass_previous_10min",
+      "text_differs:pressures_per_opp_pass_last_5min",
+      "unit_wrong:pressures_per_opp_pass_last_5min",
+      "text_differs:team_pressures_last_5min",
+      "unit_wrong:team_pressures_last_5min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": true
+    },
+    "player:ORR-09": {
+     "text": "Bogdan Wójcik is part of a sharper press: Orrinford Albion have 16 pressures in the last 5 minutes and are pressing at 0.8 pressures per opponent pass.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "player:ORR-10": {
+     "text": "Ousmane Sanogo is seeing more pressure around him: Orrinford Albion are at 0.8 pressures per opponent pass and averaging their defensive actions around 50m.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "player:ORR-06": {
+     "text": "Filip Šimek: Orrinford have upped pressure to 0.8 pressures per opponent pass in the last 5 minutes (16 pressures in the 5‑minute window).",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:team_pressures_last_5min",
+      "unit_wrong:team_pressures_last_5min",
+      "text_differs:window_duration_min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "club:KES": {
+     "text": "Kestlebury United have faced 0.8 pressures per opponent pass from Orrinford in the last 5 minutes, with 16 pressures across the 5‑minute spell.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:team_pressures_last_5min",
+      "unit_wrong:team_pressures_last_5min",
+      "text_differs:window_duration_min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "club:ORR": {
+     "text": "Orrinford Albion are pressing more: 0.8 pressures per opponent pass in the last 5 minutes (up from 0.47), 16 pressures and an average defensive action height of 50m.",
+     "problems": [
+      "too_long",
+      "numbers_without_claims",
+      "text_differs:pressures_per_opp_pass_previous_10min",
+      "unit_wrong:pressures_per_opp_pass_previous_10min",
+      "text_differs:team_pressures_last_5min",
+      "too_precise:team_pressures_last_5min",
+      "text_differs:press_height_last_5min_m"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": true
+    }
+   },
+   "rewritten": 0,
+   "meaning_rejected": 2,
+   "code_rejected": 4,
+   "verified": 1,
+   "template": 6,
+   "dropped": 0,
+   "published": {
+    "casual": {
+     "text": "Orrinford Albion are upping the heat: 16 pressures in the last 5 minutes.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": true
+    },
+    "analyst": {
+     "text": "Orrinford Albion are pressing harder: 0.80 pressures per opponent pass, up from 0.47, and 0 high regains in the last 5 minutes.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "player:ORR-09": {
+     "text": "Bogdan Wójcik: Orrinford Albion are pressing harder to win the ball back.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "player:ORR-10": {
+     "text": "Ousmane Sanogo: Orrinford Albion are pressing harder to win the ball back.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "player:ORR-06": {
+     "text": "Filip Šimek: Orrinford Albion are pressing harder to win the ball back.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "club:KES": {
+     "text": "Orrinford Albion are pressing harder to win the ball back.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "club:ORR": {
+     "text": "Orrinford Albion are pressing harder to win the ball back.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    }
+   }
+  },
+  "single": {
+   "seconds": 7.609,
+   "calls": 2,
+   "requested": 7,
+   "written": 7,
+   "published": {
+    "casual": {
+     "text": "Orrinford Albion have upped the pressure — 16 pressures in the last 5 minutes.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "analyst": {
+     "text": "Orrinford Albion are pressing more: pressures per opponent pass rose to 0.8 from 0.47, producing 16 pressures in the last 5 minutes with an average defensive action height of 50m.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:press_height_last_5min_m",
+      "unit_wrong:press_height_last_5min_m"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "player:ORR-09": {
+     "text": "Bogdan Wójcik's side have won 16 pressures in the last 5 minutes as Orrinford press higher (50m).",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "player:ORR-10": {
+     "text": "Ousmane Sanogo's team are pressing more: 0.8 pressures per opponent pass in the last 5 minutes, up from 0.47.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:pressures_per_opp_pass_previous_10min",
+      "unit_wrong:pressures_per_opp_pass_previous_10min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "player:ORR-06": {
+     "text": "Filip Šimek: Orrinford have increased their press to 0.8 pressures per opponent pass in the last 5 minutes.",
+     "problems": [
+      "numbers_without_claims"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "club:KES": {
+     "text": "Kestlebury United are facing 16 pressures from Orrinford Albion in the last 5 minutes, with their defensive actions averaging 50m up the pitch.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:press_height_last_5min_m",
+      "unit_wrong:press_height_last_5min_m"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "club:ORR": {
+     "text": "Orrinford Albion have upped their pressing: 0.8 pressures per opponent pass in the last 5 minutes, up from 0.47 in the previous period.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:pressures_per_opp_pass_previous_10min",
+      "unit_wrong:pressures_per_opp_pass_previous_10min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    }
+   }
+  }
+ },
+ {
+  "moment_id": "MO-1017-0009",
+  "trigger": "press_change",
+  "full": {
+   "status": "delivery_pending",
+   "reason": null,
+   "seconds": 16.557,
+   "model": true,
+   "calls": 7,
+   "context": "ok",
+   "tools": [
+    "get_match_state"
+   ],
+   "interpretation": "Orrinford Albion have eased off their pressure in the last spell, dropping the rate of pressures on the opponent and producing fewer high half ball wins, while their defensive actions have come slightly deeper.",
+   "written": 7,
+   "first_draft": {
+    "casual": {
+     "text": "Orrinford Albion have eased up: 17 pressures in the last 5 minutes.",
+     "problems": [
+      "numbers_without_claims"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "analyst": {
+     "text": "Orrinford Albion have reduced pressure: pressures per opponent pass down from 0.77 to 0.5 over the recent windows, with 17 pressures and 3 high-half regains in the last 5 min and an average defensive action height of 32m, suggesting they’ve come slightly deeper.",
+     "problems": [
+      "too_long",
+      "spelled_number:half",
+      "number_form:range",
+      "claims_without_numbers",
+      "text_differs:pressures_per_opp_pass_previous_10min",
+      "text_differs:pressures_per_opp_pass_last_5min",
+      "text_differs:team_pressures_last_5min",
+      "unit_wrong:team_pressures_last_5min",
+      "text_differs:team_high_regains_last_5min",
+      "unit_wrong:team_high_regains_last_5min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": true
+    },
+    "player:ORR-03": {
+     "text": "Amadou Bamba’s side made 17 pressures and 3 high-half regains in the last 5 min as their average defensive action height fell to 32m.",
+     "problems": [
+      "spelled_number:half",
+      "numbers_without_claims",
+      "text_differs:press_height_last_5min_m",
+      "unit_wrong:press_height_last_5min_m"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "player:ORR-04": {
+     "text": "From Lukas Zieliński’s perspective, Orrinford Albion have 17 pressures and 3 opponent-half regains in the last 5 min, while pressures per opponent pass dropped to 0.5.",
+     "problems": [
+      "too_long",
+      "spelled_number:half",
+      "numbers_without_claims",
+      "text_differs:pressures_per_opp_pass_last_5min",
+      "unit_wrong:pressures_per_opp_pass_last_5min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": true
+    },
+    "player:ORR-05": {
+     "text": "Kwabena Nwosu's side have registered 17 pressures and 3 high regains in the last 5 min while averaging a 32 m press height.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:press_height_last_5min_m",
+      "unit_wrong:press_height_last_5min_m"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "club:KES": {
+     "text": "Kestlebury United have faced 17 pressures and 3 opponent half ball wins from Orrinford Albion in the last 5 min; their press height was 32 m.",
+     "problems": [
+      "spelled_number:half",
+      "numbers_without_claims",
+      "text_differs:press_height_last_5min_m",
+      "unit_wrong:press_height_last_5min_m"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "club:ORR": {
+     "text": "Orrinford Albion have eased their rate of pressure: 0.5 pressures per opponent pass in the last 5 min, down from 0.77 in the previous 10 min, with 3 high regains over that 5 min window.",
+     "problems": [
+      "too_long",
+      "numbers_without_claims",
+      "text_differs:pressures_per_opp_pass_previous_10min",
+      "unit_wrong:pressures_per_opp_pass_previous_10min",
+      "text_differs:team_high_regains_last_5min",
+      "too_precise:team_high_regains_last_5min",
+      "text_differs:window_duration_min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": true
+    }
+   },
+   "rewritten": 13,
+   "meaning_rejected": 0,
+   "code_rejected": 19,
+   "verified": 1,
+   "template": 6,
+   "dropped": 0,
+   "published": {
+    "casual": {
+     "text": "Orrinford Albion have eased up: 17 pressures in the last 5 minutes.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": true
+    },
+    "analyst": {
+     "text": "Orrinford Albion are pressing less: 0.50 pressures per opponent pass, down from 0.77, and 3 high regains in the last 5 minutes.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "player:ORR-03": {
+     "text": "Amadou Bamba: Orrinford Albion are pressing less and letting the other side play.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "player:ORR-04": {
+     "text": "Lukas Zieliński: Orrinford Albion are pressing less and letting the other side play.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "player:ORR-05": {
+     "text": "Kwabena Nwosu: Orrinford Albion are pressing less and letting the other side play.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "club:KES": {
+     "text": "Orrinford Albion are pressing less and letting the other side play.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "club:ORR": {
+     "text": "Orrinford Albion are pressing less and letting the other side play.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    }
+   }
+  },
+  "single": {
+   "seconds": 3.6,
+   "calls": 2,
+   "requested": 7,
+   "written": 7,
+   "published": {
+    "casual": {
+     "text": "Orrinford Albion have eased off their press: 17 pressures and 3 high regains in the last 5 min.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "analyst": {
+     "text": "Pressing intensity has dropped: pressures per opponent pass down from 0.77 to 0.5, with 17 pressures and press height 32m in the last 5 min, but still 3 high regains — suggesting a shift to fewer, higher-quality attempts to win the ball.",
+     "problems": [
+      "too_long",
+      "unknown_name:Pressing",
+      "number_form:range",
+      "claims_without_numbers",
+      "text_differs:pressures_per_opp_pass_previous_10min",
+      "text_differs:pressures_per_opp_pass_last_5min",
+      "unit_wrong:pressures_per_opp_pass_last_5min",
+      "text_differs:team_pressures_last_5min",
+      "unit_wrong:team_pressures_last_5min",
+      "text_differs:press_height_last_5min_m"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": true
+    },
+    "player:ORR-03": {
+     "text": "Amadou Bamba has helped the team record 17 pressures and 3 high regains in the last 5 min while press height was 32m.",
+     "problems": [
+      "text_differs:press_height_last_5min_m",
+      "unit_wrong:press_height_last_5min_m",
+      "text_differs:window_duration_min",
+      "unit_wrong:window_duration_min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "player:ORR-04": {
+     "text": "Lukas Zieliński’s side have reduced their pressures per opponent pass from 0.77 to 0.5, totaling 17 pressures in the last 5 min.",
+     "problems": [
+      "number_form:range",
+      "claims_without_numbers",
+      "text_differs:pressures_per_opp_pass_previous_10min",
+      "text_differs:pressures_per_opp_pass_last_5min",
+      "unit_wrong:pressures_per_opp_pass_last_5min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": true
+    },
+    "player:ORR-05": {
+     "text": "Kwabena Nwosu's side have made 17 pressures and 3 high regains in the last 5 min, with press height 32 m.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:press_height_last_5min_m",
+      "unit_wrong:press_height_last_5min_m"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "club:KES": {
+     "text": "Kestlebury United have faced 17 Orrinford Albion pressures and 3 high regains in the last 5 min; press height was 32 m.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:press_height_last_5min_m",
+      "unit_wrong:press_height_last_5min_m"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "club:ORR": {
+     "text": "Orrinford Albion have recorded 17 pressures and 3 high regains in the last 5 min, averaging 32 m in press height, while pressures per opponent pass fell to 0.5 from 0.77.",
+     "problems": [
+      "too_long",
+      "numbers_without_claims",
+      "text_differs:press_height_last_5min_m",
+      "unit_wrong:press_height_last_5min_m",
+      "text_differs:pressures_per_opp_pass_last_5min",
+      "unit_wrong:pressures_per_opp_pass_last_5min",
+      "text_differs:pressures_per_opp_pass_previous_10min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": true
+    }
+   }
+  }
+ },
+ {
+  "moment_id": "MO-1017-0010",
+  "trigger": "momentum_swing",
+  "full": {
+   "status": "delivery_pending",
+   "reason": null,
+   "seconds": 17.414,
+   "model": true,
+   "calls": 7,
+   "context": "ok",
+   "tools": [
+    "get_match_state",
+    "get_pass_network"
+   ],
+   "interpretation": "Jakub Mazur has driven a clear shift in momentum, with Kestlebury United monopolising the attacking exchanges in a tight recent spell and creating at least one shot as play pivots through their central midfield axis.",
+   "written": 7,
+   "first_draft": {
+    "casual": {
+     "text": "Jakub Mazur is driving it — Kestlebury United have all the attacking momentum: 1 shot in the last 5 minutes.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "analyst": {
+     "text": "Jakub Mazur has swung the game: Kestlebury United now hold 100% of weighted attacking actions in the last 5 minutes, up from 33% in the previous 10 minutes, and have generated 1 shot in that 5 min window.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:momentum_share_previous_10min_pct",
+      "unit_missing:momentum_share_previous_10min_pct",
+      "unit_wrong:momentum_share_previous_10min_pct",
+      "text_differs:team_shots_last_5min",
+      "unit_wrong:team_shots_last_5min",
+      "text_differs:window_duration_min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "player:KES-08": {
+     "text": "Jakub Mazur has driven Kestlebury United to 100% of the weighted attacking actions in the last 5 minutes, up from 33% in the prior 10, contributing to 1 shot in that 5 min spell.",
+     "problems": [
+      "too_long",
+      "numbers_without_claims",
+      "text_differs:momentum_share_previous_10min_pct",
+      "unit_missing:momentum_share_previous_10min_pct",
+      "unit_wrong:momentum_share_previous_10min_pct",
+      "text_differs:team_shots_last_5min",
+      "unit_wrong:team_shots_last_5min",
+      "text_differs:window_duration_min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": true
+    },
+    "player:KES-11": {
+     "text": "Navid Aziz sees Kestlebury United monopolise attacking actions — 100% in the last 5 minutes (up from 33% previously) and 1 shot in that period.",
+     "problems": [
+      "text_differs:momentum_share_previous_10min_pct",
+      "unit_missing:momentum_share_previous_10min_pct",
+      "unit_wrong:momentum_share_previous_10min_pct",
+      "text_differs:team_shots_last_5min",
+      "unit_wrong:team_shots_last_5min",
+      "text_differs:window_duration_min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "player:KES-07": {
+     "text": "Igor Petrović: Kestlebury have owned the last 5 minutes with 100% of the weighted attacking actions, producing 1 shot in that 5 min spell.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:momentum_share_last_5min_pct",
+      "unit_missing:momentum_share_last_5min_pct",
+      "unit_wrong:momentum_share_last_5min_pct",
+      "text_differs:team_shots_last_5min",
+      "unit_wrong:team_shots_last_5min",
+      "text_differs:window_duration_min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "club:KES": {
+     "text": "Kestlebury United have taken 100% of the weighted attacking actions in the last 5 minutes, up from 33% in the previous 10 minutes, and have 1 shot in that 5 min window.",
+     "problems": [
+      "too_long",
+      "numbers_without_claims",
+      "text_differs:momentum_share_previous_10min_pct",
+      "unit_missing:momentum_share_previous_10min_pct",
+      "unit_wrong:momentum_share_previous_10min_pct",
+      "text_differs:team_shots_last_5min",
+      "unit_wrong:team_shots_last_5min",
+      "text_differs:window_duration_min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": true
+    },
+    "club:ORR": {
+     "text": "Orrinford Albion have conceded 100% of the weighted attacking actions to Kestlebury United in the last 5 minutes, after Kestlebury had 33% in the prior 10 minutes; Kestlebury also registered 1 shot in that 5 min period.",
+     "problems": [
+      "too_long",
+      "numbers_without_claims",
+      "text_differs:momentum_share_previous_10min_pct",
+      "unit_missing:momentum_share_previous_10min_pct",
+      "unit_wrong:momentum_share_previous_10min_pct",
+      "text_differs:team_shots_last_5min",
+      "unit_wrong:team_shots_last_5min",
+      "text_differs:window_duration_min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": true
+    }
+   },
+   "rewritten": 12,
+   "meaning_rejected": 0,
+   "code_rejected": 18,
+   "verified": 0,
+   "template": 7,
+   "dropped": 0,
+   "published": {
+    "casual": {
+     "text": "Kestlebury United have taken control of the game.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "analyst": {
+     "text": "Kestlebury United have taken over: 100% of the attacking actions in the last 5 minutes, up from 33%, with 1 shots.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "player:KES-08": {
+     "text": "Jakub Mazur: Kestlebury United have taken control of the game.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "player:KES-11": {
+     "text": "Navid Aziz: Kestlebury United have taken control of the game.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "player:KES-07": {
+     "text": "Igor Petrović: Kestlebury United have taken control of the game.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "club:KES": {
+     "text": "Kestlebury United have taken control of the game.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "club:ORR": {
+     "text": "Kestlebury United have taken control of the game.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    }
+   }
+  },
+  "single": {
+   "seconds": 3.634,
+   "calls": 2,
+   "requested": 7,
+   "written": 7,
+   "published": {
+    "casual": {
+     "text": "Kestlebury United are on the front foot: 100% of attacking actions in the last 5 minutes, including 1 shot in that period.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:team_shots_last_5min",
+      "unit_wrong:team_shots_last_5min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "analyst": {
+     "text": "Kestlebury United’s weighted attacking share has jumped from 33% over the previous 10 minutes to 100% in the last 5 minutes, with 1 shot in the 5 min window — a clear swing in attacking momentum.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:momentum_share_last_5min_pct",
+      "unit_missing:momentum_share_last_5min_pct",
+      "unit_wrong:momentum_share_last_5min_pct",
+      "text_differs:team_shots_last_5min",
+      "unit_wrong:team_shots_last_5min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "player:KES-08": {
+     "text": "Jakub Mazur is leading the move as Kestlebury United register 100% of the attacking actions in the last 5 minutes, including 1 shot in that span.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:team_shots_last_5min",
+      "unit_wrong:team_shots_last_5min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "player:KES-11": {
+     "text": "Navid Aziz’s side have dominated the last 5 minutes: 100% of the attacking actions and 1 shot in that 5 min window.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:momentum_share_last_5min_pct",
+      "unit_missing:momentum_share_last_5min_pct",
+      "unit_wrong:momentum_share_last_5min_pct",
+      "text_differs:team_shots_last_5min",
+      "unit_wrong:team_shots_last_5min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "player:KES-07": {
+     "text": "Igor Petrović: Kestlebury United have 100% of the weighted attacking actions in the last 5 minutes, up from 33% in the previous 10 minutes.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:momentum_share_previous_10min_pct",
+      "unit_missing:momentum_share_previous_10min_pct",
+      "unit_wrong:momentum_share_previous_10min_pct"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "club:KES": {
+     "text": "Kestlebury United have 100% of the weighted attacking actions in the last 5 minutes (1 shot in the last 5 min), up from 33% in the prior 10 minutes.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:team_shots_last_5min",
+      "unit_wrong:team_shots_last_5min",
+      "text_differs:window_duration_min",
+      "text_differs:momentum_share_previous_10min_pct",
+      "unit_missing:momentum_share_previous_10min_pct",
+      "unit_wrong:momentum_share_previous_10min_pct"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "club:ORR": {
+     "text": "Orrinford Albion have seen Kestlebury United take 1 shot in the last 5 min while Kestlebury hold 100% of the weighted attacking actions over that period, versus 33% in the previous 10 minutes.",
+     "problems": [
+      "too_long",
+      "numbers_without_claims"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": true
+    }
+   }
+  }
+ },
+ {
+  "moment_id": "MO-1017-0011",
+  "trigger": "press_change",
+  "full": {
+   "status": "delivery_pending",
+   "reason": null,
+   "seconds": 16.637,
+   "model": true,
+   "calls": 8,
+   "context": "ok",
+   "tools": [
+    "get_match_state",
+    "get_team_pressing"
+   ],
+   "interpretation": "Kestlebury United have sharply increased their pressure in a short spell, pushing their defensive actions forward and forcing more opponent involvement near the opposition box.",
+   "written": 7,
+   "first_draft": {
+    "casual": {
+     "text": "Kestlebury United are up the pitch: 22 pressures in the last 5 minutes.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "analyst": {
+     "text": "Kestlebury United have increased from 0.71 to 1.10 pressures per opponent pass, pushing their average defensive actions to 41m and generating 2 high regains in the last 5 minutes.",
+     "problems": [
+      "number_form:range",
+      "claims_without_numbers",
+      "text_differs:pressures_per_opp_pass_previous_10min",
+      "unit_wrong:pressures_per_opp_pass_previous_10min",
+      "text_differs:pressures_per_opp_pass_last_5min",
+      "text_differs:press_height_last_5min_m",
+      "unit_wrong:press_height_last_5min_m"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": true
+    },
+    "player:KES-04": {
+     "text": "Yannick Koch is involved as Kestlebury step up their press: 1.10 pressures per opponent pass and an average defensive action height of 41m in the last 5 minutes.",
+     "problems": [
+      "too_long"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": true
+    },
+    "player:KES-05": {
+     "text": "Dan Rawcliffe’s team have pushed higher: 22 team pressures and 2 opponent-half regains in the last 5 minutes.",
+     "problems": [
+      "spelled_number:half"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "player:KES-15": {
+     "text": "Dennis Bakker's side are pressing harder: 1.1 pressures per opponent pass in the last 5 minutes, up from 0.71 in the previous 10 minutes.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:pressures_per_opp_pass_previous_10min",
+      "unit_wrong:pressures_per_opp_pass_previous_10min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "club:KES": {
+     "text": "Kestlebury United have increased pressure: 22 pressures in the last 5 minutes, with an average defensive action height of 41m and 2 high regains in the opponent's half.",
+     "problems": [
+      "too_long",
+      "spelled_number:half",
+      "numbers_without_claims",
+      "text_differs:press_height_last_5min_m",
+      "unit_wrong:press_height_last_5min_m",
+      "text_differs:team_high_regains_last_5min",
+      "unit_wrong:team_high_regains_last_5min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": true
+    },
+    "club:ORR": {
+     "text": "Orrinford Albion are facing more pressure: Kestlebury United have 1.1 pressures per opponent pass in the last 5 minutes and have forced 2 ball wins high up the pitch.",
+     "problems": [
+      "too_long",
+      "numbers_without_claims",
+      "text_differs:team_high_regains_last_5min",
+      "unit_wrong:team_high_regains_last_5min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": true
+    }
+   },
+   "rewritten": 9,
+   "meaning_rejected": 1,
+   "code_rejected": 10,
+   "verified": 4,
+   "template": 3,
+   "dropped": 0,
+   "published": {
+    "casual": {
+     "text": "Kestlebury United are pressing harder to win the ball back.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "analyst": {
+     "text": "Kestlebury United are pressing harder: 1.10 pressures per opponent pass, up from 0.71, and 2 high regains in the last 5 minutes.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "player:KES-04": {
+     "text": "Yannick Koch: 1.1 pressures per opponent pass and average defensive actions at 41m in the last 5 minutes.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": true
+    },
+    "player:KES-05": {
+     "text": "Dan Rawcliffe’s team: 22 pressures and 2 high regains in the last 5 minutes.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": true
+    },
+    "player:KES-15": {
+     "text": "Dennis Bakker: Kestlebury United are pressing harder to win the ball back.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "club:KES": {
+     "text": "Kestlebury United: 22 pressures, average defensive action height 41m and 2 high regains in the last 5 minutes.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": true
+    },
+    "club:ORR": {
+     "text": "Orrinford Albion have faced Kestlebury United’s 1.1 pressures per opponent pass and 2 high regains in the last 5 minutes.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": true
+    }
+   }
+  },
+  "single": {
+   "seconds": 3.374,
+   "calls": 2,
+   "requested": 7,
+   "written": 7,
+   "published": {
+    "casual": {
+     "text": "Kestlebury United have stepped up the press: 22 pressures in the last 5 minutes.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "analyst": {
+     "text": "Press intensified: Kestlebury United made 22 pressures and 2 high regains across the last 5 min, raising pressures per opponent pass from 0.71 to 1.1 and pushing their defensive actions to 41m upfield.",
+     "problems": [
+      "unknown_name:Press",
+      "number_form:range",
+      "claims_without_numbers",
+      "text_differs:pressures_per_opp_pass_previous_10min",
+      "unit_wrong:pressures_per_opp_pass_previous_10min",
+      "text_differs:pressures_per_opp_pass_last_5min",
+      "unit_wrong:pressures_per_opp_pass_last_5min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": true
+    },
+    "player:KES-04": {
+     "text": "Yannick Koch has been part of a higher press: Kestlebury United recorded 22 pressures and 2 high regains in the last 5 minutes, with press height at 41m.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:press_height_last_5min_m",
+      "unit_wrong:press_height_last_5min_m"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "player:KES-05": {
+     "text": "Dan Rawcliffe’s side increased pressure recently: 22 pressures in the last 5 minutes and pressures per opponent pass up to 1.1 from 0.71.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:pressures_per_opp_pass_last_5min",
+      "unit_wrong:pressures_per_opp_pass_last_5min",
+      "text_differs:pressures_per_opp_pass_previous_10min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "player:KES-15": {
+     "text": "Dennis Bakker’s side have increased their intensity: 1.1 pressures per opponent pass in the last 5 minutes, up from 0.71 in the previous 10 minutes.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:pressures_per_opp_pass_previous_10min",
+      "unit_wrong:pressures_per_opp_pass_previous_10min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "club:KES": {
+     "text": "Kestlebury United have registered 22 pressures and 2 ball wins in the opponent’s half in the last 5 minutes, averaging defensive actions at 41m up the pitch.",
+     "problems": [
+      "spelled_number:half",
+      "numbers_without_claims",
+      "text_differs:press_height_last_5min_m",
+      "unit_wrong:press_height_last_5min_m"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "club:ORR": {
+     "text": "Orrinford Albion have faced 22 pressures from Kestlebury United in the last 5 minutes, with Kestlebury averaging 1.1 pressures per opponent pass in that period.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:pressures_per_opp_pass_last_5min",
+      "unit_wrong:pressures_per_opp_pass_last_5min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    }
+   }
+  }
+ },
+ {
+  "moment_id": "MO-1017-0012",
+  "trigger": "goal",
+  "full": {
+   "status": "delivery_pending",
+   "reason": null,
+   "seconds": 11.728,
+   "model": true,
+   "calls": 6,
+   "context": "ok",
+   "tools": [
+    "get_match_state",
+    "get_live_state",
+    "get_player_context"
+   ],
+   "interpretation": "Petrović’s low xg finish added another goal to extend Kestlebury United’s control, capping a period when they turned repeated attempts into a clear lead.",
+   "written": 6,
+   "first_draft": {
+    "casual": {
+     "text": "Igor Petrović makes it 3–0 as Kestlebury United keep piling on the pressure.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "analyst": {
+     "text": "Petrović scored from 20m with a 0.03 xG effort, his 1st of the match, taking Kestlebury United to a 3–0 lead and raising their shot count to 11 — a low-xG finish that turned sustained attempts into a clear advantage.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "player:KES-07": {
+     "text": "Igor Petrović has his 1st goal of the match, scoring from 20m (0.03 xG) to make it 3–0 for Kestlebury United.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "player:KES-09": {
+     "text": "Igor Petrović has 1 goal in this match after his finish; Kestlebury United lead 3–0.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "club:KES": {
+     "text": "Igor Petrović scored from 20 m with an xG of 0.03 to make it 3–0; Kestlebury United have 11 shots in the match.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "club:ORR": {
+     "text": "Igor Petrović’s non-penalty finish (xG 0.03) put Kestlebury United 3–0 ahead; they have 11 shots so far.",
+     "problems": [
+      "claims_without_numbers",
+      "text_differs:shot_is_penalty",
+      "too_precise:shot_is_penalty",
+      "text_differs:shot_xg",
+      "score_not_from_facts",
+      "text_differs:team_goals_match",
+      "text_differs:opponent_goals_match",
+      "penalty_wording"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": true,
+     "other": true
+    }
+   },
+   "rewritten": 3,
+   "meaning_rejected": 2,
+   "code_rejected": 1,
+   "verified": 6,
+   "template": 0,
+   "dropped": 0,
+   "published": {
+    "casual": {
+     "text": "Igor Petrović makes it 3–0 for Kestlebury United.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": true
+    },
+    "analyst": {
+     "text": "Petrović scored from 20m (0.03 xG), his 1st goal of the match, taking Kestlebury United to a 3–0 lead and bringing their shot tally to 11.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": true
+    },
+    "player:KES-07": {
+     "text": "Igor Petrović has his 1st goal of the match, scoring from 20m (0.03 xG) to make it 3–0 for Kestlebury United.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": true
+    },
+    "player:KES-09": {
+     "text": "Igor Petrović has 1 goal in this match after his finish; Kestlebury United lead 3–0.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": true
+    },
+    "club:KES": {
+     "text": "Igor Petrović scored from 20 m with an xG of 0.03 to make it 3–0; Kestlebury United have 11 shots in the match.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": true
+    },
+    "club:ORR": {
+     "text": "For Orrinford Albion: Igor Petrović’s 0.03 xG finish made it 3–0 to Kestlebury United; they have 11 shots in the match.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": true
+    }
+   }
+  },
+  "single": {
+   "seconds": 3.678,
+   "calls": 2,
+   "requested": 6,
+   "written": 6,
+   "published": {
+    "casual": {
+     "text": "Igor Petrović puts Kestlebury United 3–0 up with a strike from 20m.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "analyst": {
+     "text": "Petrović’s 20m finish made it 3–0; his shot carried 0.03 xG and is his 1st goal of the match, lifting Kestlebury United to 11 shots in total.",
+     "problems": [
+      "text_differs:team_goals_match",
+      "unit_wrong:team_goals_match",
+      "text_differs:opponent_goals_match",
+      "text_differs:shot_distance_m",
+      "score_not_from_facts"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "player:KES-07": {
+     "text": "Igor Petrović’s 20m strike is his 1st goal of the match, and it came from a 0.03 xG chance.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "player:KES-09": {
+     "text": "Kwame Kone’s teammate Igor Petrović has 1 goal in this match after that finish; the team lead is 3–0.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "club:KES": {
+     "text": "Kestlebury United lead 3–0 after Igor Petrović’s goal; the strike came from 20m and had an xG of 0.03.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "club:ORR": {
+     "text": "Orrinford Albion are 0–3 down after Igor Petrović’s goal, conceded from 20m with an xG of 0.03.",
+     "problems": [
+      "score_not_from_facts",
+      "score_not_from_facts"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    }
+   }
+  }
+ },
+ {
+  "moment_id": "MO-1017-0013",
+  "trigger": "shot_cluster",
+  "full": {
+   "status": "suppressed",
+   "reason": "merge_into:MO-1017-0012",
+   "seconds": 0.005,
+   "model": false,
+   "calls": 0
+  }
+ },
+ {
+  "moment_id": "MO-1017-0014",
+  "trigger": "red_card",
+  "full": {
+   "status": "delivery_pending",
+   "reason": null,
+   "seconds": 12.253,
+   "model": true,
+   "calls": 8,
+   "context": "ok",
+   "tools": [
+    "get_match_state",
+    "get_live_state",
+    "get_player_context"
+   ],
+   "interpretation": "Orrinford Albion are down a player in the closing third after Marek Popescu was sent off, further stretching a side already trailing and struggling to influence momentum.",
+   "written": 5,
+   "first_draft": {
+    "casual": {
+     "text": "Orrinford Albion down to 10 men after Marek Popescu was sent off, leaving them a man short late on.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "analyst": {
+     "text": "Marek Popescu’s red card leaves Orrinford Albion with 10 players; they now have 13 fouls and 4 cards in the match, increasing disciplinary pressure and worsening their ability to chase the game in the final third.",
+     "problems": [
+      "spelled_number:third"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "player:ORR-02": {
+     "text": "Marek Popescu has been sent off; his team now has 10 players on the pitch and 4 cards in the match.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "club:KES": {
+     "text": "Kestlebury United are up after Marek Popescu’s red leaves Orrinford Albion with 10 players on the pitch.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "club:ORR": {
+     "text": "Orrinford Albion reduced to 10 players after Marek Popescu’s red; team now on 13 fouls and 4 cards in the match.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    }
+   },
+   "rewritten": 2,
+   "meaning_rejected": 0,
+   "code_rejected": 3,
+   "verified": 4,
+   "template": 1,
+   "dropped": 0,
+   "published": {
+    "casual": {
+     "text": "Orrinford Albion down to 10 men after Marek Popescu was sent off, leaving them a man short late on.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": true
+    },
+    "analyst": {
+     "text": "Orrinford Albion are down to 10, with 13 fouls and 4 cards in the match so far.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "player:ORR-02": {
+     "text": "Marek Popescu has been sent off; his team now has 10 players on the pitch and 4 cards in the match.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": true
+    },
+    "club:KES": {
+     "text": "Kestlebury United are up after Marek Popescu’s red leaves Orrinford Albion with 10 players on the pitch.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": true
+    },
+    "club:ORR": {
+     "text": "Orrinford Albion reduced to 10 players after Marek Popescu’s red; team now on 13 fouls and 4 cards in the match.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": true
+    }
+   }
+  },
+  "single": {
+   "seconds": 2.866,
+   "calls": 2,
+   "requested": 5,
+   "written": 5,
+   "published": {
+    "casual": {
+     "text": "Orrinford Albion down to 10 after Marek Popescu is sent off.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "analyst": {
+     "text": "Red card for Marek Popescu leaves Orrinford Albion with 10 players; the team has 13 fouls and 4 cards in the match, increasing disciplinary pressure.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "player:ORR-02": {
+     "text": "Marek Popescu has been shown a red, leaving his side with 10 players; Orrinford Albion now have 13 fouls and 4 cards in the game.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "club:KES": {
+     "text": "Kestlebury United are up against 10 Orrinford Albion players after Marek Popescu’s red card; Albion have 13 fouls and 4 cards so far.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "club:ORR": {
+     "text": "Orrinford Albion are down to 10 players following Marek Popescu’s red card; the side has committed 13 fouls and received 4 cards so far.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    }
+   }
+  }
+ },
+ {
+  "moment_id": "MO-1017-0015",
+  "trigger": "press_change",
+  "full": {
+   "status": "delivery_pending",
+   "reason": null,
+   "seconds": 21.405,
+   "model": true,
+   "calls": 8,
+   "context": "ok",
+   "tools": [
+    "get_match_state",
+    "get_live_state"
+   ],
+   "interpretation": "Orrinford Albion have noticeably intensified their defending in the recent spell, increasing pressure rates and generating more actions higher up the pitch to try to disrupt Kestlebury United's control.",
+   "written": 7,
+   "first_draft": {
+    "casual": {
+     "text": "Orrinford Albion are on the front foot: 29 pressures in the last 5 minutes.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "analyst": {
+     "text": "Orrinford Albion have upped their intensity: pressures per opponent pass rose from 0.58 to 0.91, with 29 pressures and 3 high-half regains in the last 5 min and an average press height of 39 m, disrupting Kestlebury’s build-up.",
+     "problems": [
+      "too_long",
+      "spelled_number:half",
+      "number_form:range",
+      "claims_without_numbers",
+      "text_differs:pressures_per_opp_pass_previous_10min",
+      "text_differs:pressures_per_opp_pass_last_5min",
+      "text_differs:team_pressures_last_5min",
+      "unit_wrong:team_pressures_last_5min",
+      "text_differs:team_high_regains_last_5min",
+      "unit_wrong:team_high_regains_last_5min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": true
+    },
+    "player:ORR-05": {
+     "text": "Kwabena Nwosu has helped trigger the shift: Orrinford have 29 pressures and 3 high-half regains in the last 5 minutes, with press height at 39 m.",
+     "problems": [
+      "spelled_number:half",
+      "text_differs:press_height_last_5min_m",
+      "unit_wrong:press_height_last_5min_m",
+      "text_differs:window_duration_min",
+      "unit_wrong:window_duration_min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "player:ORR-18": {
+     "text": "Igor Ionescu’s midfield protection coincides with a rise from 0.58 to 0.91 pressures per opponent pass and 29 team pressures in the last 5 minutes.",
+     "problems": [
+      "number_form:range",
+      "claims_without_numbers",
+      "text_differs:pressures_per_opp_pass_previous_10min",
+      "text_differs:pressures_per_opp_pass_last_5min",
+      "unit_wrong:pressures_per_opp_pass_last_5min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": true
+    },
+    "player:ORR-04": {
+     "text": "Lukas Zieliński: Orrinford have upped the intensity — 29 pressures in the last 5 min with 3 high-half regains at a press height of 39 m.",
+     "problems": [
+      "spelled_number:half"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "club:KES": {
+     "text": "Kestlebury United are facing increased resistance: Orrinford have 29 pressures in the last 5 min and 3 ball wins in the opponent's half.",
+     "problems": [
+      "spelled_number:half"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "club:ORR": {
+     "text": "Orrinford Albion pressing more: pressures per opponent pass up to 0.91 from 0.58, 29 pressures and 3 high-half regains in the last 5 min at a 39 m press height.",
+     "problems": [
+      "spelled_number:half"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    }
+   },
+   "rewritten": 12,
+   "meaning_rejected": 0,
+   "code_rejected": 16,
+   "verified": 3,
+   "template": 4,
+   "dropped": 0,
+   "published": {
+    "casual": {
+     "text": "Orrinford Albion are on the front foot: 29 pressures in the last 5 minutes.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": true
+    },
+    "analyst": {
+     "text": "Orrinford Albion are pressing harder: 0.91 pressures per opponent pass, up from 0.58, and 3 high regains in the last 5 minutes.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "player:ORR-05": {
+     "text": "Kwabena Nwosu: Orrinford Albion are pressing harder to win the ball back.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "player:ORR-18": {
+     "text": "Igor Ionescu: Orrinford Albion are pressing harder to win the ball back.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "player:ORR-04": {
+     "text": "Lukas Zieliński: Orrinford have upped the intensity — 29 pressures in the last 5 minutes with 3 high regains at a press height of 39 m.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": true
+    },
+    "club:KES": {
+     "text": "Orrinford Albion are pressing harder to win the ball back.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "club:ORR": {
+     "text": "Orrinford Albion pressing more: pressures per opponent pass up to 0.91 from 0.58, 29 pressures and 3 high regains in the last 5 minutes at a 39 m press height.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": true
+    }
+   }
+  },
+  "single": {
+   "seconds": 3.416,
+   "calls": 2,
+   "requested": 7,
+   "written": 7,
+   "published": {
+    "casual": {
+     "text": "Orrinford Albion are pressing harder now — 29 pressures in the last 5 minutes.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "analyst": {
+     "text": "Press intensity up: pressures per opponent pass rose from 0.58 to 0.91, with 29 team pressures and 3 high regains in the last 5 minutes at an average defensive action height of 39m.",
+     "problems": [
+      "unknown_name:Press",
+      "number_form:range",
+      "claims_without_numbers",
+      "text_differs:pressures_per_opp_pass_previous_10min",
+      "text_differs:pressures_per_opp_pass_last_5min",
+      "text_differs:team_pressures_last_5min",
+      "unit_wrong:team_pressures_last_5min",
+      "text_differs:team_high_regains_last_5min",
+      "unit_wrong:team_high_regains_last_5min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": true
+    },
+    "player:ORR-05": {
+     "text": "Kwabena Nwosu’s side have increased intensity: Orrinford made 29 pressures and 3 high regains in the last 5 minutes while pressing at 0.91 pressures per opponent pass.",
+     "problems": [
+      "too_long",
+      "numbers_without_claims",
+      "text_differs:pressures_per_opp_pass_last_5min",
+      "unit_wrong:pressures_per_opp_pass_last_5min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": true
+    },
+    "player:ORR-18": {
+     "text": "Igor Ionescu’s team are pressing more: 0.91 pressures per opponent pass in the last 5 minutes, with 29 pressures and a 39m average press height.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:team_pressures_last_5min",
+      "unit_wrong:team_pressures_last_5min",
+      "text_differs:press_height_last_5min_m"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "player:ORR-04": {
+     "text": "Lukas Zieliński has seen his side press at an average height of 39m, with 29 team pressures in the last 5 minutes.",
+     "problems": [
+      "numbers_without_claims"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "club:KES": {
+     "text": "Kestlebury United are facing 29 pressures from Orrinford Albion in the last 5 minutes, with the visitors averaging a 39m press height.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:press_height_last_5min_m",
+      "unit_wrong:press_height_last_5min_m"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "club:ORR": {
+     "text": "Orrinford Albion have increased their pressing: 0.91 pressures per opponent pass in the last 5 minutes (up from 0.58), producing 3 high regains in the opponent half over the same 5-minute window.",
+     "problems": [
+      "too_long",
+      "spelled_number:half",
+      "numbers_without_claims",
+      "text_differs:pressures_per_opp_pass_previous_10min",
+      "unit_wrong:pressures_per_opp_pass_previous_10min",
+      "text_differs:team_high_regains_last_5min",
+      "too_precise:team_high_regains_last_5min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": true
+    }
+   }
+  }
+ },
+ {
+  "moment_id": "MO-1017-0016",
+  "trigger": "momentum_swing",
+  "full": {
+   "status": "suppressed",
+   "reason": "thinned",
+   "seconds": 0.007,
+   "model": false,
+   "calls": 0
+  }
+ },
+ {
+  "moment_id": "MO-1017-0017",
+  "trigger": "momentum_swing",
+  "full": {
+   "status": "delivery_pending",
+   "reason": null,
+   "seconds": 14.225,
+   "model": true,
+   "calls": 7,
+   "context": "ok",
+   "tools": [
+    "get_match_state",
+    "get_live_state"
+   ],
+   "interpretation": "Kestlebury United have swung the game into a dominant attacking spell, sharply increasing their share of threat in a short window and forcing Orrinford Albion onto the back foot.",
+   "written": 6,
+   "first_draft": {
+    "casual": {
+     "text": "Kestlebury United have taken over: 80% of the attacking action in the last 5 min.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "analyst": {
+     "text": "Kestlebury United’s attacking share jumped from 11% to 80% between the previous 10 minutes and the last 5 min, producing 1 shot in that 5 min window — a clear short-term momentum swing forcing Orrinford Albion back.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:team_shots_last_5min",
+      "unit_wrong:team_shots_last_5min",
+      "betting"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": true,
+     "other": false
+    },
+    "player:KES-18": {
+     "text": "Tobias Kaiser’s side have 80% of the attacking actions in the last 5 min, up from 11% in the prior 10 minutes.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:momentum_share_previous_10min_pct",
+      "unit_missing:momentum_share_previous_10min_pct",
+      "unit_wrong:momentum_share_previous_10min_pct"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "player:KES-06": {
+     "text": "Tobias Kaiser has driven Kestlebury United’s surge: 80% share of weighted attacking actions in the last 5 minutes.",
+     "problems": [
+      "numbers_without_claims"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "club:KES": {
+     "text": "Kestlebury United have 80% of the weighted attacking actions over the last 5 minutes, up from 11% in the previous 10 minutes.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:momentum_share_previous_10min_pct",
+      "unit_missing:momentum_share_previous_10min_pct",
+      "unit_wrong:momentum_share_previous_10min_pct"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "club:ORR": {
+     "text": "Orrinford Albion have faced Kestlebury United’s burst: 80% share of weighted attacking actions in the last 5 minutes, with 1 shot in that 5 min window.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:team_shots_last_5min",
+      "unit_wrong:team_shots_last_5min",
+      "text_differs:window_duration_min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    }
+   },
+   "rewritten": 10,
+   "meaning_rejected": 0,
+   "code_rejected": 15,
+   "verified": 0,
+   "template": 6,
+   "dropped": 0,
+   "published": {
+    "casual": {
+     "text": "Kestlebury United have taken control of the game.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "analyst": {
+     "text": "Kestlebury United have taken over: 80% of the attacking actions in the last 5 minutes, up from 11%, with 1 shots.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "player:KES-18": {
+     "text": "Tobias Kaiser: Kestlebury United have taken control of the game.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "player:KES-06": {
+     "text": "Amir Kaya: Kestlebury United have taken control of the game.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "club:KES": {
+     "text": "Kestlebury United have taken control of the game.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "club:ORR": {
+     "text": "Kestlebury United have taken control of the game.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    }
+   }
+  },
+  "single": {
+   "seconds": 3.679,
+   "calls": 2,
+   "requested": 6,
+   "written": 6,
+   "published": {
+    "casual": {
+     "text": "Kestlebury United are suddenly on it: 80% of the attacking actions in the last 5 minutes.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "analyst": {
+     "text": "Kestlebury United’s momentum has jumped from 11% over the previous 10 minutes to 80% in the last 5 minutes, with 1 shot in that 5 min window — a clear shift into attack.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:momentum_share_last_5min_pct",
+      "unit_missing:momentum_share_last_5min_pct",
+      "unit_wrong:momentum_share_last_5min_pct",
+      "text_differs:team_shots_last_5min",
+      "unit_wrong:team_shots_last_5min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "player:KES-18": {
+     "text": "Tobias Kaiser is part of Kestlebury United’s surge: the team hold 80% of weighted attacking actions in the last 5 minutes.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "player:KES-06": {
+     "text": "Amir Kaya’s side have 80% of the weighted attacking actions in the last 5 minutes, up from 11% in the previous 10 minutes.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:momentum_share_previous_10min_pct",
+      "unit_missing:momentum_share_previous_10min_pct",
+      "unit_wrong:momentum_share_previous_10min_pct"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "club:KES": {
+     "text": "Kestlebury United have 80% of the weighted attacking actions in the last 5 minutes, versus 11% in the prior 10-minute period.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:momentum_share_previous_10min_pct",
+      "unit_missing:momentum_share_previous_10min_pct",
+      "unit_wrong:momentum_share_previous_10min_pct"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "club:ORR": {
+     "text": "Orrinford Albion have seen Kestlebury United take 80% of the weighted attacking actions in the last 5 minutes, during a 5 min window.",
+     "problems": [
+      "numbers_without_claims"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    }
+   }
+  }
+ },
+ {
+  "moment_id": "MO-1017-0018",
+  "trigger": "press_change",
+  "full": {
+   "status": "suppressed",
+   "reason": "thinned",
+   "seconds": 0.006,
+   "model": false,
+   "calls": 0
+  }
+ },
+ {
+  "moment_id": "MO-1017-0019",
+  "trigger": "shot_cluster",
+  "full": {
+   "status": "delivery_pending",
+   "reason": null,
+   "seconds": 6.443,
+   "model": true,
+   "calls": 4,
+   "context": "ok",
+   "tools": [
+    "get_match_state",
+    "get_live_state"
+   ],
+   "interpretation": "Orrinford Albion have forced a concentrated spell of attempts, turning a rare attacking burst into multiple efforts inside a short window.",
+   "written": 7,
+   "first_draft": {
+    "casual": {
+     "text": "Orrinford Albion keep coming: 3 shots in the last 5 minutes.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "analyst": {
+     "text": "Orrinford Albion have forced a concentrated spell — 3 shots across a 5 min window, turning a rare attacking burst into multiple attempts inside a short period.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "player:ORR-18": {
+     "text": "Igor Ionescu’s side produced 3 shots in a 5 min window as Orrinford Albion turned a brief surge of play into multiple attempts.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "player:ORR-24": {
+     "text": "Joel Vik’s team registered 3 shots in a 5 min spell as Orrinford Albion converted a short attacking burst into several attempts.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "player:ORR-08": {
+     "text": "Kamil Vasić saw Orrinford Albion produce 3 shots in the last 5 minutes.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "club:KES": {
+     "text": "Kestlebury United have conceded 3 shots from Orrinford Albion in the last 5 minutes.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "club:ORR": {
+     "text": "Orrinford Albion forced a concentrated spell: 3 shots in the last 5 minutes.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    }
+   },
+   "rewritten": 0,
+   "meaning_rejected": 0,
+   "code_rejected": 0,
+   "verified": 7,
+   "template": 0,
+   "dropped": 0,
+   "published": {
+    "casual": {
+     "text": "Orrinford Albion keep coming: 3 shots in the last 5 minutes.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": true
+    },
+    "analyst": {
+     "text": "Orrinford Albion have forced a concentrated spell — 3 shots across a 5 min window, turning a rare attacking burst into multiple attempts inside a short period.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": true
+    },
+    "player:ORR-18": {
+     "text": "Igor Ionescu’s side produced 3 shots in a 5 min window as Orrinford Albion turned a brief surge of play into multiple attempts.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": true
+    },
+    "player:ORR-24": {
+     "text": "Joel Vik’s team registered 3 shots in a 5 min spell as Orrinford Albion converted a short attacking burst into several attempts.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": true
+    },
+    "player:ORR-08": {
+     "text": "Kamil Vasić saw Orrinford Albion produce 3 shots in the last 5 minutes.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": true
+    },
+    "club:KES": {
+     "text": "Kestlebury United have conceded 3 shots from Orrinford Albion in the last 5 minutes.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": true
+    },
+    "club:ORR": {
+     "text": "Orrinford Albion forced a concentrated spell: 3 shots in the last 5 minutes.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": true
+    }
+   }
+  },
+  "single": {
+   "seconds": 2.305,
+   "calls": 2,
+   "requested": 7,
+   "written": 7,
+   "published": {
+    "casual": {
+     "text": "Orrinford Albion are piling on the pressure: 3 shots in the last 5 minutes.",
+     "problems": [
+      "cluster_inference"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": true,
+     "other": false
+    },
+    "analyst": {
+     "text": "Orrinford Albion have registered 3 shots in the last 5 minutes (window 5 min), signalling a sustained attacking spell that raises their chance volume and forces Kestlebury United to defend deeper.",
+     "problems": [
+      "numbers_without_claims"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "player:ORR-18": {
+     "text": "Igor Ionescu’s side have recorded 3 shots in the past 5 minutes, reflecting increased attacking output while he shields the defence.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "player:ORR-24": {
+     "text": "Joel Vik’s team have managed 3 shots in the last 5 minutes, giving him more chances to be involved in the attack.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "player:ORR-08": {
+     "text": "Kamil Vasić’s side have had 3 shots in the last 5 minutes.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "club:KES": {
+     "text": "Kestlebury United have conceded 3 shots from Orrinford Albion in the last 5 minutes.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "club:ORR": {
+     "text": "Orrinford Albion have produced 3 shots in the last 5 minutes.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    }
+   }
+  }
+ },
+ {
+  "moment_id": "MO-1017-0020",
+  "trigger": "momentum_swing",
+  "full": {
+   "status": "delivery_pending",
+   "reason": null,
+   "seconds": 16.535,
+   "model": true,
+   "calls": 8,
+   "context": "ok",
+   "tools": [
+    "get_match_state",
+    "get_live_state"
+   ],
+   "interpretation": "Orrinford Albion have flipped the game momentum into a sustained attacking burst, taking complete share of weighted attacks in the recent spell and turning that into multiple attempts on goal.",
+   "written": 7,
+   "first_draft": {
+    "casual": {
+     "text": "Orrinford Albion have taken over: 2 shots in the last 5 minutes.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "analyst": {
+     "text": "Orrinford Albion have seized momentum, owning 100% of weighted attacking actions over the last 5 min (up from 57% in the previous 10), generating 2 shots in that 5 min window.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:team_shots_last_5min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "player:ORR-24": {
+     "text": "Joel Vik is central to Orrinford Albion’s surge: the team have 100% share of weighted attacks in the last 5 min and have taken 2 shots in that spell.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:team_shots_last_5min",
+      "unit_wrong:team_shots_last_5min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "player:ORR-08": {
+     "text": "Kamil Vasić’s side have flipped momentum—Orrinford Albion hold 100% of weighted attacking actions in the last 5 min, producing 2 shots in that period.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:team_shots_last_5min",
+      "unit_wrong:team_shots_last_5min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "player:ORR-11": {
+     "text": "Nils Fjeld: Orrinford Albion have had 100% of the weighted attacking actions in the last 5 min and 2 shots in that 5 min spell.",
+     "problems": [
+      "numbers_without_claims"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "club:KES": {
+     "text": "Kestlebury United have conceded 100% of the weighted attacking actions to Orrinford Albion in the last 5 min, who have also had 2 shots in that 5 min window.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:team_shots_last_5min",
+      "unit_wrong:team_shots_last_5min",
+      "text_differs:window_duration_min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "club:ORR": {
+     "text": "Orrinford Albion have taken complete control: 100% share of weighted attacking actions in the last 5 min (up from 57% in the previous 10 min) and 2 shots in that 5 min window.",
+     "problems": [
+      "too_long",
+      "numbers_without_claims",
+      "text_differs:momentum_share_previous_10min_pct",
+      "unit_missing:momentum_share_previous_10min_pct",
+      "unit_wrong:momentum_share_previous_10min_pct",
+      "text_differs:team_shots_last_5min",
+      "unit_wrong:team_shots_last_5min",
+      "text_differs:window_duration_min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": true
+    }
+   },
+   "rewritten": 12,
+   "meaning_rejected": 0,
+   "code_rejected": 18,
+   "verified": 1,
+   "template": 6,
+   "dropped": 0,
+   "published": {
+    "casual": {
+     "text": "Orrinford Albion have taken over: 2 shots in the last 5 minutes.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": true
+    },
+    "analyst": {
+     "text": "Orrinford Albion have taken over: 100% of the attacking actions in the last 5 minutes, up from 57%, with 2 shots.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "player:ORR-24": {
+     "text": "Joel Vik: Orrinford Albion have taken control of the game.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "player:ORR-08": {
+     "text": "Kamil Vasić: Orrinford Albion have taken control of the game.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "player:ORR-11": {
+     "text": "Nils Fjeld: Orrinford Albion have taken control of the game.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "club:KES": {
+     "text": "Orrinford Albion have taken control of the game.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    },
+    "club:ORR": {
+     "text": "Orrinford Albion have taken control of the game.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false,
+     "verified": false
+    }
+   }
+  },
+  "single": {
+   "seconds": 3.79,
+   "calls": 2,
+   "requested": 7,
+   "written": 7,
+   "published": {
+    "casual": {
+     "text": "Orrinford Albion are on the front foot: 100% of the attacking play in the last 5 minutes.",
+     "problems": [],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": false,
+     "unsupported": false,
+     "other": false
+    },
+    "analyst": {
+     "text": "Orrinford Albion’s weighted attacking actions rose to 100% in the last 5 minutes from 57% in the previous 10, with 2 shots in that 5 min window — a clear swing into their favour.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:momentum_share_previous_10min_pct",
+      "unit_missing:momentum_share_previous_10min_pct",
+      "unit_wrong:momentum_share_previous_10min_pct",
+      "text_differs:team_shots_last_5min",
+      "unit_wrong:team_shots_last_5min",
+      "text_differs:window_duration_min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "player:ORR-24": {
+     "text": "Joel Vik is part of Orrinford Albion’s momentum: the team has 100% of the attacking actions in the last 5 minutes and 2 shots in that period.",
+     "problems": [
+      "text_differs:team_shots_last_5min",
+      "unit_wrong:team_shots_last_5min",
+      "text_differs:window_duration_min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "player:ORR-08": {
+     "text": "Kamil Vasić’s side have shifted the momentum — Orrinford Albion hold 100% of attacking actions in the last 5 minutes, up from 57% in the previous 10.",
+     "problems": [
+      "unknown_fact:momentum_share_previous_10min",
+      "numbers_without_claims"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "player:ORR-11": {
+     "text": "Nils Fjeld: Orrinford Albion have 100% of weighted attacking actions in the last 5 min, with 2 shots in that 5 min window.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:team_shots_last_5min",
+      "unit_wrong:team_shots_last_5min",
+      "text_differs:window_duration_min"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    },
+    "club:KES": {
+     "text": "Kestlebury United have conceded 100% of the weighted attacking actions in the last 5 min as Orrinford Albion have 2 shots in that 5 min window, up from 57% in the previous 10 min.",
+     "problems": [
+      "too_long",
+      "numbers_without_claims",
+      "text_differs:team_shots_last_5min",
+      "unit_wrong:team_shots_last_5min",
+      "text_differs:window_duration_min",
+      "text_differs:momentum_share_previous_10min_pct",
+      "unit_missing:momentum_share_previous_10min_pct",
+      "unit_wrong:momentum_share_previous_10min_pct"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": true
+    },
+    "club:ORR": {
+     "text": "Orrinford Albion: 100% share of weighted attacking actions in the last 5 min and 2 shots in that 5 min window, rising from 57% in the prior 10 min.",
+     "problems": [
+      "numbers_without_claims",
+      "text_differs:team_shots_last_5min",
+      "unit_wrong:team_shots_last_5min",
+      "text_differs:window_duration_min",
+      "text_differs:momentum_share_previous_10min_pct",
+      "unit_missing:momentum_share_previous_10min_pct",
+      "unit_wrong:momentum_share_previous_10min_pct"
+     ],
+     "absent": [],
+     "wrong_number": false,
+     "unverified_number": true,
+     "unsupported": false,
+     "other": false
+    }
+   }
+  }
+ },
+ {
+  "moment_id": "MO-1017-0021",
+  "trigger": "press_change",
+  "full": {
+   "status": "suppressed",
+   "reason": "thinned",
+   "seconds": 0.006,
+   "model": false,
+   "calls": 0
+  }
+ }
+]

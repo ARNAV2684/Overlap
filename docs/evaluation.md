@@ -106,12 +106,45 @@ fix on `main`: in-process MCP sessions and at most two parallel narrator calls
 
 ## Single vs multi-agent (W3)
 
-> **To be filled from the comparison bench** (`agents/evals/`): the same moments through the full seven-agent
-> pipeline and through a single narrator with no analyst context, fact-checker or rewrites.
+[`agents/evals/single_vs_multi.py`](../agents/evals/single_vs_multi.py) runs the same 17 moments of the fixture
+match SYN-1017 two ways on the deployed model (Azure OpenAI in Foundry, gpt-5-mini, minimal reasoning), with the
+deployed limits (6 s per call, 15 s per moment). **Single agent:** the narrator alone, with the same model, prompt
+and batching, but no analyst context, no fact-checker and no rewrites; it publishes what it writes. **Seven agents:**
+the full pipeline. Every published English line is judged against the moment's evidence by the same code.
 
 | Measure | Single agent | Seven agents |
 |---|---|---|
-| Wrong numbers | _to be filled_ | _to be filled_ |
-| Unsupported claims | _to be filled_ | _to be filled_ |
-| Lines refused or rewritten | _to be filled_ | _to be filled_ |
-| Latency p50 / p95 | _to be filled_ | _to be filled_ |
+| Lines published | 109 | 109 |
+| Wrong numbers (a value the evidence never states) | 0 | 0 |
+| Unverified numbers (not tied to their fact at its value, order, unit and precision) | 63 lines (58%) | 0 |
+| Unsupported claims (do/don't wording rules) | 2 lines | 0 |
+| Lines the fact-checker's code check would refuse | 65 (60%) | 0 |
+| Lines refused or rewritten | 0, nothing checks | 69 rewritten; 67 replaced by the checked stat line; 0 dropped |
+| Model's own lines published, verified | — | 42 |
+| Model calls per moment | 2.0 | 6.8 |
+| Latency per moment p50 / p95 | 3.6 s / 4.1 s | 14.0 s / 14.0 s |
+
+What it shows: gpt-5-mini did not invent numbers here, but on its own it published 65 of 109 lines that no check
+could tie to the evidence. It attached a value to the wrong fact, told a score from the trailing side, left out a
+unit, ran past the length limit, or read pressure into a shot cluster ("piling on the pressure"). The pipeline
+published none of those. The fact-checker sent 69 lines back for a rewrite and put the checked stat line in place of
+the rest. The cost is about 3.4 times the model calls and a moment that takes its whole 15 s budget.
+
+With relaxed limits (20 s per call, 60 s per moment) the fact-checker sent 127 lines back, published 38 verified
+model lines and 71 stat lines, and still let nothing unchecked through. The single agent's refused share was 68%.
+Latency was 16.2 s p50 against 3.6 s. Full reports:
+[`single-vs-multi-azure/`](../agents/evals/results/single-vs-multi-azure/report.md),
+[`single-vs-multi-azure-60s/`](../agents/evals/results/single-vs-multi-azure-60s/report.md). Latency was measured
+from a developer machine to Sweden Central, so it includes the network. Meaning only a reader can judge is not
+counted for either arm, so the single agent's figures are a floor.
+
+### Hindi numbers
+
+Numbers no longer reach the translator. Each one goes as an opaque placeholder and is put back afterwards
+([`agents/translation.py`](../agents/translation.py)). On the fixture match, with a simulated Hindi translator that
+moves numbers between slots as Azure did, `main` before this change dropped 3, 9 and 19 of 130 Hindi lines and
+published 3, 7 and 16 wrong ones (at swap shares of 25%, 50% and 100%). It also dropped 1 line with no swaps at all,
+from a re-check bug with two facts of equal value. After the change: 0 dropped and 0 wrong at every share, and the
+translator saw no digits
+([`hindi-numbers/`](../agents/evals/results/hindi-numbers/report.md)). The real Azure drop rate is the block A row
+above.
