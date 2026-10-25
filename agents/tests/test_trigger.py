@@ -74,22 +74,48 @@ def test_queue_keeps_the_newest_normal_moments_and_every_high_one(moments):
     normal = [m for m in moments if m["evidence"]["trigger"] in ("momentum_swing", "press_change")][:6]
     goal = next(m for m in moments if m["evidence"]["trigger"] == "goal")
     keep, drop = T.plan_batch([*normal, goal, {"kind": "insight_job"}], max_queued=2)
-    assert [d["id"] for d in drop] == [m["id"] for m in normal[:3]]            # the oldest three normal ones
-    assert {d["id"] for d in keep} == {m["id"] for m in normal[3:]} | {goal["id"]}
+    kept = T.MOMENTS_PER_MATCH + 2
+    assert [d["id"] for d in drop] == [m["id"] for m in normal[:6 - kept]]     # the oldest normal ones
+    assert {d["id"] for d in keep} == {m["id"] for m in normal[6 - kept:]} | {goal["id"]}
 
 
 def test_overflow_is_closed_durably_and_never_runs(moments, clock):
     store = MemoryStore()
-    normal = [m for m in moments if m["evidence"]["trigger"] in ("momentum_swing", "press_change")][:5]
+    normal = [m for m in moments if m["evidence"]["trigger"] in ("momentum_swing", "press_change")][:6]
     results = asyncio.run(T.handle_batch(normal, deps(store, clock)))
     status = {r["moment_id"]: r["status"] for r in results}
-    assert [status[m["id"]] for m in normal[:2]] == ["suppressed", "suppressed"]
+    assert [status[m["id"]] for m in normal[:2]] == ["suppressed", "suppressed"]   # 6 - (2 running + 2 queued)
     first = asyncio.run(store.read("SYN-1017", f"job:{normal[0]['id']}"))[0]
     assert first["state"] == "suppressed" and first["terminal_reason"] == "queue_overflow"
     assert first["stage_outputs"] == {}
     assert asyncio.run(store.read("SYN-1017", f"outbox:{normal[0]['id']}")) is None
     again = asyncio.run(T.handle_batch(normal[:1], deps(store, clock)))          # a repeated notification
     assert again[0]["status"] == "skipped"
+
+
+def test_two_jobs_of_one_match_run_at_once_and_share_the_budget_exactly(moments, clock, monkeypatch):
+    store = MemoryStore()
+    normal = [m for m in moments if m["evidence"]["trigger"] in ("momentum_swing", "press_change")][:4]
+    running, peak = 0, 0
+    real = W.process_moment
+
+    async def watched(doc, d):
+        nonlocal running, peak
+        running += 1
+        peak = max(peak, running)
+        await asyncio.sleep(0.01)                     # long enough for a second job to start
+        try:
+            return await real(doc, d)
+        finally:
+            running -= 1
+
+    monkeypatch.setattr(W, "process_moment", watched)
+    results = asyncio.run(T.handle_batch(normal, deps(store, clock)))
+    assert peak == T.MOMENTS_PER_MATCH
+    assert [r["moment_id"] for r in results] == [m["id"] for m in normal]      # results in the batch's order
+    assert {r["status"] for r in results} == {"delivery_pending"}
+    outboxes = [d for (_, i), (d, _) in store.docs.items() if str(i).startswith("outbox:")]
+    assert len(outboxes) == len(normal)                                       # each moment published once
 
 
 # --- Azure Functions: recap from the match_state feed, publisher timer --------------------------------------------

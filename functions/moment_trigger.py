@@ -40,13 +40,15 @@ def make_deps(store=None, settings=None):
 
 
 HIGH = ("goal", "red_card", "penalty")         # never dropped for queue overflow
-PARALLEL_MATCHES = 2                          # workflow.md §3: 1 running job per match, 2 globally
+PARALLEL_MATCHES = 2                          # workflow.md §3: matches handled at once
+MOMENTS_PER_MATCH = 2                         # workflow.md §3: jobs of one match running at once (one at a time left
+                                              # bursts waiting behind a 7 s job until they went stale at 20x)
 
 
 def plan_batch(docs: list[dict], max_queued: int) -> tuple[list[dict], list[dict]]:
-    """Moments to run and moments to drop (workflow.md §3). Per match, in id order: one running plus `max_queued`
-    waiting normal moments are kept, the newest ones; older normal moments beyond that are dropped. High-priority
-    moments are always kept. Non-moments are ignored."""
+    """Moments to run and moments to drop (workflow.md §3). Per match, in id order: `MOMENTS_PER_MATCH` running plus
+    `max_queued` waiting normal moments are kept, the newest ones; older normal moments beyond that are dropped.
+    High-priority moments are always kept. Non-moments are ignored."""
     keep, drop = [], []
     by_match: dict[str, list[dict]] = {}
     for doc in docs:
@@ -55,15 +57,16 @@ def plan_batch(docs: list[dict], max_queued: int) -> tuple[list[dict], list[dict
     for match_docs in by_match.values():
         match_docs.sort(key=lambda d: d.get("id", ""))
         normal = [d for d in match_docs if (d.get("evidence") or {}).get("trigger") not in HIGH]
-        overflow = {id(d) for d in normal[:max(0, len(normal) - (1 + max_queued))]}
+        overflow = {id(d) for d in normal[:max(0, len(normal) - (MOMENTS_PER_MATCH + max_queued))]}
         for d in match_docs:
             (drop if id(d) in overflow else keep).append(d)
     return keep, drop
 
 
 async def handle_batch(docs: list[dict], deps=None) -> list[dict]:
-    """Process a batch: each match's moments in order (one running job per match), at most two matches at once;
-    overflow beyond the queue limit is closed as suppressed (`queue_overflow`)."""
+    """Process a batch: each match's moments started in order, `MOMENTS_PER_MATCH` of them at once, at most
+    `PARALLEL_MATCHES` matches at once; overflow beyond the queue limit is closed as suppressed (`queue_overflow`).
+    Results come back in the batch's order."""
     from workflow import process_moment, suppress_moment
     own = deps is None
     deps = deps or make_deps()
@@ -73,10 +76,15 @@ async def handle_batch(docs: list[dict], deps=None) -> list[dict]:
 
     async def one_match(match_docs: list[dict]) -> None:
         async with gate:
-            for doc in match_docs:
-                result = await process_moment(doc, deps)
-                log.info("%s: %s", doc.get("id"), result.get("status"))
-                results.append(result)
+            lane = asyncio.Semaphore(MOMENTS_PER_MATCH)          # waiters wake in order, so jobs start in id order
+
+            async def one(doc: dict) -> dict:
+                async with lane:
+                    result = await process_moment(doc, deps)
+                    log.info("%s: %s", doc.get("id"), result.get("status"))
+                    return result
+
+            results.extend(await asyncio.gather(*(one(doc) for doc in match_docs)))
 
     try:
         for doc in drop:

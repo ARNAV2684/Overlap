@@ -346,7 +346,7 @@ class DurableBudget:
     Same rules as models.Budget: unknown usage keeps the reservation."""
 
     def __init__(self, store: Store, *, max_calls_per_moment: int, max_calls_per_match: int,
-                 max_tokens_per_match: int, reserve_tokens: int, retries: int = 5):
+                 max_tokens_per_match: int, reserve_tokens: int, retries: int = 8):  # several jobs of a match at once
         self.store = store
         self.limits = (max_calls_per_moment, max_calls_per_match, max_tokens_per_match)
         self.reserve_tokens, self.retries = reserve_tokens, retries
