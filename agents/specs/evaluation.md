@@ -120,6 +120,9 @@ local model (Foundry Local, phi-4-mini) as a free, repeatable reference. Azure c
 fixture files, or recorded bench matches (`--matches`, needs the stats engine's environment); `--from-rows` rebuilds
 a report from a saved `moments.json`. Budgets and the breaker are opened wide for the run, so neither arm is turned
 into templates by a budget; Azure latency is measured from the developer machine and includes the network.
+The recorded Azure runs (25 Oct) predate the precision leniency in fact-checking.md §1.6, so their unverified and
+refused counts for the single agent are higher than a re-run would give; the wrong-number and unsupported rows
+do not depend on it.
 
 ## 7. Hindi numbers (D7)
 

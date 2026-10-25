@@ -136,7 +136,11 @@ Latency was 16.2 s p50 against 3.6 s. Full reports:
 [`single-vs-multi-azure/`](../agents/evals/results/single-vs-multi-azure/report.md),
 [`single-vs-multi-azure-60s/`](../agents/evals/results/single-vs-multi-azure-60s/report.md). Latency was measured
 from a developer machine to Sweden Central, so it includes the network. Meaning only a reader can judge is not
-counted for either arm, so the single agent's figures are a floor.
+counted for either arm, so the single agent's figures are a floor. These runs (25 Oct) used the code check as it was
+before the precision-leniency change (fact-checking.md §1.6: rounded measures, any order, small counts, `km`). The
+wrong-number and unsupported-claim rows don't depend on it. The unverified and refused rows would be lower for the
+single agent under §1.6. A re-run needs the gpt-5-mini deployment back: `python -m evals.single_vs_multi --fixture
+--allow-paid`.
 
 ### Hindi numbers
 
