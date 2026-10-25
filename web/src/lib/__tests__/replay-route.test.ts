@@ -79,6 +79,18 @@ describe("GET /api/replay/<id>: manifest and chunks", () => {
     expect(logs.at(-1)).toMatch(/^replay SYN-0042 chunk 1: 1 events, 2 frames, 0 panels, 0 rejected, \d+ ms$/);
   });
 
+  it("lets the browser cache a match whose archive settled, and not one still being written", async () => {
+    fakes.store = fakeArchiveStore({ match: { ...STORED_MATCH, updated_ms: Date.now() - 11 * 60_000 } });
+    let { get } = await load();
+    expect((await get("SYN-0042")).cache).toBe("private, max-age=3600");
+    expect((await get("SYN-0042", "?chunk=1")).cache).toBe("private, max-age=3600");
+
+    fakes.store = fakeArchiveStore({ match: { ...STORED_MATCH, updated_ms: Date.now() - 60_000 } });
+    ({ get } = await load());
+    expect((await get("SYN-0042")).cache).toBe("no-store");
+    expect((await get("SYN-0042", "?chunk=1")).cache).toBe("no-store");
+  });
+
   it("re-reads tracking that arrives after full time instead of caching a partial chunk", async () => {
     const tracking = { "p1/m1": { frames: [frameAt(1, 60_000)], unreadable: 0 } };
     fakes.store = fakeArchiveStore({ tracking });

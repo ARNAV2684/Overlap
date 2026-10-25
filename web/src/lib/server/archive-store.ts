@@ -32,6 +32,8 @@ export type StoredMatch = {
   status: unknown;
   setup: unknown;
   result: unknown;
+  /** When the document was last written (Cosmos `_ts`), in ms; absent when unknown. */
+  updated_ms?: number;
 };
 
 /** One tracking file, decompressed. `frames` are in file order, which can repeat a frame after a redelivery. */
@@ -161,7 +163,9 @@ export function createArchiveStore(settings: ArchiveSettings): ArchiveStore {
       guarded("match document", async (signal) => {
         const { resource } = await cosmos.matches.item(matchId, matchId).read<StoredDoc>({ abortSignal: signal });
         if (!resource) return null;
-        return { match_id: matchId, status: resource.status, setup: resource.setup, result: resource.result };
+        const ts = resource._ts;
+        return { match_id: matchId, status: resource.status, setup: resource.setup, result: resource.result,
+          ...(typeof ts === "number" ? { updated_ms: ts * 1000 } : {}) };
       }),
 
     periodMarkers: (matchId) =>

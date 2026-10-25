@@ -304,7 +304,12 @@ browser releases them at the chosen speed.
   until the relay and the clock handle it.
 
 - **Caching:** a finished match never changes, so the route keeps each match's periods and goals in memory (at most
-  20 matches) and answers with `Cache-Control: no-store`: tracking and stats may still be arriving after the events stream reaches full time. Reloading must see newly archived records. This does not establish an archive-completion signal or automatically refresh chunks already loaded by the player.
+  20 matches). Tracking and stats may still be arriving after the events stream reaches full time, so a match is
+  served with `Cache-Control: no-store` until its archive has **settled**: its match document unchanged for 10
+  minutes (`SETTLED_MS`; the archiver runs seconds behind). Settled matches never change again and are served with
+  `Cache-Control: private, max-age=3600`, so a judge replaying or scrubbing a finished match is not re-reading the
+  archive each time. A match whose document time is unknown stays `no-store`. This does not establish an
+  archive-completion signal or automatically refresh chunks already loaded by the player.
 - **Settings** (server-only, the archiver's names, values never written down): `OVERLAP_COSMOS_ENDPOINT`,
   `OVERLAP_COSMOS_DATABASE` (default `live`), `OVERLAP_COSMOS_KEY` (local emulator only; without it the route uses
   `DefaultAzureCredential`), and for Blob either `OVERLAP_ARCHIVE_STORAGE` (a connection string, local) or

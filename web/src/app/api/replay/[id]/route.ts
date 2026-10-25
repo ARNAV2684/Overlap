@@ -48,9 +48,19 @@ const STATUS: Record<ErrorCode, number> = {
 const fail = (code: ErrorCode) =>
   Response.json({ error: code }, { status: STATUS[code], headers: { "Cache-Control": "no-store" } });
 
-// Full time on the events stream does not mean tracking/stats have finished archiving.
-// A later request must be able to see newly archived data instead of an hour-old partial chunk.
-const ok = (body: unknown) => Response.json(body, { headers: { "Cache-Control": "no-store" } });
+// Full time on the events stream does not mean tracking/stats have finished archiving, so a match is served
+// uncached until its archive has settled: its match document unchanged for SETTLED_MS (the archiver runs seconds
+// behind). Settled matches never change again, so the browser may keep their manifest and chunks for an hour.
+export const SETTLED_MS = 10 * 60_000;
+const SETTLED_CACHE = "private, max-age=3600";
+const ok = (body: unknown, settled: boolean) =>
+  Response.json(body, { headers: { "Cache-Control": settled ? SETTLED_CACHE : "no-store" } });
+/** When each cached index's match document was last written, in ms (absent when the store did not say). */
+const updatedAt = new Map<string, number>();
+const isSettled = (matchId: string, now = Date.now()) => {
+  const at = updatedAt.get(matchId);
+  return at !== undefined && now - at >= SETTLED_MS;
+};
 
 /** The archive reader for the current settings, or null (and one log line naming the problems) without them. */
 function archiveStore(): ArchiveStore | null {
@@ -64,6 +74,7 @@ function archiveStore(): ArchiveStore | null {
   if (current?.settingsKey !== settingsKey) {
     current = { settingsKey, store: createArchiveStore(env.settings) };
     indexes.clear();
+    updatedAt.clear();
   }
   return current.store;
 }
@@ -93,7 +104,12 @@ async function loadIndex(store: ArchiveStore, matchId: string): Promise<ReplayIn
     return result.error;
   }
   indexes.set(matchId, result.index);
-  if (indexes.size > INDEX_CACHE_LIMIT) indexes.delete(indexes.keys().next().value as string);
+  if (match.updated_ms !== undefined) updatedAt.set(matchId, match.updated_ms);
+  if (indexes.size > INDEX_CACHE_LIMIT) {
+    const oldest = indexes.keys().next().value as string;
+    indexes.delete(oldest);
+    updatedAt.delete(oldest);
+  }
   return result.index;
 }
 
@@ -113,7 +129,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
     if (chunkParam === null) {
       console.info(`replay ${id} manifest: ${index.manifest.chunks.length} chunks, ${Math.round(performance.now() - started)} ms`);
-      return ok(index.manifest);
+      return ok(index.manifest, isSettled(id));
     }
 
     const chunk = index.manifest.chunks[Number(chunkParam)];
@@ -130,7 +146,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       `replay ${id} chunk ${chunk.index}: ${events.length} events, ${frames} frames, ${panels.length} panels, ` +
         `${body.rejected.count} rejected, ${Math.round(performance.now() - started)} ms`,
     );
-    return ok(body);
+    return ok(body, isSettled(id));
   } catch (error) {
     if (error instanceof ArchiveStoreError) {
       console.error(`replay ${id}: ${error.message}`);
