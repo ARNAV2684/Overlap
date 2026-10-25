@@ -13,6 +13,7 @@ import { keyNumber, overlayText, type Overlay } from "@/lib/live/insights";
 import { cardSource, CARD_SOURCE_LABEL, CHART_LABEL, MOMENT_KIND_GLYPH, MOMENT_KIND_LABEL, momentKind } from "@/lib/live/live-insights";
 import { useExperience, useFeed } from "@/providers/MatchExperience";
 import { usePreferences } from "@/providers/PreferencesProvider";
+import { factLabel, layoutFor } from "@/lib/live/mode-layout";
 
 /** Opens what a card points to: an analysis tab, or a live insight card (with the card's player or team). */
 export type ShowChart = (component: string, eventId?: string, highlight?: { team_id?: string; player_id?: string }) => void;
@@ -92,6 +93,7 @@ export function MomentStrip({ onShowChart }: { onShowChart?: ShowChart }) {
   const { current } = useFeed();
   const { mode } = useExperience();
   const [prefs] = usePreferences();
+  const layout = layoutFor(mode);
   const lead = current ?? visible[0] ?? null;
   const earlier = visible.filter((c) => c.overlay_id !== lead?.overlay_id).slice(0, 3);
 
@@ -136,7 +138,19 @@ export function MomentStrip({ onShowChart }: { onShowChart?: ShowChart }) {
                 <KindChip card={lead} />
                 <SourceBadge card={lead} />
               </div>
-              <CardText text={overlayText(lead, mode, prefs.lang)} className="mt-1.5 text-[15px] font-semibold leading-snug text-ink/90 sm:text-[16px]" />
+              <CardText
+                text={overlayText(lead, mode, prefs.lang)}
+                className={`mt-1.5 font-semibold leading-snug text-ink/90 ${layout.commentaryLarge ? "text-[18px] sm:text-[20px]" : "text-[15px] sm:text-[16px]"}`}
+              />
+              {layout.showFacts && lead.facts_checked && lead.facts_checked.length > 0 && (
+                <ul className="mt-2 flex flex-wrap gap-1.5" aria-label="Facts the fact-checker verified">
+                  {lead.facts_checked.map((key) => (
+                    <li key={key} className="rounded-full bg-ink/[0.06] px-2 py-0.5 font-mono text-[10px] font-semibold text-ink/65">
+                      ✓ {factLabel(key)}
+                    </li>
+                  ))}
+                </ul>
+              )}
               {lead.visual && onShowChart && (
                 <button
                   type="button"

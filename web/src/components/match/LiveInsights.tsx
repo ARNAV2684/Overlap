@@ -36,6 +36,7 @@ import { useScoreboard } from "@/lib/store-hooks";
 import { readableInk } from "@/lib/team-colours";
 import { useExperience } from "@/providers/MatchExperience";
 import { overlayColour } from "@/components/pitch3d/scene/stage";
+import { battleHeadline, connectionHeadline, tempoHeadline, workHeadline } from "@/lib/live/mode-layout";
 import { Toggle } from "@/components/viz/Viz";
 
 const BATTLE_ROLES: Role[] = ["forward", "midfielder", "defender"];
@@ -71,6 +72,8 @@ function CardShell({
   controls,
   children,
   note,
+  headline,
+  compact = false,
 }: {
   id?: string;
   /** A chart link landed here: the nonce restarts the ring's fade. */
@@ -80,6 +83,9 @@ function CardShell({
   controls?: React.ReactNode;
   children: React.ReactNode;
   note: string;
+  /** Casual: the card as one plain sentence, without its numbers, controls or method note. */
+  headline?: string;
+  compact?: boolean;
 }) {
   return (
     <section
@@ -93,10 +99,16 @@ function CardShell({
           <p className="ov-eyebrow">{eyebrow}</p>
           <h3 className="mt-0.5 text-[15px] font-black tracking-tight">{title}</h3>
         </div>
-        {controls}
+        {!compact && controls}
       </div>
-      <div className="mt-3 flex-1">{children}</div>
-      <p className="mt-3 font-mono text-[9px] uppercase tracking-[1px] text-ink/35">{note}</p>
+      {compact ? (
+        <p className="mt-2 flex-1 text-[16px] font-semibold leading-snug text-ink/85">{headline}</p>
+      ) : (
+        <>
+          <div className="mt-3 flex-1">{children}</div>
+          <p className="mt-3 font-mono text-[9px] uppercase tracking-[1px] text-ink/35">{note}</p>
+        </>
+      )}
     </section>
   );
 }
@@ -164,7 +176,7 @@ export function BattleCard({ b, colours, setup }: { b: Battle; colours: Colours;
   );
 }
 
-function HeadToHead({ data, colours, focus }: { data: ReturnType<typeof useInsightData>; colours: Colours; focus: InsightFocus | null }) {
+function HeadToHead({ data, colours, focus, compact }: { data: ReturnType<typeof useInsightData>; colours: Colours; focus: InsightFocus | null; compact: boolean }) {
   const [manual, setManual] = useState<{ role: Role; at: number } | null>(null);
   const [auto, setAuto] = useState(0);
   const mine = focusFor(focus, "head_to_head");
@@ -187,6 +199,8 @@ function HeadToHead({ data, colours, focus }: { data: ReturnType<typeof useInsig
       flash={mine?.nonce ?? null}
       eyebrow={picked ? "Head-to-head" : "Head-to-head · rotating"}
       title={`${ROLE_LABEL[role]}: who is winning their battle`}
+      compact={compact}
+      headline={battleHeadline(b, ROLE_LABEL[role])}
       note="From the event data and the stats engine · best player in the role on each side"
       controls={
         <Toggle
@@ -250,7 +264,7 @@ function ConnectionPitch({ links, players, colour }: { links: Connection[]; play
   );
 }
 
-function Connections({ data, colours, focus }: { data: ReturnType<typeof useInsightData>; colours: Colours; focus: InsightFocus | null }) {
+function Connections({ data, colours, focus, compact }: { data: ReturnType<typeof useInsightData>; colours: Colours; focus: InsightFocus | null; compact: boolean }) {
   const { myClub } = useExperience();
   const [manual, setManual] = useState<{ side: Side; at: number } | null>(null);
   const mine = focusFor(focus, "connections");
@@ -272,6 +286,8 @@ function Connections({ data, colours, focus }: { data: ReturnType<typeof useInsi
       flash={mine?.nonce ?? null}
       eyebrow="Connections"
       title="The partnerships shaping the game"
+      compact={compact}
+      headline={connectionHeadline(links, (id) => data.players.get(id)?.name.split(" ").at(-1) ?? id)}
       note="Ranked by passes + 2 × progressive + 1 × into the final third + 3 × in moves that ended in a shot"
       controls={
         <Toggle
@@ -315,7 +331,7 @@ const PART_COLOUR: Record<keyof typeof WORK_WEIGHTS, string> = {
   pressures: "#94a3b8",
 };
 
-function EngineRoom({ data, colours, focus }: { data: ReturnType<typeof useInsightData>; colours: Colours; focus: InsightFocus | null }) {
+function EngineRoom({ data, colours, focus, compact }: { data: ReturnType<typeof useInsightData>; colours: Colours; focus: InsightFocus | null; compact: boolean }) {
   const mine = focusFor(focus, "engine_room");
   const top: Workhorse[] = useMemo(() => workhorses(data.lines, data.players, 4), [data.lines, data.players]);
   const hasTracking = top.some((w) => w.parts.find((p) => p.key === "distanceKm")!.value > 0);
@@ -327,6 +343,8 @@ function EngineRoom({ data, colours, focus }: { data: ReturnType<typeof useInsig
       flash={mine?.nonce ?? null}
       eyebrow="Engine room"
       title="Who is putting the work in"
+      compact={compact}
+      headline={workHeadline(top, (id) => data.players.get(id)?.name.split(" ").at(-1) ?? id)}
       note={`Score = ${w.distanceKm} × km + ${w.sprints} × sprints + ${w.duelsWon} × duels won + ${w.recoveries} × recoveries + ${w.interceptions} × interceptions + ${w.pressures} × pressures`}
     >
       {top.length === 0 ? (
@@ -380,7 +398,7 @@ function EngineRoom({ data, colours, focus }: { data: ReturnType<typeof useInsig
 const TEMPO_WORD: Record<Tempo["state"], string> = { control: "Control", balanced: "Balanced", chaos: "Chaos" };
 const RHYTHM_WORD: Record<Tempo["rhythm"], string> = { faster: "Speeding up", steady: "Steady rhythm", slower: "Slowing down" };
 
-function TempoCard({ data, colours }: { data: ReturnType<typeof useInsightData>; colours: Colours }) {
+function TempoCard({ data, colours, compact }: { data: ReturnType<typeof useInsightData>; colours: Colours; compact: boolean }) {
   const t = useMemo(
     () => (data.setup ? tempo(data.events, data.nowMs, { home: data.setup.teams.home.team_id, away: data.setup.teams.away.team_id }) : null),
     [data],
@@ -389,6 +407,8 @@ function TempoCard({ data, colours }: { data: ReturnType<typeof useInsightData>;
     <CardShell
       eyebrow="Tempo · last 5 minutes"
       title="Control or chaos, and the rhythm"
+      compact={compact}
+      headline={tempoHeadline(t, (side) => data.setup?.teams[side].name ?? "")}
       note="Control: 6+ completed passes per possession · chaos: 3.8 or fewer · rhythm: passes a minute against the match so far"
     >
       {!t || !data.setup ? (
@@ -442,16 +462,17 @@ function TempoCard({ data, colours }: { data: ReturnType<typeof useInsightData>;
   );
 }
 
-export function LiveInsights({ focus = null }: { focus?: InsightFocus | null }) {
+export function LiveInsights({ focus = null, detail = "full" }: { focus?: InsightFocus | null; detail?: "headline" | "full" }) {
+  const compact = detail === "headline";
   const data = useInsightData();
   if (!data.setup) return null;
   const colours = { home: overlayColour(data.setup.teams.home.colours), away: overlayColour(data.setup.teams.away.colours) };
   return (
     <div className="grid gap-4 md:grid-cols-2" aria-label="Live insights">
-      <HeadToHead data={data} colours={colours} focus={focus} />
-      <Connections data={data} colours={colours} focus={focus} />
-      <EngineRoom data={data} colours={colours} focus={focus} />
-      <TempoCard data={data} colours={colours} />
+      <HeadToHead data={data} colours={colours} focus={focus} compact={compact} />
+      <Connections data={data} colours={colours} focus={focus} compact={compact} />
+      <EngineRoom data={data} colours={colours} focus={focus} compact={compact} />
+      <TempoCard data={data} colours={colours} compact={compact} />
     </div>
   );
 }

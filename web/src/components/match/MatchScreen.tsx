@@ -10,7 +10,8 @@
 // Outputs: UI
 // Spec:    web/specs/screens.md §2
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { layoutFor } from "@/lib/live/mode-layout";
 import type { ReplaySpeed } from "@/lib/replay-player";
 import { useExperience, useFeed } from "@/providers/MatchExperience";
 import { usePreferences } from "@/providers/PreferencesProvider";
@@ -51,7 +52,15 @@ function ModeSwitch() {
 }
 
 export function MatchScreen({ intro, initialSpeed }: { intro?: ReactNode; initialSpeed?: ReplaySpeed }) {
-  const { source, setPinned, setAnalysis } = useExperience();
+  const { source, setPinned, setAnalysis, mode } = useExperience();
+  // Casual tells the story, Analyst shows the data (web/specs/screens.md §2.9)
+  const layout = layoutFor(mode);
+  // "Show the numbers" opens the panel for the mode it was pressed in; another mode starts collapsed again
+  const [numbersFor, setNumbersFor] = useState<typeof mode | null>(null);
+  const showNumbers = numbersFor === mode;
+  useEffect(() => {
+    setAnalysis(layout.analysisDefault);
+  }, [mode, layout.analysisDefault, setAnalysis]);
   const { current } = useFeed();
   const [prefs] = usePreferences();
   const [focus, setFocus] = useState<Focus>(null);
@@ -99,17 +108,31 @@ export function MatchScreen({ intro, initialSpeed }: { intro?: ReactNode; initia
           </div>
           <PitchUnderlay />
           <MomentStrip onShowChart={showChart} />
-          <LiveInsights focus={insightFocus} />
+          <LiveInsights focus={insightFocus} detail={layout.insights} />
         </div>
         <aside className="flex min-w-0 flex-col gap-4">
           <ViewerBar />
           <PlayerFocus />
           <AiFeed onShowChart={showChart} />
-          <LiveRail />
+          <LiveRail detail={layout.rail} />
         </aside>
       </div>
       <div id="analytics" className="scroll-mt-20">
-        <AnalysisPanel focus={focus} />
+        {layout.analysisPanel === "open" || showNumbers || focus ? (
+          <AnalysisPanel focus={focus} />
+        ) : (
+          <button
+            type="button"
+            onClick={() => setNumbersFor(mode)}
+            className="ov-card flex w-full items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-ink/[0.03]"
+          >
+            <span>
+              <span className="ov-eyebrow">Match analysis</span>
+              <span className="mt-1 block text-[13px] text-ink/60">Shot maps, pass networks, heatmaps and every number behind the story.</span>
+            </span>
+            <span className="shrink-0 font-mono text-[11px] font-bold uppercase tracking-[1px] text-accent">Show the numbers →</span>
+          </button>
+        )}
       </div>
     </main>
   );
