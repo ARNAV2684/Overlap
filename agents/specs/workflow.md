@@ -103,9 +103,12 @@ Expiry wins over displaying a stale fallback.
 | One audience accepted, other expired | Retain individual outcomes; mark partially_expired; do not duplicate the accepted card |
 | Restart beyond deadline / period boundary | Suppress or expire; never reset lifetime |
 
-Fallback: one approved template per trigger and mode, filled only from validated facts and context names
-(for example `shot_cluster`: `<team name> have taken <shots> shots in the last <duration> minutes.`; `red_card`:
-`<team name> are down to <players>.`). Templates live in `fallbacks.py`; run the deterministic check even on
+Fallback: one approved template per trigger and mode, filled only from validated facts and context names.
+Casual and analyst templates differ for every trigger (rule §4.1(e), 25 Oct): casual says it in plain words with at
+most one number (`shot_cluster`: `<team name> keep shooting: <shots> shots in quick succession.`); analyst adds
+the numbers behind it (`<team name> have taken <shots> shots in the last <duration> minutes.`; `red_card`:
+`<team name> are down to <players>, with <fouls> fouls and <cards> cards in the match so far.`). Templates live in
+`fallbacks.py`; run the deterministic check even on
 templates, and translate them like any line. `verified=false,fallback=true` and a visible template label
 are mandatory. Reason stays in audit state, not an invented public overlay field.
 

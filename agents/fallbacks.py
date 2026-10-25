@@ -60,34 +60,75 @@ def template(moment: dict, mode: str) -> dict:
             return _line(mode, f"Goal for {team}: a {fmt(xg)} xG chance from {fmt(dist)} m. {fmt(tg)}–{fmt(og)}.",
                          [_claim(xg), _claim(dist), _claim(tg), _claim(og)])
         return _line(mode, f"{team} score. {fmt(tg)}–{fmt(og)}.", [_claim(tg), _claim(og)])
+    # Casual tells the story in plain words with at most one number; analyst adds the numbers behind it. Both are
+    # checked like any model line, so every number is a claim, in the order it appears.
     if trig == "red_card":
         n = f["team_players_on_pitch"]
+        if analyst and "team_fouls_match" in f and "team_cards_match" in f:
+            fouls, cards = f["team_fouls_match"], f["team_cards_match"]
+            return _line(mode, f"{team} are down to {fmt(n)}, with {fmt(fouls)} fouls and {fmt(cards)} cards in the "
+                               f"match so far.", [_claim(n), _claim(fouls), _claim(cards)])
         return _line(mode, f"{team} are down to {fmt(n)}.", [_claim(n)])
     if trig == "penalty":
         tg, og = f["team_goals_match"], f["opponent_goals_match"]
+        if analyst and "shot_xg" in f:
+            xg = f["shot_xg"]
+            return _line(mode, f"{team} miss a {fmt(xg)} xG penalty. Still {fmt(tg)}–{fmt(og)}.",
+                         [_claim(xg), _claim(tg), _claim(og)])
         return _line(mode, f"Penalty missed by {team}. Still {fmt(tg)}–{fmt(og)}.", [_claim(tg), _claim(og)])
     if trig == "big_chance":
         xg, dist = f["shot_xg"], f["shot_distance_m"]
-        return _line(mode, f"Big chance for {team}: {fmt(xg)} xG from {fmt(dist)} m.", [_claim(xg), _claim(dist)])
+        if analyst:
+            text, claims = f"Big chance for {team}: {fmt(xg)} xG from {fmt(dist)} m", [_claim(xg), _claim(dist)]
+            if "team_shots_match" in f and "team_xg_match" in f:
+                shots, txg = f["team_shots_match"], f["team_xg_match"]
+                text += f", {fmt(shots)} shots and {fmt(txg)} xG in the match"
+                claims += [_claim(shots), _claim(txg)]
+            return _line(mode, text + ".", claims)
+        return _line(mode, f"{team} go close with a big chance from {fmt(dist)} m.", [_claim(dist)])
     if trig == "shot_cluster":
         n, d = f["shots_last_5min"], f["window_duration_min"]
-        return _line(mode, f"{team} have taken {fmt(n)} shots in the last {fmt(d)} minutes.", [_claim(n), _claim(d)])
+        if analyst:
+            return _line(mode, f"{team} have taken {fmt(n)} shots in the last {fmt(d)} minutes.",
+                         [_claim(n), _claim(d)])
+        return _line(mode, f"{team} keep shooting: {fmt(n)} shots in quick succession.", [_claim(n)])
     if trig == "momentum_swing":
         now, before, d = (f["momentum_share_last_5min_pct"], f["momentum_share_previous_10min_pct"],
                           f["window_duration_min"])
-        return _line(mode, f"{team} have taken over: {fmt(now)}% of the attacking actions in the last {fmt(d)} "
-                           f"minutes, up from {fmt(before)}%.", [_claim(now), _claim(d), _claim(before)])
+        if analyst:
+            text = (f"{team} have taken over: {fmt(now)}% of the attacking actions in the last {fmt(d)} minutes, "
+                    f"up from {fmt(before)}%")
+            claims = [_claim(now), _claim(d), _claim(before)]
+            if "team_shots_last_5min" in f:
+                shots = f["team_shots_last_5min"]
+                text += f", with {fmt(shots)} shots"
+                claims.append(_claim(shots))
+            return _line(mode, text + ".", claims)
+        return _line(mode, f"{team} have taken control of the game.", [])
     if trig == "press_change":
         now, before = f["pressures_per_opp_pass_last_5min"], f["pressures_per_opp_pass_previous_10min"]
         harder = now["value"] > before["value"]
         verb, way = ("pressing harder", "up") if harder else ("pressing less", "down")
-        return _line(mode, f"{team} are {verb}: {fmt(now)} pressures per opponent pass, {way} from {fmt(before)}.",
-                     [_claim(now), _claim(before)])
+        if analyst:
+            text = f"{team} are {verb}: {fmt(now)} pressures per opponent pass, {way} from {fmt(before)}"
+            claims = [_claim(now), _claim(before)]
+            if "team_high_regains_last_5min" in f and "window_duration_min" in f:
+                regains, d = f["team_high_regains_last_5min"], f["window_duration_min"]
+                text += f", and {fmt(regains)} high regains in the last {fmt(d)} minutes"
+                claims += [_claim(regains), _claim(d)]
+            return _line(mode, text + ".", claims)
+        tail = "to win the ball back" if harder else "and letting the other side play"
+        return _line(mode, f"{team} are {verb} {tail}.", [])
     if trig == "milestone":
         g = f["player_goals_match"]
         name = player_name(moment, e["player_ids"][0]) if e["player_ids"] else None
         who = name or team
-        return _line(mode, f"{who}: {ORDINALS.get(g['value'], str(g['value']))} goal of the match.", [_claim(g)])
+        nth = ORDINALS.get(g["value"], str(g["value"]))
+        if analyst and "shot_xg" in f:
+            xg = f["shot_xg"]
+            return _line(mode, f"{who}: {nth} goal of the match, from a {fmt(xg)} xG chance.",
+                         [_claim(g), _claim(xg)])
+        return _line(mode, f"{who}: {nth} goal of the match.", [_claim(g)])
     if trig == "head_to_head":
         leader, rival = (player_name(moment, p) for p in e["player_ids"][:2])
         pairs = _h2h_pairs(f)
