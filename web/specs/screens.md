@@ -8,13 +8,21 @@ earlier screens are kept in [`vedant-frontend/`](../../vedant-frontend/README.md
 
 ## 1. Home `/`
 
-Opens on a match being played (`components/home/HomeLive.tsx`):
+Opens on a match being played (`components/home/HomeLive.tsx`; the choice is `pickHomeMatch`, `lib/home-choice.ts`):
 
 1. The newest **live** match whose clock is moving between polls of `/api/matches` (every 8 s); among several, the
    highest match number.
 2. A live match that sends no frame for 9 s is marked quiet (the generator stopped mid-match) and skipped.
-3. With nothing live: a **replay** of the newest finished match at 5×, with a line saying so. A match that kicks off
-   later takes over.
+3. With nothing live: a **replay** at 5×, with a line saying so: the newest **showcase** replay if the team named
+   some (`OVERLAP_SHOWCASE_MATCH_IDS`, `realtime.md` §5.3), else the newest finished match. A match that kicks off
+   later takes over; a replay already playing keeps playing.
+
+**First visit:** above the pitch, a "What you're seeing" panel (`components/home/FirstVisitHint.tsx`) in four lines:
+a synthetic match drawn from tracking five times a second (replayed at 5×, or live); a card explains each moment, with
+the **AI · checked** and **Stat line · checked** badges drawn as on the cards and what each means; **Your match** for
+mode, club, player and language; **Watch** and **Analyse**, with a link to How it works. **Got it** hides it for good
+in this browser (localStorage); where storage is blocked it closes for the page and shows again next visit. It renders
+nothing on the server, so it never flashes for a visitor who dismissed it.
 
 Above the screen: the wordmark, the tagline and chips for the other matches. The top navigation (`components/shell/
 TopNav.tsx`) has Live, Matches, How it works and the theme switch on every page.
