@@ -13,6 +13,7 @@
 
 from __future__ import annotations
 
+import time
 import uuid
 from dataclasses import dataclass
 from typing import Any
@@ -68,7 +69,9 @@ class StageExecutor(Executor):
         with telemetry.stage_span(state.moment, self.name, reused=output is not None) as span:
             if output is None:
                 state.calls = []
+                started = time.perf_counter()
                 output = await _stage(state, self.name)(state)
+                output = {**output, "duration_ms": round((time.perf_counter() - started) * 1000, 3)}
                 if state.calls:
                     output = {**output, "calls": state.calls}
                 await jobs.save_stage(job, self.name, output)

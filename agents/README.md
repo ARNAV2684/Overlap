@@ -102,3 +102,10 @@ AI Content Safety. `evals/foundry_quality.py` scores a sample of published lines
 | `smoke.py` | One call through the configured provider |
 | `prompts/` | One prompt file per agent |
 | `evals/` | The bench, recall, numeric accuracy, fault injection, latency, Azeem's review sheet, the gold set, the report |
+
+## Local latency fixes (pending shared review/deployment)
+`OVERLAP_MCP_TRANSPORT=embedded` uses a fresh real MCP session in memory per job, avoiding subprocess imports.
+Set it to `stdio` to retain separate-process operation. The narrator uses at most two parallel batches under the
+existing model budget; template/fact-check behaviour stays intact. Paid providers remain off unless configured.
+Stage/model attempt `duration_ms` fields describe backend work, not browser delivery. Run
+`python -m evals.latency /path/to/jobs.json` on local job exports; do not commit those exports.

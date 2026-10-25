@@ -165,4 +165,7 @@ def _structured(result: Any) -> str:
 
 def mcp_context(settings: Settings):
     """The context factory for Deps: moment -> McpContext."""
+    if settings.mcp_transport == "embedded":
+        from embedded_context import EmbeddedMcpContext
+        return lambda moment: EmbeddedMcpContext(settings, moment)
     return lambda moment: McpContext(settings, moment)

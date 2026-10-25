@@ -30,7 +30,7 @@ _Answer:_
   no key reaches the browser, and it is never logged or rendered.
 - **Groups joined:** `match-<id>` only (events, positions, status). Audience groups (`match-<id>-<mode>-<lang>`) and
   player groups are **not joined**: this screen shows no overlays. After the connection is ready the client sends
-  `{type:"joinGroup", group, ackId}` and waits up to 3 s for the ack before asking for the snapshot anyway.
+  `{type:"joinGroup", group, ackId}` and waits up to 3 s for a successful ack. A refused or missing ack closes this attempt and retries with backoff; it never reports a working live subscription.
 - **Request headers:** none added by us. Every HTTP call goes to this app's own routes (same origin); the routes set
   `Cache-Control: no-store` on their responses.
 - **Generation guard:** each connection attempt is one generation. Every callback checks its generation is still the
@@ -148,9 +148,8 @@ _Answer:_
 - **Merge:** snapshot entries (`received = null`) and buffered live entries are merged by `seq`; where a `seq` is in both,
   the live copy wins. They are then ingested in ascending `seq`. After the merge the buffer is released and later
   messages are ingested directly.
-- **If the snapshot fails** (error, timeout, invalid response): log it, continue with live messages only, and show
-  "Earlier history is unavailable. New live messages will still appear." A new snapshot is merged again on the next
-  reconnect; the `seq` dedupe makes that safe.
+- **If the snapshot fails** (error, timeout, invalid response): log it, close the attempt and retry with backoff. Do not present live tracking indefinitely without
+  its setup and earlier score/events. A new snapshot is merged on reconnect; the `seq` dedupe makes that safe.
 - **If the stream is unreachable** on first load: "Cannot reach the stream server. Is it running?", then the retry
   schedule in §1.
 - **Stale-connection fallback to the snapshot API** (the spec's original wording) is **not decided**: today a stale
@@ -305,7 +304,12 @@ browser releases them at the chosen speed.
   until the relay and the clock handle it.
 
 - **Caching:** a finished match never changes, so the route keeps each match's periods and goals in memory (at most
-  20 matches) and answers with `Cache-Control: private, max-age=3600`.
+  20 matches). Tracking and stats may still be arriving after the events stream reaches full time, so a match is
+  served with `Cache-Control: no-store` until its archive has **settled**: its match document unchanged for 10
+  minutes (`SETTLED_MS`; the archiver runs seconds behind). Settled matches never change again and are served with
+  `Cache-Control: private, max-age=3600`, so a judge replaying or scrubbing a finished match is not re-reading the
+  archive each time. A match whose document time is unknown stays `no-store`. This does not establish an
+  archive-completion signal or automatically refresh chunks already loaded by the player.
 - **Settings** (server-only, the archiver's names, values never written down): `OVERLAP_COSMOS_ENDPOINT`,
   `OVERLAP_COSMOS_DATABASE` (default `live`), `OVERLAP_COSMOS_KEY` (local emulator only; without it the route uses
   `DefaultAzureCredential`), and for Blob either `OVERLAP_ARCHIVE_STORAGE` (a connection string, local) or
@@ -484,3 +488,51 @@ override replaces the job's whole container, so the route reads the job's own co
 | `502 start_failed` | The archive or Azure call failed |
 
 The web app's identity holds a custom role that can only read and start that job (`infra/specs/security.md` §3).
+
+## Local release fix to §8: durable admission and availability
+`OVERLAP_LIVE_ENABLED=true` AND a valid job ID are required. Missing/false disables POST even with a stale job ID.
+GET /api/start-match is uncached, read-only and returns `{available: boolean}` after checking job and control
+container existence. It returns unavailable on failures; it does not promise every downstream service is healthy.
+The button stays hidden until true, polls every 30 seconds and hides again on unavailable.
+
+POST rejects a cross-site Origin/Sec-Fetch-Site before admission. A 60-second Blob lease on
+`match-control/starts.json` serializes all web replicas. The durable document contains a version, monotonic last
+number, rolling attempt timestamps with hashed network visitor identifiers, and a pending execution reservation.
+The web identity has Blob Data Contributor only on this new container, not on archived tracking.
+
+Within the lease: reconcile any pending named execution (only Succeeded/Failed/Stopped releases it), check
+running executions, enforce at most 3 admitted attempts per visitor/hour and 6 globally/hour, allocate an unused
+number above persisted and archived IDs, SAVE the reservation, then invoke ARM once. Store the execution name
+when returned. Timeouts/lost responses or save failures retain the reservation: no automatic retry. HTTP 409
+`start_pending` means the reservation is not yet confirmed (see below); 409 `match_running` includes competing lease holders;
+429 `rate_limited`; 503 `start_unavailable` on missing state/permissions/invalid control data. Responses are uncached.
+The network identifier is not user authentication; rotating/spoofing it still cannot bypass the global cap.
+Admitted failed/unknown starts consume quota. Historical entries expire logically after one hour and are pruned
+on later admission; no raw IP is stored. Do not delete/reset the coordination blob as routine recovery.
+
+A pending unnamed execution (or a named one whose status cannot be read) is fail-closed while it could still be
+playing. It is cleared under the lease only when **both** hold: the reservation is older than 35 minutes
+(`PENDING_RECOVERY_MS`; the generator job stops every execution after 1,800 s, `replicaTimeout`) **and** the job
+has no running execution. Then no execution from it can still be playing, and the worst case of a lost ARM
+response is one extra synthetic match. Without this, one failed start would lock the button for the rest of a
+judging window. Elapsed time alone never unlocks; lastNumber and attempts are preserved, so numbering and quotas
+are unchanged. An operator may still reconcile sooner by recording the execution name.
+
+### Live-list freshness (§5.3)
+GET /api/matches excludes live candidates whose match_state `_ts` (or initial matches `_ts` when absent) is older
+than 180 wall seconds, more than 60 seconds in the future, or already full_time without an archived final result.
+Finished results remain unchanged. This is a conservative display filter, not archive mutation or a claim a game
+finished. Genuine long pauses can temporarily disappear; a fresh snapshot makes them eligible again. The home
+screen clears its quiet exclusion when a match's clock advances, so a resumed stream can be selected again.
+
+## Viewer recovery acceptance (24 October 2026)
+
+A socket must receive its initial Web PubSub connected message within 10 seconds. A constructor failure, silent
+handshake, failed join or closed connection invalidates that generation before retrying. Stop cancels handshake,
+join and retry timers. The status remains connecting/reconnecting through subscription and snapshot catch-up;
+only the completed catch-up is marked live (or finished if full time). A failed snapshot invalidates the attempt and reconnects with backoff; it must not leave a live screen without setup/history.
+
+`viewer-acceptance.qa.test.ts` is opt-in and loopback-only: two real socket/store clients, late join, forced
+disconnect, fresh snapshot at full time, and replay chunks compared with the independently recorded generator
+setup/events/tracking/result. Local transport evidence is separate from browser rendering and Azure behavior.
+See ../../docs/viewer-replay-acceptance.md for the checklist and recorded results.

@@ -8,6 +8,7 @@
 
 from __future__ import annotations
 
+import time
 import uuid
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
@@ -47,16 +48,18 @@ class RunState:
         """One structured model call for `agent` with its prompt file; raises ModelFailed (the caller's template
         takes over). Every attempt is recorded with the prompt version and model."""
         entry = {"agent": agent, "prompt": prompts.version(agent), "model": self.deps.settings.model_name}
+        started = time.perf_counter()
         with telemetry.model_span(self.moment, agent, entry["prompt"], entry["model"]) as span:
             try:
                 result = await self.deps.models.ask(agent, prompts.instructions(agent), payload, schema,
                                                     match_id=self.match_id, moment_id=self.moment_id,
                                                     deadline_utc=self.job.doc["deadline_utc"])
             except ModelFailed as e:
-                self.calls.append({**entry, "ok": False, "reason": e.reason})
+                self.calls.append({**entry, "ok": False, "reason": e.reason,
+                                   "duration_ms": round((time.perf_counter() - started) * 1000, 3)})
                 telemetry.model_result(span, False, e.reason)
                 raise
-            self.calls.append({**entry, "ok": True})
+            self.calls.append({**entry, "ok": True, "duration_ms": round((time.perf_counter() - started) * 1000, 3)})
             telemetry.model_result(span, True)
         return result
 

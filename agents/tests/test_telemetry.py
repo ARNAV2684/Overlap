@@ -204,7 +204,10 @@ def test_one_span_per_job_stage_model_call_and_tool_call(moments, clock, spans):
     job_ctx = jobs[0].context
     assert all(s.context.trace_id == job_ctx.trace_id for s in ours)          # one trace per card
     narrator = next(s for s in ours if s.name == "overlap.stage narrator")
-    assert narrator.parent is not None and narrator.attributes["overlap.model_calls"] == 1
+    assert narrator.parent is not None
+    assert narrator.attributes["overlap.model_calls"] == sum(1 for name, _ in models.calls if name == "narrator")
+    narrator_calls = [s for s in ours if s.name == "overlap.model_call narrator"]
+    assert narrator_calls and all(s.parent.span_id == narrator.context.span_id for s in narrator_calls)
     # no line, prompt or payload text anywhere
     text = all_values(found)
     intent = asyncio.run(store.read("SYN-1017", "outbox:MO-1017-0013"))[0]["intent"]

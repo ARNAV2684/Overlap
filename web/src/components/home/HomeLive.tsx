@@ -47,6 +47,10 @@ export function HomeLive() {
             clocks.current.set(m.match_id, m.clock);
           }
           setMoving(next);
+          setQuiet((previous) => {
+            if (![...next].some((id) => previous.has(id))) return previous;
+            return new Set([...previous].filter((id) => !next.has(id)));
+          });
           setMatches(list);
           setError(false);
         })
@@ -126,8 +130,8 @@ export function HomeLive() {
             <p className="text-[18px] font-bold">{error ? "Can't reach the match archive" : matches ? "No match yet" : "Finding a match…"}</p>
             <p className="mt-2 text-[14px] text-ink/50">
               {error
-                ? "Check the archive settings in web/.env.local and that the local stack is running."
-                : "Start one with the generator: uv run python cli.py live --hubs emulator --speed 20"}
+                ? "The match archive is temporarily unavailable. Please try again shortly."
+                : "Live matches are available when the service is running. Completed matches appear here as replays."}
             </p>
             {!error && matches && (
               <div className="mt-4 flex justify-center">

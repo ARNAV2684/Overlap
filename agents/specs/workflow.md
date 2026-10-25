@@ -71,7 +71,7 @@ All values below are **proposed**, unmeasured defaults for owner review. A timeo
 | Moment workflow deadline | 15 wall seconds from first durable observation, including queue wait; persist once |
 | MCP | 2 seconds/call, at most 2 calls including one transient retry |
 | Model request | 4 seconds or remaining deadline minus 1 second for fallback, whichever is smaller |
-| Total model requests | At most 12 per moment: spotter rank 1, analyst 1, narrator 1, semantic check 1, two rewrite/check pairs 4, semantic checks of translations 3; transient retries consume the same cap. Translator service calls are counted separately |
+| Total model requests | At most 12 per moment: spotter rank 1, analyst 1, narrator at most 2 concurrent chunks, semantic check 1, two rewrite/check pairs 4, semantic checks of translations 3; transient retries consume the same cap. Translator service calls are counted separately |
 | Prompt/output cap | At most 3,000 input tokens and 800 generated tokens/request; no silent truncation of evidence |
 | Match budget | At most 12 admitted model jobs plus the recap, 120 model calls and 400,000 total metered/reserved tokens; the $25 Azure cap (Arnav, 20 Oct) also applies across all matches |
 | Concurrency | 1 running job per match, 2 globally; at most 2 queued per match; suppress oldest queued overflow durably |
@@ -117,3 +117,16 @@ same entry point; neither transport alone establishes completed processing.
 
 D1–D4/D6 decisions and the dependency specs must be agreed before code. Azure access/budget gates only M3.
 M2 can establish a real, fixture-backed MCP call after its tool/source specification is accepted.
+
+### Local release fix: transport and narration latency
+
+The default `OVERLAP_MCP_TRANSPORT=embedded` runs the existing bound MCP server and client over SDK in-memory
+streams. Each job has its own immutable identity, reader, retry counters and server lifetime; no session is reused
+for a different moment. It removes repeated Python subprocess imports, not the MCP protocol, schema validation or
+read-only checks. `stdio` remains explicit compatibility mode. This is not a network endpoint.
+
+Narration partitions requested line IDs into at most two disjoint chunks. Both calls run concurrently through the
+same durable budget gate and original deadline, then combine in requested order. A failed chunk uses templates
+only for its own missing IDs. Fact-checking and rewrite limits are unchanged. The 12-call limit still includes
+retries, so a later optional call may fall back if exhausted. Increased prompt duplication may increase token
+usage; there is no claim of lower model cost or measured Azure speed until cloud validation.

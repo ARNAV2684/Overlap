@@ -95,3 +95,11 @@ az eventhubs namespace delete -g rg-overlap -n evhns-overlap-<token>
 
 To resume, set those five values back (`true`, `1`, `true`, `Standard_S1`, `4000`), `azd provision`, and deploy the
 Functions zip again. To remove everything: `azd down --purge` (only after judging, `specs/costs.md` §3).
+
+## Local release patch: prerequisites before enabling starts
+The patch adds `match-control` and a container-scoped web writer role. Provision these through reviewed Bicep before
+deploying the patched web image. Container Apps sets `OVERLAP_LIVE_ENABLED` from deployLive; keep it false while
+paused. The web's existence probe does not establish full pipeline health; run the normal end-to-end acceptance
+check before a demonstration. No resources were deployed by the local patch.
+For an unknown start outcome, investigate job executions and the pending record under a Blob lease; never delete
+starts.json, reset its counter, or release it on a timeout alone. Retain audit/quota history and last allocated ID.

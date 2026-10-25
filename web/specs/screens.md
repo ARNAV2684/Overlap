@@ -225,3 +225,9 @@ From `GET /api/season/<id>/player/<playerId>`.
 
 Two players of any group side by side: scout cards, both on one radar (the first player's group), per 90 bars and
 percentiles. The picker lists the first player's peers.
+
+## Release availability correction
+StartMatchButton is hidden until the uncached availability endpoint confirms configured job/control storage.
+Unavailable/offline errors never reveal a start control by default. HomeLive uses the freshness-filtered match
+list and can restore quiet matches when their clocks advance. Empty-state text describes service availability
+without showing local developer commands to public visitors. Archives are not deleted to repair the home page.

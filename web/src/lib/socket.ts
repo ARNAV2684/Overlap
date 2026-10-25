@@ -25,8 +25,10 @@ export const SUBPROTOCOL = "json.webpubsub.azure.v1";
 export const TICK_MS = 1000;
 /** First retry after 3 s, then 6 s, 12 s, and never more than 15 s, plus up to 20% random jitter. */
 export const BACKOFF = { firstMs: 3000, maxMs: 15_000, jitter: 0.2 } as const;
-/** How long to wait for the reply to joinGroup before asking for the snapshot anyway. */
+/** How long to wait for the reply to joinGroup before retrying the connection. */
 export const ACK_TIMEOUT_MS = 3000;
+/** Bound socket establishment, including the initial Web PubSub connected message. */
+export const HANDSHAKE_TIMEOUT_MS = 10_000;
 
 const OPEN = 1; // WebSocket.OPEN, written out so a test double does not need the constant
 
@@ -73,6 +75,8 @@ export function createMatchSocket(store: MatchStore, overrides: Partial<SocketDe
   let tickTimer: ReturnType<typeof setInterval> | null = null;
   let unsubscribe: (() => void) | null = null;
   let snapshotAbort: AbortController | null = null;
+  let handshakeTimer: ReturnType<typeof setTimeout> | null = null;
+  const joinTimers = new Map<ReturnType<typeof setTimeout>, () => void>();
 
   // per connection
   let loading = false;
@@ -83,6 +87,10 @@ export function createMatchSocket(store: MatchStore, overrides: Partial<SocketDe
   const current = (gen: number) => running && gen === generation;
 
   function clearConnection() {
+    if (handshakeTimer !== null) clearTimeout(handshakeTimer);
+    handshakeTimer = null;
+    for (const [timer, cancel] of joinTimers) { clearTimeout(timer); cancel(); }
+    joinTimers.clear();
     snapshotAbort?.abort();
     snapshotAbort = null;
     loading = false;
@@ -123,14 +131,19 @@ export function createMatchSocket(store: MatchStore, overrides: Partial<SocketDe
     }
     if (!current(gen)) return;
 
-    const ws = new deps.WebSocketImpl(url, SUBPROTOCOL);
+    let ws: WebSocket;
+    try { ws = new deps.WebSocketImpl(url, SUBPROTOCOL); }
+    catch { failed(gen, notices.unreachable); return; }
     socket = ws;
     let connected = false;
+    handshakeTimer = setTimeout(() => failed(gen, notices.unreachable), HANDSHAKE_TIMEOUT_MS);
 
     ws.onmessage = (event) => {
       if (!current(gen)) return;
       handle(gen, event.data, () => {
         connected = true;
+        if (handshakeTimer !== null) clearTimeout(handshakeTimer);
+        handshakeTimer = null;
       });
     };
     ws.onerror = () => {
@@ -152,6 +165,10 @@ export function createMatchSocket(store: MatchStore, overrides: Partial<SocketDe
   /** The attempt failed or the connection dropped: say so and try again later. */
   function failed(gen: number, text: string) {
     if (!current(gen)) return;
+    generation++; // invalidate callbacks before a delayed snapshot or ack can apply
+    clearConnection();
+    closeSocket();
+    if (retryTimer !== null) clearTimeout(retryTimer);
     store.setConnection("reconnecting");
     store.setNotice(text, "warning");
     retryTimer = setTimeout(connect, retryDelay(attempt, deps.random));
@@ -181,7 +198,7 @@ export function createMatchSocket(store: MatchStore, overrides: Partial<SocketDe
 
     if (m.type === "system" && m.event === "connected") {
       onConnected();
-      void catchUp(gen);
+      if (!loading) void catchUp(gen);
     } else if (m.type === "ack" && typeof m.ackId === "number") {
       acks.get(m.ackId)?.(m.success === true);
     } else if (m.type === "message" && m.from === "group" && m.dataType === "json") {
@@ -192,49 +209,52 @@ export function createMatchSocket(store: MatchStore, overrides: Partial<SocketDe
     // Anything else (other system events, server messages) is not for the screen
   }
 
-  /** Asks the server to put us in the match group and resolves when it says yes (or after ACK_TIMEOUT_MS). */
-  function join(gen: number): Promise<void> {
+  /** Asks the server to put us in the match group and resolves when it says yes; refusal or ACK_TIMEOUT_MS returns false. */
+  function join(gen: number): Promise<boolean> {
     const ws = socket;
-    if (!ws || ws.readyState !== OPEN) return Promise.resolve();
+    if (!ws || ws.readyState !== OPEN) return Promise.resolve(false);
     return Promise.all(
       groups.map(
         (group) =>
-          new Promise<void>((resolve) => {
+          new Promise<boolean>((resolve) => {
             const ackId = nextAckId++;
             const timer = setTimeout(() => {
               acks.delete(ackId);
-              resolve();
+              joinTimers.delete(timer);
+              resolve(false);
             }, ACK_TIMEOUT_MS);
+            joinTimers.set(timer, () => resolve(false));
             acks.set(ackId, (ok) => {
               clearTimeout(timer);
+              joinTimers.delete(timer);
               acks.delete(ackId);
               if (!ok && current(gen)) console.warn(`Could not join group ${group}`);
-              resolve();
+              resolve(ok);
             });
-            ws.send(JSON.stringify({ type: "joinGroup", group, ackId }));
+            try { ws.send(JSON.stringify({ type: "joinGroup", group, ackId })); }
+            catch { acks.get(ackId)?.(false); }
           }),
       ),
-    ).then(() => undefined);
+    ).then((results) => results.every(Boolean));
   }
 
   /**
    * On a new connection: start from a clean store, join the group, then read the snapshot while holding back live
    * messages, and merge the two by seq. Snapshot rows are history (received = null); a message that is in both is
-   * kept as live. If the snapshot cannot be read, carry on with live messages only.
+   * kept as live. If the snapshot cannot be read, reconnect with backoff to recover history and setup.
    */
   async function catchUp(gen: number) {
-    // Status and notice first, then the reset (which publishes at once), so no frame shows an empty store as "reconnecting"
-    store.setConnection("live");
+    // Keep the attempt connecting/reconnecting through reset and catch-up; only success becomes live.
     store.setNotice(notices.loadingHistory);
     store.reset();
-    attempt = 0;
     loading = true;
     buffer = [];
     const ws = socket;
 
     // Join first, then snapshot: anything published after the join is buffered, anything before it is in the snapshot
-    await join(gen);
+    const joined = await join(gen);
     if (!current(gen) || socket !== ws) return; // stopped, replaced, or the connection dropped while joining
+    if (!joined) { failed(gen, notices.unreachable); return; }
 
     const controller = new AbortController();
     snapshotAbort = controller;
@@ -252,6 +272,8 @@ export function createMatchSocket(store: MatchStore, overrides: Partial<SocketDe
       // Aborted means the connection was closed or stopped while loading: nothing left to do
       if (!current(gen) || controller.signal.aborted) return;
       console.warn(error);
+      failed(gen, notices.historyUnavailable);
+      return;
     }
 
     // Live messages that arrived while loading win over the snapshot's copy of the same seq
@@ -267,6 +289,8 @@ export function createMatchSocket(store: MatchStore, overrides: Partial<SocketDe
     for (const { envelope, received } of [...entries.values()].sort((a, b) => a.envelope.seq - b.envelope.seq)) {
       store.ingest(envelope, received);
     }
+    attempt = 0;
+    store.setConnection("live");
     if (historyLoaded) store.setNotice(notices.connected);
     else store.setNotice(notices.historyUnavailable, "warning");
     store.flush();

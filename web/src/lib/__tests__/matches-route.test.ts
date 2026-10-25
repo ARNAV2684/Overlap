@@ -73,6 +73,7 @@ async function get() {
 
 const logs: string[] = [];
 beforeEach(() => {
+  vi.spyOn(Date, "now").mockReturnValue(40_000); // these fixture timestamps are seconds after epoch
   fakes.env = SETTINGS;
   fakes.store = fakeStore([]).store;
   logs.length = 0;

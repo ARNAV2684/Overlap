@@ -8,7 +8,7 @@
 
 import { describe, expect, it } from "vitest";
 import { audienceGroup, buildInsightsSnapshot, LIVE_WINDOW_MS } from "@/lib/server/insights-snapshot";
-import { createRateLimiter, nextMatchNumber, readStartEnv, withMatchNumber } from "@/lib/server/start-match";
+import { nextMatchNumber, readStartEnv, withMatchNumber } from "@/lib/server/start-match";
 
 const M = "SYN-3001";
 const group = audienceGroup(M, { mode: "casual", lang: "en" });
@@ -66,20 +66,12 @@ describe("start match", () => {
     expect(nextMatchNumber(["SYN-9999"])).toBeNull();
   });
 
-  it("allows three starts per visitor per hour", () => {
-    let t = 0;
-    const limiter = createRateLimiter(3, 3_600_000, () => t);
-    expect([1, 2, 3, 4].map(() => limiter.allow("a"))).toEqual([true, true, true, false]);
-    expect(limiter.allow("b")).toBe(true);
-    t = 3_600_001;
-    expect(limiter.allow("a")).toBe(true);
-  });
 
   it("needs the job's resource id", () => {
     expect(readStartEnv({})).toBeNull();
     expect(readStartEnv({ OVERLAP_GENERATOR_JOB_ID: "not-an-id" })).toBeNull();
     const id = "/subscriptions/s/resourceGroups/rg-overlap/providers/Microsoft.App/jobs/caj-overlap-generator";
-    expect(readStartEnv({ OVERLAP_GENERATOR_JOB_ID: id })).toEqual({ jobId: id });
+    expect(readStartEnv({ OVERLAP_GENERATOR_JOB_ID: id, OVERLAP_LIVE_ENABLED: "true" })).toEqual({ jobId: id });
   });
 
   it("keeps the job's own container and settings, adding only the match number", () => {

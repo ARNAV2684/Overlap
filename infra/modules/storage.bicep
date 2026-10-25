@@ -124,6 +124,22 @@ resource webTracking 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   }
 }
 
+// Durable web admission state is separate from read-only match/tracking archives.
+resource matchControl 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
+  parent: blobService
+  name: 'match-control'
+  properties: { publicAccess: 'None' }
+}
+resource webStartControl 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(matchControl.id, webPrincipalId, blobDataContributor)
+  scope: matchControl
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', blobDataContributor)
+    principalId: webPrincipalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
 // Developer: laptop services run against Azure with their own sign-in
 resource developer 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(developerPrincipalId)) {
   name: guid(account.id, developerPrincipalId, blobDataContributor)
