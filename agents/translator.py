@@ -12,6 +12,8 @@
 
 from __future__ import annotations
 
+import asyncio
+
 from pydantic import BaseModel, Field
 
 from fact_checker import LineVerdict, core, evidence_view, names_of, numeric_check
@@ -57,7 +59,10 @@ async def run(run: RunState) -> dict:
     status = {f"{i}|en": st for i, st in checked["status"].items() if "dropped" not in st}
     lines, dropped = list(english), []
     names = names_of(m)
-    for lang in [lang for lang in s.languages if lang != "en"]:
+
+    async def one_language(lang: str) -> tuple[dict[str, tuple[dict, dict]], list[dict]]:
+        """The final (line, status) per line id for one language, and the line ids dropped for it."""
+        lost: list[dict] = []
         translated = await _translate(run, english, lang)
         good: dict[str, dict] = {}
         if translated is not None:
@@ -88,7 +93,14 @@ async def run(run: RunState) -> dict:
                                                                                       names=names):
                     final[tmpl["id"]] = (tr, {"verified": False, "fallback": True})
                 else:
-                    dropped.append({"id": tmpl["id"], "lang": lang})
+                    lost.append({"id": tmpl["id"], "lang": lang})
+        return final, lost
+
+    # The languages are independent, so they run side by side (one after another cost a second or two per job at
+    # 20x, where a card's whole live window is 15 s); the lines are put back in the configured language order
+    others = [lang for lang in s.languages if lang != "en"]
+    for lang, (final, lost) in zip(others, await asyncio.gather(*(one_language(lang) for lang in others)), strict=True):
+        dropped.extend(lost)
         for en in english:
             if en["id"] in final:
                 tr, st = final[en["id"]]
