@@ -12,6 +12,7 @@
 from __future__ import annotations
 
 import re
+from decimal import ROUND_HALF_UP, Decimal
 from typing import Any
 
 from pydantic import BaseModel, Field
@@ -33,7 +34,15 @@ TOKEN = re.compile(r"""
 """, re.VERBOSE)
 SUFFIX = re.compile(r"(?P<ord>st|nd|rd|th)\b|\s?(?P<pct>%)|\s?(?P<unit>xG|km/h|km|metres|meters|m|minutes|minute|"
                     r"mins|min|seconds|secs|yards|yds|hours)\b")
-UNITS_OK = {"xG": {"xG"}, "m": {"m", "metres", "meters"}, "min": {"min", "mins", "minute", "minutes"}}
+UNITS_OK = {"xG": {"xG"}, "m": {"m", "metres", "meters"}, "min": {"min", "mins", "minute", "minutes"},
+            "km": {"km"}, "km/h": {"km/h"}}
+# Lenient on precision, strict on meaning (Arnav, 25 Oct; fact-checking.md §1.6): a measured value may be written
+# rounded (0.12 xG as "0.1 xG", 18.4 m as "18 m"); counts, scores and minutes stay exact
+MEASURED = frozenset({"xG", "m", "km", "km/h", "%"})
+# English small counts are read as digits ("three shots" checks as "3 shots"); any other spelled number still fails
+SMALL_COUNTS = {"one": "1", "two": "2", "three": "3", "four": "4", "five": "5", "six": "6", "seven": "7",
+                "eight": "8", "nine": "9", "ten": "10"}
+SMALL_COUNT = re.compile(r"\b(" + "|".join(SMALL_COUNTS) + r")\b", re.IGNORECASE)
 
 NUMBER_WORDS = {
     "en": r"zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|twenty|"
@@ -134,6 +143,23 @@ def _decimals(token: str) -> int:
     return len(token.split(".", 1)[1]) if "." in token else 0
 
 
+def _counts_as_digits(text: str) -> str:
+    """English small counts as digits, so "three shots" is checked like "3 shots" (fact-checking.md §1.6)."""
+    return SMALL_COUNT.sub(lambda m: SMALL_COUNTS[m.group(1).lower()], text)
+
+
+def matches_fact(token: str, fact: dict) -> bool:
+    """The written number states this fact: exactly, or (measured values only) the fact rounded half-up to fewer
+    decimals, never to zero. 0.12 xG may read "0.1"; 3 shots must read "3" (fact-checking.md §1.6)."""
+    written, value = float(token), float(fact["value"])
+    if written == value:
+        return True
+    places = _decimals(token)
+    if fact.get("unit") not in MEASURED or written == 0 or places >= fact["decimals"]:
+        return False
+    return float(Decimal(str(value)).quantize(Decimal(1).scaleb(-places), rounding=ROUND_HALF_UP)) == written
+
+
 # --- the code check -----------------------------------------------------------------------------------------------
 
 def shape_problems(line: dict) -> list[str]:
@@ -157,6 +183,8 @@ def numeric_check(line: dict, moment: dict, *, english: dict | None = None, name
         return problems
     facts, lang, text = fact_map(moment), line["lang"], line["text"]
     norm = normalise(text, lang)
+    if lang == "en":
+        norm = _counts_as_digits(norm)
     limit = LIMITS[mode_of(line.get("id", line["mode"]))]
     if len(text) > (limit if lang == "en" else int(limit * TRANSLATED_SLACK)):
         problems.append("too_long")
@@ -190,7 +218,8 @@ def numeric_check(line: dict, moment: dict, *, english: dict | None = None, name
         if claims != english["claims"]:
             problems.append("claims_changed")
         got = sorted(float(t["text"]) for t in tokens)
-        want = sorted(float(c["value"]) for c in english["claims"])
+        # the English line's own numbers, as written (a measured value may be rounded there, §1.6)
+        want = sorted(float(t["text"]) for t in numbers(_counts_as_digits(normalise(english["text"], "en")))[0])
         if got != want:
             problems.append("numbers_changed")
         for name in names or []:
@@ -205,17 +234,32 @@ def numeric_check(line: dict, moment: dict, *, english: dict | None = None, name
     return problems
 
 
+def _pair(tokens: list[dict], claims: list[dict], facts: dict) -> list[tuple[dict, dict | None]]:
+    """Each written number with the claim it states: numbers may come in any order (§1.6). A number that states no
+    remaining claim is paired with the next unused one, so its difference is reported."""
+    unused, pairs = list(claims), []
+    for tok in tokens:
+        claim = next((c for c in unused if c["key"] in facts and matches_fact(tok["text"], facts[c["key"]])), None)
+        if claim is None and unused:
+            claim = unused[0]
+        if claim is not None:
+            unused.remove(claim)
+        pairs.append((tok, claim))
+    return pairs
+
+
 def _units(tokens: list[dict], claims: list[dict], facts: dict, *, ordered: bool) -> list[str]:
     problems = []
-    pairs = list(zip(tokens, claims, strict=False)) if ordered else [
-        (t, next((c for c in claims if float(c["value"]) == float(t["text"])), None)) for t in tokens]
-    for i, (tok, claim) in enumerate(pairs):
+    pairs = _pair(tokens, claims, facts) if ordered else [
+        (t, next((c for c in claims if c["key"] in facts and matches_fact(t["text"], facts[c["key"]])), None))
+        for t in tokens]
+    for tok, claim in pairs:
         if claim is None:
             continue
         f = facts.get(claim["key"])
         if f is None:
             continue
-        if ordered and float(tok["text"]) != float(f["value"]):
+        if ordered and not matches_fact(tok["text"], f):
             problems.append(f"text_differs:{claim['key']}")
         if _decimals(tok["text"]) > f["decimals"]:
             problems.append(f"too_precise:{claim['key']}")
@@ -228,10 +272,15 @@ def _units(tokens: list[dict], claims: list[dict], facts: dict, *, ordered: bool
             problems.append(f"unit_wrong:{claim['key']}")
         if tok["ordinal"] and (unit is not None or f["decimals"] != 0):
             problems.append(f"ordinal_wrong:{claim['key']}")
-        if ordered and tok["kind"] == "score" and tok is tokens[i]:
-            nxt = claims[i + 1]["key"] if i + 1 < len(claims) else None
-            prev = claims[i - 1]["key"] if i > 0 else None
-            if (claim["key"], nxt) not in SCORE_PAIRS and (prev, claim["key"]) not in SCORE_PAIRS:
+    if ordered:
+        # A score is two numbers in a row; together they must state a team/opponent pair of the moment, in that order
+        # (equal scores either way round). A swapped score fails.
+        scores = [i for i, (tok, _) in enumerate(pairs) if tok["kind"] == "score"]
+        for a, b in zip(scores[::2], scores[1::2], strict=False):
+            ca, cb = pairs[a][1], pairs[b][1]
+            keys = (ca["key"] if ca else None, cb["key"] if cb else None)
+            level = ca is not None and cb is not None and float(ca["value"]) == float(cb["value"])
+            if keys not in SCORE_PAIRS and not (level and keys[::-1] in SCORE_PAIRS):
                 problems.append("score_not_from_facts")
     return problems
 
