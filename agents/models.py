@@ -194,7 +194,8 @@ def approx_tokens(text: str) -> int:
 class Breaker:
     """Pauses model calls after `limit` failures in a row (timeouts, provider errors), for `cooldown_s`; then lets
     one probe call through: success closes it, failure pauses again. A slow or failing model then costs each moment
-    nothing instead of its whole deadline, so cards still go out (as templates) before they expire."""
+    nothing instead of its whole deadline, so cards still go out (as templates) before they expire. A timeout counts
+    only when the call had its full request timeout (`Models.ask`), not one shortened by the job's deadline."""
     limit: int
     cooldown_s: float
     failures: int = 0
@@ -250,6 +251,9 @@ class Models:
         timeout = min(self.settings.request_timeout_s, deadline_utc - self.clock() - FALLBACK_RESERVE_S)
         if timeout < MIN_CALL_S:
             raise ModelFailed("deadline")
+        # A call cut short by the job's deadline says nothing about the model's health; only a call that had its full
+        # request timeout counts towards the breaker when it times out
+        full_timeout = timeout >= self.settings.request_timeout_s
         message = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
         if approx_tokens(instructions) + approx_tokens(message) > self.settings.max_input_tokens:
             raise ModelFailed("input_too_large")              # never truncate evidence silently
@@ -275,7 +279,10 @@ class Models:
             self.breaker.probing = False
             raise ModelFailed("budget") from e
         except ModelTimeout as e:
-            self.breaker.failure(self.clock())
+            if full_timeout:
+                self.breaker.failure(self.clock())
+            else:
+                self.breaker.probing = False             # release a probe, count nothing
             raise ModelFailed("timeout") from e
         except Exception as e:                          # provider, network or credential failure: template
             self.breaker.failure(self.clock())
