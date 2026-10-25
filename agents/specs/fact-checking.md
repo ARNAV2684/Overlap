@@ -55,6 +55,6 @@ context, wrong ordinal, wrong press direction, duplicate keys, wrong match, stal
 Translated lines keep the English claims list unchanged and are re-checked with §1 after locale normalisation:
 decimal comma → point (`0,15` → `0.15`, Spanish and French), Devanagari digits → ASCII digits (Hindi), and
 locale percent spacing (`71 %`). Every number of the English line must appear exactly once with the same value.
-Spelled-out numbers in the target language are rejected. Then a meaning check per language batch (§2). A failed
+Because the target word order can move numbers, the unit checks pair each number with an unused claim of the same value, preferring one whose unit fits it (5 high regains and a 5-minute window: "5 minutes" is the window). Spelled-out numbers in the target language are rejected. Then a meaning check per language batch (§2). A failed
 language uses the translated template (also checked) or is suppressed for that card; English is never suppressed
 because another language failed.

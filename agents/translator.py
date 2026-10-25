@@ -5,7 +5,8 @@
 # Outputs: {lines: [...en and translated lines], status: {"<id>|<lang>": {verified, fallback}}, dropped: [...]}
 # Spec:    agents/specs/agents.md §5; agents/specs/fact-checking.md §4; agents/specs/prompts.md (translator.md)
 #
-# The translation itself is Azure AI Translator (a local fake offline). Each translated line keeps the English claims
+# The translation itself is Azure AI Translator (a local fake offline), with every number sent as an opaque
+# placeholder and put back afterwards (translation.py). Each translated line keeps the English claims
 # unchanged and passes the code check after locale normalisation; a verified English line also needs the model's
 # post-translation check for its language to stay verified. A failed line gets its translated template (also
 # checked) or is dropped for that language; English is never dropped because another language failed.
@@ -27,14 +28,16 @@ class LanguageVerdict(BaseModel):
     lines: list[LineVerdict]
 
 
-async def _translate(run: RunState, lines: list[dict], lang: str) -> list[dict] | None:
+async def _translate(run: RunState, lines: list[dict], lang: str) -> list[dict | None] | None:
+    """The translated lines in order, None for a line the translator returned unusable (its protected numbers did
+    not all come back); None for the whole call when the translator failed."""
     if not lines:
         return []
     try:
         texts = await run.deps.translator.translate([ln["text"] for ln in lines], lang, keep=names_of(run.moment))
     except TranslationError:
         return None
-    return [{**ln, "lang": lang, "text": t} for ln, t in zip(lines, texts, strict=True)]
+    return [None if t is None else {**ln, "lang": lang, "text": t} for ln, t in zip(lines, texts, strict=True)]
 
 
 async def _check_language(run: RunState, lang: str, pairs: list[tuple[dict, dict]]) -> dict | None:
@@ -67,7 +70,7 @@ async def run(run: RunState) -> dict:
         good: dict[str, dict] = {}
         if translated is not None:
             for en, tr in zip(english, translated, strict=True):
-                if not numeric_check(tr, m, english=en, names=names):
+                if tr is not None and not numeric_check(tr, m, english=en, names=names):
                     good[en["id"]] = tr
         model_pairs = [(en, good[en["id"]]) for en in english
                        if en["id"] in good and checked["status"][en["id"]]["verified"]]

@@ -64,7 +64,12 @@ rejected ([`evaluation.md`](evaluation.md)).
 - A translation that changes a number is refused. The line falls back to its translated template, checked the same
   way, or is **dropped for that language**. English is never dropped because another language failed.
 - In the Azure runs Translator sometimes reordered numbers in Hindi ("1–0 after 3 minutes" came back as "0–3 after 1
-  minute"); those lines were dropped on purpose rather than shown wrong.
+  minute"); those lines were dropped on purpose rather than shown wrong. A swap that keeps the same numbers in another
+  order with no unit to give it away (a score `2–1` turned into `1–2`) could pass the code check, so numbers no longer
+  reach the translator at all: each goes as an opaque placeholder pinned like a name and is put back afterwards, and a
+  line whose placeholders don't all come back exactly once is refused. On a simulated Hindi translator that moves
+  numbers this way, wrong Hindi lines went from up to 16 of 130 to 0, and drops from up to 19 to 0
+  ([`agents/evals/results/hindi-numbers/`](../agents/evals/results/hindi-numbers/report.md)).
 
 ## No personal data
 

@@ -205,10 +205,27 @@ def numeric_check(line: dict, moment: dict, *, english: dict | None = None, name
     return problems
 
 
+def _unit_fits(tok: dict, fact: dict | None) -> bool:
+    unit = (fact or {}).get("unit")
+    return tok["pct"] == (unit == "%") and (not tok["unit"] or tok["unit"] in UNITS_OK.get(unit, set()))
+
+
+def _pair_by_value(tokens: list[dict], claims: list[dict], facts: dict) -> list[tuple[dict, dict | None]]:
+    """A translated line's numbers can come in any order, so each token takes an unused claim of the same value,
+    preferring one whose unit fits it (5 regains and a 5-minute window: "5 minutes" is the window)."""
+    free, pairs = list(claims), []
+    for t in tokens:
+        same = [c for c in free if float(c["value"]) == float(t["text"])]
+        claim = next((c for c in same if _unit_fits(t, facts.get(c["key"]))), same[0] if same else None)
+        if claim is not None:
+            free.remove(claim)
+        pairs.append((t, claim))
+    return pairs
+
+
 def _units(tokens: list[dict], claims: list[dict], facts: dict, *, ordered: bool) -> list[str]:
     problems = []
-    pairs = list(zip(tokens, claims, strict=False)) if ordered else [
-        (t, next((c for c in claims if float(c["value"]) == float(t["text"])), None)) for t in tokens]
+    pairs = list(zip(tokens, claims, strict=False)) if ordered else _pair_by_value(tokens, claims, facts)
     for i, (tok, claim) in enumerate(pairs):
         if claim is None:
             continue
