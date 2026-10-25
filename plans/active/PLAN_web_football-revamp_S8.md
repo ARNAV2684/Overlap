@@ -6,7 +6,7 @@
 | Parent plan | [`PLAN_web_football-revamp`](PLAN_web_football-revamp.md) · v0.2 (handed over to Arnav, 23 Oct) |
 | Milestone in parent plan | M3 live-screen sweep, after [S7](PLAN_web_football-revamp_S7.md) |
 | Author / owner | Arnav (web co-owner, `plans/REGISTRY.md`) |
-| Status | Implemented and validated locally; PR not opened yet |
+| Status | Done — merged into `main` in #96 (25 Oct) |
 | Reviewed branch and commit | main · `b18297f` (after #92) |
 | Planned branch | `claude/gallant-noether-0jf0ql` (the branch this work session was given) |
 

@@ -10,7 +10,7 @@
 | Review coordinator | Arnav |
 | Affected component owners | Generator, stats engine: Azeem · Event Hubs, Cosmos, Web PubSub, relay, archiver, agents, MCP: Arnav (Pranav helping) · Web app: Arnav, Azeem · Other infrastructure and `azure.yaml`: unassigned (Arnav decides) |
 | Proposal version and date | v1.1 · 23 Oct 2026 (D-01, D-03, D-10 decided; A0 in progress) |
-| Status | Built and proven 24 Oct: A0 (#85, #89), A1–A2 (`infra/azure-data`), Wave 1 A3–A5 (`infra/azure-wave1`), Wave 2 A6–A10 and A8 (`infra/azure-wave2`); paused after A8 with the replay link kept |
+| Status | Built and proven 24 Oct: A0 (#85, #89), A1–A2 (`infra/azure-data`), Wave 1 A3–A5 (`infra/azure-wave1`), Wave 2 A6–A10 and A8 (`infra/azure-wave2`), all in `main` through #91 and #95. Resumed on 25 Oct for four proving runs (SYN-3009 to SYN-3012, `docs/evaluation.md`), then paused again with the replay link kept |
 | Plan tier and file | Full · `plans/active/PLAN_infra_azure-pass.md` |
 | Repository | [ARNAV2684/Overlap](https://github.com/ARNAV2684/Overlap) |
 | Reviewed branch and commit | main · 0c73c59 |

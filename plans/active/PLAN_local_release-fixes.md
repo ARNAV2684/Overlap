@@ -1,6 +1,6 @@
 # Local release fixes
 
-Status: Implemented locally; local checks passed; team/cloud review pending — user authorized local implementation; publication for review now authorized; no merge or deployment.
+Status: Done — merged into `main` through #99 (25 Oct), with the stuck-start auto-clear and settled-replay caching added there, and deployed for the 25 Oct Azure runs.
 Baseline: Azure branch dec477f, isolated branch fix/local-release-readiness. Main remains b18297f.
 Author: Pranav. Registry reviewers: Arnav (agents/MCP/relay), Arnav and Azeem (web); other infra unassigned, Arnav decides.
 No teammate approval claimed. Open PR #95 contains this Azure base; #96 overlaps three specification files listed below.

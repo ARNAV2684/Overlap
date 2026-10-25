@@ -6,7 +6,7 @@
 | Parent plan | [`PLAN_web_football-revamp`](PLAN_web_football-revamp.md) · v0.2 (handed over to Arnav, 23 Oct) |
 | Milestone in parent plan | M3 live-screen sweep (§15 "Left to do" and the 24 Oct polish session) |
 | Author / owner | Arnav (web co-owner, `plans/REGISTRY.md`) |
-| Status | In progress — implemented and validated locally; PR not opened yet |
+| Status | Done — merged into `main` in #92 (23 Oct) |
 | Reviewed branch and commit | main · `22ceb8a` (after #90) |
 | Planned branch | `web/live-screen-s7` |
 
