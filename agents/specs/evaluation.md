@@ -87,3 +87,51 @@ Resuming a completed stage keeps its original timing; missing historical measure
 `python -m evals.latency jobs.json` summarizes these local exported job documents. Model-call success is not
 proof that its words passed checking or reached the browser. Compare stdio and embedded using the same fixture,
 separately reporting first-call import cost and later calls; cloud Cosmos/model performance needs its own test.
+
+## 6. Single agent against the seven (D6)
+
+`evals/single_vs_multi.py` runs the same moments two ways and writes `evals/results/single-vs-multi-<run>/`:
+
+- **Seven agents:** the full pipeline (spotter → analyst over MCP → narrator → fact-checker with up to two rewrites
+  → translator → director), as deployed.
+- **Single agent:** the narrator alone, with the same model, prompt and two-batch split
+  (`narrator.draft`), but no analyst interpretation, no fact-checker and no rewrites. It publishes what it writes.
+
+Both arms run on the moments the pipeline admitted with the model (merged and suppressed moments are skipped and
+counted). English only, because the single agent writes English only (translation is §7). Each published line is
+judged against the moment's evidence by code:
+
+- **Wrong number:** a value that is no fact's value in the moment: wrong whatever it meant (a lower bound).
+- **Unverified number:** the fact-checker's code check could not tie a number to its fact at its value, order, unit
+  and precision (`numeric_check`, as `run_match.recheck` does on outboxes). It may be true (a score told from the
+  trailing side, a claim attached to the wrong fact), but nothing checked it; the pipeline never publishes one.
+- **Unsupported claim:** the do/don't wording rules, penalty and direction wording. (The name rule refuses
+  ordinary capitalised openers too, such as "Press", so it counts only under refused.)
+- **Refused:** any problem the code check sees (the above, plus length, markup and internal ids).
+
+Also reported: the pipeline's first draft (with the analyst's interpretation), code and meaning rejections, rewrites,
+template and dropped lines, verified model lines, model calls per moment and latency p50/p95. Meaning faults only a
+model or a person can judge are not counted for either arm, so the single agent's figures are a floor.
+
+Runs: the deployed model (Azure OpenAI in Foundry, gpt-5-mini, minimal reasoning) with the deployed limits (6 s per
+call, 15 s per moment) and with relaxed limits (20 s, 60 s) to show the fact-checker's loop when it has time; and a
+local model (Foundry Local, phi-4-mini) as a free, repeatable reference. Azure calls are billed, so the bench refuses
+`OVERLAP_MODEL_PROVIDER=azure` unless `--allow-paid` is given. Inputs: the fixture match SYN-1017 with its MCP
+fixture files, or recorded bench matches (`--matches`, needs the stats engine's environment); `--from-rows` rebuilds
+a report from a saved `moments.json`. Budgets and the breaker are opened wide for the run, so neither arm is turned
+into templates by a budget; Azure latency is measured from the developer machine and includes the network.
+The recorded Azure runs (25 Oct) predate the precision leniency in fact-checking.md §1.6, so their unverified and
+refused counts for the single agent are higher than a re-run would give; the wrong-number and unsupported rows
+do not depend on it.
+
+## 7. Hindi numbers (D7)
+
+`evals/hindi_numbers.py` writes `evals/results/hindi-numbers/`. Every fixture moment goes through the agents with the
+provider off (template lines) in English and Hindi, with a **simulated** Hindi translator: it changes the word order
+(postpositions move to the front) and, in a stated share of lines with two or more numbers, moves the numbers between
+slots, as Azure AI Translator did in October. The share is unknown for Azure, so 25%, 50% and 100% are reported, each
+with numbers sent raw (before) and as placeholders (after, `translation.ProtectedNumbers`). Reported per share:
+Hindi lines dropped, wrong Hindi lines that passed the re-check (a swapped score such as `2–1` → `1–2` keeps the same
+numbers in another order), and digits the translator saw (must be 0 after). A control run without swaps must drop
+nothing. The simulation measures the guard and the re-check, not how often Azure keeps a placeholder; the first Azure
+run after deploy records the real Hindi drop rate beside it.

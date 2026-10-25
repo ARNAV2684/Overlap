@@ -39,7 +39,7 @@ deadline. A line now passes when a viewer would read the same fact:
 | Lenient | Example | Still strict |
 |---|---|---|
 | A **measured** value (`xG`, `m`, `km`, `km/h`, `%`) written rounded half-up to fewer decimals than the fact | 0.12 xG as "0.1 xG", 18.4 m as "18 m", 57.6% as "58%" | Never rounded to 0 (0.04 xG is not "0 xG"); a wrongly rounded value fails (0.12 as "0.2"); counts, scores, minutes and unitless rates stay exact (3 shots is never "4") |
-| Numbers in **any order**, each matching its own claim | "from 18 m with a 0.12 xG chance" with claims xG then metres | Every number needs a claim (no invented "34th minute"); a score must state team then opponent (`score_not_from_facts` for a swapped one; a level score reads the same either way) |
+| Numbers in **any order**, each matching its own claim (each claim used once; between claims of equal value, the one whose unit fits: 5 regains and a 5-minute window, "5 minutes" is the window) | "from 18 m with a 0.12 xG chance" with claims xG then metres | Every number needs a claim (no invented "34th minute"); a score must state team then opponent (`score_not_from_facts` for a swapped one; a level score reads the same either way) |
 | English **small counts** one–ten spelled out, read as digits | "three shots" with `shots_last_5min = 3` | Still exact ("four shots" fails); other spelled numbers still fail |
 | `km` and `km/h` as units | "covered 10 km", "33.4 km/h" | The unit must match the fact's unit |
 
@@ -74,6 +74,7 @@ context, wrong ordinal, wrong press direction, duplicate keys, wrong match, stal
 Translated lines keep the English claims list unchanged and are re-checked with §1 after locale normalisation:
 decimal comma → point (`0,15` → `0.15`, Spanish and French), Devanagari digits → ASCII digits (Hindi), and
 locale percent spacing (`71 %`). Every number of the English line must appear exactly once with the same value.
-Spelled-out numbers in the target language are rejected. Then a meaning check per language batch (§2). A failed
+Because the target word order can move numbers, the unit checks pair each number with an unused claim it states,
+preferring one whose unit fits it (as in §1.6). Spelled-out numbers in the target language are rejected. Then a meaning check per language batch (§2). A failed
 language uses the translated template (also checked) or is suppressed for that card; English is never suppressed
 because another language failed.

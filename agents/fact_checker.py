@@ -234,13 +234,22 @@ def numeric_check(line: dict, moment: dict, *, english: dict | None = None, name
     return problems
 
 
-def _pair(tokens: list[dict], claims: list[dict], facts: dict) -> list[tuple[dict, dict | None]]:
-    """Each written number with the claim it states: numbers may come in any order (§1.6). A number that states no
-    remaining claim is paired with the next unused one, so its difference is reported."""
+def _unit_fits(tok: dict, fact: dict) -> bool:
+    unit = fact.get("unit")
+    return tok["pct"] == (unit == "%") and (not tok["unit"] or tok["unit"] in UNITS_OK.get(unit, set()))
+
+
+def _pair(tokens: list[dict], claims: list[dict], facts: dict, *, fallback: bool = True
+          ) -> list[tuple[dict, dict | None]]:
+    """Each written number with the claim it states: numbers may come in any order (§1.6), and each claim is used once.
+    Of the unused claims a number states, one whose unit fits it wins (5 regains and a 5-minute window: "5 minutes" is
+    the window). With `fallback`, a number that states no remaining claim is paired with the next unused one, so its
+    difference is reported; without it (a translated line, checked unordered) it stays unpaired."""
     unused, pairs = list(claims), []
     for tok in tokens:
-        claim = next((c for c in unused if c["key"] in facts and matches_fact(tok["text"], facts[c["key"]])), None)
-        if claim is None and unused:
+        same = [c for c in unused if c["key"] in facts and matches_fact(tok["text"], facts[c["key"]])]
+        claim = next((c for c in same if _unit_fits(tok, facts[c["key"]])), same[0] if same else None)
+        if claim is None and fallback and unused:
             claim = unused[0]
         if claim is not None:
             unused.remove(claim)
@@ -250,9 +259,7 @@ def _pair(tokens: list[dict], claims: list[dict], facts: dict) -> list[tuple[dic
 
 def _units(tokens: list[dict], claims: list[dict], facts: dict, *, ordered: bool) -> list[str]:
     problems = []
-    pairs = _pair(tokens, claims, facts) if ordered else [
-        (t, next((c for c in claims if c["key"] in facts and matches_fact(t["text"], facts[c["key"]])), None))
-        for t in tokens]
+    pairs = _pair(tokens, claims, facts, fallback=ordered)
     for tok, claim in pairs:
         if claim is None:
             continue

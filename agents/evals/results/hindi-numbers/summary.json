@@ -1,0 +1,83 @@
+{
+ "moments": 21,
+ "languages": [
+  "en",
+  "hi"
+ ],
+ "targets_supported": [
+  "es",
+  "hi",
+  "fr"
+ ],
+ "translator": "simulated (word order + numbers moved between slots); provider off: template lines",
+ "rows": [
+  {
+   "swap_rate": 0.25,
+   "lines_scrambled_before": 5,
+   "before": {
+    "english_lines": 130,
+    "hindi_lines": 128,
+    "hindi_dropped": 2,
+    "drop_rate": 0.0154,
+    "wrong_hindi_published": 3,
+    "digits_seen_by_translator": 125
+   },
+   "after": {
+    "english_lines": 130,
+    "hindi_lines": 130,
+    "hindi_dropped": 0,
+    "drop_rate": 0.0,
+    "wrong_hindi_published": 0,
+    "digits_seen_by_translator": 0
+   }
+  },
+  {
+   "swap_rate": 0.5,
+   "lines_scrambled_before": 13,
+   "before": {
+    "english_lines": 130,
+    "hindi_lines": 122,
+    "hindi_dropped": 8,
+    "drop_rate": 0.0615,
+    "wrong_hindi_published": 7,
+    "digits_seen_by_translator": 149
+   },
+   "after": {
+    "english_lines": 130,
+    "hindi_lines": 130,
+    "hindi_dropped": 0,
+    "drop_rate": 0.0,
+    "wrong_hindi_published": 0,
+    "digits_seen_by_translator": 0
+   }
+  },
+  {
+   "swap_rate": 1.0,
+   "lines_scrambled_before": 29,
+   "before": {
+    "english_lines": 130,
+    "hindi_lines": 111,
+    "hindi_dropped": 19,
+    "drop_rate": 0.1462,
+    "wrong_hindi_published": 16,
+    "digits_seen_by_translator": 191
+   },
+   "after": {
+    "english_lines": 130,
+    "hindi_lines": 130,
+    "hindi_dropped": 0,
+    "drop_rate": 0.0,
+    "wrong_hindi_published": 0,
+    "digits_seen_by_translator": 0
+   }
+  }
+ ],
+ "control_no_swap_protected": {
+  "english_lines": 130,
+  "hindi_lines": 130,
+  "hindi_dropped": 0,
+  "drop_rate": 0.0,
+  "wrong_hindi_published": 0,
+  "digits_seen_by_translator": null
+ }
+}

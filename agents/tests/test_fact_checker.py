@@ -152,6 +152,27 @@ def test_translations_are_rechecked(moments, lang, text, ok):
     assert (problems == []) is ok, problems
 
 
+def test_an_english_line_in_any_order_pairs_equal_values_by_unit(moments):
+    # numbers may come in any order (§1.6): "5 minutes" is the window even when the regains claim comes first
+    press = by_id(moments, "MO-1017-0021")
+    claims = [("team_high_regains_last_5min", 5), ("window_duration_min", 5)]
+    assert numeric_check(line("In the last 5 minutes Orrinford Albion won 5 high regains.", claims), press) == []
+    wrong = line("In the last 5 minutes Orrinford Albion won 5 minutes.", claims)
+    assert "unit_wrong:team_high_regains_last_5min" in numeric_check(wrong, press)
+
+
+def test_a_translation_with_two_facts_of_the_same_value_pairs_units_by_fit(moments):
+    # 5 high regains and a 5-minute window: "5 मिनट" is the window, wherever the Hindi word order puts it
+    press = by_id(moments, "MO-1017-0021")
+    english = line("Orrinford Albion won 5 high regains in the last 5 minutes.",
+                   [("team_high_regains_last_5min", 5), ("window_duration_min", 5)])
+    for text in ("(hi) in the last 5 minutes Orrinford Albion won 5 high regains.",
+                 "(hi) Orrinford Albion won 5 high regains in the last 5 minutes."):
+        assert numeric_check({**english, "lang": "hi", "text": text}, press, english=english) == []
+    twice = {**english, "lang": "hi", "text": "(hi) Orrinford Albion: 5 minutes, then 5 minutes."}
+    assert "unit_wrong:team_high_regains_last_5min" in numeric_check(twice, press, english=english)
+
+
 def test_locale_normalisation():
     assert normalise("71 % y 0,15", "es") == "71% y 0.15"
     assert normalise("७१ %", "hi") == "71%"

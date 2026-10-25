@@ -1,0 +1,253 @@
+{
+ "provider": "azure",
+ "model": "gpt-5-mini",
+ "languages": [
+  "en"
+ ],
+ "request_timeout_s": 20.0,
+ "moment_deadline_s": 60.0,
+ "reasoning_effort": "minimal",
+ "moments": 21,
+ "compared": 17,
+ "skipped": {
+  "suppressed": 4
+ },
+ "single": {
+  "requested": 109,
+  "written": 109,
+  "published": {
+   "lines": 109,
+   "wrong_number": 0,
+   "unverified_number": 73,
+   "unsupported": 1,
+   "other": 16,
+   "any_problem": 74,
+   "absent": {},
+   "codes": {
+    "text_differs": 109,
+    "unit_wrong": 80,
+    "numbers_without_claims": 56,
+    "unit_missing": 19,
+    "too_long": 12,
+    "score_not_from_facts": 11,
+    "claims_without_numbers": 7,
+    "number_form": 6,
+    "spelled_number": 4,
+    "unknown_name": 3,
+    "too_precise": 2,
+    "cluster_inference": 1
+   }
+  },
+  "refused": 0,
+  "rewritten": 0,
+  "calls_per_moment": 2.0,
+  "latency_s": {
+   "n": 17,
+   "p50": 3.63,
+   "p95": 7.61,
+   "max": 7.61
+  }
+ },
+ "full": {
+  "written": 109,
+  "first_draft": {
+   "lines": 109,
+   "wrong_number": 0,
+   "unverified_number": 74,
+   "unsupported": 6,
+   "other": 30,
+   "any_problem": 76,
+   "absent": {},
+   "codes": {
+    "text_differs": 123,
+    "unit_wrong": 80,
+    "numbers_without_claims": 49,
+    "spelled_number": 21,
+    "unit_missing": 18,
+    "too_long": 18,
+    "claims_without_numbers": 15,
+    "score_not_from_facts": 9,
+    "number_form": 7,
+    "penalty_wording": 5,
+    "too_precise": 4,
+    "unknown_name": 1
+   }
+  },
+  "code_rejected": 187,
+  "meaning_rejected": 7,
+  "rewritten": 127,
+  "verified": 38,
+  "template": 71,
+  "dropped": 0,
+  "published": {
+   "lines": 109,
+   "wrong_number": 0,
+   "unverified_number": 0,
+   "unsupported": 0,
+   "other": 0,
+   "any_problem": 0,
+   "absent": {},
+   "codes": {}
+  },
+  "context_ok": 17,
+  "interpretations": 17,
+  "calls_per_moment": 6.88,
+  "latency_s": {
+   "n": 17,
+   "p50": 16.22,
+   "p95": 21.41,
+   "max": 21.41
+  }
+ },
+ "examples": [
+  {
+   "moment_id": "MO-1017-0019",
+   "trigger": "shot_cluster",
+   "line": "casual",
+   "single": "Orrinford Albion are piling on the pressure: 3 shots in the last 5 minutes.",
+   "absent": [],
+   "problems": [
+    "cluster_inference"
+   ],
+   "full": "Orrinford Albion keep coming: 3 shots in the last 5 minutes.",
+   "full_verified": true
+  },
+  {
+   "moment_id": "MO-1017-0001",
+   "trigger": "goal",
+   "line": "analyst",
+   "single": "Malte Zimmermann's 12m strike (0.15 xG) gives Kestlebury United a 1–0 lead; it's their first shot of the match and his first goal here.",
+   "absent": [],
+   "problems": [
+    "spelled_number:first",
+    "numbers_without_claims",
+    "score_not_from_facts"
+   ],
+   "full": "Goal for Kestlebury United: a 0.15 xG chance from 12 m. 1–0.",
+   "full_verified": false
+  },
+  {
+   "moment_id": "MO-1017-0001",
+   "trigger": "goal",
+   "line": "player:KES-10",
+   "single": "Malte Zimmermann has scored his first goal of the match, making it 1–0 for Kestlebury United; his shot came from 12m with 0.15 xG.",
+   "absent": [],
+   "problems": [
+    "spelled_number:first",
+    "score_not_from_facts",
+    "text_differs:team_goals_match",
+    "score_not_from_facts"
+   ],
+   "full": "Malte Zimmermann scores for Kestlebury United. 1–0.",
+   "full_verified": false
+  },
+  {
+   "moment_id": "MO-1017-0001",
+   "trigger": "goal",
+   "line": "club:ORR",
+   "single": "Orrinford Albion trail 0–1 after conceding to Malte Zimmermann, who scored from 12m (0.15 xG).",
+   "absent": [],
+   "problems": [
+    "score_not_from_facts",
+    "score_not_from_facts"
+   ],
+   "full": "Kestlebury United score. 1–0.",
+   "full_verified": false
+  },
+  {
+   "moment_id": "MO-1017-0002",
+   "trigger": "goal",
+   "line": "casual",
+   "single": "Kwame Kone puts Kestlebury United 2–0 up.",
+   "absent": [],
+   "problems": [
+    "claims_without_numbers",
+    "text_differs:player_goals_match",
+    "score_not_from_facts",
+    "text_differs:team_goals_match"
+   ],
+   "full": "Kwame Kone makes it 2–0 for Kestlebury United with a close-range finish.",
+   "full_verified": true
+  },
+  {
+   "moment_id": "MO-1017-0002",
+   "trigger": "goal",
+   "line": "club:ORR",
+   "single": "Orrinford Albion trail 0–2 following Kwame Kone’s goal from 4 m (shot xG 0.49).",
+   "absent": [],
+   "problems": [
+    "score_not_from_facts",
+    "score_not_from_facts"
+   ],
+   "full": "Kestlebury United score. 2–0.",
+   "full_verified": false
+  },
+  {
+   "moment_id": "MO-1017-0003",
+   "trigger": "momentum_swing",
+   "line": "club:KES",
+   "single": "Kestlebury United have dominated the last 5 min: 100% share of weighted attacking actions, with 1 shot in that window.",
+   "absent": [],
+   "problems": [
+    "text_differs:momentum_share_last_5min_pct",
+    "unit_missing:momentum_share_last_5min_pct",
+    "unit_wrong:momentum_share_last_5min_pct",
+    "text_differs:window_duration_min",
+    "unit_wrong:window_duration_min"
+   ],
+   "full": "Kestlebury United have taken control of the game.",
+   "full_verified": false
+  },
+  {
+   "moment_id": "MO-1017-0003",
+   "trigger": "momentum_swing",
+   "line": "club:ORR",
+   "single": "Orrinford Albion have seen Kestlebury United take control in the last 5 min — Kestlebury with 100% of weighted attacking actions and 1 shot in that window.",
+   "absent": [],
+   "problems": [
+    "text_differs:momentum_share_last_5min_pct",
+    "unit_missing:momentum_share_last_5min_pct",
+    "unit_wrong:momentum_share_last_5min_pct",
+    "text_differs:window_duration_min",
+    "unit_wrong:window_duration_min"
+   ],
+   "full": "Kestlebury United have taken control of the game.",
+   "full_verified": false
+  },
+  {
+   "moment_id": "MO-1017-0004",
+   "trigger": "press_change",
+   "line": "analyst",
+   "single": "Kestlebury United’s pressing has eased: pressures per opponent pass fell from 1.07 to 0.55, with 11 team pressures and 0 high regains in the last 5 minutes at an average press height of 27m, so defensive actions are lower and deeper.",
+   "absent": [],
+   "problems": [
+    "too_long",
+    "number_form:range",
+    "claims_without_numbers",
+    "text_differs:pressures_per_opp_pass_previous_10min",
+    "text_differs:pressures_per_opp_pass_last_5min",
+    "text_differs:team_pressures_last_5min",
+    "unit_wrong:team_pressures_last_5min",
+    "text_differs:team_high_regains_last_5min",
+    "unit_wrong:team_high_regains_last_5min"
+   ],
+   "full": "Kestlebury United are pressing less: 0.55 pressures per opponent pass, down from 1.07, and 0 high regains in the last 5 minutes.",
+   "full_verified": false
+  },
+  {
+   "moment_id": "MO-1017-0004",
+   "trigger": "press_change",
+   "line": "player:KES-04",
+   "single": "Yannick Koch saw his side’s pressures per opponent pass drop to 0.55 in the last 5 minutes, with 11 team pressures and 0 high regains.",
+   "absent": [],
+   "problems": [
+    "numbers_without_claims",
+    "text_differs:team_pressures_last_5min",
+    "unit_wrong:team_pressures_last_5min",
+    "text_differs:team_high_regains_last_5min"
+   ],
+   "full": "Yannick Koch: Kestlebury United are pressing less and letting the other side play.",
+   "full_verified": false
+  }
+ ]
+}

@@ -57,6 +57,14 @@ Translates checked English lines to `es`, `hi`, `fr` with Azure AI Translator (a
 numbers, claims and names stay as in English. Every translated line goes back through the fact-checker; a failed
 language gets the translated template or is suppressed for that card.
 
+Numbers never reach the translator (`translation.ProtectedNumbers`, D7). Each number — a score such as `1–0`, a
+decimal, a percentage, an ordinal, an xG figure — is replaced by its own opaque placeholder (`QZXAA`, `QZXAB`, …; no
+digits), the placeholders are pinned with the dynamic dictionary like names, and the values are put back afterwards.
+On Azure, Hindi moved numbers between slots ("1–0 after 3 minutes" came back as "0–3 after 1 minute"); a placeholder
+carries its own value wherever the target word order puts it. A line whose placeholders do not all come back exactly
+once is treated as untranslated for that language (its template, or dropped), never repaired by guesswork. The
+re-check is unchanged and runs on every restored line. Measured in `evals/hindi_numbers.py` (evaluation.md §7).
+
 ## 6. Director
 
 Rules, not a model: priority and ordering (priority, then newer first); `show_at_ms = evidence.match_ms`,
