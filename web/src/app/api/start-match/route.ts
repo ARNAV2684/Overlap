@@ -23,11 +23,18 @@ export async function GET() {
   } catch { return json({ available: false }); }
 }
 
-export async function POST(request: Request) {
+/** The browser's own page may start a match; another site may not. Behind the Container Apps ingress the server sees
+ * its internal URL (http://…:3000), so the Origin is compared with the host the browser addressed (forwarded Host). */
+function fromThisSite(request: Request): boolean {
+  if (request.headers.get("sec-fetch-site") === "cross-site") return false;
   const origin = request.headers.get("origin");
-  if ((origin && origin !== new URL(request.url).origin) || request.headers.get("sec-fetch-site") === "cross-site") {
-    return json({ error: "forbidden" }, 403);
-  }
+  if (!origin) return true;
+  const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? new URL(request.url).host;
+  try { return new URL(origin).host === host.split(",")[0].trim(); } catch { return false; }
+}
+
+export async function POST(request: Request) {
+  if (!fromThisSite(request)) return json({ error: "forbidden" }, 403);
   try {
     const s = services();
     if (!s) return json({ error: "start_unavailable" }, 503);
