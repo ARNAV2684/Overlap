@@ -39,7 +39,7 @@ def test_good_lines_pass(moments):
     (CLUSTER, "Kestlebury United have taken 3 shots.",
      [("shots_last_5min", 3), ("window_duration_min", 5)], "claims_without_numbers"),              # extra claim
     (CLUSTER, "Kestlebury United have taken three shots in the last 5 minutes.",
-     [("window_duration_min", 5)], "spelled_number:three"),                                        # number word
+     [("window_duration_min", 5)], "numbers_without_claims"),             # "three" reads as 3, and 3 has no claim
     (CLUSTER, "Kestlebury United have taken 3 shots in the last 5 minutes, with 11 on target.",
      [("shots_last_5min", 3), ("window_duration_min", 5)], "numbers_without_claims"),              # stale context
     (CLUSTER, "Kestlebury United have taken 3 shots in the last 5 minutes and dominate.",
@@ -94,7 +94,17 @@ def test_score_claims_must_be_in_order(moments):
     good = line("Kestlebury United score. 1–1.", [("team_goals_match", 1), ("opponent_goals_match", 1)])
     swapped = line("Kestlebury United score. 1–1.", [("opponent_goals_match", 1), ("team_goals_match", 1)])
     assert numeric_check(good, goal) == []
-    assert "score_not_from_facts" in numeric_check(swapped, goal)
+    # a level score reads the same either way round (fact-checking.md §1.6: lenient on order, strict on meaning)
+    assert numeric_check(swapped, goal) == []
+
+
+def test_an_unequal_score_written_the_wrong_way_round_still_fails(moments):
+    goal = by_id(moments, GOAL)
+    f = {x["key"]: x["value"] for x in goal["evidence"]["facts"]}
+    tg, og = f["team_goals_match"], f["opponent_goals_match"]
+    assert tg != og
+    flipped = line(f"Kestlebury United score. {og}–{tg}.", [("opponent_goals_match", og), ("team_goals_match", tg)])
+    assert "score_not_from_facts" in numeric_check(flipped, goal)
 
 
 def test_score_from_context_is_rejected(moments):
@@ -140,6 +150,15 @@ def test_translations_are_rechecked(moments, lang, text, ok):
     translated = {**english, "lang": lang, "text": text}
     problems = numeric_check(translated, press, english=english, names=["Kestlebury United", "Orrinford Albion"])
     assert (problems == []) is ok, problems
+
+
+def test_an_english_line_in_any_order_pairs_equal_values_by_unit(moments):
+    # numbers may come in any order (§1.6): "5 minutes" is the window even when the regains claim comes first
+    press = by_id(moments, "MO-1017-0021")
+    claims = [("team_high_regains_last_5min", 5), ("window_duration_min", 5)]
+    assert numeric_check(line("In the last 5 minutes Orrinford Albion won 5 high regains.", claims), press) == []
+    wrong = line("In the last 5 minutes Orrinford Albion won 5 minutes.", claims)
+    assert "unit_wrong:team_high_regains_last_5min" in numeric_check(wrong, press)
 
 
 def test_a_translation_with_two_facts_of_the_same_value_pairs_units_by_fit(moments):

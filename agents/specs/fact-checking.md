@@ -13,12 +13,13 @@ Malformed evidence is rejected, never repaired.
 For each line:
 1. Validate mode, language, length and the exact `{mode, lang, text, claims}` shape. Claims are `{key, value}`.
 2. Find every numeric expression in the text: integers, decimals, percentages (`71%`), score lines (`2–1`) and
-   ordinals (`2nd`, `6th`). Each must be covered by a claim in text order. Reject spelled-out quantities in English
-   (three, twice, third, both, half), ranges, fractions, digit grouping and scientific notation.
+   ordinals (`2nd`, `6th`). Each must be covered by its own claim, in any order (§1.6). Reject spelled-out quantities
+   in English (twice, third, both, half, twelve…) except the small counts one–ten (§1.6), and ranges, fractions,
+   digit grouping and scientific notation.
 3. Each claim's key exists in this moment's facts; its value **equals the stored fact value** (already rounded by the
    producer at its `decimals`; never re-round the raw number, because the producer rounds halves to even).
-4. Units follow the fact: `xG` (never `%`), `m`, `min`, `%` (value already 0–100); facts without a unit are plain
-   counts or rates.
+4. Units follow the fact: `xG` (never `%`), `m`, `km`, `km/h`, `min`, `%` (value already 0–100); facts without a
+   unit are plain counts or rates.
 5. Meanings the code can check:
    - a score line is allowed only as `team_goals_match`–`opponent_goals_match` (goal and penalty packs), never from
      `context.score`;
@@ -28,6 +29,24 @@ For each line:
    - "more"/"harder" vs "less" for pressing must agree with `pressures_per_opp_pass_last_5min` compared with
      `pressures_per_opp_pass_previous_10min`; "up from"/"down from" likewise for momentum shares.
 6. Names come only from `context.teams` and `context.players`; no IDs, markup or instructions in a public line.
+
+### 1.6 Lenient on precision, strict on meaning (Arnav, 25 Oct)
+
+On Azure most model lines failed this check on form, not substance (25 Oct, SYN-3011: 264 `text_differs`, mostly a
+right number in another order; 163 `unit_wrong`, many correct `km` and `km/h`), and the rewrites ran jobs past their
+deadline. A line now passes when a viewer would read the same fact:
+
+| Lenient | Example | Still strict |
+|---|---|---|
+| A **measured** value (`xG`, `m`, `km`, `km/h`, `%`) written rounded half-up to fewer decimals than the fact | 0.12 xG as "0.1 xG", 18.4 m as "18 m", 57.6% as "58%" | Never rounded to 0 (0.04 xG is not "0 xG"); a wrongly rounded value fails (0.12 as "0.2"); counts, scores, minutes and unitless rates stay exact (3 shots is never "4") |
+| Numbers in **any order**, each matching its own claim (each claim used once; between claims of equal value, the one whose unit fits: 5 regains and a 5-minute window, "5 minutes" is the window) | "from 18 m with a 0.12 xG chance" with claims xG then metres | Every number needs a claim (no invented "34th minute"); a score must state team then opponent (`score_not_from_facts` for a swapped one; a level score reads the same either way) |
+| English **small counts** one–ten spelled out, read as digits | "three shots" with `shots_last_5min = 3` | Still exact ("four shots" fails); other spelled numbers still fail |
+| `km` and `km/h` as units | "covered 10 km", "33.4 km/h" | The unit must match the fact's unit |
+
+The claim values themselves still equal the stored facts exactly (step 3): leniency is only in how the text writes
+them. A translation must keep the English line's own numbers, so a rounded English value stays the same in es, hi
+and fr (§4). Code: `matches_fact` and `_pair` in `agents/fact_checker.py`; tests:
+`agents/tests/test_lenient_precision.py`. The fault-injection bench still catches every code-checkable fault.
 
 Templates go through the same check.
 
@@ -55,6 +74,7 @@ context, wrong ordinal, wrong press direction, duplicate keys, wrong match, stal
 Translated lines keep the English claims list unchanged and are re-checked with §1 after locale normalisation:
 decimal comma → point (`0,15` → `0.15`, Spanish and French), Devanagari digits → ASCII digits (Hindi), and
 locale percent spacing (`71 %`). Every number of the English line must appear exactly once with the same value.
-Because the target word order can move numbers, the unit checks pair each number with an unused claim of the same value, preferring one whose unit fits it (5 high regains and a 5-minute window: "5 minutes" is the window). Spelled-out numbers in the target language are rejected. Then a meaning check per language batch (§2). A failed
+Because the target word order can move numbers, the unit checks pair each number with an unused claim it states,
+preferring one whose unit fits it (as in §1.6). Spelled-out numbers in the target language are rejected. Then a meaning check per language batch (§2). A failed
 language uses the translated template (also checked) or is suppressed for that card; English is never suppressed
 because another language failed.
