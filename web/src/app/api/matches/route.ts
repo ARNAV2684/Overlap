@@ -2,7 +2,8 @@
 //
 // Purpose: list the archived matches, live and finished, for the match picker: clubs, status, phase, score and clock
 // Inputs:  HTTP GET; Cosmos `matches` and `match_state` through src/lib/server/archive-store.ts (settings:
-//          archive-env.ts, the same as the replay route)
+//          archive-env.ts, the same as the replay route); OVERLAP_SHOWCASE_MATCH_IDS, read on every request so it can
+//          change without a rebuild
 // Outputs: JSON { matches: [...] }, or { error } (codes in web/specs/realtime.md §5.3)
 // Spec:    web/specs/realtime.md §5.3. Plan: vedant-frontend/plans/active/PLAN_web_match-list.md
 //
@@ -10,7 +11,7 @@
 // logged. Settings and keys never appear in a response or a log line; storage errors are logged by operation only.
 
 import { connection } from "next/server";
-import { buildMatchList, currentMatchRows, liveMatchIds, MATCH_LIST_LIMIT, parseMatchRows } from "@/lib/match-list";
+import { buildMatchList, currentMatchRows, liveMatchIds, MATCH_LIST_LIMIT, parseMatchRows, parseShowcaseIds } from "@/lib/match-list";
 import { describeArchiveEnvProblems, readArchiveEnv } from "@/lib/server/archive-env";
 import { ArchiveStoreError, createMatchListStore, type MatchListStore } from "@/lib/server/archive-store";
 
@@ -61,7 +62,8 @@ export async function GET() {
       else console.error(`match list ${ids[i]}: match state read failed`);
     });
 
-    return Response.json(buildMatchList(currentMatchRows(rows, states), states), { headers: NO_STORE });
+    const showcase = parseShowcaseIds(process.env.OVERLAP_SHOWCASE_MATCH_IDS);
+    return Response.json(buildMatchList(currentMatchRows(rows, states), states, showcase), { headers: NO_STORE });
   } catch (error) {
     if (error instanceof ArchiveStoreError) {
       console.error(`match list: ${error.message}`);

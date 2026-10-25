@@ -60,6 +60,9 @@ param livePipeline string = 'true'
 ])
 param webMinReplicas string = '1'
 
+@description('Replays the home page opens on first, comma separated; empty for the newest (SHOWCASE_MATCH_IDS).')
+param showcaseMatchIds string = ''
+
 @description('Cosmos DB shared RU/s: "4000" during a live run (about $0.24 an hour above the free 1,000), "1000" otherwise.')
 param cosmosThroughput string = '1000'
 
@@ -211,6 +214,7 @@ module containerApps 'modules/container-apps.bicep' = {
     workspaceName: monitoring.outputs.workspaceName
     deployLive: live
     webMinReplicas: int(webMinReplicas)
+    showcaseMatchIds: showcaseMatchIds
     webImage: webImage
     statsImage: statsImage
     generatorImage: generatorImage

@@ -8,8 +8,9 @@ https://ca-overlap-web.agreeablestone-46edcfef.swedencentral.azurecontainerapps.
 
 - The first visit may take **about 10 s**: between test windows the web app scales to zero and wakes on the first
   request. Reload once if the page is still blank.
-- The home page opens on a live match if one is playing; otherwise it plays a **replay** of the newest finished match
-  at 5× and says so.
+- The home page opens on a live match if one is playing; otherwise it plays a **replay** at 5× (one of our showcase
+  matches) and says so. On a first visit a short panel above the pitch explains what you are seeing; **Got it** hides
+  it.
 - The top navigation has **Live**, **Matches**, **League**, **How it works** and a light/dark switch.
 
 ## 2. Watch a replay

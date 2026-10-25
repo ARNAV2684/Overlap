@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildMatchList, liveMatchIds, matchListSchema, parseMatchRows } from "@/lib/match-list";
+import { buildMatchList, liveMatchIds, matchListSchema, parseMatchRows, parseShowcaseIds } from "@/lib/match-list";
 
 /** A `matches` row as the store's projection returns it, with the Cosmos fields a query can still carry. */
 const row = (matchId: string, status: string, ts: number, extra: Record<string, unknown> = {}) => ({
@@ -114,5 +114,24 @@ describe("live freshness", () => {
     expect(selected.map((r) => r.match_id)).toEqual(["SYN-3001", "SYN-3002", "SYN-3003"]);
     expect(rows).toHaveLength(4); // no mutation
     expect(rows[0].status).toBe("live");
+  });
+});
+
+describe("showcase replays", () => {
+  it("reads the setting's match ids and ignores anything else", () => {
+    expect([...parseShowcaseIds(" SYN-3012, SYN-3013 ,,nope,SYN-12")]).toEqual(["SYN-3012", "SYN-3013"]);
+    expect(parseShowcaseIds(undefined).size).toBe(0);
+    expect(parseShowcaseIds("").size).toBe(0);
+  });
+
+  it("marks finished showcase matches without changing the order, and never a live one", () => {
+    const { rows } = parseMatchRows([row("SYN-3014", "live", 40), row("SYN-3013", "finished", 30), row("SYN-3012", "finished", 20)]);
+    const list = buildMatchList(rows, new Map(), new Set(["SYN-3012", "SYN-3014"]));
+    expect(list.matches.map((m) => [m.match_id, m.showcase ?? false])).toEqual([
+      ["SYN-3014", false],
+      ["SYN-3013", false],
+      ["SYN-3012", true],
+    ]);
+    expect(matchListSchema.safeParse(list).success).toBe(true);
   });
 });

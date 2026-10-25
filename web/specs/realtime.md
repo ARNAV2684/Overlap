@@ -376,6 +376,10 @@ picker works the same with the local stand-in (which has no list) and on Azure.
   - **Finished:** `phase` is `full_time`, `score` is the stored `result.score`, `clock` is `null`. `match_state` is not
     read.
   - **Order:** live matches first, then finished ones; inside each, the most recently written first.
+  - **Showcase:** a finished match named in `OVERLAP_SHOWCASE_MATCH_IDS` (comma separated, read on every request, so
+    it changes without a rebuild) carries `"showcase": true`; every other match leaves the field out. It never changes
+    the order. The home page opens on the newest showcase replay when nothing is live (`screens.md` §1). On Azure the
+    setting comes from the `azd` value `SHOWCASE_MATCH_IDS` (`infra/modules/container-apps.bicep`).
 - **Left out:** a `matches` document without a setup, with another status, or finished without a valid result. The
   route logs one line with how many it left out and their ids.
 - **Errors** (body `{ "error": "<code>" }`, `Cache-Control: no-store`):

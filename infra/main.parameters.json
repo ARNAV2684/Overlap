@@ -29,6 +29,9 @@
     "webMinReplicas": {
       "value": "${WEB_MIN_REPLICAS=1}"
     },
+    "showcaseMatchIds": {
+      "value": "${SHOWCASE_MATCH_IDS=}"
+    },
     "cosmosThroughput": {
       "value": "${COSMOS_THROUGHPUT=1000}"
     },

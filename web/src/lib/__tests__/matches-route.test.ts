@@ -101,6 +101,18 @@ describe("GET /api/matches", () => {
     expect(logs).toEqual([]);
   });
 
+  it("marks the finished matches named in OVERLAP_SHOWCASE_MATCH_IDS, read on every request", async () => {
+    fakes.store = fakeStore([row("SYN-3013", "finished", 30), row("SYN-3012", "finished", 20)]).store;
+    vi.stubEnv("OVERLAP_SHOWCASE_MATCH_IDS", "SYN-3012");
+    const { body } = await get();
+    expect(body.matches.map((m: { match_id: string; showcase?: boolean }) => [m.match_id, m.showcase ?? false])).toEqual([
+      ["SYN-3013", false],
+      ["SYN-3012", true],
+    ]);
+    vi.unstubAllEnvs();
+    expect((await get()).body.matches.some((m: { showcase?: boolean }) => m.showcase)).toBe(false);
+  });
+
   it("answers an empty archive with an empty list", async () => {
     expect(await get()).toMatchObject({ status: 200, body: { matches: [] } });
   });

@@ -35,6 +35,9 @@ param deployLive bool = true
 @description('Web app minimum replicas: 1 during a run, 0 while paused.')
 param webMinReplicas int = 1
 
+@description('Replays the home page opens on first, comma separated (SYN-3012,SYN-3013); empty for the newest.')
+param showcaseMatchIds string = ''
+
 @description('Images; empty means the public placeholder (before the first push).')
 param webImage string = ''
 param statsImage string = ''
@@ -148,6 +151,8 @@ resource web 'Microsoft.App/containerApps@2024-03-01' = {
             // The start button: present only while the generator job exists
             { name: 'OVERLAP_GENERATOR_JOB_ID', value: deployLive ? generatorJobId : '' }
             { name: 'OVERLAP_LIVE_ENABLED', value: deployLive ? 'true' : 'false' }
+            // The home page opens on these replays first (web/specs/screens.md §1); changing it needs no new image
+            { name: 'OVERLAP_SHOWCASE_MATCH_IDS', value: showcaseMatchIds }
           ]
         }
       ]
