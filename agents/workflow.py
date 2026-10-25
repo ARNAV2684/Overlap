@@ -26,6 +26,7 @@ import fact_checker
 import narrator
 import recap_writer
 import spotter
+import telemetry
 import translator
 from runtime import Deps, RunState, Stage, Stages
 from state import LeaseLost, SourceConflict, Store, write_outbox
@@ -65,14 +66,16 @@ class StageExecutor(Executor):
         state = _RUNS[message.key]
         jobs, job = state.deps.jobs, state.job
         output = job.stage_outputs.get(self.name)
-        if output is None:
-            state.calls = []
-            started = time.perf_counter()
-            output = await _stage(state, self.name)(state)
-            output = {**output, "duration_ms": round((time.perf_counter() - started) * 1000, 3)}
-            if state.calls:
-                output = {**output, "calls": state.calls}
-            await jobs.save_stage(job, self.name, output)
+        with telemetry.stage_span(state.moment, self.name, reused=output is not None) as span:
+            if output is None:
+                state.calls = []
+                started = time.perf_counter()
+                output = await _stage(state, self.name)(state)
+                output = {**output, "duration_ms": round((time.perf_counter() - started) * 1000, 3)}
+                if state.calls:
+                    output = {**output, "calls": state.calls}
+                await jobs.save_stage(job, self.name, output)
+            telemetry.stage_result(span, output)
         if output.get("terminal"):
             await jobs.finish(job, output["terminal"], output.get("reason"))
             await ctx.yield_output({"status": output["terminal"], "reason": output.get("reason")})
@@ -116,14 +119,18 @@ async def _run_job(moment: dict, deps: Deps, order: tuple[str, ...]) -> dict:
         return {"status": "delivery_pending", "moment_id": moment["moment_id"], "resumed": True}
     key = f"{moment['moment_id']}:{uuid.uuid4().hex}"
     _RUNS[key] = RunState(moment, job, deps)
-    try:
-        result = await build_workflow(order).run(RunKey(key))
-    except LeaseLost:
-        return {"status": "lease_lost", "moment_id": moment["moment_id"]}
-    finally:
-        _RUNS.pop(key, None)
-    outputs = result.get_outputs()
-    return {**(outputs[-1] if outputs else {"status": "incomplete"}), "moment_id": moment["moment_id"]}
+    with telemetry.job_span(moment, order) as span:
+        try:
+            result = await build_workflow(order).run(RunKey(key))
+        except LeaseLost:
+            telemetry.job_result(span, {"status": "lease_lost"})
+            return {"status": "lease_lost", "moment_id": moment["moment_id"]}
+        finally:
+            _RUNS.pop(key, None)
+        outputs = result.get_outputs()
+        final = {**(outputs[-1] if outputs else {"status": "incomplete"}), "moment_id": moment["moment_id"]}
+        telemetry.job_result(span, final)
+    return final
 
 
 async def process_moment(doc: dict, deps: Deps) -> dict:

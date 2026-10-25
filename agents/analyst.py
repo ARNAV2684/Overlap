@@ -20,6 +20,7 @@ from context import ContextRejected, ContextUnavailable
 from fact_checker import evidence_view
 from models import ModelFailed
 from runtime import RunState
+from telemetry import TracedContext
 
 # Tools that fit each trigger, after get_match_state and get_live_state. "actor" is player_ids[0].
 PLAN = {"goal": [("get_player_context", "actor")], "milestone": [("get_player_context", "actor")],
@@ -76,7 +77,8 @@ async def _read_context(run: RunState) -> tuple[list[dict], dict]:
     m, e = run.moment, run.moment["evidence"]
     tools: list[dict] = []
     data: dict = {}
-    async with run.deps.context(m) as mcp:
+    async with run.deps.context(m) as opened:
+        mcp = TracedContext(opened, m)                # one span per tool call
         frozen = await mcp.call("get_match_state")
         if frozen["state"]["teams"] != m["context"]["teams"]:
             raise ContextRejected("get_match_state:context_mismatch")

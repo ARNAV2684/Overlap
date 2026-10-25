@@ -1,0 +1,127 @@
+{
+ "created_utc": "2026-10-25T09:16:52Z",
+ "source": "cosmos:SYN-3010",
+ "judge_model": "gpt-5-mini",
+ "evaluators": [
+  "azure-ai-evaluation:groundedness",
+  "azure-ai-evaluation:relevance",
+  "azure-ai-evaluation:fluency"
+ ],
+ "lines": 60,
+ "by_metric": {
+  "groundedness": {
+   "n": 59,
+   "mean": 4.14,
+   "pass_rate": 0.983,
+   "errors": 1,
+   "not_applicable": 0,
+   "threshold": 3
+  },
+  "relevance": {
+   "n": 60,
+   "mean": 3.1,
+   "pass_rate": 0.917,
+   "errors": 0,
+   "not_applicable": 0,
+   "threshold": 3
+  },
+  "fluency": {
+   "n": 60,
+   "mean": 3.12,
+   "pass_rate": 1.0,
+   "errors": 0,
+   "not_applicable": 0,
+   "threshold": 3
+  }
+ },
+ "by_kind": {
+  "model": {
+   "groundedness": 4.2,
+   "relevance": 2.92,
+   "fluency": 3.2,
+   "n": 25
+  },
+  "template": {
+   "groundedness": 4.09,
+   "relevance": 3.23,
+   "fluency": 3.06,
+   "n": 35
+  }
+ },
+ "by_trigger": {
+  "big_chance": {
+   "groundedness": 4.0,
+   "relevance": 3.17,
+   "fluency": 3.0,
+   "n": 6
+  },
+  "connection": {
+   "groundedness": 4.33,
+   "relevance": 3.5,
+   "fluency": 3.0,
+   "n": 6
+  },
+  "goal": {
+   "groundedness": 4.33,
+   "relevance": 3.08,
+   "fluency": 3.08,
+   "n": 12
+  },
+  "head_to_head": {
+   "groundedness": 4.17,
+   "relevance": 2.83,
+   "fluency": 3.33,
+   "n": 12
+  },
+  "momentum_swing": {
+   "groundedness": 4.0,
+   "relevance": 3.0,
+   "fluency": 3.17,
+   "n": 6
+  },
+  "press_change": {
+   "groundedness": 4.0,
+   "relevance": 3.0,
+   "fluency": 3.2,
+   "n": 5
+  },
+  "shot_cluster": {
+   "groundedness": 4.0,
+   "relevance": 2.71,
+   "fluency": 3.0,
+   "n": 7
+  },
+  "workhorse": {
+   "groundedness": 4.0,
+   "relevance": 3.83,
+   "fluency": 3.0,
+   "n": 6
+  }
+ },
+ "by_mode": {
+  "analyst": {
+   "groundedness": 4.0,
+   "relevance": 3.13,
+   "fluency": 3.13,
+   "n": 15
+  },
+  "casual": {
+   "groundedness": 4.43,
+   "relevance": 3.21,
+   "fluency": 3.21,
+   "n": 14
+  },
+  "club": {
+   "groundedness": 4.0,
+   "relevance": 2.88,
+   "fluency": 3.12,
+   "n": 17
+  },
+  "player": {
+   "groundedness": 4.14,
+   "relevance": 3.21,
+   "fluency": 3.0,
+   "n": 14
+  }
+ }
+}

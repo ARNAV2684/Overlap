@@ -17,6 +17,8 @@
     "OVERLAP_WEBPUBSUB_ENDPOINT": "http://localhost:8787",
     "OVERLAP_WEBPUBSUB_HUB": "live",
     "OVERLAP_MODEL_PROVIDER": "off",
-    "OVERLAP_TRANSLATOR": "fake"
+    "OVERLAP_TRANSLATOR": "fake",
+    "OVERLAP_TRACING": "off",
+    "OVERLAP_CONTENT_SAFETY": "off"
   }
 }
