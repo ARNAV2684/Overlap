@@ -11,7 +11,9 @@
 // The daily cap keeps a runaway log loop from costing more than about $1.15 a day. The Application Insights
 // connection string identifies where telemetry goes; it is not a credential (the repository never holds it anyway).
 // The alerts read Application Insights, which stays while the pipeline is paused; with nothing running they never
-// fire.
+// fire. The Functions host samples telemetry adaptively (host.json sets no samplingSettings, so its defaults apply:
+// requests are never sampled, traces and dependencies are under load). The function-failure panel and alert are
+// exact; card counts, agent spans and model calls can undercount at 20x, so read them as rates and shares.
 
 @description('Azure region for monitoring.')
 param location string
@@ -197,14 +199,15 @@ resource alertGroup 'Microsoft.Insights/actionGroups@2023-01-01' = if (alertsOn)
   }
 }
 
-// Each alert counts rows in Application Insights over its window and emails once when the count passes the threshold
+// Each alert counts rows in Application Insights over its window and emails once when the count is greater than the
+// threshold, so a threshold of 2 means "3 or more"
 var alertRules = [
   {
     name: 'functions-failing'
     severity: 2
     description: 'Function runs are failing (relay, archiver, moment trigger, recap trigger or publisher).'
     query: 'requests | where cloud_RoleName startswith "func-overlap" and success == false'
-    threshold: 3
+    threshold: 2                     // 3 or more failed runs (requests are never sampled)
     window: 'PT5M'
   }
   {
@@ -212,7 +215,7 @@ var alertRules = [
     severity: 3
     description: 'The model breaker keeps opening: model calls are being skipped and cards fall back to templates.'
     query: 'dependencies | where name startswith "overlap.model_call" and tostring(customDimensions["overlap.reason"]) == "breaker_open"'
-    threshold: 10
+    threshold: 9                     // 10 or more skipped calls (dependencies can be sampled: a floor, not a count)
     window: 'PT10M'
   }
   {

@@ -108,9 +108,9 @@ Basic, admin user off, images pulled by managed identity (`AcrPull`).
 | Setting | Value |
 |---|---|
 | Log Analytics | Pay-as-you-go, retention 30 days, **daily cap 0.5 GB** |
-| Application Insights | Workspace-based, for the Functions app; adaptive sampling on |
+| Application Insights | Workspace-based, for the Functions app; adaptive sampling on. The Functions host's defaults apply (`functions/host.json` sets no `samplingSettings`): requests (function runs) are never sampled; traces and dependencies (the publisher's card totals, agent spans, model and MCP calls) are sampled under load, so at 20× their counts can be low. Read those panels as rates and shares, not exact totals |
 | Workbook | "Overlap live run" on Application Insights: cards sent and expired per minute, model-written jobs by match, function runs and failures, relay and archiver batch time, agent stage time, model calls by outcome, MCP tool calls, exceptions. Reader lag itself is not logged, so batch time stands in for it |
-| Alerts | Log alerts on Application Insights, every 5 minutes, emailed to the budget contact (`BUDGET_CONTACT_EMAIL`; none without it): 3 or more failed function runs in 5 minutes; 10 or more model calls skipped as `breaker_open` in 10 minutes; at least 20 cards expired and more expired than sent in 15 minutes. They stay while paused and never fire with nothing running |
+| Alerts | Log alerts on Application Insights, every 5 minutes, emailed to the budget contact (`BUDGET_CONTACT_EMAIL`; none without it): 3 or more failed function runs in 5 minutes (exact: requests are never sampled); 10 or more model calls skipped as `breaker_open` in 10 minutes (sampled, so it may fire late); at least 20 cards expired and more expired than sent in 15 minutes. They stay while paused and never fire with nothing running |
 
 ### 2.9 Microsoft Foundry (model)
 

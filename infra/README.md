@@ -79,7 +79,9 @@ Open `OVERLAP_WEB_URL` and press **Start a live match** (3 starts per visitor pe
 **Watch it:** in the portal, open the Application Insights resource `appi-overlap-<token>` → Workbooks → **Overlap live
 run**, and pick a time range that covers the match: cards sent and expired, function runs and failures, relay and
 archiver batch time, each agent's stage time, model calls by outcome and MCP calls. Alerts email the budget contact
-when function runs fail, the model breaker keeps opening, or most cards expire.
+when function runs fail, the model breaker keeps opening, or most cards expire. Function runs are exact; card,
+agent and model counts are sampled under load, so at 20× read them as rates and shares
+([`specs/resources.md`](specs/resources.md) §2.8).
 
 ## Pause (after a run) and resume
 
