@@ -146,7 +146,7 @@ Raise the model-written share at 20× and show it on more replays; a "how this c
 
 Paste one. Block A decides after the proving run; the audit's rule is Multi-Agent if the share of "AI · checked" cards is clearly visible, otherwise Azure Cloud Native Integration.
 
-### 5a. Best Multi-Agent System (138 words, plus the optional marker sentences)
+### 5a. Best Multi-Agent System (166 words, plus the AI-share marker sentence)
 
 Overlap is a multi-agent system with distinct roles and one shared record. Seven agents (spotter, analyst, narrator, fact-checker, translator, director, recap writer) each own one job on a flagged match moment, and each saves its output on a shared job document in Cosmos DB before handing off to the next. The analyst reaches the evidence through our own MCP server; the fact-checker sends failing lines back to the narrator twice, then falls back to a labelled template, and a crashed run resumes from its last saved stage without ever running a moment twice. The outcome is something a single agent cannot give: personalised, translated commentary in which every number is verified in code before it is shown. On our 24-match bench, 0 wrong numbers appeared in 12,236 published lines (template path), and fault injection caught every numeric fault. On the same moments on gpt-5-mini, a single narrator agent published 65 of 109 lines no check could tie to the evidence; the seven agents published none. `[[AI-SHARE sentence: the model-written share of the latest proving run]]`
 
@@ -192,7 +192,7 @@ Optional sixth: the **Overlap live run** workbook in Application Insights during
 
 ## 8. Source check
 
-Every count and number above, with where it comes from. Checked 25 Oct 2026 against the files named.
+Every count and number above, with where it comes from. Checked 25 Oct 2026 against the files named; rows from "Tests" down were added or updated in the evening, at `main` `1a60777`.
 
 | Claim | Value | Source |
 |---|---|---|
@@ -224,7 +224,14 @@ Every count and number above, with where it comes from. Checked 25 Oct 2026 agai
 | Pause and resume | five settings | `infra/README.md` "Pause" and "Resume" |
 | In-process MCP | removes a 4–5 s process start per job | Brief "Known gap"; `docs/release-readiness.md` (lines 29–35) |
 | CI | workflows `infra.yml`, `pr-checks.yml`, `python.yml`, `web.yml` | `.github/workflows` |
-| Tests | "more than 1,000" | Run on 25 Oct on branch `fix/local-release-readiness` (HEAD `3cb19f8`): agents 217 passed; MCP 150 passed, 3 skipped; stats 76 passed, 1 skipped; functions 20 passed; generator 112 passed, 2 skipped; archiver 6 passed, 1 skipped (storage tests need emulators); web 592 passed, 4 skipped. Total 1,173 passed, 0 failed. The brief's generator (90), archiver (7) and web (588) counts differ from these, so the portal text gives no per-suite number |
+| Tests | 1,241 passing | Run on `main` at `1a60777` on 25 Oct: agents 278; MCP 151 (2 skipped); stats 76 (1 skipped); functions 20; generator 112 (2 skipped); archiver 5 (2 skipped, need the storage emulators); web 599 (4 skipped). The same table is in `README.md` |
+| Model-written share on Azure | 5–16% across four 20× matches on 25 Oct | `docs/evaluation.md`, "Live AI share on Azure": SYN-3009 16% (#103), SYN-3010 9 of 167 = 5% (`agents/evals/results/live-SYN-3010/report.md`), SYN-3011 14% (#106), SYN-3012 48 of 291 = 16% (#108) |
+| Card live window at 20× | 15 real seconds | `agents/specs/workflow.md` §3 (15 s job deadline) |
+| Single vs multi-agent | Same 17 moments; single agent 65 of 109 lines refused by the code check; seven agents 0, 69 rewritten | `agents/evals/results/single-vs-multi-azure/report.md`; `docs/evaluation.md` |
+| Foundry evaluation | 60 lines (25 model, 35 template): groundedness 98.3%, relevance 91.7%, fluency 100% | `agents/evals/results/foundry-1/report.md` |
+| Hindi placeholders | 0 dropped and 0 wrong at every simulated swap rate; before, up to 19 dropped and 16 wrong of 130 | `agents/evals/results/hindi-numbers/report.md` (100% swap row) |
+| Tracing | One trace per card, no line text on any span | `agents/specs/observability.md` §1–§2 |
+| GitHub Copilot | Used in the editor and for pull request reviews | The team's confirmation, 25 Oct; `docs/microsoft-stack.md` |
 
 ---
 
