@@ -15,8 +15,9 @@
 | `OVERLAP_CONTENT_SAFETY_REJECT_AT` | `4` | A line with any category at this severity (2, 4 or 6) or above uses its template |
 | `OVERLAP_CONTENT_SAFETY_TIMEOUT_S` | `1.5` | Per-line screen time limit |
 
-**To turn tracing on in Azure (the next deploy):** add one app setting to the insights Functions app,
-`OVERLAP_TRACING=azure`. The connection string is already there. The packages are in `functions/requirements.txt`.
+**On Azure, tracing is on:** `infra/modules/functions.bicep` sets `OVERLAP_TRACING=azure` on both Functions apps (only
+the insights app runs the agents, so only it sends spans), and every provision keeps it. The connection string is set
+beside it. The packages are in `functions/requirements.txt`.
 Application Insights has a daily cap (`infra/modules/monitoring.bicep`, 0.5 GB), and a full match is a few thousand
 spans, well inside it.
 
