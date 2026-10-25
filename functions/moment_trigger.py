@@ -91,6 +91,8 @@ async def handle_batch(docs: list[dict], deps=None) -> list[dict]:
         if own:
             await deps.store.close()
             await deps.models.close()
+            if deps.safety is not None:
+                await deps.safety.close()
     return results
 
 
@@ -196,6 +198,8 @@ async def run(match_id: str | None, interval_s: float, once: bool, publish: bool
     finally:
         await deps.models.close()
         await deps.store.close()
+        if deps.safety is not None:
+            await deps.safety.close()
         for c in closers:
             await c.close()
 

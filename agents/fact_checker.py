@@ -339,6 +339,7 @@ async def run(run: Any) -> dict:
     """Check the narrator's (or recap writer's) lines: code check, model meaning check, at most `max_rewrites`
     rewrites of the failed lines, then each remaining line's template. Status per line id."""
     import narrator
+    import safety
     from fallbacks import template_line
     m, settings = run.moment, run.deps.settings
     writer = "recap_writer" if "recap_writer" in run.job.stage_outputs else "narrator"
@@ -374,6 +375,7 @@ async def run(run: Any) -> dict:
         candidates = {i: core(ln) for i, ln in (await narrator.rewrite(run, failed, agent=writer)).items()}
         if not candidates:
             break
+    verified, screened = await safety.screen(run, verified)   # Content Safety, when on (off: unchanged)
     lines, status = [], {}
     for i in ids:
         if i in verified:
@@ -388,7 +390,8 @@ async def run(run: Any) -> dict:
         lines.append(tmpl)
         status[i] = {"verified": False, "fallback": True}
     return {"lines": lines, "status": status, "interpretation_supported": supported, "rounds": rounds,
-            "verified": bool(lines) and all(status[ln["id"]]["verified"] for ln in lines)}
+            "verified": bool(lines) and all(status[ln["id"]]["verified"] for ln in lines),
+            **({"safety": screened} if screened else {})}
 
 
 def _template(moment: dict, line_id: str, template_line: Any) -> dict:

@@ -16,6 +16,7 @@ from typing import Any
 from pydantic import BaseModel
 
 import prompts
+import telemetry
 from config import Settings
 from models import ModelFailed, Models
 from state import Job, JobStore, Store
@@ -46,14 +47,17 @@ class RunState:
         """One structured model call for `agent` with its prompt file; raises ModelFailed (the caller's template
         takes over). Every attempt is recorded with the prompt version and model."""
         entry = {"agent": agent, "prompt": prompts.version(agent), "model": self.deps.settings.model_name}
-        try:
-            result = await self.deps.models.ask(agent, prompts.instructions(agent), payload, schema,
-                                                match_id=self.match_id, moment_id=self.moment_id,
-                                                deadline_utc=self.job.doc["deadline_utc"])
-        except ModelFailed as e:
-            self.calls.append({**entry, "ok": False, "reason": e.reason})
-            raise
-        self.calls.append({**entry, "ok": True})
+        with telemetry.model_span(self.moment, agent, entry["prompt"], entry["model"]) as span:
+            try:
+                result = await self.deps.models.ask(agent, prompts.instructions(agent), payload, schema,
+                                                    match_id=self.match_id, moment_id=self.moment_id,
+                                                    deadline_utc=self.job.doc["deadline_utc"])
+            except ModelFailed as e:
+                self.calls.append({**entry, "ok": False, "reason": e.reason})
+                telemetry.model_result(span, False, e.reason)
+                raise
+            self.calls.append({**entry, "ok": True})
+            telemetry.model_result(span, True)
         return result
 
 
@@ -81,6 +85,7 @@ class Deps:
     worker: str = field(default_factory=lambda: f"worker-{uuid.uuid4().hex[:8]}")
     models: Models | None = None                 # None: no model (every step uses its template)
     context: ContextFactory | None = None        # None: no MCP context (the analyst adds no interpretation)
+    safety: Any = None                           # None: no Content Safety screen (safety.ContentSafety when on)
 
     def __post_init__(self):
         if self.models is None:
@@ -96,6 +101,7 @@ def agent_deps(store: Store, settings: Settings, *, translator: Translator | Non
     from state import DurableBudget
     from translation import translator as make_translator
     clock = clock or time.time
+    telemetry.configure(settings)                # once per process; off unless OVERLAP_TRACING asks for it
     jobs = JobStore(store, deadline_s=settings.moment_deadline_s, clock=clock)
     models = Models(settings, clock=clock)
     context = None
@@ -104,5 +110,9 @@ def agent_deps(store: Store, settings: Settings, *, translator: Translator | Non
         models = Models(settings, ModelGate(settings, DurableBudget.from_settings(store, settings)),
                         chat_client(settings), clock)
         context = mcp_context(settings)
+    safety = None
+    if settings.content_safety != "off":
+        from safety import ContentSafety
+        safety = ContentSafety.from_settings(settings)
     return Deps(store=store, jobs=jobs, settings=settings, translator=translator or make_translator(settings),
-                models=models, context=context)
+                models=models, context=context, safety=safety)

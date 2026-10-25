@@ -19,6 +19,9 @@ dependencies = [
     "azure-ai-translation-text==1.0.1",
     "mcp==1.30.0",
     "pydantic==2.14.1",
+    "opentelemetry-sdk==1.45.1",
+    "azure-monitor-opentelemetry-exporter==1.0.0b58",
+    "azure-ai-contentsafety==1.0.0",
 ]
 
 [dependency-groups]

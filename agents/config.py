@@ -18,6 +18,8 @@ from urllib.parse import urlparse
 
 PROVIDERS = ("off", "local", "azure")
 TRANSLATORS = ("fake", "azure")
+TRACING = ("off", "console", "azure")
+CONTENT_SAFETY = ("off", "azure")
 MODES = ("casual", "analyst", "player", "club")
 LANGUAGES = ("en", "es", "hi", "fr")
 LOOPBACK_HOSTS = frozenset({"localhost", "127.0.0.1", "::1"})
@@ -58,6 +60,11 @@ ENV = {
     "OVERLAP_MCP_TIMEOUT_S": "mcp_timeout_s",
     "OVERLAP_TAG_TOP_SPEED_KMH": "tag_top_speed_kmh",
     "OVERLAP_TAG_DISTANCE_KM": "tag_distance_km",
+    "OVERLAP_TRACING": "tracing",
+    "OVERLAP_CONTENT_SAFETY": "content_safety",
+    "OVERLAP_CONTENT_SAFETY_ENDPOINT": "content_safety_endpoint",
+    "OVERLAP_CONTENT_SAFETY_REJECT_AT": "content_safety_reject_at",
+    "OVERLAP_CONTENT_SAFETY_TIMEOUT_S": "content_safety_timeout_s",
 }
 
 
@@ -103,6 +110,13 @@ class Settings:
     mcp_timeout_s: float = 2.0
     tag_top_speed_kmh: float = 33.0            # player tags (§10.6): first crossing of either threshold
     tag_distance_km: float = 10.0
+    # observability (agents/specs/observability.md): spans to Application Insights through
+    # APPLICATIONINSIGHTS_CONNECTION_STRING (azure), to the console (console), or nowhere (off)
+    tracing: str = "off"
+    content_safety: str = "off"                # azure: Azure AI Content Safety screens model lines after the check
+    content_safety_endpoint: str = ""
+    content_safety_reject_at: int = 4          # a line with any category at this severity or above uses its template
+    content_safety_timeout_s: float = 1.5
 
     @classmethod
     def from_env(cls, env: Mapping[str, str] | None = None) -> Settings:
@@ -159,6 +173,14 @@ class Settings:
             raise SettingsError(f"OVERLAP_LANGUAGES must include en and use only {', '.join(LANGUAGES)}")
         if not self.modes or not set(self.modes) <= set(MODES):
             raise SettingsError(f"OVERLAP_MODES must use only {', '.join(MODES)}")
+        if self.tracing not in TRACING:
+            raise SettingsError(f"OVERLAP_TRACING must be one of {', '.join(TRACING)}")
+        if self.content_safety not in CONTENT_SAFETY:
+            raise SettingsError(f"OVERLAP_CONTENT_SAFETY must be one of {', '.join(CONTENT_SAFETY)}")
+        if self.content_safety == "azure" and not self.content_safety_endpoint.startswith("https://"):
+            raise SettingsError("OVERLAP_CONTENT_SAFETY_ENDPOINT must be an https URL for azure content safety")
+        if self.content_safety_reject_at not in (2, 4, 6):
+            raise SettingsError("OVERLAP_CONTENT_SAFETY_REJECT_AT must be 2, 4 or 6")
         if self.mcp_source not in ("cosmos", "fixture"):
             raise SettingsError("OVERLAP_MCP_SOURCE must be cosmos or fixture")
         if self.mcp_source == "fixture" and not self.mcp_fixture_dir:
@@ -176,7 +198,7 @@ class Settings:
         if self.max_player_lines < 0:
             raise SettingsError("OVERLAP_MAX_PLAYER_LINES must not be negative")
         for name in ("request_timeout_s", "moment_deadline_s", "mcp_timeout_s", "tag_top_speed_kmh",
-                     "tag_distance_km"):
+                     "tag_distance_km", "content_safety_timeout_s"):
             if getattr(self, name) <= 0:
                 raise SettingsError(f"{name} must be positive")
         for name in ("max_calls_per_moment", "max_calls_per_match", "max_tokens_per_match", "max_input_tokens",

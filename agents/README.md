@@ -56,6 +56,12 @@ Foundry: `OVERLAP_AZURE_OPENAI_ENDPOINT`, `OVERLAP_AZURE_OPENAI_DEPLOYMENT`, man
 goes through `models.ModelGate`: per-moment and per-match budgets and a timeout. Plan:
 [`PLAN_agents_insights-build`](../plans/active/PLAN_agents_insights-build.md).
 
+**Tracing and screening (off by default):** `OVERLAP_TRACING=azure` sends Agent Framework's OpenTelemetry spans to
+Application Insights (`APPLICATIONINSIGHTS_CONNECTION_STRING`): one trace per card, with a span per stage, model call
+and MCP tool call, and no prompt or line text. `OVERLAP_CONTENT_SAFETY=azure` screens verified model lines with Azure
+AI Content Safety. `evals/foundry_quality.py` scores a sample of published lines with Azure AI Evaluation
+(groundedness, relevance, fluency), only when run with `--run`. See [`specs/observability.md`](specs/observability.md).
+
 ## Define before you code
 
 | # | Spec | What it decides | Governs |
@@ -65,6 +71,7 @@ goes through `models.ModelGate`: per-moment and per-match budgets and a timeout.
 | 3 | [`specs/fact-checking.md`](specs/fact-checking.md) | How numbers and claims are verified, rewrites, translation checks | `fact_checker.py` |
 | 4 | [`specs/prompts.md`](specs/prompts.md) | Shared rules for every prompt: tone per mode, grounding, what must never be said | `prompts/*.md` |
 | 5 | [`specs/evaluation.md`](specs/evaluation.md) | How recall, numeric accuracy, quality and latency are measured | `evals/*.py` |
+| 6 | [`specs/observability.md`](specs/observability.md) | Spans to Application Insights, the Azure AI Evaluation run, the Content Safety screen | `telemetry.py`, `safety.py`, `evals/foundry_quality.py` |
 
 ## Files
 
@@ -89,6 +96,8 @@ goes through `models.ModelGate`: per-moment and per-match budgets and a timeout.
 | `fallbacks.py` | Labelled template lines for when an agent fails |
 | `config.py` | Settings: provider, endpoints, timeouts, budgets, modes, languages |
 | `models.py` | The chat client for the provider, and the gate every model call goes through |
+| `telemetry.py` | Agent Framework OpenTelemetry to Application Insights: job, stage, model-call and tool-call spans |
+| `safety.py` | Optional Azure AI Content Safety screen of verified model lines |
 | `translation.py` | Azure AI Translator, or a local fake |
 | `smoke.py` | One call through the configured provider |
 | `prompts/` | One prompt file per agent |

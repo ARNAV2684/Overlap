@@ -142,6 +142,8 @@ async def run(match_id: str, moments: list[dict], state: dict | None, settings: 
             wrong += bad
         print(f"recap {recap}", flush=True)
     await deps.models.close()
+    if deps.safety is not None:
+        await deps.safety.close()
     return summarise(match_id, settings, rows, recap, wrong)
 
 
