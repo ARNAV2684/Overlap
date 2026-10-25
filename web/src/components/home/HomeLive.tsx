@@ -2,8 +2,9 @@
 
 // HomeLive.tsx — The home page
 //
-// Purpose: open on a match being played: the newest live match if one is sending, otherwise a replay of the newest
-//          finished match at 5×, so the pitch is never empty. Switches to a live match when one starts
+// Purpose: open on a match being played: the newest live match if one is sending, otherwise a replay at 5× (a
+//          showcase replay if the team chose some, else the newest finished match), so the pitch is never empty, with
+//          a "what you're seeing" hint on a first visit. Switches to a live match when one starts
 // Inputs:  GET /api/matches (polled), frames from the chosen live match
 // Outputs: UI
 // Spec:    web/specs/screens.md §1
@@ -18,6 +19,7 @@ import { pickHomeMatch, type HomeChoice } from "@/lib/home-choice";
 import type { MatchListItem } from "@/lib/match-list";
 import { MatchSession } from "@/components/match/MatchSession";
 import { Wordmark } from "@/components/shell/TopNav";
+import { FirstVisitHint } from "./FirstVisitHint";
 import { StartMatchButton } from "./StartMatchButton";
 
 const POLL_MS = 8000;
@@ -143,6 +145,7 @@ export function HomeLive() {
       intro={
         <>
           {intro}
+          <FirstVisitHint source={choice.source} />
           {choice.source === "replay" && (
             <div className="-mt-1 flex flex-col gap-2">
               <p className="text-[13px] text-ink/45">
