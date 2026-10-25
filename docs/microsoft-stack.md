@@ -153,6 +153,7 @@ the change they describe.
 | [`python.yml`](../.github/workflows/python.yml) | Detect changed projects; ruff on changed files; pytest per changed project with a locked `uv sync` (and the mock feed's contract check); tests of the CI scripts; one result job |
 | [`web.yml`](../.github/workflows/web.yml) | Web lint, type check and production build |
 | [`infra.yml`](../.github/workflows/infra.yml) | Bicep build and lint |
+| [`main.yml`](../.github/workflows/main.yml) | After every merge, on the whole of `main`: every Python project's tests, ruff, the web lint, types, tests and build, and the Bicep template |
 
 **GitHub Copilot.** Used in the editor (chat while writing and debugging code) and for reviews of pull requests,
 alongside the team's own reviews. Every change still passed the same CI jobs and a human merge.

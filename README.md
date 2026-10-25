@@ -1,5 +1,7 @@
 # Overlap
 
+[![Checks on main](https://github.com/ARNAV2684/Overlap/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/ARNAV2684/Overlap/actions/workflows/main.yml)
+
 **Every fan watches a different match.**
 
 Overlap is a live football match companion where seven agents on Microsoft Foundry explain each big moment as it
@@ -166,6 +168,8 @@ match, pause and resume). Costs and budgets: [`infra/specs/costs.md`](infra/spec
 
 Python suites run with `uv run pytest` in each folder; the web app with `npx vitest run`. GitHub Actions runs 11 jobs
 on every pull request: ruff and pytest for each changed Python project, web lint, type check and build, Bicep build and lint, a secrets scan, and policy and scope checks ([`.github/workflows/`](.github/workflows)).
+After every merge, [`main.yml`](.github/workflows/main.yml) runs everything on the whole of `main` (every Python
+project's tests, ruff, the web tests and build, the Bicep template); the badge above shows its result.
 
 ## Repository
 
