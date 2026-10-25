@@ -140,6 +140,25 @@ connection card also pins the Connections story on the 3D pitch (`pitch.md` §4)
 use the stats engine's rule (an open-play pass from x ≥ 35 ending at least 25 % closer to goal), so a card and the
 commentary quote the same number.
 
+### 2.9 Casual and Analyst are two different screens (25 Oct)
+
+Rule §4.1(e) asks for "two genuinely different experiences". Before this, the mode only switched the card stream, and
+most stat lines read the same, so the switch looked like it did nothing. `lib/live/mode-layout.ts` (`layoutFor`) now
+decides five things per mode; `MatchScreen`, `LiveInsights`, `LiveRail` and `MomentStrip` follow it:
+
+| | Casual: the story | Analyst: the data | My club, Player focus |
+|---|---|---|---|
+| Pitch opens on | Watch (clean pitch) | Analyse (story overlays) | Analyse |
+| Insight cards (§2.8) | One plain sentence each: "Forwards: Sartori is getting the better of Aziz.", "The game has turned chaotic and speeding up." No tables, toggles or method notes | Full cards with every number | Full |
+| Live numbers (§2.7) | xG, possession, shots on target | Everything: xG race, pass accuracy, momentum, PPDA, press height, flanks | Everything |
+| Live commentary (§2.8) | Larger text, the first thing under the pitch | Normal size, plus ✓ chips for each fact the fact-checker verified (`facts_checked`, readable labels) | Normal |
+| Analysis panel (§2.5) | Behind a "Show the numbers" button; a card's chart link still opens it | Open | Open |
+
+The mode used is the effective one (a club or player mode without its pick falls back to Casual). Switching mode
+resets the pitch to that mode's default and collapses the panel again in Casual. The card wording differs too: the
+agents' casual and analyst lines and templates are different for every trigger (`agents/specs/workflow.md` §4).
+Tests: `src/lib/__tests__/mode-layout.test.ts`.
+
 ## 3. Your match (preferences)
 
 `components/match/ViewerBar.tsx`, kept by `providers/PreferencesProvider.tsx` in this browser:

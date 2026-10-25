@@ -107,7 +107,7 @@ function FlankRow({ setup, flanks, colours }: { setup: MatchSetup; flanks: Flank
   );
 }
 
-export function LiveRail() {
+export function LiveRail({ detail = "full" }: { detail?: "basic" | "full" }) {
   const { memory, tick, playheadMs } = useExperience();
   const { setup } = useScoreboard();
   const panels = useMemo(() => {
@@ -120,7 +120,7 @@ export function LiveRail() {
     return flankShares(memory.events(), memory.setup(), playheadMs);
   }, [memory, tick, playheadMs]);
   if (!setup) return null;
-  return <LiveRailView setup={setup} panel={panels.panel} heavyPanel={panels.heavy} flanks={flanks} />;
+  return <LiveRailView setup={setup} panel={panels.panel} heavyPanel={panels.heavy} flanks={flanks} detail={detail} />;
 }
 
 /**
@@ -132,11 +132,14 @@ export function LiveRailView({
   panel,
   heavyPanel,
   flanks,
+  detail = "full",
 }: {
   setup: MatchSetup;
   panel: StatPanel | null;
   heavyPanel: StatPanel | null;
   flanks?: Flanks;
+  /** Casual: the numbers a fan follows (xG, possession, shots on target); analyst: everything. */
+  detail?: "basic" | "full";
 }) {
   const minute = (panel?.match_ms ?? 0) / 60_000;
   const hs = xgShots(heavyPanel?.heavy, "home");
@@ -145,7 +148,7 @@ export function LiveRailView({
   const colours = { home: overlayColour(setup.teams.home.colours), away: overlayColour(setup.teams.away.colours) };
   const t = data.panel?.teams;
   const xg = { home: t?.home.xg ?? null, away: t?.away.xg ?? null };
-  const rows: Row[] = [
+  const allRows: Row[] = [
     { label: "Possession", home: t?.home.possession_pct ?? null, away: t?.away.possession_pct ?? null, suffix: "%" },
     { label: "Shots on target", home: t?.home.shots_on_target ?? null, away: t?.away.shots_on_target ?? null },
     { label: "Pass accuracy", home: t?.home.pass_completion_pct ?? null, away: t?.away.pass_completion_pct ?? null, suffix: "%" },
@@ -153,6 +156,8 @@ export function LiveRailView({
     { label: "PPDA 10′ (lower presses harder)", home: t?.home.ppda_last_10min ?? null, away: t?.away.ppda_last_10min ?? null, digits: 1, lowerIsBetter: true },
     { label: "Press height 10′", home: t?.home.press_height_last_10min_m ?? null, away: t?.away.press_height_last_10min_m ?? null, suffix: " m" },
   ];
+  const basic = detail === "basic";
+  const rows = basic ? allRows.filter((r) => r.label === "Possession" || r.label === "Shots on target") : allRows;
   return (
     <section className="viz-card" aria-label="Live match numbers">
       <div className="flex items-center justify-between">
@@ -174,7 +179,7 @@ export function LiveRailView({
         ))}
         <p className="order-2 pb-5 font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-ink/40">xG</p>
       </div>
-      {data.race && (
+      {data.race && !basic && (
         <div className="mt-3">
           <MiniRace home={data.race.home} away={data.race.away} minute={data.minute} colours={colours} />
         </div>
@@ -183,7 +188,7 @@ export function LiveRailView({
         {rows.map((r) => (
           <Bar key={r.label} row={r} colours={colours} />
         ))}
-        {flanks && <FlankRow setup={setup} flanks={flanks} colours={colours} />}
+        {flanks && !basic && <FlankRow setup={setup} flanks={flanks} colours={colours} />}
       </div>
     </section>
   );
