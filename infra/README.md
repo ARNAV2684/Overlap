@@ -23,7 +23,7 @@ Bicep templates deployed with `azd up`, all in one resource group. Services use 
 | `modules/foundry.bicep` | Microsoft Foundry project and model deployments |
 | `modules/storage.bicep` | Storage account (shared keys off): `tracking`, `stats-checkpoints`, Functions host containers |
 | `modules/key-vault.bicep` | Nothing: Key Vault is not deployed (no secrets; `specs/resources.md` §2.11) |
-| `modules/monitoring.bicep` | Application Insights and Log Analytics |
+| `modules/monitoring.bicep` | Application Insights and Log Analytics; the "Overlap live run" workbook; email alerts on function failures, the model breaker and expiring cards (with `BUDGET_CONTACT_EMAIL`) |
 | `modules/identity.bicep` | The four managed identities (functions, stats, generator, web); each module assigns its own roles |
 | `containers/*.Dockerfile` | The web, stats and generator images (built in the registry with `az acr build`) |
 
@@ -75,6 +75,11 @@ az functionapp deployment source config-zip -g rg-overlap -n <AZURE_FUNCTIONS_IN
 
 Open `OVERLAP_WEB_URL` and press **Start a live match** (3 starts per visitor per hour, one match at a time). It plays
 `SYN-3000` upwards at 20× (about 7 minutes); the home page switches to it when its first frames arrive.
+
+**Watch it:** in the portal, open the Application Insights resource `appi-overlap-<token>` → Workbooks → **Overlap live
+run**, and pick a time range that covers the match: cards sent and expired, function runs and failures, relay and
+archiver batch time, each agent's stage time, model calls by outcome and MCP calls. Alerts email the budget contact
+when function runs fail, the model breaker keeps opening, or most cards expire.
 
 ## Pause (after a run) and resume
 
