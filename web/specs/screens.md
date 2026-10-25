@@ -202,7 +202,9 @@ analyst) and language, from the insights history (`realtime.md` §4).
 
 ## 7. How it works `/how-it-works`
 
-The pipeline in six steps, the seven agents, and what each pitch story means.
+The pipeline in six steps, each naming the Azure service it runs on (Container Apps, Event Hubs, Functions, Cosmos DB
+and Blob Storage, Microsoft Foundry with Agent Framework, Web PubSub), the seven agents, and what each pitch story
+means.
 
 ## 8. League `/league` (revamp S4, built)
 

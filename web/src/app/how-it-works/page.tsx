@@ -1,6 +1,7 @@
 // page.tsx — How it works
 //
-// Purpose: the pipeline in six steps, the seven agents, and what each pitch story means
+// Purpose: the pipeline in six steps with the Azure service behind each, the seven agents, and what each pitch story
+//          means
 // Inputs:  none
 // Outputs: page
 // Spec:    web/specs/screens.md §7
@@ -11,11 +12,11 @@ import Link from "next/link";
 export const metadata: Metadata = { title: "How it works" };
 
 const PIPELINE = [
-  ["01", "Generator", "Synthetic league, played possession by possession: events, plus every player's position at 5 Hz."],
-  ["02", "Event Hubs", "Events and tracking stream in as they happen. The relay forwards them; the archiver keeps every match."],
-  ["03", "Stats engine", "xG, pass difficulty, pressing, momentum, distance and sprints, every match second. Spots the moments that matter."],
-  ["04", "Seven agents", "Spotter, analyst (through MCP), narrator, fact-checker, translator, director, recap writer."],
-  ["05", "Web PubSub", "Each audience (mode, language, club, player) gets its own ordered stream of checked cards."],
+  ["01", "Generator", "Synthetic league, played possession by possession: events, plus every player's position at 5 Hz. A Container Apps job on Azure."],
+  ["02", "Event Hubs", "Events and tracking stream into Azure Event Hubs as they happen. Azure Functions relay them to the screen; the archiver keeps every match in Cosmos DB and Blob Storage."],
+  ["03", "Stats engine", "xG, pass difficulty, pressing, momentum, distance and sprints, every match second, on Container Apps. Spots the moments that matter."],
+  ["04", "Seven agents", "Microsoft Agent Framework on Azure Functions, writing with gpt-5-mini on Microsoft Foundry: spotter, analyst (through MCP), narrator, fact-checker, translator, director, recap writer."],
+  ["05", "Web PubSub", "Azure Web PubSub gives each audience (mode, language, club, player) its own ordered stream of checked cards."],
   ["06", "This screen", "A 3D pitch from the tracking, the story director's overlays and the AI commentary, plus head-to-heads, connections, the engine room and control vs chaos, worked out live from the events."],
 ] as const;
 
@@ -24,7 +25,7 @@ const AGENTS = [
   ["Analyst", "Reads the moment's context through the MCP server: live state, pressing, pass network, periods."],
   ["Narrator", "Writes the line for each mode: casual, analyst, club and player."],
   ["Fact-checker", "Checks every number, name and claim against the evidence. Fails go back, then to a template."],
-  ["Translator", "Spanish, Hindi and French, re-checked so every number survives."],
+  ["Translator", "Spanish, Hindi and French with Azure AI Translator, re-checked so every number survives."],
   ["Director", "Times the card, picks its chart, and sends one per audience."],
   ["Recap writer", "At full time, the story of the match from its moments."],
 ] as const;
@@ -55,7 +56,7 @@ export default function HowItWorksPage() {
       <div className="mb-4 mt-14 flex items-center gap-3">
         <h2 className="text-[22px] font-black tracking-tight">The seven agents</h2>
         <span className="h-px flex-1 bg-ink/[0.06]" />
-        <span className="ov-sub">Microsoft Agent Framework · MCP</span>
+        <span className="ov-sub">Microsoft Agent Framework · Foundry · MCP</span>
       </div>
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
         {AGENTS.map(([name, text], i) => (
