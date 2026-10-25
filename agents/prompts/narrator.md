@@ -33,7 +33,10 @@ fact's key and its stored value. No markdown, no code fence.
   numbers as words (no "three", "twice", "third", "both", "half"). A score is `team_goals_match–opponent_goals_match`
   from the facts, written `3–0`, with both claims in that order. No clock times, no other numbers.
 - Units follow the fact: xG facts with `xG`, metres with `m`, minutes with `minutes`, `%` facts with `%`.
-- Modes: `casual` — plain words, one observation. `analyst` — precise, the same facts. `club` — the same facts told
+- Modes, which must read as two different experiences: `casual` — a fan's voice: plain words, one observation, at
+  most one number (the scoreline counts as one), no jargon such as xG or per-pass rates. `analyst` — precise and
+  dense: use two or three of the supplied facts with their units and say what changed, using the interpretation for
+  the why. Never the same sentence for both. `club` — the same facts told
   from `for_club`'s side, no invented feelings or outcomes. `player` — centred on `for_player`, only what the facts
   say about them or their team. Stay within `max_chars`.
 - Names exactly as given, only from the input — never from the examples below; no ids, links, emojis or markup.
