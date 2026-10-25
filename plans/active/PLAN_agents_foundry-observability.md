@@ -5,7 +5,7 @@
 | Change | Agent Framework OpenTelemetry to Application Insights (job, stage, model-call and MCP tool-call spans); an Azure AI Evaluation script for published lines; an optional Content Safety screen of verified model lines |
 | Why | Workstream W4 of the 25 Oct parallel workstreams brief: show the multi-agent flow in Foundry and Application Insights, and add an independent quality judge, for the submission |
 | Author / owner | Arnav (layer 5 · Agents, from `plans/REGISTRY.md`) |
-| Status | Built; PR open for review (#100). Code only: nothing deployed, nothing run on Azure |
+| Status | Built; PR open for review (#100). Run once on Azure (25 Oct, SYN-3010): tracing and the evaluation checked |
 | Reviewed commit | main · 924292e |
 | Branch | `agents/foundry-observability` |
 | Governing spec | [`agents/specs/observability.md`](../../agents/specs/observability.md) (new; status "built, not yet run on Azure", not yet agreed) |
@@ -30,6 +30,7 @@
 | `functions/moment_trigger.py` | Modify | Close the screen's client |
 | `functions/requirements.txt`, `functions/pyproject.toml`, `functions/uv.lock` | Modify | The same runtime packages |
 | `functions/local.settings.example.json` | Modify | `OVERLAP_TRACING` and `OVERLAP_CONTENT_SAFETY` off |
+| `agents/evals/results/foundry-1/`, `agents/evals/results/live-SYN-3010/` | Add | The Azure evaluation and the live-run report of SYN-3010 |
 | `plans/active/PLAN_agents_foundry-observability.md` | Add | This plan |
 
 - **Contracts or hot shared files touched:** None. No change to `CONTRACTS.md`, job or outbox shapes (the fact-checker's
@@ -47,5 +48,11 @@
 - **Risk:** extra latency or import cost on the Functions app once tracing is on. Mitigation: exporters batch off the
   request path; imports happen only when a setting asks; the Content Safety screen has a 1.5 s per-line limit and stays
   off.
-- **Handover:** PR #100 into `main`, not merged. Block A: add `OVERLAP_TRACING=azure` to the insights Functions app on
-  the next deploy, then run the evaluation once after the proving run.
+- **Handover:** PR #100 into `main`, not merged. Run on Azure 25 Oct, at Arnav's request. Azure was resumed, the
+  Functions zip deployed from this branch with `OVERLAP_TRACING=azure` set by CLI on the insights app, and SYN-3010
+  played at 20×. There were 29 traces with every stage, model call and MCP call, matching the Cosmos audit, and no
+  content attributes. The evaluation scored 60 lines: groundedness 98.3%, relevance 91.7%, fluency 100%
+  (`agents/specs/observability.md` §2.2, §3.4). Azure was then paused (apps, plan, stats, generator, Event Hubs and
+  model deployment deleted). Minutes later another session resumed it for its own run, so pausing again is that
+  session's job. For good: merge #100, then add `OVERLAP_TRACING=azure` to `infra/modules/functions.bicep` (a CLI
+  setting is lost on the next provision).

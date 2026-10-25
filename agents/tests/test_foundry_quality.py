@@ -72,8 +72,16 @@ def test_the_evaluator_reads_the_evidence_and_the_task(moments, clock):
     for f in m["evidence"]["facts"]:
         assert f"{f['label']}: {f['value']}" in ctx
     assert m["evidence"]["clock"] in ctx and "Kestlebury" in ctx
+    first = m["context"]["players"][0]
+    team = next(t["name"] for t in m["context"]["teams"].values() if first["player_id"].startswith(t["team_id"]))
+    assert f"{first['name']} ({first['pos']}, {team})" in ctx
     q = Q.query(m, "analyst")
     assert "shot cluster" in q and "analytics-minded" in q and "only the facts given" in q
+    player = m["context"]["players"][-1]
+    assert f"a fan following {player['name']}, about {player['name']}'s part" in Q.query(m, "player",
+                                                                                         player["player_id"])
+    other = next(t for t in m["context"]["teams"].values() if t["team_id"] != m["evidence"]["team_id"])
+    assert f"a fan of {other['name']} about" in Q.query(m, "club", other["team_id"])
 
 
 def test_the_sample_spreads_across_triggers():
@@ -81,6 +89,25 @@ def test_the_sample_spreads_across_triggers():
             for i in range(10)]
     got = Q.sample(rows, 4)
     assert len(got) == 4 and {r["trigger"] for r in got} == {"goal", "press_change"}
+
+
+def test_a_judge_reply_without_a_score_is_an_error_not_a_number():
+    row = {"sample_id": "MO-1|g", "match_id": "SYN-1", "moment_id": "MO-1", "trigger": "goal", "mode": "casual",
+           "kind": "model", "response": "A line.", "query": "q", "context": "c"}
+    evaluators = {"fluency": lambda **kw: {"fluency": float("nan"), "fluency_result": "unknown",
+                                           "fluency_reason": "cut off"}}
+    got = Q.score_one(row, evaluators)
+    assert got["fluency"]["score"] is None and got["fluency"]["result"] == "error"
+    summary = Q.summarise([got], "test", "fake", ["fluency"])
+    assert summary["by_metric"]["fluency"]["errors"] == 1 and summary["by_metric"]["fluency"]["mean"] is None
+    json.dumps(summary, allow_nan=False)                          # strict JSON: no NaN anywhere
+
+
+def test_model_lines_come_first_and_templates_fill_the_rest():
+    rows = [{"sample_id": f"MO-{k}-{i}", "trigger": "goal", "mode": "casual", "kind": k}
+            for k in ("model", "template") for i in range(5)]
+    assert [r["kind"] for r in Q.sample(rows, 7)].count("model") == 5
+    assert {r["kind"] for r in Q.sample(rows, 3)} == {"model"}
 
 
 def test_a_dry_run_writes_the_sample_and_calls_nothing(moments, clock, tmp_path, capsys):

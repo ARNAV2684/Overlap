@@ -1,8 +1,8 @@
 # Observability spec: tracing, Azure AI Evaluation, Content Safety
 
-> **Status: built, not yet run on Azure** (25 Oct 2026). Governs `telemetry.py`, `safety.py` and
-> `evals/foundry_quality.py`. Everything here is off by default; nothing is deployed by this change. The Azure numbers
-> in §3.4 are placeholders until the run on Azure.
+> **Status: built; tracing and the evaluation run once on Azure** (25 Oct 2026, match SYN-3010; Azure paused again
+> after). Governs `telemetry.py`, `safety.py` and `evals/foundry_quality.py`. Everything here is off by default; the
+> Content Safety screen has not run on Azure (no resource).
 
 ## 1. Settings
 
@@ -71,7 +71,25 @@ dependencies
 ```
 
 The end-to-end transaction view (open any `overlap.job` span) shows the seven stages, the MCP calls and the model
-calls as one timeline.
+calls as one timeline. The same data sits in the Log Analytics workspace as `AppDependencies` (`Name`, `DurationMs`,
+`Properties`, `OperationId`); `kind` is a reserved word in Kusto, so don't use it as a column name.
+
+### 2.2 Measured on Azure (SYN-3010, 25 Oct)
+
+One 20× match on Azure with `OVERLAP_TRACING=azure` on the insights Functions app:
+
+- 29 traces, one per job that ran (the 3 moments closed for queue overflow never start a job). Spans: 29 `overlap.job`,
+  117 `overlap.stage`, 103 `overlap.model_call`, 37 `overlap.tool_call`, 85 `invoke_agent` and 85 `chat` (model calls
+  refused before the request, `deadline` or `budget`, have no Agent Framework span), plus Agent Framework's workflow
+  spans (`workflow.run`, `executor.process`, `edge_group.process`, `message.send`).
+- Model-call outcomes in the traces match the jobs' own audit in Cosmos exactly: narrator 33 ok and 9 timeouts,
+  fact-checker 18 ok and 1 timeout, analyst 12, spotter 8, translator 3 timeouts and 18 `deadline`, recap writer 1
+  timeout.
+- Stage time, p50 / p95 (ms): fact-checker 4,648 / 9,004; analyst 1,974 / 5,789; narrator 2,740 / 4,134; translator
+  997 / 4,237; spotter 144 / 1,881; director 24 / 61.
+- No content: across every span the attribute keys are ids, outcome codes, counts, the model and token usage (`gen_ai.usage.*`).
+  No span has `gen_ai.input.messages`, `gen_ai.output.messages`, `gen_ai.system_instructions` or tool arguments or
+  results. Agent Framework's `workflow.definition` holds the graph only (executor ids and edges).
 
 ## 3. Azure AI Evaluation of published lines
 
@@ -95,7 +113,7 @@ uv run python -m evals.foundry_quality --results evals/results/round-1/matches -
 
 Lines published in English that the fact-checker verified and that are not fallbacks (model lines). With
 `--include-templates`, template lines are added as a baseline and reported apart (`kind`). Up to `--sample` lines
-(default 60), spread across triggers in turn, then modes. The recap is left out (its evidence is the whole match).
+(default 60): model lines first, then templates for what is left, each spread across triggers in turn, then modes. The recap is left out (its evidence is the whole match).
 
 For each line the evaluators receive:
 
@@ -117,31 +135,61 @@ For each line the evaluators receive:
 A line passes a metric at 3 or above (the evaluators' default threshold). An evaluator that fails is an `error` for
 that line and is not retried; errors are counted, never dropped.
 
-### 3.3 Placeholder for `docs/evaluation.md`
+### 3.3 Section for `docs/evaluation.md`
 
-The section below is for `docs/evaluation.md`; the numbers are filled in from `summary.json` after the run on Azure.
+The section below is for `docs/evaluation.md`, with the numbers from §3.4.
 
 ```markdown
 ## Independent judge: Azure AI Evaluation
 
-On top of our own fact-checker, a sample of published lines was scored by the Azure AI Evaluation evaluators on our
-Foundry gpt-5-mini deployment: groundedness (is every statement supported by the moment's evidence?), relevance (does
-it answer the task?) and fluency. Scores are 1–5; a line passes at 3 or above.
+On top of our own fact-checker, 60 published English lines from a live 20× match on Azure (SYN-3010) were scored by
+the Azure AI Evaluation evaluators on our Foundry gpt-5-mini deployment: groundedness (is every statement supported by
+the moment's evidence?), relevance (does it answer the task?) and fluency. Scores are 1–5; a line passes at 3 or above.
 
-| Metric | Lines | Mean | Pass rate |
+| Lines | Groundedness | Relevance | Fluency |
 |---|---|---|---|
-| Groundedness | _n_ | _x.x_ | _xx%_ |
-| Relevance | _n_ | _x.x_ | _xx%_ |
-| Fluency | _n_ | _x.x_ | _xx%_ |
+| Model-written, checked (25) | 24 of 25 pass (mean 4.2) | 21 of 25 (2.9) | 25 of 25 (3.2) |
+| Templates, as a baseline (35) | 34 of 34 scored (4.1) | 34 of 35 (3.2) | 35 of 35 (3.1) |
 
-Sample: _n_ English model lines from matches _SYN-…_, spread across triggers and modes (`evals/foundry_quality.py`,
-results in `agents/evals/results/foundry-1/`). The judge sees only the facts the agents saw. Lines are synthetic
-commentary on synthetic matches.
+Every model-written line the match produced is in the sample. The judge sees only the facts the agents saw. Most
+relevance misses are lines that don't repeat the clock or the moment's main player, which the card shows beside the
+line. Lines are synthetic commentary on synthetic matches. Results: `agents/evals/results/foundry-1/`.
 ```
 
-### 3.4 Results
+### 3.4 Results (SYN-3010, 25 Oct)
 
-Not run yet. Block A runs it once on Azure after the proving run and commits `agents/evals/results/foundry-1/`.
+60 English lines from the Cosmos outboxes of SYN-3010: all 25 model-written, checked lines the match produced and 35
+templates as a baseline. 180 evaluator calls on gpt-5-mini (Entra ID), about 4.5 minutes.
+
+| Metric | Scored | Mean | Pass rate | Errors |
+|---|---|---|---|---|
+| Groundedness | 59 | 4.14 | 98.3% | 1 (the judge's reply had no score) |
+| Relevance | 60 | 3.10 | 91.7% | 0 |
+| Fluency | 60 | 3.12 | 100% | 0 |
+
+By kind: model lines pass groundedness 24 of 25, relevance 21 of 25 and fluency 25 of 25; templates 34 of 34 scored,
+34 of 35 and 35 of 35.
+
+What failed:
+
+- **Groundedness (1).** A club-mode head-to-head line about the followed club's player ("Timo Wagner has 1 shot, 0 on
+  target and 0.02 xG so far"). The judge wanted the moment's main player, so it is a relevance miss rather than a wrong
+  fact. The numbers are right.
+- **Relevance.** Mostly lines that don't name the clock or the moment's main player, which the card shows next to the
+  line.
+
+Two fixes to the evaluator's inputs were made on this run, before the final scores:
+
+- The task text named the moment's main player for every audience. It now names the club (club mode) or the followed
+  player (player mode) the line was written for.
+- Players were listed without their team. Each player now carries their team, taken from the id prefix.
+
+Before those fixes the same lines scored groundedness 86.7% and relevance 83.3%. The failures were correct lines that
+the judge could not tie to the task or to a team.
+
+The live run itself (`agents/evals/results/live-SYN-3010/`): full time 4–0, 31 moments, 167 cards and 24 recap
+deliveries sent, 9 of the sent cards model-written. The 15-second card window at 20× still sends most cards to their
+template, the known gap block A is working on.
 
 ## 4. Content Safety screen (optional)
 

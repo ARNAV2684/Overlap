@@ -21,6 +21,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import math
 import os
 import sys
 import time
@@ -60,14 +61,22 @@ def lines_of(moment: dict, intent: dict | None, *, include_templates: bool) -> l
         out.append({"sample_id": f"{moment['moment_id']}|{a['group']}", "match_id": moment["match_id"],
                     "moment_id": moment["moment_id"], "trigger": moment["evidence"]["trigger"], "mode": mode,
                     "kind": "model" if model_line else "template", "response": line["text"],
-                    "query": query(moment, mode), "context": context(moment)})
+                    "query": query(moment, mode, a.get(mode)), "context": context(moment)})
     return out
 
 
-def query(moment: dict, mode: str) -> str:
+def query(moment: dict, mode: str, target: str | None = None) -> str:
+    """The task as the audience saw it: club and player lines are written for that club's fans or about the followed
+    player, who need not be the moment's main player."""
     view = evidence_view(moment)
     who = f" involving {view['actor']}" if view.get("actor") else ""
-    return (f"Write one short live-commentary line for {MODE_WORDS.get(mode, 'a fan')} about this "
+    audience = MODE_WORDS.get(mode, "a fan")
+    if mode == "player" and target:
+        name = (view["players"].get(target) or {}).get("name", target)
+        audience = f"a fan following {name}, about {name}'s part in it"
+    elif mode == "club" and target:
+        audience = f"a fan of {view['teams'].get(target, target)}"
+    return (f"Write one short live-commentary line for {audience} about this "
             f"{view['trigger'].replace('_', ' ')} moment for {view['team']}{who} at {moment['evidence']['clock']} "
             f"(period {view['period']}), using only the facts given.")
 
@@ -76,7 +85,9 @@ def context(moment: dict) -> str:
     """The evidence as the evaluator reads it: teams, players, the moment and every fact with its label."""
     view = evidence_view(moment)
     facts = "\n".join(f"- {f['label']}: {f['value']}{' ' + f['unit'] if f.get('unit') else ''}" for f in view["facts"])
-    players = ", ".join(f"{p['name']} ({p['pos']})" for p in view["players"].values()) or "none named"
+    teams = view["teams"]                              # player ids start with their team id (KES-10)
+    players = ", ".join(f"{p['name']} ({p['pos']}, {teams.get(p['player_id'].split('-')[0], 'team unknown')})"
+                        for p in moment["context"].get("players") or []) or "none named"
     return (f"Teams: {', '.join(view['teams'].values())}. Team in this moment: {view['team']}. Players: {players}.\n"
             f"Moment: {view['trigger'].replace('_', ' ')}, period {view['period']}, clock "
             f"{moment['evidence']['clock']}.\nFacts:\n{facts}")
@@ -110,9 +121,13 @@ async def from_cosmos(match_ids: Iterable[str], *, include_templates: bool, stor
 
 
 def sample(rows: list[dict], n: int) -> list[dict]:
-    """Up to n lines, spread across triggers (then modes, in id order), so rare triggers are scored too."""
-    rows = sorted(rows, key=lambda r: (r["mode"], r["sample_id"]))
-    return sorted(_spread(rows, n), key=lambda r: r["sample_id"])
+    """Up to n lines: model lines first, then templates (the baseline) for what is left; each spread across triggers
+    (then modes, in id order), so rare triggers are scored too."""
+    chosen: list[dict] = []
+    for kind in ("model", "template"):
+        group = sorted((r for r in rows if r.get("kind", "model") == kind), key=lambda r: (r["mode"], r["sample_id"]))
+        chosen += _spread(group, n - len(chosen))
+    return sorted(chosen, key=lambda r: r["sample_id"])
 
 
 # --- the evaluators -------------------------------------------------------------------------------------------------
@@ -146,9 +161,10 @@ def score_one(row: dict, evaluators: dict[str, Evaluator]) -> dict:
             out[name] = {"score": None, "result": "error", "reason": type(e).__name__}
             continue
         score = got.get(name, got.get(f"gpt_{name}"))
-        out[name] = {"score": float(score) if isinstance(score, int | float) else None,
-                     "result": got.get(f"{name}_result") or ("pass" if isinstance(score, int | float)
-                                                              and score >= THRESHOLD else "fail"),
+        scored = isinstance(score, int | float) and math.isfinite(score)
+        result = got.get(f"{name}_result") or ("pass" if scored and score >= THRESHOLD else "fail")
+        out[name] = {"score": float(score) if scored else None,
+                     "result": result if scored or result == "not_applicable" else "error",   # no score (NaN)
                      "threshold": got.get(f"{name}_threshold", THRESHOLD),
                      "reason": (got.get(f"{name}_reason") or "")[:500],
                      "seconds": round(time.perf_counter() - start, 2)}

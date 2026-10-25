@@ -1,0 +1,74 @@
+{
+ "match_id": "SYN-3010",
+ "final_phase": "full_time",
+ "final_score": {
+  "home": 4,
+  "away": 0
+ },
+ "moments": 31,
+ "moments_by_trigger": {
+  "connection": 4,
+  "press_change": 7,
+  "goal": 4,
+  "momentum_swing": 4,
+  "big_chance": 2,
+  "shot_cluster": 2,
+  "head_to_head": 3,
+  "workhorse": 3,
+  "milestone": 2
+ },
+ "jobs_by_state": {
+  "expired": 10,
+  "suppressed": 14,
+  "published": 8
+ },
+ "terminal_reasons": {
+  "queue_overflow": 3,
+  "stale": 7,
+  "thinned": 3,
+  "merge_into": 1
+ },
+ "model_jobs": 12,
+ "deliveries": {
+  "player_tag:sent": 56,
+  "overlay:expired": 206,
+  "overlay:sent": 167,
+  "recap:sent": 24
+ },
+ "sent_cards": {
+  "verified": 9,
+  "template": 158
+ },
+ "player_tags": 14,
+ "model_calls": {
+  "analyst:ok": 12,
+  "fact_checker:ok": 18,
+  "fact_checker:timeout": 1,
+  "narrator:ok": 33,
+  "narrator:timeout": 9,
+  "recap_writer:timeout": 1,
+  "spotter:ok": 8,
+  "translator:deadline": 18,
+  "translator:timeout": 3
+ },
+ "latency_moment_to_send_s": {
+  "all": {
+   "n": 7,
+   "p50": 8,
+   "p95": 24,
+   "max": 24
+  },
+  "model": {
+   "n": 2,
+   "p50": 16,
+   "p95": 24,
+   "max": 24
+  },
+  "template": {
+   "n": 5,
+   "p50": 3,
+   "p95": 11,
+   "max": 11
+  }
+ }
+}
