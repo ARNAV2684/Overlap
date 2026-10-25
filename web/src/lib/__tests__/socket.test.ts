@@ -3,6 +3,7 @@ import type { ParsedEnvelope } from "@/lib/contracts";
 import { ApiError, type Snapshot } from "@/lib/api";
 import {
   ACK_TIMEOUT_MS,
+  HANDSHAKE_TIMEOUT_MS,
   BACKOFF,
   createMatchSocket,
   retryDelay,
@@ -149,7 +150,7 @@ describe("connecting", () => {
     ws().receive(connectedMessage);
     await settle();
     store.flush();
-    expect(state().connection.status).toBe("live");
+    expect(state().connection.status).toBe("connecting");
     expect(state().notice.text).toBe(notices.loadingHistory);
   });
 
@@ -168,7 +169,7 @@ describe("connecting", () => {
     expect(getSnapshot.mock.calls[0][1]).toBeInstanceOf(AbortSignal);
   });
 
-  it("asks for the snapshot anyway if the join is never acknowledged", async () => {
+  it("retries rather than claiming live delivery if the join is never acknowledged", async () => {
     socket.start();
     await settle();
     ws().open();
@@ -177,10 +178,12 @@ describe("connecting", () => {
     await vi.advanceTimersByTimeAsync(ACK_TIMEOUT_MS - 1);
     expect(getSnapshot).not.toHaveBeenCalled();
     await vi.advanceTimersByTimeAsync(1);
-    expect(getSnapshot).toHaveBeenCalledTimes(1);
+    expect(getSnapshot).not.toHaveBeenCalled();
+    store.flush();
+    expect(state().connection.status).toBe("reconnecting");
   });
 
-  it("warns, but carries on, when the join is refused", async () => {
+  it("reconnects when the join is refused", async () => {
     socket.start();
     await settle();
     ws().open();
@@ -189,7 +192,11 @@ describe("connecting", () => {
     ws().receive(ack(1, false));
     await settle();
     expect(warn).toHaveBeenCalledWith(expect.stringContaining(`match-${MATCH}`));
-    expect(getSnapshot).toHaveBeenCalledTimes(1);
+    expect(getSnapshot).not.toHaveBeenCalled();
+    store.flush();
+    expect(state().connection.status).toBe("reconnecting");
+    await vi.advanceTimersByTimeAsync(BACKOFF.firstMs);
+    expect(negotiate).toHaveBeenCalledTimes(2);
   });
 
   it("is safe to start twice", async () => {
@@ -235,7 +242,7 @@ describe("catching up", () => {
     expect(state().timeline.rows[0].detail).toBe("Nora 9 → Nora 11 · success");
   });
 
-  it("carries on with live messages only when the snapshot cannot be read", async () => {
+  it("retries a failed snapshot instead of leaving team setup and history absent", async () => {
     socket.start();
     await settle();
     await connectAndJoin();
@@ -243,9 +250,17 @@ describe("catching up", () => {
     snapshot.reject(new ApiError("network", "snapshot: cannot reach the stream server"));
     await settle();
     store.flush();
+    expect(rowKeys()).toEqual([]);
+    expect(state().connection.status).toBe("reconnecting");
+    expect(state().notice).toEqual({ text: notices.historyUnavailable, tone: "warning" });
+    snapshot = deferred<Snapshot>();
+    await vi.advanceTimersByTimeAsync(BACKOFF.firstMs);
+    await connectAndJoin();
+    snapshot.resolve(snapshotOf([eventEnv(8)]));
+    await settle(); store.flush();
+    expect(state().scoreboard.setup).toEqual(makeSetup());
     expect(rowKeys()).toEqual(["8"]);
     expect(state().connection.status).toBe("live");
-    expect(state().notice).toEqual({ text: notices.historyUnavailable, tone: "warning" });
     expect(warn).toHaveBeenCalled();
   });
 
@@ -361,7 +376,7 @@ describe("reconnecting", () => {
     expect(state().notice).toEqual({ text: notices.connectionLost, tone: "warning" });
   });
 
-  it("never shows a cleared store as still reconnecting (no half-updated frame)", async () => {
+  it("keeps the reconnecting status until subscription and catch-up complete", async () => {
     await fullyConnected([eventEnv(1)]);
     snapshot = deferred<Snapshot>();
     ws().serverClose();
@@ -372,7 +387,7 @@ describe("reconnecting", () => {
     ws().receive(connectedMessage); // the store is reset here
     await settle();
     expect(seen.length).toBeGreaterThan(0);
-    expect(seen.every((entry) => entry.startsWith("live:"))).toBe(true);
+    expect(seen.every((entry) => entry.startsWith("reconnecting:"))).toBe(true);
   });
 
   it("backs off 3, 6, 12, then 15 s while the server stays unreachable", async () => {
@@ -577,5 +592,26 @@ describe("stopping", () => {
     socket.start();
     await settle();
     expect(FakeWebSocket.instances).toHaveLength(2);
+  });
+});
+
+describe("bounded connection recovery", () => {
+  it("retries a socket that never sends its connected message and ignores its late callback", async () => {
+    socket.start(); await settle();
+    const oldMessage = ws().onmessage;
+    await vi.advanceTimersByTimeAsync(HANDSHAKE_TIMEOUT_MS);
+    expect(ws().closed).toBe(true);
+    oldMessage?.({ data: JSON.stringify(connectedMessage) });
+    expect(getSnapshot).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(BACKOFF.firstMs);
+    expect(negotiate).toHaveBeenCalledTimes(2);
+  });
+  it("clears handshake and join timers when stopped", async () => {
+    socket.start(); await settle();
+    ws().open(); ws().receive(connectedMessage); await settle();
+    socket.stop();
+    await vi.advanceTimersByTimeAsync(HANDSHAKE_TIMEOUT_MS + BACKOFF.maxMs);
+    expect(negotiate).toHaveBeenCalledTimes(1);
+    expect(getSnapshot).not.toHaveBeenCalled();
   });
 });

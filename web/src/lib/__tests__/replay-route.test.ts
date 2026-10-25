@@ -58,11 +58,11 @@ afterEach(() => {
 });
 
 describe("GET /api/replay/<id>: manifest and chunks", () => {
-  it("answers the manifest, cacheable, and logs one line", async () => {
+  it("answers the manifest without HTTP caching and logs one line", async () => {
     const { get } = await load();
     const { status, cache, body } = await get("SYN-0042");
     expect(status).toBe(200);
-    expect(cache).toBe("private, max-age=3600");
+    expect(cache).toBe("no-store");
     expect(body).toMatchObject({ match_id: "SYN-0042", status: "finished", result: STORED_MATCH.result, gaps: [] });
     expect(body.chunks).toHaveLength(5);
     expect(logs).toEqual([expect.stringMatching(/^replay SYN-0042 manifest: 5 chunks, \d+ ms$/)]);
@@ -77,6 +77,22 @@ describe("GET /api/replay/<id>: manifest and chunks", () => {
     expect(body.rejected).toEqual({ count: 0, samples: [] });
     expect(body.envelopes.map((e: { kind: string }) => e.kind)).toEqual(["positions", "event", "status"]);
     expect(logs.at(-1)).toMatch(/^replay SYN-0042 chunk 1: 1 events, 2 frames, 0 panels, 0 rejected, \d+ ms$/);
+  });
+
+  it("re-reads tracking that arrives after full time instead of caching a partial chunk", async () => {
+    const tracking = { "p1/m1": { frames: [frameAt(1, 60_000)], unreadable: 0 } };
+    fakes.store = fakeArchiveStore({ tracking });
+    const { get } = await load();
+    const first = await get("SYN-0042", "?chunk=1");
+    expect(first.cache).toBe("no-store");
+    tracking["p1/m1"].frames.push(frameAt(1, 60_200));
+    const later = await get("SYN-0042", "?chunk=1");
+    expect(later.cache).toBe("no-store");
+    const frames = (body: typeof later.body) => body.envelopes.flatMap(
+      (e: { kind: string; data: { frames?: unknown[] } }) => e.kind === "positions" ? e.data.frames : [],
+    );
+    expect(frames(first.body)).toHaveLength(1);
+    expect(frames(later.body)).toHaveLength(2);
   });
 
   it("serves each half's last panel, stamped just after the whistle, in that half's last chunk", async () => {
