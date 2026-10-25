@@ -70,11 +70,11 @@ All values below are **proposed**, unmeasured defaults for owner review. A timeo
 |---|---|
 | Moment workflow deadline | 15 wall seconds from first durable observation, including queue wait; persist once |
 | MCP | 2 seconds/call, at most 2 calls including one transient retry |
-| Model request | 4 seconds or remaining deadline minus 1 second for fallback, whichever is smaller |
+| Model request | 4 seconds (6 on Azure, where in-process MCP freed the time; `OVERLAP_MODEL_TIMEOUT_S`) or remaining deadline minus 1 second for fallback, whichever is smaller |
 | Total model requests | At most 12 per moment: spotter rank 1, analyst 1, narrator at most 2 concurrent chunks, semantic check 1, two rewrite/check pairs 4, semantic checks of translations 3; transient retries consume the same cap. Translator service calls are counted separately |
 | Prompt/output cap | At most 3,000 input tokens and 800 generated tokens/request; no silent truncation of evidence |
-| Match budget | At most 12 admitted model jobs plus the recap, 120 model calls and 400,000 total metered/reserved tokens; the $25 Azure cap (Arnav, 20 Oct) also applies across all matches |
-| Concurrency | 1 running job per match, 2 globally; at most 2 queued per match; suppress oldest queued overflow durably |
+| Match budget | Defaults: at most 12 admitted model jobs plus the recap, 120 model calls and 400,000 total metered/reserved tokens. On Azure (25 Oct): 30 jobs, 300 calls, 900,000 tokens, because a 20× match makes about 40 moments and 12 jobs capped the model-written share near 30% (about $0.10–0.15 a match on gpt-5-mini). The $25 Azure cap (Arnav, 20 Oct) also applies across all matches |
+| Concurrency | 2 running jobs per match (started in moment order), 2 matches at once; at most 2 queued per match; suppress oldest queued overflow durably. One running job per match left bursts waiting behind a 7 s job until they went stale at 20× (25 Oct). The budget, jobs and outbox are ETag-guarded, so concurrent jobs of a match never double-count or double-publish. The translator runs es, hi and fr side by side |
 | Freshness | Same period and <=300,000 match ms behind playhead, per §10; unknown playhead -> hold within deadline, then suppress |
 | Display | Up to 6 wall seconds at 1x and 20x; remove early if live eligibility ends |
 | Performance target | p95 checked-overlay-ready latency <=8 wall seconds; browser display latency measured separately |

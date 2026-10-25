@@ -143,6 +143,14 @@ resource apps 'Microsoft.Web/sites@2024-04-01' = [for a in appsToRun: {
         // A fresh MCP server process per job needs 4-5 s to start on Azure under match load; its request timeout is
         // twice this (default 2 s), so 4 s lets it answer while the job stays inside its 15 s deadline
         { name: 'OVERLAP_MCP_TIMEOUT_S', value: '4' }
+        // A 20x match makes about 40 moments; the default 12 model jobs capped the model-written share near 30%. About
+        // $0.10-0.15 a match on gpt-5-mini; the $25 model budget still caps everything (agents/specs/workflow.md §3)
+        { name: 'OVERLAP_MAX_MODEL_JOBS_PER_MATCH', value: '30' }
+        { name: 'OVERLAP_MAX_CALLS_PER_MATCH', value: '300' }
+        { name: 'OVERLAP_MAX_TOKENS_PER_MATCH', value: '900000' }
+        // In-process MCP freed 4-5 s per job; 6 s lets the narrator, fact-checker and translator calls finish
+        // (narrator p50 2.7 s, max 3.7 s on 25 Oct) while the 15 s job deadline still bounds every card
+        { name: 'OVERLAP_MODEL_TIMEOUT_S', value: '6' }
       ], map(a.off, f => { name: 'AzureWebJobs.${f}.Disabled', value: 'true' }))
     }
   }
