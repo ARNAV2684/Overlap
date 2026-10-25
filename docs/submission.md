@@ -1,6 +1,6 @@
 # Overlap: portal submission text
 
-Ready to paste into the Innovation Studio project page. Written 25 Oct 2026. Submit on 27 Oct, IST evening (portal closes 28 Oct, 12:29 IST).
+Ready to paste into the Innovation Studio project page. Written 25 Oct 2026; updated the same evening with the results of PRs #99 to #107 and the four Azure runs of 25 Oct. Submit on 27 Oct, IST evening (portal closes 28 Oct, 12:29 IST).
 
 **How to use this file**
 
@@ -13,11 +13,10 @@ Ready to paste into the Innovation Studio project page. Written 25 Oct 2026. Sub
 
 | Marker | Where | Who supplies it |
 |---|---|---|
-| `[[AI-SHARE]]` | Long description, "Results"; section 5 | Block A, proving run (A5/A6) |
+| `[[AI-SHARE]]` | Long description, "Results"; section 5 | The next proving run (the 25 Oct runs gave 5–16%, already in the text) |
 | `[[SHOWCASE-IDS]]` | Testing instructions | Block A, showcase replays (E2) |
 | `[[LIVE-WINDOWS]]` | Testing instructions | Arnav, judging mode (E1) |
 | `[[VIDEO-URL]]` | Section 9 (field list) | Video, B6 |
-| `[[W2]]`, `[[W3]]`, `[[W4]]` | Optional sentences | Include only if that PR is merged and deployed |
 
 ---
 
@@ -81,9 +80,10 @@ All measured on Azure (Sweden Central) or on the evaluation bench; nothing here 
 
 - **Pipeline on Azure, 24 Oct.** Nine of nine full 20× matches (SYN-3000 to SYN-3008) archived identical to their recordings. In the final run every reader was 0 s behind Event Hubs at p50, 1 s at p95 and 3 s at worst, across 3,009 function runs with none failed. A full match plays in 6 min 40 s.
 - **Agents bench, 24 generated matches (538 moments).** Detection recall on every labelled trigger was 100% (195 of 195: goals, red cards, penalties, milestones, shot clusters). 0 wrong numbers in 12,236 published lines on the template path, and 0 in 2,996 more lines on a local-model subset. Fault injection on 33 labelled lines: all 11 numeric faults caught, 9 of 9 meaning faults the code can judge caught, and 0 false rejections of the 12 valid lines.
-- **Cards written by the model.** `[[AI-SHARE: e.g. "In the proving run on Azure, X of Y cards (Z%) were written by gpt-5-mini and passed the fact-checker, labelled "AI · checked"; the rest are labelled "Stat line · checked"."]]`
-- **Single agent versus the full pipeline.** `[[W3: one sentence with the measured difference, only if the comparison lands]]`
-- **Tests.** More than 1,000 automated tests across the agents, MCP server, stats engine, Functions, archiver, generator and web app, with CI on every pull request.
+- **Cards written by the model.** At 20× a card is live for 15 real seconds. In four full 20× matches on Azure on 25 Oct, 5–16% of cards were written by gpt-5-mini and passed the fact-checker, labelled "AI · checked"; the rest are labelled "Stat line · checked". Each run removed one cause of late model lines (a slow MCP start, one job at a time, a strict numeric check, a breaker that paused the model). `[[AI-SHARE: add the next proving run's share, or delete this marker]]`
+- **Single agent versus the full pipeline.** On the same 17 moments on gpt-5-mini, the narrator alone published 65 of 109 lines that no check could tie to the evidence (a value attached to the wrong fact, a score told from the trailing side, a missing unit). The seven agents published none of those: they rewrote 69 lines and replaced the rest with checked stat lines.
+- **Line quality, scored in Foundry.** Azure AI Evaluation on 60 published lines of an Azure match (all 25 model lines and 35 templates): groundedness 98.3%, relevance 91.7%, fluency 100%.
+- **Tests.** 1,241 automated tests pass across the agents, MCP server, stats engine, Functions, archiver, generator and web app, with CI on every pull request.
 
 ### Responsible AI
 
@@ -91,19 +91,20 @@ All measured on Azure (Sweden Central) or on the evaluation bench; nothing here 
 - **Numbers cannot be made up.** An agent may cite only numbers from a moment's evidence pack. The fact-checker verifies each one in code; a meaning check can never overrule a numeric failure.
 - **Honest labels.** "AI · checked" appears only on a model-written line that the fact-checker passed. A template line is labelled "Stat line · checked" and is never called AI.
 - **Failure means a safe fallback, not silence or a guess.** Any model failure falls back to a template for that step only.
-- **Translation is held to the same rule.** If Translator scrambles a number (for example reordering a score), the line is refused for that language. English is never suppressed. `[[W3: add one sentence on the placeholder fix and the new Hindi drop rate, only if it lands]]`
+- **Translation is held to the same rule.** If Translator scrambles a number (for example reordering a score), the line is refused for that language. English is never suppressed. Numbers no longer reach Translator at all: each goes as a placeholder and is put back afterwards. On a simulated translator that moves numbers between slots, no Hindi line was dropped or wrong, where before up to 19 of 130 were dropped and 16 published wrong.
+- **Traced, scored and ready to screen.** Every agent run is traced in Application Insights with no prompt or line text on any span; published lines are scored with Azure AI Evaluation; an Azure AI Content Safety screen of model lines is built and can be switched on.
 - **No personal data.** No accounts, no logins; viewer preferences stay in the browser. Public match starts are limited by hashed network identifiers, and no raw addresses are stored.
 - **Cost guards.** Model calls are budgeted per moment and per match in code, the model deployment has a small token-rate limit, and a model budget alerts at 50%, 80% and 100% of $25.
 
 ### Cost and operations
 
 - **Infrastructure as code.** The whole of Azure is in Bicep and deployed with `azd`; resources use managed identities with no keys or connection strings anywhere. Local key authentication is off on Event Hubs, Cosmos DB, Web PubSub, AI Services and Translator, and shared-key access is off on Storage.
-- **Operable.** Application Insights and Log Analytics collect telemetry from the Functions apps; a documented pause and resume path takes the live pipeline down and brings it back with five settings.
+- **Operable.** Application Insights and Log Analytics collect telemetry from the Functions apps, with one trace per card from the agents; a documented pause and resume path takes the live pipeline down and brings it back with five settings.
 - **Cost, estimated from list prices.** The replay-only link costs about $0.20 a day while paused. The full live pipeline is about $11–14 a day. The 24 Oct whole-day estimate, with nine full matches, was about $3. Eight subscription budgets alert at every $25 step up to $200, and public starts are rate limited (one match at a time, 3 per visitor and 6 in total per hour).
 
 ### What is next
 
-Show the model-written share on more replays; follow several players at once, and a single-metric mode; show live ball speed on its own; send traces and evaluations of each agent run to Foundry `[[W4: say "in progress" or drop]]`; and automatic eventing from video, the one optional stretch goal from the challenge we did not attempt.
+Raise the model-written share at 20× and show it on more replays; a "how this card was made" view on each card; follow several players at once, and a single-metric mode; show live ball speed on its own; and automatic eventing from video, the one optional stretch goal from the challenge we did not attempt.
 
 ---
 
@@ -115,6 +116,8 @@ Show the model-written share on more replays; follow several players at once, an
 - Microsoft Agent Framework: the seven-agent workflow
 - Model Context Protocol (MCP): our own per-moment, read-only stats server, used by the analyst
 - Azure AI Translator: Spanish, Hindi and French
+- Azure AI Evaluation: groundedness, relevance and fluency of published lines, on the Foundry deployment
+- OpenTelemetry tracing from Agent Framework into Application Insights: one trace per card
 
 **Azure data and compute**
 
@@ -131,6 +134,7 @@ Show the model-written share on more replays; follow several players at once, an
 
 - Bicep and Azure Developer CLI (`azd`)
 - GitHub Actions: lint and test on every pull request (Python, web, infrastructure)
+- GitHub Copilot: in the editor and for pull request reviews
 
 **Application**
 
@@ -144,7 +148,7 @@ Paste one. Block A decides after the proving run; the audit's rule is Multi-Agen
 
 ### 5a. Best Multi-Agent System (138 words, plus the optional marker sentences)
 
-Overlap is a multi-agent system with distinct roles and one shared record. Seven agents (spotter, analyst, narrator, fact-checker, translator, director, recap writer) each own one job on a flagged match moment, and each saves its output on a shared job document in Cosmos DB before handing off to the next. The analyst reaches the evidence through our own MCP server; the fact-checker sends failing lines back to the narrator twice, then falls back to a labelled template, and a crashed run resumes from its last saved stage without ever running a moment twice. The outcome is something a single agent cannot give: personalised, translated commentary in which every number is verified in code before it is shown. On our 24-match bench, 0 wrong numbers appeared in 12,236 published lines (template path), and fault injection caught every numeric fault. `[[AI-SHARE sentence]]` `[[W3: single-agent comparison sentence, if it lands]]` `[[W2: "Each card shows how it was made: which agents ran, the MCP calls and the checks.", if it lands]]`
+Overlap is a multi-agent system with distinct roles and one shared record. Seven agents (spotter, analyst, narrator, fact-checker, translator, director, recap writer) each own one job on a flagged match moment, and each saves its output on a shared job document in Cosmos DB before handing off to the next. The analyst reaches the evidence through our own MCP server; the fact-checker sends failing lines back to the narrator twice, then falls back to a labelled template, and a crashed run resumes from its last saved stage without ever running a moment twice. The outcome is something a single agent cannot give: personalised, translated commentary in which every number is verified in code before it is shown. On our 24-match bench, 0 wrong numbers appeared in 12,236 published lines (template path), and fault injection caught every numeric fault. On the same moments on gpt-5-mini, a single narrator agent published 65 of 109 lines no check could tie to the evidence; the seven agents published none. `[[AI-SHARE sentence: the model-written share of the latest proving run]]`
 
 ### 5b. Best Azure Cloud Native Integration (144 words)
 
@@ -159,7 +163,7 @@ Paste into the portal's testing field. **No sign-in, no credentials, no cost to 
 1. Open **https://ca-overlap-web.agreeablestone-46edcfef.swedencentral.azurecontainerapps.io**. A first visit may take about 10 seconds to wake; reload once if the page is empty.
 2. The home page plays a recorded match on a 3D pitch. For a good one, open `/matches` and choose **Watch replay** on `[[SHOWCASE-IDS]]`. Use **5×** or **20×**, with pause and restart over the pitch.
 3. Watch the **commentary strip** under the pitch: the card on screen now, and the three before it. Each card shows its minute, the kind of moment, the sentence with its key number, and a badge. **AI · checked** means a model wrote the line and the fact-checker passed every number. **Stat line · checked** means a template wrote it from the verified numbers; it is never called AI. Click a card's chart link to open the chart or insight card it refers to.
-4. Below the pitch, use the viewer bar to change **Mode** (Casual, Analyst, My club, Player focus), **Language** (English, Español, हिन्दी, Français), **Club** and **Follow** (a player). The next cards arrive in that voice. Player focus shows the player's distance, top speed and sprints, and their numbers beside their opposite number's.
+4. Below the pitch, use the viewer bar to change **Mode** (Casual, Analyst, My club, Player focus), **Language** (English, Español, हिन्दी, Français), **Club** and **Follow** (a player). The next cards arrive in that voice. Casual and Analyst are two different screens: Casual keeps to the story and a few numbers, Analyst shows every number and the facts the fact-checker verified. Player focus shows the player's distance, top speed and sprints, and their numbers beside their opposite number's.
 5. Open the **recap** from `/matches` ("Recap") for the full-time summary and every moment, and `/league` for the table, title race and style map. `/how-it-works` shows the pipeline and the seven agents.
 6. The site is **paused to replays only** to save cost, so the start button is hidden. Live matches run in announced windows: `[[LIVE-WINDOWS]]`. During a window, press **Start a live match** on the home page; it plays a full match at 20× in about 7 minutes, one at a time.
 7. Reconnect and layout: the page recovers on its own if the network drops; it works at phone width and in light and dark themes.
@@ -180,7 +184,7 @@ Source code: https://github.com/ARNAV2684/Overlap (judge's guide: `docs/testing.
 | 4 | Recap | `/match/<showcase id>/recap` in Analyst mode, language Hindi if the cards are clean, otherwise English | Final score, the recap text, the moment timeline | "The full-time recap, written from a fact pack built by code, in the viewer's mode and language." |
 | 5 | Architecture | Lucid diagram page 7 exported to PNG (same file as `docs/img/architecture.png`) | Generator, Event Hubs, the two Functions apps, Container Apps, Cosmos DB, Blob, Web PubSub, Foundry (gpt-5-mini), Translator, Application Insights, the viewer; managed identity noted | "Deployed on Azure, Sweden Central: event-driven, keyless, defined in Bicep." |
 
-Optional sixth, only if the PRs merged and deployed: the **"How this card was made"** panel (W2) open on a card, showing the seven agents, the MCP calls and the fact-check result.
+Optional sixth: the **Overlap live run** workbook in Application Insights during a live window (cards sent and expired, agent stage times, model calls), if it is deployed by then.
 
 **Thumbnail** (16:9, 1280×720 minimum, PNG, under 2 MB): the 3D pitch from the Wide camera with one moment card in the focus colour, the wordmark "Overlap" and the tagline "Every fan watches a different match." in large type. Use the dark theme if the card reads better there. No club badges that resemble real ones, no music-service or league logos, no text smaller than 28 px.
 
@@ -244,10 +248,10 @@ Save a copy of every field's final text in the repository after submitting (plan
 
 ---
 
-## Notes for Arnav (not for the portal)
+## Notes for the team (not for the portal)
 
 1. **Wrong-numbers claim.** The brief's "0 wrong numbers in 12,236 published lines" counts template lines (provider off). I kept it, labelled it "on the template path", and added the 2,996-line local-model subset. A judge reading the bench report would otherwise see "Verified 0.0%". Do not drop the qualifier.
-2. **AI-share is the open claim.** Until block A's proving run, no sentence says how many cards the model wrote on Azure. At 20× on 24 Oct every card was a template. If the share stays low, use the Cloud Native paragraph and the "Stat line · checked" wording in the results marker.
-3. **GitHub Copilot.** Not listed: nothing in the repository says it was used. The technologies list in the plan allows it "only if really used".
-4. **Hindi.** The text says a scrambled number gets the line refused for that language, which is true today. Add the W3 sentence only after its PR is merged and measured on fixtures.
-5. **Do not paste** the repository's older README tagline lines about "Status: planning"; W1 is replacing it.
+2. **AI share.** The text gives the measured 5–16% of the 25 Oct runs. If the next proving run is clearly higher, put its figure in the `[[AI-SHARE]]` marker and consider the Multi-Agent paragraph; if it stays low, use the Cloud Native paragraph.
+3. **GitHub Copilot.** Listed because the team confirmed it was used in the editor and for pull request reviews (25 Oct).
+4. **Hindi.** The placeholder result is from a simulated translator; the real Azure drop rate is measured in the next run. The text says "on a simulated translator" for that reason.
+5. **Single vs multi-agent.** Measured before the fact-checker's precision change (#106). The wrong-number rows don't depend on it; the single agent's refused share would be somewhat lower under it.
