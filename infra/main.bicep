@@ -98,6 +98,7 @@ module monitoring 'modules/monitoring.bicep' = {
     location: location
     token: token
     tags: tags
+    alertEmail: budgetContactEmail
   }
 }
 

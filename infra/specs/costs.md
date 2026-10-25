@@ -28,6 +28,9 @@ _Answer:_
 The overall budgets were created directly on the subscription (they cover everything, including anything outside the
 resource group); the model budget is created by Bicep with the Foundry resource (A4).
 
+The three log alerts on Application Insights ([`resources.md`](resources.md) §2.8) cost about $1.50 a month each at
+a 5-minute frequency (list price), about $4.50 a month for the three; the workbook is free.
+
 Azure budgets only send alerts; they never stop spending. The $25 model cap is enforced by:
 
 1. **Code:** the agents' budget settings (`OVERLAP_MAX_CALLS_PER_MATCH`, `OVERLAP_MAX_TOKENS_PER_MATCH`,
