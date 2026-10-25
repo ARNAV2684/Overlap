@@ -117,10 +117,14 @@ Agents bench ([`agents/evals/results/round-1/report.md`](agents/evals/results/ro
 Line quality on Azure (Azure AI Evaluation on the Foundry deployment, 60 lines of SYN-3010): groundedness 98.3%,
 relevance 91.7%, fluency 100% ([`docs/evaluation.md`](docs/evaluation.md#line-quality-azure-ai-evaluation)).
 
-Known gap: in the 24 Oct Azure runs most cards were templates (**Stat line · checked**): a fresh MCP process per job
-took 4–5 s and the narrator call 3–11 s, longer than a card's 15 s window at 20×. In-process MCP sessions and two
-parallel narrator calls ([`docs/release-readiness.md`](docs/release-readiness.md)) are the fix; the share of model-written
-cards after the next deploy is recorded in [`docs/evaluation.md`](docs/evaluation.md).
+Single agent against the seven, on gpt-5-mini (same 17 moments): the narrator alone published 65 of 109 lines that no
+check could tie to the evidence; the seven agents published none, rewrote 69 and replaced the rest with checked stat
+lines ([`docs/evaluation.md`](docs/evaluation.md#single-vs-multi-agent-w3)).
+
+Known gap: at 20× a card is live for only 15 real seconds, and on Azure most cards are still checked templates
+(**Stat line · checked**). Across four matches on 25 Oct the model-written share was 5–16%; each run removed one cause
+(a slow MCP start, one job at a time, a strict numeric check, a breaker that paused the model) and the next fix is in
+review. Every run is in [`docs/evaluation.md`](docs/evaluation.md#live-ai-share-on-azure-25-oct).
 
 ## Run locally
 
@@ -148,15 +152,17 @@ match, pause and resume). Costs and budgets: [`infra/specs/costs.md`](infra/spec
 
 ## Tests and CI
 
-| Suite | Tests on `main`, 25 Oct |
+| Suite | Tests passing on `main`, 25 Oct (opt-in tests skipped) |
 |---|---|
-| Agents | 217 |
-| MCP server | 153 |
-| Stats engine | 77 |
+| Agents | 278 |
+| MCP server | 151 (2 skipped) |
+| Stats engine | 76 (1 skipped) |
 | Functions | 20 |
-| Web app | 596 (592 run, 4 opt-in skipped) |
-| Generator | 114 |
-| Archiver | 7 |
+| Web app | 599 (4 skipped) |
+| Generator | 112 (2 skipped) |
+| Archiver | 5 (2 skipped, need the storage emulators) |
+
+1,241 tests pass in all.
 
 Python suites run with `uv run pytest` in each folder; the web app with `npx vitest run`. GitHub Actions runs 11 jobs
 on every pull request: ruff and pytest for each changed Python project, web lint, type check and build, Bicep build and lint, a secrets scan, and policy and scope checks ([`.github/workflows/`](.github/workflows)).

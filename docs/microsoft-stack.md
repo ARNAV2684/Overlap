@@ -78,7 +78,7 @@ quote come from the moment's evidence pack.
 
 **Where.**
 - [`mcp_server/`](../mcp_server): the server ([`server.py`](../mcp_server/server.py)), the tools
-  ([`tools/`](../mcp_server/tools)), the spec ([`specs/tools.md`](../mcp_server/specs/tools.md)), 150 tests.
+  ([`tools/`](../mcp_server/tools)), the spec ([`specs/tools.md`](../mcp_server/specs/tools.md)), 151 tests.
 - [`agents/context.py`](../agents/context.py): the client through Agent Framework's `MCPStdioTool` (a separate
   process per job).
 - [`agents/embedded_context.py`](../agents/embedded_context.py): the same MCP protocol, the same server and tools,
@@ -124,7 +124,7 @@ Four people built Overlap in parallel, every layer at once. GitHub is how that w
 [`.github/pull_request_template.md`](../.github/pull_request_template.md): which layers it touches, whether a message
 shape changed, synthetic data only, no secrets, and how to test it. Each layer has named owners in
 [`plans/REGISTRY.md`](../plans/REGISTRY.md), and a pull request touching another layer's files tells its owners first.
-By 25 Oct, 95 pull requests had been reviewed and merged this way.
+By 25 Oct, 107 pull requests had been reviewed and merged this way.
 
 **Contracts first.** [`CONTRACTS.md`](../CONTRACTS.md) is the one source of truth for every message between layers:
 match setup, events, tracking frames, evidence packs, overlays, browser envelopes, metric definitions, insight
