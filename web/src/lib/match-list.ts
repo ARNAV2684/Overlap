@@ -3,7 +3,8 @@
 // Purpose: turn the archive's recent `matches` documents and the stats engine's `match_state` documents into the
 //          match picker's list, and define the list's shape, which the browser checks again
 // Inputs:  projected `matches` rows (archive-store.ts createMatchListStore), match_state documents by match id
-// Outputs: parseMatchRows(), liveMatchIds(), buildMatchList(), matchListSchema, MatchListItem, MATCH_LIST_LIMIT
+// Outputs: parseMatchRows(), liveMatchIds(), buildMatchList(), parseShowcaseIds(), matchListSchema, MatchListItem,
+//          MATCH_LIST_LIMIT
 // Spec:    web/specs/realtime.md §5.3; CONTRACTS.md §4.1, §4.2. Plan: vedant-frontend/plans/active/PLAN_web_match-list.md
 //
 // Pure: no I/O. Shared by the route (server) and api.ts (browser), so it imports nothing server-only. Stored rows are
@@ -35,6 +36,8 @@ export const matchListItemSchema = z.strictObject({
   phase: phaseSchema.nullable(),
   score: scoreSchema.nullable(),
   clock: clockSchema.nullable(),
+  /** Finished matches only: one of the replays chosen to show first (OVERLAP_SHOWCASE_MATCH_IDS). Absent otherwise. */
+  showcase: z.literal(true).optional(),
 });
 export type MatchListItem = z.infer<typeof matchListItemSchema>;
 
@@ -85,11 +88,21 @@ export function parseMatchRows(raw: readonly unknown[]): ParsedRows {
 export const liveMatchIds = (rows: readonly StoredRow[]): string[] =>
   rows.filter((row) => row.status === "live").map((row) => row.match_id);
 
+/** The match ids in OVERLAP_SHOWCASE_MATCH_IDS ("SYN-3012, SYN-3013"); anything that is not a match id is ignored. */
+export function parseShowcaseIds(raw: string | undefined): Set<string> {
+  return new Set((raw ?? "").split(",").map((s) => s.trim()).filter(isMatchId));
+}
+
 /**
  * The list: live matches first, then finished ones, each newest first. `states` holds the match_state documents of
- * live matches; one that is missing or fails its check leaves that match's phase, score and clock null.
+ * live matches; one that is missing or fails its check leaves that match's phase, score and clock null. A finished
+ * match in `showcase` is marked `showcase: true`; the order does not change.
  */
-export function buildMatchList(rows: readonly StoredRow[], states: ReadonlyMap<string, unknown>): MatchList {
+export function buildMatchList(
+  rows: readonly StoredRow[],
+  states: ReadonlyMap<string, unknown>,
+  showcase: ReadonlySet<string> = new Set(),
+): MatchList {
   const ordered = [...rows].sort((a, b) => {
     if (a.status !== b.status) return a.status === "live" ? -1 : 1;
     return b._ts - a._ts;
@@ -102,7 +115,8 @@ export function buildMatchList(rows: readonly StoredRow[], states: ReadonlyMap<s
       };
       if (row.status === "finished") {
         // parseMatchRows guarantees the result
-        return { match_id: row.match_id, status: "finished", ...teams, phase: "full_time", score: row.result!.score, clock: null };
+        const item: MatchListItem = { match_id: row.match_id, status: "finished", ...teams, phase: "full_time", score: row.result!.score, clock: null };
+        return showcase.has(row.match_id) ? { ...item, showcase: true } : item;
       }
       const state = matchStateSchema.safeParse(states.get(row.match_id));
       return state.success

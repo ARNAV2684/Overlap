@@ -1,7 +1,8 @@
 // home-choice.ts — Which match the home page opens on
 //
 // Purpose: pick the home page's match from the match list: a live match that is really being played, else a replay
-//          of the newest finished match, keeping what is already playing when nothing better appears
+//          of a showcase match (the team's chosen replays), else of the newest finished match, keeping what is
+//          already playing when nothing better appears
 // Inputs:  the match list (match-list.ts), the live matches that went quiet, the live matches whose clock moved
 //          since the last poll, and the current choice
 // Outputs: pickHomeMatch(); HomeChoice
@@ -15,8 +16,9 @@ export type HomeChoice = { matchId: string; source: "live" | "replay" } | null;
 
 /**
  * A live match that is not quiet wins, preferring one whose clock is moving, then the highest match number (the
- * newest run). Without one, a replay already playing keeps playing; otherwise the newest finished match (the list's
- * first) as a replay. Returns `current` itself when it stays the choice, so a caller can tell nothing changed.
+ * newest run). Without one, a replay already playing keeps playing; otherwise the newest showcase match, or if there
+ * is none the newest finished match (the list is newest first), as a replay. Returns `current` itself when it stays
+ * the choice, so a caller can tell nothing changed.
  */
 export function pickHomeMatch(
   matches: readonly MatchListItem[],
@@ -32,6 +34,6 @@ export function pickHomeMatch(
     return { matchId: live.match_id, source: "live" };
   }
   if (current?.source === "replay") return current;
-  const finished = matches.find((m) => m.status === "finished");
+  const finished = matches.find((m) => m.status === "finished" && m.showcase) ?? matches.find((m) => m.status === "finished");
   return finished ? { matchId: finished.match_id, source: "replay" } : null;
 }

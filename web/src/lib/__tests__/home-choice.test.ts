@@ -55,4 +55,11 @@ describe("pickHomeMatch", () => {
     const list = [item("SYN-3012", "live"), item("SYN-3003", "finished")];
     expect(pickHomeMatch(list, none, none, replay)).toEqual({ matchId: "SYN-3012", source: "live" });
   });
+
+  it("opens a showcase replay before the newest one, and still prefers a live match", () => {
+    const showcase = { ...item("SYN-3002", "finished"), showcase: true as const };
+    const list = [item("SYN-3003", "finished"), showcase];
+    expect(pickHomeMatch(list, none, none, null)).toEqual({ matchId: "SYN-3002", source: "replay" });
+    expect(pickHomeMatch([item("SYN-3012", "live"), ...list], none, none, null)).toEqual({ matchId: "SYN-3012", source: "live" });
+  });
 });
