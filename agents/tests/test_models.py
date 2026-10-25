@@ -273,3 +273,61 @@ def test_failing_model_trips_the_breaker_and_later_calls_skip_it(monkeypatch):
     with pytest.raises(ModelFailed) as e:
         ask(m, deadline=1e9)
     assert e.value.reason == "provider_error" and SlowAgent.calls == 3     # the probe
+
+
+class SleepyAgent:
+    calls = 0
+
+    def __init__(self, client, instructions, name=None):
+        pass
+
+    async def run(self, messages, **kwargs):
+        SleepyAgent.calls += 1
+        await asyncio.sleep(5)                             # always longer than the call's timeout
+
+
+def sleepy_models(monkeypatch, request_timeout_s):
+    import agent_framework
+    monkeypatch.setattr(agent_framework, "Agent", SleepyAgent)
+    SleepyAgent.calls = 0
+    s = Settings(provider="local", local_base_url="http://localhost:1", local_model="m", model_breaker_failures=1,
+                 model_breaker_cooldown_s=30, request_timeout_s=request_timeout_s)
+    return Models(s, ModelGate(s), client=object(), clock=Clock())
+
+
+def test_a_timeout_cut_short_by_the_deadline_never_trips_the_breaker(monkeypatch):
+    # The job's deadline leaves 0.6 s of a 4 s request timeout: the model was never given its full time
+    m = sleepy_models(monkeypatch, request_timeout_s=4.0)
+    reasons = []
+    for _ in range(3):
+        try:
+            ask(m, deadline=1.6)
+        except ModelFailed as e:
+            reasons.append(e.reason)
+    assert reasons == ["timeout", "timeout", "timeout"]
+    assert SleepyAgent.calls == 3 and m.breaker.failures == 0 and not m.breaker.open_until
+
+
+def test_a_full_length_timeout_still_trips_the_breaker(monkeypatch):
+    m = sleepy_models(monkeypatch, request_timeout_s=0.6)
+    reasons = []
+    for _ in range(2):
+        try:
+            ask(m, deadline=1e9)
+        except ModelFailed as e:
+            reasons.append(e.reason)
+    assert reasons == ["timeout", "breaker_open"]          # limit 1: the first full timeout pauses the model
+    assert SleepyAgent.calls == 1
+
+
+def test_a_probe_cut_short_by_the_deadline_is_released_not_counted(monkeypatch):
+    m = sleepy_models(monkeypatch, request_timeout_s=4.0)
+    m.breaker.failures, m.breaker.open_until = 1, 10.0     # paused earlier by a real failure
+    m.clock.t = 11.0                                       # cooldown over: the next call is the probe
+    with pytest.raises(ModelFailed) as e:
+        ask(m, deadline=12.6)                              # 0.6 s left of 4 s
+    assert e.value.reason == "timeout" and SleepyAgent.calls == 1
+    assert not m.breaker.probing and m.breaker.failures == 1
+    with pytest.raises(ModelFailed):
+        ask(m, deadline=12.6)                              # the next call may probe again
+    assert SleepyAgent.calls == 2
