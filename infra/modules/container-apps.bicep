@@ -10,7 +10,8 @@
 //
 // Images are pulled with each app's own identity (AcrPull, no admin user). Before the first image push the apps run a
 // public placeholder image. With deployLive false (paused after A8) the stats engine and the generator job are not
-// deployed and the web app scales to zero between visitors; replays keep working from Cosmos DB and Blob Storage.
+// deployed; the web app keeps its minimum replicas (1, so the link never cold-starts) and replays keep working from
+// Cosmos DB and Blob Storage.
 
 @description('Azure region for every resource here.')
 param location string

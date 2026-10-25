@@ -53,7 +53,7 @@ param webPubSubSku string = 'Standard_S1'
 ])
 param livePipeline string = 'true'
 
-@description('Web app minimum replicas: "1" during a run, "0" while paused (first visit then waits for a cold start).')
+@description('Web app minimum replicas: "1" (also while paused, so the judges\' link never cold-starts); "0" only to save about $1 a day, at the cost of a 25 s first visit.')
 @allowed([
   '0'
   '1'

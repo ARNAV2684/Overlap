@@ -1,6 +1,7 @@
 # Azure Functions
 
-A separate Python Functions app (Flex Consumption on Azure): the screen relay, the archiver and the insight agents
+Python Functions code, deployed on Azure as two apps on one dedicated B3 plan (always on, one instance;
+`infra/specs/resources.md`): the screen relay, the archiver and the insight agents
 (moment trigger, recap, publisher), all on one Python with one set of packages.
 
 ## Define before you code
