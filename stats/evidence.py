@@ -13,13 +13,29 @@ from __future__ import annotations
 
 import rolling
 from state import MatchState
-from triggers import SHOT_CLUSTER_WINDOW_MS, Fired
+from triggers import CONNECTION_WINDOW_MS, SHOT_CLUSTER_WINDOW_MS, Fired, duels_won
 
 MIN = 60_000
 SCHEMA_VERSION = 1
 EVIDENCE_VERSION = 1
 MAX_ORDINAL = 9999
 MAX_PRESS_EVENTS = 20
+MAX_PLAYER_EVENTS = 12
+DUEL_TYPES = frozenset({"Tackle", "TakeOn", "Aerial"})
+
+
+# Role -> the three numbers a head-to-head compares: (fact suffix, label, unit, decimals, value of a Player)
+H2H_FACTS: dict[str, list] = {
+    "forward": [("shots", "shots", None, 0, lambda p: p.counts["shots"]),
+                ("shots_on_target", "shots on target", None, 0, lambda p: p.counts["on_target"]),
+                ("xg", "expected goals", "xG", 2, lambda p: p.xg)],
+    "midfielder": [("passes_completed", "completed passes", None, 0, lambda p: p.counts["completed"]),
+                   ("progressive_passes", "progressive passes", None, 0, lambda p: p.counts["progressive"]),
+                   ("key_passes", "passes leading to a shot", None, 0, lambda p: p.counts["key_passes"])],
+    "defender": [("duels_won", "duels won", None, 0, lambda p: duels_won(p.counts)),
+                 ("interceptions", "interceptions", None, 0, lambda p: p.counts["interceptions"]),
+                 ("recoveries", "ball recoveries", None, 0, lambda p: p.counts["recoveries"])],
+}
 
 
 class OrdinalOverflow(RuntimeError):
@@ -200,6 +216,60 @@ class Builder:
                  fact("shot_xg", n["xg"], 2, f"Expected goals of {scorer.name}'s shot", "xG")]
         return {"window": {"from_ms": e["match_ms"], "to_ms": e["match_ms"]}, "event_ids": [],
                 "player_ids": [e["player_id"]], "facts": facts}
+
+    # --- insight moments (evidence-packs.md §1.9–§1.11) -------------------------------------------------------------
+
+    def _recent_of(self, player_id: str, types: frozenset[str] | None = None) -> list[str]:
+        """The player's latest events (of these types), for the pack's event ids."""
+        ids = [i for i, p in self.state.event_players.items() if p == player_id]
+        if types is not None:
+            ids = [i for i in ids if self._type_of(i) in types]
+        return ids[-MAX_PLAYER_EVENTS:]
+
+    def _type_of(self, event_id: str) -> str:
+        return self.state.event_types.get(event_id, "")
+
+    def _head_to_head(self, f: Fired) -> dict:
+        s, e, d = self.state, f.event, f.data
+        player, rival = s.players[d["player"]], s.players[d["rival"]]
+        facts = []
+        for suffix, label, unit, decimals, value in H2H_FACTS[d["role"]]:
+            facts.append(fact(f"player_{suffix}_match", value(player), decimals, f"{player.name}'s {label} so far", unit))
+            facts.append(fact(f"rival_{suffix}_match", value(rival), decimals, f"{rival.name}'s {label} so far", unit))
+        return {"window": {"from_ms": 0, "to_ms": e["match_ms"]},
+                "event_ids": self._recent_of(player.player_id) + self._recent_of(rival.player_id),
+                "player_ids": [player.player_id, rival.player_id], "facts": facts}
+
+    def _connection(self, f: Fired) -> dict:
+        e, d = f.event, f.data
+        a, b = d["pair"]
+        passes, moves = d["passes"], d["shot_moves"]
+        names = f"{self.player_name(a)} and {self.player_name(b)}"
+        facts = [fact("pair_passes_last_15min", len(passes), 0, f"Passes between {names} in the last 15 minutes"),
+                 fact("pair_progressive_passes_last_15min", sum(p["progressive"] for p in passes), 0,
+                      f"Progressive passes between {names} in the last 15 minutes"),
+                 fact("pair_final_third_passes_last_15min", sum(p["final_third"] for p in passes), 0,
+                      f"Passes between {names} into the final third in the last 15 minutes"),
+                 fact("pair_shot_moves_last_15min", sum(p["possession_id"] in moves for p in passes), 0,
+                      f"Passes between {names} in moves that ended in a shot, last 15 minutes")]
+        start = max(e["match_ms"] - CONNECTION_WINDOW_MS, self.state.period_start_ms.get(e["period"], 0))
+        return {"window": {"from_ms": start, "to_ms": e["match_ms"]},
+                "event_ids": [p["event_id"] for p in passes], "player_ids": [a, b], "facts": facts}
+
+    def _workhorse(self, f: Fired) -> dict:
+        e = f.event
+        p = self.state.players[f.data["player"]]
+        c = p.counts
+        facts = [fact("player_duels_won_match", duels_won(c), 0, f"{p.name}'s duels won so far"),
+                 fact("player_recoveries_match", c["recoveries"], 0, f"{p.name}'s ball recoveries so far"),
+                 fact("player_pressures_match", c["pressures"], 0, f"{p.name}'s pressures so far"),
+                 fact("player_interceptions_match", c["interceptions"], 0, f"{p.name}'s interceptions so far")]
+        if p.motion.distance_m > 0:
+            facts += [fact("player_distance_km", p.motion.distance_m / 1000, 1, f"Distance {p.name} has covered", "km"),
+                      fact("player_sprints_match", p.motion.sprints, 0, f"{p.name}'s sprints so far")]
+        work = DUEL_TYPES | {"Interception", "BallRecovery"}
+        return {"window": {"from_ms": 0, "to_ms": e["match_ms"]}, "event_ids": self._recent_of(p.player_id, work),
+                "player_ids": [p.player_id], "facts": facts}
 
     # --- helpers --------------------------------------------------------------------------------------------------
 

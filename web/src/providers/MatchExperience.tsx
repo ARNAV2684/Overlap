@@ -129,6 +129,8 @@ export function MatchExperienceProvider({ children }: { children: ReactNode }) {
 
   // Twice a second: refresh the sample panels read, and re-direct the story with hysteresis
   const candidate = useRef<{ kind: StoryKind; since: number } | null>(null);
+  // The team of a connection card on screen now (set from the feed below): its connections become the story
+  const connectionsFor = useRef<Side | null>(null);
   const shownAt = useRef(0);
   useEffect(() => {
     let lastVersion = -1;
@@ -141,7 +143,7 @@ export function MatchExperienceProvider({ children }: { children: ReactNode }) {
       }
       if (!sample) return;
       setPlayheadMs(Math.floor(sample.matchMs / 1000) * 1000);
-      const next = directStory(memory, sample, pinned, myClub);
+      const next = directStory(memory, sample, pinned, myClub, connectionsFor.current);
       const now = performance.now();
       setStory((current) => {
         if (!current || pinned || current.kind === next.kind) {
@@ -150,7 +152,7 @@ export function MatchExperienceProvider({ children }: { children: ReactNode }) {
           return next;
         }
         // A different story: switch at once for a goal, otherwise when it has held and the current one has had its time
-        if (next.kind === "protect" && current.kind !== "protect") {
+        if ((next.kind === "protect" || next.kind === "connections") && current.kind !== next.kind) {
           shownAt.current = now;
           candidate.current = null;
           return next;
@@ -179,6 +181,17 @@ export function MatchExperienceProvider({ children }: { children: ReactNode }) {
     void group; // a new group starts a new feed
     return createInsightFeed();
   }, [group]);
+
+  // A connection card on screen draws its team's connections on the pitch while it is up
+  useEffect(() => {
+    const follow = () => {
+      const card = feed.getState().current;
+      const teamId = card?.visual?.component === "connections" ? card.visual.highlight?.team_id : undefined;
+      connectionsFor.current = !teamId || !setup ? null : teamId === setup.teams.home.team_id ? "home" : teamId === setup.teams.away.team_id ? "away" : null;
+    };
+    follow();
+    return feed.subscribe(follow);
+  }, [feed, setup]);
 
   useEffect(() => {
     const controller = new AbortController();

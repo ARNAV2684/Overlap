@@ -17,7 +17,8 @@ from runtime import RunState
 DURATION_MS = 6000                               # maximum wall-clock display time (§10.3)
 VISUAL = {"goal": "key_events", "big_chance": "key_events", "penalty": "key_events", "shot_cluster": "key_events",
           "momentum_swing": "momentum_tide", "press_change": "pressing_zones", "red_card": "key_events",
-          "milestone": "key_events"}             # goal, big chance, penalty -> shot_map once the web app has it
+          "milestone": "key_events", "head_to_head": "head_to_head", "connection": "connections",
+          "workhorse": "engine_room"}            # goal, big chance, penalty -> shot_map once the web app has it
 
 
 def groups(match_id: str, line_id: str, lang: str) -> str:
@@ -32,9 +33,12 @@ def overlay_id(moment_id: str) -> str:
 
 
 def visual(e: dict) -> dict:
-    """Component, window and highlight per trigger (§10.6): the triggering event, except for momentum swings."""
-    if e["trigger"] == "momentum_swing" or not e["event_ids"]:
+    """Component, window and highlight per trigger (§10.6): the triggering event, except for momentum swings and the
+    insight moments (the leader or worker for a head-to-head or workhorse, the team for a connection)."""
+    if e["trigger"] in ("momentum_swing", "connection") or not e["event_ids"]:
         highlight = {"team_id": e["team_id"]}
+    elif e["trigger"] in ("head_to_head", "workhorse") and e["player_ids"]:
+        highlight = {"team_id": e["team_id"], "player_id": e["player_ids"][0]}
     elif e["trigger"] == "milestone" and e["player_ids"]:
         highlight = {"team_id": e["team_id"], "player_id": e["player_ids"][0], "event_id": e["event_ids"][-1]}
     else:

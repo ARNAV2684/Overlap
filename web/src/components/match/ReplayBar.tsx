@@ -2,14 +2,17 @@
 
 // ReplayBar.tsx — Replay controls
 //
-// Purpose: play and pause, 1× / 5× / 20×, restart, and a progress line through the match, for archived matches
-// Inputs:  the replay player from ReplayProvider; an initial speed
+// Purpose: play and pause, 1× / 5× / 20×, restart, and a progress line through the match with a mark for every
+//          moment explained so far, for archived matches
+// Inputs:  the replay player from ReplayProvider; an initial speed; the moments shown so far
 // Outputs: UI
 // Spec:    web/specs/screens.md §2.4
 
 import { useEffect, useRef } from "react";
 import { SPEEDS, type ReplaySpeed } from "@/lib/replay-player";
 import { useReplayPlayer, useReplayState } from "@/providers/ReplayProvider";
+import { MOMENT_KIND_LABEL, momentKind } from "@/lib/live/live-insights";
+import { useVisibleCards } from "./MomentStrip";
 
 export function ReplayBar({ initialSpeed }: { initialSpeed?: ReplaySpeed }) {
   const player = useReplayPlayer();
@@ -25,6 +28,8 @@ export function ReplayBar({ initialSpeed }: { initialSpeed?: ReplaySpeed }) {
   const duration = state.manifest?.duration_ms ?? 0;
   const progress = duration ? Math.min(1, state.playheadMs / duration) : 0;
   const playing = state.status === "playing";
+  // Moments already shown, as marks on the progress line (later ones stay hidden: no spoilers)
+  const marks = useVisibleCards();
   const btn = "grid h-9 min-w-9 place-items-center rounded-full px-3 font-mono text-[11px] font-black transition-colors";
 
   return (
@@ -62,8 +67,17 @@ export function ReplayBar({ initialSpeed }: { initialSpeed?: ReplaySpeed }) {
         ))}
       </div>
       <div className="hidden w-28 items-center sm:flex md:w-44" aria-label={`Replay progress ${Math.round(progress * 100)}%`}>
-        <div className="h-1 w-full overflow-hidden rounded-full bg-white/15">
+        <div className="relative h-1 w-full rounded-full bg-white/15">
           <div className="h-full rounded-full bg-accent transition-[width] duration-200" style={{ width: `${progress * 100}%` }} />
+          {duration > 0 &&
+            marks.map((c) => (
+              <span
+                key={c.overlay_id}
+                className={`absolute top-1/2 h-2.5 w-[3px] -translate-x-1/2 -translate-y-1/2 rounded-full ${c.priority === "high" ? "bg-white" : "bg-white/55"}`}
+                style={{ left: `${Math.min(1, c.show_at_ms / duration) * 100}%` }}
+                title={`${c.clock.split(":")[0]}′ ${MOMENT_KIND_LABEL[momentKind(c)]}`}
+              />
+            ))}
         </div>
       </div>
       <button type="button" className={`${btn} text-white/60 hover:text-white`} onClick={() => player.restart()} aria-label="Restart from kick-off">

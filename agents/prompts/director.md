@@ -26,9 +26,11 @@ one per line and language with its group and §6/§10.6 overlay body (`mode`, `l
 - Groups: `match-<id>-<casual|analyst>-<lang>`, `match-<id>-club-<teamId>-<lang>`,
   `match-<id>-player-<playerId>-<lang>`.
 - Visual: goal, big chance, penalty, shot cluster, red card, milestone → `key_events` (goal, big chance and penalty
-  move to `shot_map` once the web app has it); momentum swing → `momentum_tide`; press change → `pressing_zones`.
-  Highlight the team and the triggering (last) event, except momentum swings (team only); a milestone also
-  highlights its player and carries a player tag.
+  move to `shot_map` once the web app has it); momentum swing → `momentum_tide`; press change → `pressing_zones`;
+  head-to-head → `head_to_head`; connection → `connections`; workhorse → `engine_room`.
+  Highlight the team and the triggering (last) event, except momentum swings and connections (team only) and
+  head-to-heads and workhorses (the team and the first player); a milestone also highlights its player and carries
+  a player tag.
 - Player tags (`player_tag` envelopes) are sent when a player's speed or distance in `match_state` first crosses its
   threshold; values come from `match_state`, never from a model.
 - No model-chosen destinations, durations or chart names. A line is never both verified and a fallback.

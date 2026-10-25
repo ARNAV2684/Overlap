@@ -81,12 +81,16 @@ Volume is per match on season S1 (19.7 in all; median 19.5, range 10–33).
 | `momentum_swing` | normal | 10 min per team per period | 5.52 | `momentum_share_last_5min_pct` · % · 0; `momentum_share_previous_10min_pct` · % · 0; `team_shots_last_5min` · 0; `window_duration_min` · min · 0 | The team's share of weighted attacking actions jumped ≥ 25 points to ≥ 60 % |
 | `press_change` | normal | 10 min per team per period | 6.04 | `pressures_per_opp_pass_last_5min` · 2; `pressures_per_opp_pass_previous_10min` · 2; `team_pressures_last_5min`, `team_high_regains_last_5min` · 0; `window_duration_min` · min · 0; optional `press_height_last_5min_m` · m · 0 | The team presses ≥ 1.5× more (label says "pressing more") or ≤ 1/1.5 as much ("pressing less") |
 | `milestone` | normal | none | 0.57 | `player_goals_match` (2 or 3) · 0; `shot_xg` · xG · 2 | A player's 2nd or 3rd goal |
+| `head_to_head` | normal | 15 min per role per period | 4–5 | Three `player_<m>_match` / `rival_<m>_match` pairs for the role (`evidence-packs.md` §1) | One player is clearly winning their battle with their opposite number in the same role; the **rival is the second `player_ids` entry, on the other team** |
+| `connection` | normal | 20 min per team per period | 4–8 | `pair_passes_last_15min`, `pair_progressive_passes_last_15min`, `pair_final_third_passes_last_15min`, `pair_shot_moves_last_15min` · 0 | A new passing partnership is driving the team over the last 15 minutes |
+| `workhorse` | normal | 15 min per period | 1–2 | `player_duels_won_match`, `player_recoveries_match`, `player_pressures_match`, `player_interceptions_match` · 0; with tracking `player_distance_km` · km · 1, `player_sprints_match` · 0 | A new hardest worker: running, duels, recoveries |
 | `sprint` | low | — | 0 | Deferred (D-01) | — |
 
 Priority isn't stored in the document; look it up by `trigger` from this table (`specs/triggers.md` §3).
 
 **One event can fire several moments, in this order:** goal, red card, penalty, big chance, shot cluster, momentum
-swing, press change, milestone. Nothing is merged: a goal that is also a cluster's third shot gives `goal` and
+swing, press change, milestone, head-to-head, connection, workhorse. Per-match counts for the last three are from three
+generated matches, not season S1. Nothing is merged: a goal that is also a cluster's third shot gives `goal` and
 `shot_cluster` with the same last `event_id` (the fixture's `MO-1017-0012` and `MO-1017-0013`). Merging for the
 screen is the spotter's call.
 
