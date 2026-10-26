@@ -13,4 +13,4 @@ WORKDIR /app/generator
 COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev
 COPY . .
-CMD ["sh", "-c", "exec uv run --frozen --no-dev python cli.py live --hubs azure --speed 20 --home CAL --away DTN --first-match \"$OVERLAP_FIRST_MATCH\" --seed \"$OVERLAP_FIRST_MATCH\""]
+CMD ["sh", "-c", "exec uv run --frozen --no-dev python cli.py live --hubs azure --speed 20 --from-season --first-match \"$OVERLAP_FIRST_MATCH\" --seed \"$OVERLAP_FIRST_MATCH\""]

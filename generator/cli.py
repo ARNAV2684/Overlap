@@ -181,6 +181,8 @@ def main(argv: list[str] | None = None) -> int:
     lv.add_argument("--record", action="store_true", help="also save each match to data/generated/matches")
     lv.add_argument("--seed", type=int, default=1, help="seed of the first match; the next ones count up")
     lv.add_argument("--first-match", type=int, default=1, help="number of the first match id (SYN-NNNN)")
+    lv.add_argument("--from-season", action="store_true",
+                    help="take the clubs from the season's fixture list by match number (instead of --home/--away)")
     lv.add_argument("--kickoff", default="2026-10-24T19:00:00Z")
     lv.add_argument("--storyline", action="append", help=STORYLINE_HELP)
     lv.set_defaults(func=cmd_live)
@@ -210,7 +212,15 @@ def main(argv: list[str] | None = None) -> int:
     v.set_defaults(func=cmd_validate)
 
     args = p.parse_args(argv)
-    if args.command == "live":
+    if args.command == "live" and args.from_season:
+        # One match per run on Azure: SYN-3015 plays the season's fixture 3015 (round robin, wrapping round)
+        if args.home or args.away:
+            print("--from-season picks the clubs; leave out --home and --away", file=sys.stderr)
+            return 2
+        ids = list(_clubs()[1])
+        fixture = batch.season_fixture(ids, args.first_match)
+        args.home, args.away = [fixture[0]], [fixture[1]]
+    elif args.command == "live":
         args.home = args.home or ["CAL"]
         args.away = args.away or ["DTN"]
     try:
