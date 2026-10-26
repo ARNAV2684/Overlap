@@ -40,7 +40,7 @@ and a card is labelled **AI · checked** only when a model wrote it and the fact
 
 ## Architecture
 
-**Deployed on Azure** (resource group `rg-overlap`, Sweden Central; AWS equivalents in brackets):
+**Deployed on Azure** (resource group `rg-overlap`, Sweden Central):
 
 ![Overlap on Azure: deployed cloud architecture](docs/img/azure-deployment.png)
 
