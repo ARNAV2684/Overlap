@@ -560,12 +560,12 @@ Proposed first-slice values:
 - `show_at_ms=evidence.match_ms`; `clock=evidence.clock`: this identifies the observed moment, not a fresh event
   invented at model completion. `duration_ms=6000` is the **maximum wall-clock display duration**, independent of
   playback speed. Recheck eligibility as the base playhead advances; remove early on expiry, period change or full time.
-- Suppress live delivery when current base-stream play time is more than 300,000 match ms past `show_at_ms`,
+- Suppress live delivery when current base-stream play time is more than 600,000 match ms past `show_at_ms`,
   the period changed, or the match ended. Do not relabel late analysis as current. Preserve its terminal reason
   for evaluation; recap/replay use is a future feature. If the current playhead cannot be established, do not send
   a live card. The playhead is defined in §10.6 (not the relay's private `screen` documents); it is not model
   context.
-- Frontend eligibility requires a base playhead in the same period, between `show_at_ms` and `show_at_ms+300000`.
+- Frontend eligibility requires a base playhead in the same period, between `show_at_ms` and `show_at_ms+600000`.
   Period comes from the overlay's proposed `period` field, not guessed from the clock label. At most one card is
   visible; keep at most
   two waiting per audience, prefer newest eligible normal-priority cards and record/surface an appropriate empty
@@ -663,7 +663,8 @@ These extend §10.3–§10.4 for the layer-5 build. Where they differ from §10.
   `match_state`, never from a model.
 - **Playhead for expiry.** The base playhead is `match_state.source.match_ms` (§4.2, written at least every 5 match
   seconds). A card is live-eligible while that playhead is in the same period, between `show_at_ms` and
-  `show_at_ms + 300000`. Unknown playhead → no live card.
+  `show_at_ms + 600000` (10 match minutes; 5 until 26 Oct, raised so a 20× card has 30 wall seconds). Unknown
+  playhead → no live card.
 - **Insights snapshot.** `GET /api/match/<id>/insights/snapshot?mode=<mode>&lang=<lang>` (plus `&club=<teamId>` or
   `&player=<playerId>` for those modes), same response shape as §10.4. Served by the Web PubSub stand-in locally and
   by the web app's route on Azure.

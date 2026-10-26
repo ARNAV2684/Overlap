@@ -56,7 +56,7 @@ def test_a_late_joiner_gets_the_two_newest_live_cards(moments, clock):
     seqs = [e["seq"] for e in body["envelopes"]]
     assert seqs == sorted(seqs) and len(seqs) <= 2 and body["cursor"] >= seqs[-1]
     assert all(e["data"]["mode"] == "casual" and e["data"]["lang"] == "en" for e in body["envelopes"])
-    later = {**state, "source": {"match_ms": state["source"]["match_ms"] + 400_000}}
+    later = {**state, "source": {"match_ms": state["source"]["match_ms"] + insights.LIVE_WINDOW_MS + 100_000}}
     status, body = insights.build_insights("SYN-1017", "match-SYN-1017-casual-en", later, docs)
     assert status == 200 and body["envelopes"] == [] and body["cursor"] > 0          # expired, cursor kept
 

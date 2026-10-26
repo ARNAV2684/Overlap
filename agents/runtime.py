@@ -105,7 +105,8 @@ def agent_deps(store: Store, settings: Settings, *, translator: Translator | Non
     from translation import translator as make_translator
     clock = clock or time.time
     telemetry.configure(settings)                # once per process; off unless OVERLAP_TRACING asks for it
-    jobs = JobStore(store, deadline_s=settings.moment_deadline_s, clock=clock)
+    jobs = JobStore(store, deadline_s=settings.moment_deadline_s, recap_deadline_s=settings.recap_deadline_s,
+                    clock=clock)
     models = Models(settings, clock=clock)
     context = None
     if settings.provider != "off":

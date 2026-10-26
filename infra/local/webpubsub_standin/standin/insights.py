@@ -20,7 +20,7 @@ LANGS = ("en", "es", "hi", "fr")
 MATCH_ID = re.compile(r"^SYN-[0-9]{4}$")
 TEAM_ID = re.compile(r"^[A-Z]{3}$")
 PLAYER_ID = re.compile(r"^[A-Z]{3}-[0-9]{2}$")
-LIVE_WINDOW_MS = 300_000
+LIVE_WINDOW_MS = 600_000
 MAX_CARDS = 2
 
 
