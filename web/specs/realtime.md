@@ -395,6 +395,23 @@ picker works the same with the local stand-in (which has no list) and on Azure.
 - **Not handled yet:** a match whose generator stopped before full time stays `live` in the archive, so it is listed as
   live with nothing streaming. Locally every run starts clean; Azure needs a rule later.
 
+### 5.4 Card trace `GET /api/match/<id>/moments/<moment>/trace`
+
+For the "How this card was made" drawer (`screens.md` §4.1). Reads the agents' job record `job:<moment>` from Cosmos
+`moments` (partition `match_id`; the web identity's database-wide reader role) with one point read, and answers with
+`buildCardTrace()` (`src/lib/card-trace.ts`): the stages in the order they ran with their times and model calls, the
+analyst's interpretation and MCP tools, the fact-check rounds, verdict and reasons, translations per language, and the
+job's working time against its deadline. The record keeps bounded audit fields only (`agents/specs/workflow.md` §2):
+no prompts, no hidden reasoning. `moment` is `MO-<n>-<k>` or `RC-<n>` of this match.
+
+| Status | Body |
+|---|---|
+| 200 | the trace, `Cache-Control: no-store` (a job may still be running) |
+| 400 | `bad_match_id`, `bad_moment_id` |
+| 404 | `trace_not_found`: no record, or not a job |
+| 503 | `trace_unavailable`: the screen settings are missing (a local run without Cosmos) |
+| 502 | `storage_error` |
+
 ## 6. Testing and checks
 
 - How is the code under `src/lib` and the live screen checked, and what runs where?
