@@ -1,22 +1,8 @@
 # Overlap: portal submission text
 
-Ready to paste into the Innovation Studio project page. Written 25 Oct 2026; updated the same evening with the results of PRs #99 to #107 and the four Azure runs of 25 Oct. Submit on 27 Oct, IST evening (portal closes 28 Oct, 12:29 IST).
-
-**How to use this file**
-
-- Everything outside a `[[...]]` marker is final. Each `[[...]]` marker is a number or choice that only the redeploy and the proving run (block A) can supply. Replace it, or delete the sentence it sits in.
-- Section 5 has two closing paragraphs. Paste exactly one, after the category decision.
-- The portal's own field limits are not stated in the rules or the audit. If a field has a limit, cut from the end of the long description first; the elevator pitch is already inside the 100–150 words the plan asks for.
-- Every number is traced in section 8 ("Source check"). Re-run that check after any marker is filled in.
-
-**Open markers (fill before submitting)**
-
-| Marker | Where | Who supplies it |
-|---|---|---|
-| `[[AI-SHARE]]` | Long description, "Results"; section 5 | The next proving run (the 25 Oct runs gave 5–16%, already in the text) |
-| `[[SHOWCASE-IDS]]` | Testing instructions | Block A, showcase replays (E2) |
-| `[[LIVE-WINDOWS]]` | Testing instructions | Arnav, judging mode (E1) |
-| `[[VIDEO-URL]]` | Section 9 (field list) | Video, B6 |
+Ready to paste into the Innovation Studio project page, field by field (section 9 says which section goes where).
+Every number has its source in section 8. Two values are filled in on submission day: the demo video's public URL
+(`[[VIDEO-URL]]`) and the live-match times (`[[LIVE-WINDOWS]]`).
 
 ---
 
@@ -80,10 +66,10 @@ All measured on Azure (Sweden Central) or on the evaluation bench; nothing here 
 
 - **Pipeline on Azure, 24 Oct.** Nine of nine full 20× matches (SYN-3000 to SYN-3008) archived identical to their recordings. In the final run every reader was 0 s behind Event Hubs at p50, 1 s at p95 and 3 s at worst, across 3,009 function runs with none failed. A full match plays in 6 min 40 s.
 - **Agents bench, 24 generated matches (538 moments).** Detection recall on every labelled trigger was 100% (195 of 195: goals, red cards, penalties, milestones, shot clusters). 0 wrong numbers in 12,236 published lines on the template path, and 0 in 2,996 more lines on a local-model subset. Fault injection on 33 labelled lines: all 11 numeric faults caught, 9 of 9 meaning faults the code can judge caught, and 0 false rejections of the 12 valid lines.
-- **Cards written by the model.** At 20× a card is live for 15 real seconds. In four full 20× matches on Azure on 25 Oct, 5–16% of cards were written by gpt-5-mini and passed the fact-checker, labelled "AI · checked"; the rest are labelled "Stat line · checked". Each run removed one cause of late model lines (a slow MCP start, one job at a time, a strict numeric check, a breaker that paused the model). `[[AI-SHARE: add the next proving run's share, or delete this marker]]`
+- **Cards written by the model.** At 20× a whole match takes under 7 minutes, so the agents have seconds per card. Every card says who wrote it: "AI · checked" when gpt-5-mini wrote it and the fact-checker passed it, "Stat line · checked" when a template did. Six full 20× matches on Azure (25–26 Oct) each removed one cause of late model lines: a slow MCP start, one job at a time, a strict numeric check, a breaker that paused the model, and a 15-second deadline. In the latest (SYN-3014), 285 cards went out (118 the day before), 42 of them model-written, 29 of 81 in English.
 - **Single agent versus the full pipeline.** On the same 17 moments on gpt-5-mini, the narrator alone published 65 of 109 lines that no check could tie to the evidence (a value attached to the wrong fact, a score told from the trailing side, a missing unit). The seven agents published none of those: they rewrote 69 lines and replaced the rest with checked stat lines.
 - **Line quality, scored in Foundry.** Azure AI Evaluation on 60 published lines of an Azure match (all 25 model lines and 35 templates): groundedness 98.3%, relevance 91.7%, fluency 100%.
-- **Tests.** 1,241 automated tests pass across the agents, MCP server, stats engine, Functions, archiver, generator and web app, with CI on every pull request.
+- **Tests.** 1,256 automated tests pass across the agents, MCP server, stats engine, Functions, archiver, generator and web app, with CI on every pull request.
 
 ### Responsible AI
 
@@ -142,17 +128,11 @@ Raise the model-written share at 20× and show it on more replays; a "how this c
 
 ---
 
-## 5. Closing paragraph, two versions
+## 5. Category and closing paragraph
 
-Paste one. Block A decides after the proving run; the audit's rule is Multi-Agent if the share of "AI · checked" cards is clearly visible, otherwise Azure Cloud Native Integration.
+**Category: Best Multi-Agent System.** Paste this paragraph at the end of the description.
 
-### 5a. Best Multi-Agent System (166 words, plus the AI-share marker sentence)
-
-Overlap is a multi-agent system with distinct roles and one shared record. Seven agents (spotter, analyst, narrator, fact-checker, translator, director, recap writer) each own one job on a flagged match moment, and each saves its output on a shared job document in Cosmos DB before handing off to the next. The analyst reaches the evidence through our own MCP server; the fact-checker sends failing lines back to the narrator twice, then falls back to a labelled template, and a crashed run resumes from its last saved stage without ever running a moment twice. The outcome is something a single agent cannot give: personalised, translated commentary in which every number is verified in code before it is shown. On our 24-match bench, 0 wrong numbers appeared in 12,236 published lines (template path), and fault injection caught every numeric fault. On the same moments on gpt-5-mini, a single narrator agent published 65 of 109 lines no check could tie to the evidence; the seven agents published none. `[[AI-SHARE sentence: the model-written share of the latest proving run]]`
-
-### 5b. Best Azure Cloud Native Integration (144 words)
-
-Overlap is event-driven on Azure from the first frame to the screen. A generator job streams events and 5 Hz tracking into Event Hubs; two Azure Functions apps consume them, one relaying to Web PubSub, the other archiving to Cosmos DB and Blob Storage and triggering the agents from the Cosmos DB change feed; Container Apps run the stats engine and the web app. Everything is Bicep deployed with `azd`, every service signs in with a managed identity (four user-assigned identities, local key authentication off, no secrets to store), and Application Insights watches it all. We measured it: nine of nine full 20× matches on Azure archived identical to their recordings, every reader 0 s behind at p50 and 1 s at p95 across 3,009 function runs with none failed. It pauses to about $0.20 a day (estimated) and resumes by changing five settings.
+Overlap is a multi-agent system with distinct roles and one shared record. Seven agents (spotter, analyst, narrator, fact-checker, translator, director, recap writer) each own one job on a flagged match moment, and each saves its output on a shared job document in Cosmos DB before handing off to the next. The analyst reaches the evidence through our own MCP server; the fact-checker sends failing lines back to the narrator twice, then falls back to a labelled template, and a crashed run resumes from its last saved stage without ever running a moment twice. The outcome is something a single agent cannot give: personalised, translated commentary in which every number is verified in code before it is shown. On our 24-match bench, 0 wrong numbers appeared in 12,236 published lines (template path), and fault injection caught every numeric fault. On the same moments on gpt-5-mini, a single narrator agent published 65 of 109 lines no check could tie to the evidence; the seven agents published none. Every card on the site has a "How this card was made" view that shows the agents at work: which ran, their model and MCP calls, and what the fact-checker sent back and why.
 
 ---
 
@@ -160,9 +140,9 @@ Overlap is event-driven on Azure from the first frame to the screen. A generator
 
 Paste into the portal's testing field. **No sign-in, no credentials, no cost to you.**
 
-1. Open **https://ca-overlap-web.agreeablestone-46edcfef.swedencentral.azurecontainerapps.io**. A first visit may take about 10 seconds to wake; reload once if the page is empty.
-2. The home page plays a recorded match on a 3D pitch. For a good one, open `/matches` and choose **Watch replay** on `[[SHOWCASE-IDS]]`. Use **5×** or **20×**, with pause and restart over the pitch.
-3. Watch the **commentary strip** under the pitch: the card on screen now, and the three before it. Each card shows its minute, the kind of moment, the sentence with its key number, and a badge. **AI · checked** means a model wrote the line and the fact-checker passed every number. **Stat line · checked** means a template wrote it from the verified numbers; it is never called AI. Click a card's chart link to open the chart or insight card it refers to.
+1. Open **https://ca-overlap-web.agreeablestone-46edcfef.swedencentral.azurecontainerapps.io**.
+2. The home page plays a recorded match on a 3D pitch. For a good one, open `/matches` and choose **Watch replay** on **SYN-3013** or **SYN-3014** (full matches played on Azure on 26 Oct). Use **5×** or **20×**, with pause and restart over the pitch.
+3. Watch the **commentary strip** under the pitch: the card on screen now, and the three before it. Each card shows its minute, the kind of moment, the sentence with its key number, and a badge. **AI · checked** means a model wrote the line and the fact-checker passed every number. **Stat line · checked** means a template wrote it from the verified numbers; it is never called AI. Click a card's chart link to open the chart or insight card it refers to, and **How this card was made** to see the agents' work behind it: each agent's time and model calls, the MCP tools the analyst used, and what the fact-checker sent back.
 4. Below the pitch, use the viewer bar to change **Mode** (Casual, Analyst, My club, Player focus), **Language** (English, Español, हिन्दी, Français), **Club** and **Follow** (a player). The next cards arrive in that voice. Casual and Analyst are two different screens: Casual keeps to the story and a few numbers, Analyst shows every number and the facts the fact-checker verified. Player focus shows the player's distance, top speed and sprints, and their numbers beside their opposite number's.
 5. Open the **recap** from `/matches` ("Recap") for the full-time summary and every moment, and `/league` for the table, title race and style map. `/how-it-works` shows the pipeline and the seven agents.
 6. The site is **paused to replays only** to save cost, so the start button is hidden. Live matches run in announced windows: `[[LIVE-WINDOWS]]`. During a window, press **Start a live match** on the home page; it plays a full match at 20× in about 7 minutes, one at a time.
@@ -182,7 +162,7 @@ Source code: https://github.com/ARNAV2684/Overlap (judge's guide: `docs/testing.
 | 2 | Match with commentary | `/replay/<showcase id>`, scroll so the commentary strip and the insight cards share the frame | Commentary strip with at least one "AI · checked" and one "Stat line · checked" card, replay bar with moment marks, head-to-head card | "Live commentary: every line says who wrote it, and every number is checked in code." |
 | 3 | Player Focus | Same match, Mode set to Player focus, a player followed | Ring and name tag on the pitch, the Player focus panel with the opposite number's comparison, a card centred on that player | "Player focus: the same moment, from one player's night, against their opposite number." |
 | 4 | Recap | `/match/<showcase id>/recap` in Analyst mode, language Hindi if the cards are clean, otherwise English | Final score, the recap text, the moment timeline | "The full-time recap, written from a fact pack built by code, in the viewer's mode and language." |
-| 5 | Architecture | Lucid diagram page 7 exported to PNG (same file as `docs/img/architecture.png`) | Generator, Event Hubs, the two Functions apps, Container Apps, Cosmos DB, Blob, Web PubSub, Foundry (gpt-5-mini), Translator, Application Insights, the viewer; managed identity noted | "Deployed on Azure, Sweden Central: event-driven, keyless, defined in Bicep." |
+| 5 | Architecture | `docs/img/azure-deployment.png` | Generator, Event Hubs, the two Functions apps, Container Apps, Cosmos DB, Blob, Web PubSub, Foundry (gpt-5-mini), Translator, Application Insights, the viewer; managed identity noted | "Deployed on Azure, Sweden Central: event-driven, keyless, defined in Bicep." |
 
 Optional sixth: the **Overlap live run** workbook in Application Insights during a live window (cards sent and expired, agent stage times, model calls), if it is deployed by then.
 
@@ -197,7 +177,7 @@ Every count and number above, with where it comes from. Checked 25 Oct 2026 agai
 | Claim | Value | Source |
 |---|---|---|
 | Elevator pitch length | 148 words (inside 100–150) | Counted with a script on the text in section 2 |
-| Matches archived identical on Azure | 9 of 9, SYN-3000 to SYN-3008 | `plans/active/PLAN_infra_azure-pass.md` (A8); brief "Proven 24 Oct" |
+| Matches archived identical on Azure | 9 of 9, SYN-3000 to SYN-3008 | `plans/active/PLAN_infra_azure-pass.md` (A8) |
 | Reader lag | 0 s p50, 1 s p95, 3 s worst; 3,009 function runs, 0 failed (SYN-3008) | Same, A8 latency |
 | Match duration at 20× | 6 min 40 s | Same; `infra/README.md` says "about 7 minutes" (rounded), used in testing step 6 |
 | Bench size | 24 matches, 538 moments | `agents/evals/results/round-1/report.md` |
@@ -217,16 +197,16 @@ Every count and number above, with where it comes from. Checked 25 Oct 2026 agai
 | Model | gpt-5-mini, GlobalStandard | `infra/modules/foundry.bicep` lines 22, 91 |
 | Managed identities | 4 user-assigned; local auth off on Event Hubs, Cosmos, Web PubSub, AI Services, Translator; shared keys off on Storage | `infra/specs/security.md` §1, §2 |
 | Budgets | eight overall ($25 to $200 in $25 steps); model budget $25 with alerts at 50/80/100% | `infra/specs/costs.md` §1 |
-| Paused cost | about $0.20 a day | Audit (25 Oct revised) §5; registry $0.17 a day in `PLAN_infra_azure-pass.md` |
-| Live cost | about $11–14 a day | Audit §7. Estimate; `infra/specs/costs.md` §2 estimates $5.5–8 plus Cosmos at 4,000 RU/s, which is lower. Text says "about $11–14", the audit's figure |
+| Paused cost | about $0.20 a day, plus the always-warm web app (at most about $1.30 a day) | `infra/specs/costs.md`; `PLAN_infra_azure-pass.md` ($0.17 a day) |
+| Live cost | about $11–14 a day | Estimate from list prices: `infra/specs/costs.md` §2 ($5.5–8 a day) plus Cosmos DB at 4,000 RU/s ($5.8 a day while set) |
 | 24 Oct whole-day cost | about $3, list-price estimate | `PLAN_infra_azure-pass.md` A8, "Cost" |
 | Start limits | one match at a time; 3 per visitor and 6 global per hour | `docs/release-readiness.md`; `web/README.md` (PR #97, on `fix/local-release-readiness`) |
 | Pause and resume | five settings | `infra/README.md` "Pause" and "Resume" |
-| In-process MCP | removes a 4–5 s process start per job | Brief "Known gap"; `docs/release-readiness.md` (lines 29–35) |
+| In-process MCP | removes a 4–5 s process start per job | `docs/release-readiness.md` (lines 29–35) |
 | CI | workflows `infra.yml`, `pr-checks.yml`, `python.yml`, `web.yml` | `.github/workflows` |
-| Tests | 1,241 passing | Run on `main` at `1a60777` on 25 Oct: agents 278; MCP 151 (2 skipped); stats 76 (1 skipped); functions 20; generator 112 (2 skipped); archiver 5 (2 skipped, need the storage emulators); web 599 (4 skipped). The same table is in `README.md` |
-| Model-written share on Azure | 5–16% across four 20× matches on 25 Oct | `docs/evaluation.md`, "Live AI share on Azure": SYN-3009 16% (#103), SYN-3010 9 of 167 = 5% (`agents/evals/results/live-SYN-3010/report.md`), SYN-3011 14% (#106), SYN-3012 48 of 291 = 16% (#108) |
-| Card live window at 20× | 15 real seconds | `agents/specs/workflow.md` §3 (15 s job deadline) |
+| Tests | 1,256 passing | Run on `main` at `109c071` on 26 Oct: agents 281; MCP 150 (3 skipped); stats 76 (1 skipped); functions 20; generator 112 (2 skipped); archiver 5 (2 skipped, need the storage emulators); web 612 (4 skipped). The same table is in `README.md` |
+| Model-written share on Azure | 42 of 285 cards on SYN-3014 (29 of 81 in English); 5–16% across the four 25 Oct runs | `docs/evaluation.md`, "Live AI share on Azure"; `agents/evals/results/live-SYN-3014/report.md` |
+| Time per card at 20× | 25 s per moment on Azure (15 s until 26 Oct); a card may show up to 10 match minutes after its moment | `infra/modules/functions.bicep` (`OVERLAP_MOMENT_DEADLINE_S`); `CONTRACTS.md` §10.6 |
 | Single vs multi-agent | Same 17 moments; single agent 65 of 109 lines refused by the code check; seven agents 0, 69 rewritten | `agents/evals/results/single-vs-multi-azure/report.md`; `docs/evaluation.md` |
 | Foundry evaluation | 60 lines (25 model, 35 template): groundedness 98.3%, relevance 91.7%, fluency 100% | `agents/evals/results/foundry-1/report.md` |
 | Hindi placeholders | 0 dropped and 0 wrong at every simulated swap rate; before, up to 19 dropped and 16 wrong of 130 | `agents/evals/results/hindi-numbers/report.md` (100% swap row) |
@@ -244,21 +224,12 @@ Every count and number above, with where it comes from. Checked 25 Oct 2026 agai
 | Elevator pitch | Section 2 |
 | Description | Section 3 plus the chosen paragraph from section 5 at the end |
 | Technologies | Section 4 |
-| Category | Chosen by block A (section 5) |
+| Category | Best Multi-Agent System (section 5) |
 | Demo video URL | `[[VIDEO-URL]]` (public YouTube or Vimeo, under 2:00) |
 | Repository URL | https://github.com/ARNAV2684/Overlap |
 | Live URL | https://ca-overlap-web.agreeablestone-46edcfef.swedencentral.azurecontainerapps.io |
 | Testing instructions | Section 6 |
 | Images | Section 7 (3–5 screenshots, the architecture PNG, a thumbnail) |
 
-Save a copy of every field's final text in the repository after submitting (plan item B11).
+After submitting, keep this file as the record of what was entered.
 
----
-
-## Notes for the team (not for the portal)
-
-1. **Wrong-numbers claim.** The brief's "0 wrong numbers in 12,236 published lines" counts template lines (provider off). I kept it, labelled it "on the template path", and added the 2,996-line local-model subset. A judge reading the bench report would otherwise see "Verified 0.0%". Do not drop the qualifier.
-2. **AI share.** The text gives the measured 5–16% of the 25 Oct runs. If the next proving run is clearly higher, put its figure in the `[[AI-SHARE]]` marker and consider the Multi-Agent paragraph; if it stays low, use the Cloud Native paragraph.
-3. **GitHub Copilot.** Listed because the team confirmed it was used in the editor and for pull request reviews (25 Oct).
-4. **Hindi.** The placeholder result is from a simulated translator; the real Azure drop rate is measured in the next run. The text says "on a simulated translator" for that reason.
-5. **Single vs multi-agent.** Measured before the fact-checker's precision change (#106). The wrong-number rows don't depend on it; the single agent's refused share would be somewhat lower under it.
