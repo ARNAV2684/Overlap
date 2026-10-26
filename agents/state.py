@@ -259,8 +259,9 @@ class JobStore:
     """Claim once, lease, save stage outputs, finish. Times are wall-clock seconds (never mixed with match_ms)."""
 
     def __init__(self, store: Store, *, lease_s: float = 6.0, deadline_s: float = 15.0,
-                 clock: Callable[[], float] = time.time):
+                 recap_deadline_s: float = 60.0, clock: Callable[[], float] = time.time):
         self.store, self.lease_s, self.deadline_s, self.clock = store, lease_s, deadline_s, clock
+        self.recap_deadline_s = recap_deadline_s
 
     async def claim(self, moment: dict, worker: str) -> Job | None:
         """The job for this moment with this worker's lease, or None when it's finished or leased elsewhere.
@@ -270,7 +271,9 @@ class JobStore:
         doc = {"id": f"job:{moment['moment_id']}", "match_id": moment["match_id"], "kind": JOB,
                "moment_id": moment["moment_id"], "schema_version": moment["schema_version"],
                "evidence_version": moment["evidence_version"], "source_hash": h, "state": "pending",
-               "first_seen_utc": now, "deadline_utc": now + self.deadline_s, "lease_owner": None,
+               # The recap is shown once at full time, not raced against the match: it gets its own, longer deadline
+               "first_seen_utc": now, "lease_owner": None,
+               "deadline_utc": now + (self.recap_deadline_s if moment.get("kind") == "recap" else self.deadline_s),
                "lease_until": 0.0, "lease_generation": 0, "stage": None, "stage_outputs": {},
                "attempts": 0, "terminal_reason": None, "publication_id": None}
         await self.store.create(doc)

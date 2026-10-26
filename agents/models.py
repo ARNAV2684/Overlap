@@ -248,12 +248,14 @@ class Models:
                   moment_id: str, deadline_utc: float) -> BaseModel:
         if not self.on:
             raise ModelFailed("off")
-        timeout = min(self.settings.request_timeout_s, deadline_utc - self.clock() - FALLBACK_RESERVE_S)
+        # The recap writer's one call writes every recap line (SYN-3014: 6 s was too short once it could finish)
+        limit = self.settings.recap_request_timeout_s if name == "recap_writer" else self.settings.request_timeout_s
+        timeout = min(limit, deadline_utc - self.clock() - FALLBACK_RESERVE_S)
         if timeout < MIN_CALL_S:
             raise ModelFailed("deadline")
         # A call cut short by the job's deadline says nothing about the model's health; only a call that had its full
         # request timeout counts towards the breaker when it times out
-        full_timeout = timeout >= self.settings.request_timeout_s
+        full_timeout = timeout >= limit
         message = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
         if approx_tokens(instructions) + approx_tokens(message) > self.settings.max_input_tokens:
             raise ModelFailed("input_too_large")              # never truncate evidence silently

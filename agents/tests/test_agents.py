@@ -479,3 +479,16 @@ def test_replays_can_turn_the_stale_check_off(moments, clock):
     store.states["SYN-1017"] = {"phase": "full_time", "period": 2, "source": {"event_seq": 9, "match_ms": 6_000_000}}
     d = deps(store, clock, settings=dataclasses.replace(SETTINGS, skip_stale=False))
     assert process(by_id(moments, "MO-1017-0013"), d)["status"] == "delivery_pending"
+
+
+def test_the_recap_job_gets_its_own_deadline(moments, clock):
+    # Shown once at full time, the recap is not raced against the match: 60 s, where a moment gets 15 (25 on Azure)
+    store = MemoryStore()
+    jobs = JobStore(store, deadline_s=15, recap_deadline_s=60, clock=clock)
+    moment = by_id(moments, "MO-1017-0013")
+    recap = {**moment, "id": "RC-1017", "moment_id": "RC-1017", "kind": "recap"}
+    now = clock()
+    asyncio.run(jobs.claim(moment, "w"))
+    asyncio.run(jobs.claim(recap, "w"))
+    assert job(store, "MO-1017-0013")["deadline_utc"] - now == 15
+    assert job(store, "RC-1017")["deadline_utc"] - now == 60

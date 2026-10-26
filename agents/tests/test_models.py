@@ -2,6 +2,7 @@
 agents/specs/workflow.md §3."""
 import asyncio
 import json
+import time
 from types import SimpleNamespace
 from typing import ClassVar
 
@@ -158,6 +159,19 @@ def test_the_recap_writer_gets_its_own_output_allowance(monkeypatch):
     ask(m)
     assert ScriptedAgent.seen[0][1]["options"]["max_tokens"] == m.settings.recap_max_output_tokens == 2400
     assert ScriptedAgent.seen[1][1]["options"]["max_tokens"] == 800
+
+
+def test_the_recap_writer_gets_its_own_call_timeout(monkeypatch):
+    # The recap is shown once at full time; its one call writes every line and needs more than a moment's 6 s
+    import agent_framework
+    monkeypatch.setattr(agent_framework, "Agent", SleepyAgent)
+    s = Settings(provider="local", local_base_url="http://localhost:1", local_model="m", request_timeout_s=0.5,
+                 recap_request_timeout_s=0.7)
+    m = Models(s, ModelGate(s), client=object(), clock=Clock())
+    start = time.perf_counter()
+    with pytest.raises(ModelFailed):
+        asyncio.run(m.ask("recap_writer", "rules", {"x": 1}, Out, match_id="M", moment_id="RC", deadline_utc=1e9))
+    assert time.perf_counter() - start >= 0.65
 
 def test_ask_parses_a_fenced_reply(monkeypatch):
     m = models_with(monkeypatch, '```json\n{"decision": "admit"}\n```')
