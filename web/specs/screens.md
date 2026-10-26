@@ -199,6 +199,29 @@ received, newest first and grouped by half, with its minute, kind, badge (§2.3)
 how many were written by the agents; the full-time recap on top when it arrives (in a replay, at full time); the publisher's player tags. Empty
 state: the agents are watching, and what makes a card.
 
+### 4.1 How this card was made
+
+`CardTrace.tsx`. Every card in the commentary strip (§2.8) and the feed has a link, **How this card was made**, that
+opens a drawer from the right (full width on a phone) with the agents' work behind that card, read from the job record
+they share (`realtime.md` §5.4):
+
+- **Summary:** how many agents ran, how many model calls (and the model), the agents' working time against the job
+  deadline, and the outcome: sent to every audience, partly or too late, not shown, with how long after the moment was
+  found.
+- **The agents, in order:** spotter (or recap writer), analyst, narrator, fact-checker, translator, director; each with
+  its role, its time as a bar, what it did ("Admitted; ranked by the model", "3 MCP tool calls; context read",
+  "6 of 6 lines passed after 1 rewrite", "0 of 18 translations checked and kept") and a chip per model call (✓ and its
+  time, or ✕ and why: timeout, deadline, breaker). A rewrite shows as the narrator's call inside the fact-checker. A
+  stage whose own output was not used has a grey dot.
+- **What the analyst read, through MCP:** its interpretation (no numbers by design) and each tool it called, with
+  "set aside" for data newer than the moment.
+- **The fact-check:** lines passed, rounds of rewrites, and what sent each line back, in plain words ("a number written
+  in words", "a name not in the evidence", or the meaning check's reason).
+- **Translations, re-checked:** kept out of total for Spanish, Hindi and French.
+
+The drawer loads when it opens and says so when there is no record (a local stack, or a card from before records were
+kept). Escape, the Close button or the backdrop close it, and focus returns to the link.
+
 ## 5. Matches `/matches`
 
 Every archived match, live first: clubs, score, clock or Full time, and Watch live / Watch replay / Recap.

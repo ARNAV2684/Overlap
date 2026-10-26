@@ -14,6 +14,7 @@ import { cardMinute, cardSource, CHART_LABEL } from "@/lib/live/live-insights";
 import { useScoreboard } from "@/lib/store-hooks";
 import { useExperience, useFeed } from "@/providers/MatchExperience";
 import { usePreferences } from "@/providers/PreferencesProvider";
+import { CardTraceButton } from "./CardTrace";
 import { CardText, KindChip, SourceBadge, useVisibleCards, type ShowChart } from "./MomentStrip";
 
 /** The half a card belongs to: its period when it has one, else its minute. */
@@ -95,6 +96,9 @@ export function AiFeed({ onShowChart }: { onShowChart?: ShowChart }) {
                       )}
                     </div>
                     <CardText text={overlayText(card, mode, prefs.lang)} className="mt-1.5 text-[13.5px] leading-snug text-ink/85" />
+                    <div className="mt-1.5">
+                      <CardTraceButton card={card} />
+                    </div>
                   </article>
                 );
               })}
