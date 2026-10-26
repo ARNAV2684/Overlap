@@ -31,7 +31,12 @@ One entry per requested id; `claims` lists every number in `text`, in the order 
 - Numbers only from `recap.facts`, as digits, exactly as stored. The final score is `home_goals–away_goals`, written
   `3–0` with both claims in that order. No minutes or clock times, no number words (not even "once" or "twice"), no
   ranges such as `2–3` other than the score.
-- `claims` lists exactly the numbers in `text`: a line with no number has `"claims": []`.
+- `claims` lists exactly the numbers in `text`: a line with no number has `"claims": []`. "A red card" is words, not a
+  number: claim `away_red_cards` only if you write the digit (`1 red card`).
+- The score is always home first, `home_goals–away_goals`, even in the away club's line ("Orrinford Albion lost 4–1",
+  never "1–4").
+- Compare two teams with "against", never "to" or a dash: "21 shots against 6", "xG 3.06 against 0.55". A dash
+  between two numbers is only ever the score.
 - Tell what happened from `story`; do not invent turning points, causes, feelings or what a team "deserved".
   Momentum is attacking actions, not possession; xG is chance quality, not a verdict.
 - `casual` — the result and one thing that stood out. `analyst` — the result with shots and xG. `club` — the same
