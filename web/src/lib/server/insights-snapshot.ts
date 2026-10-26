@@ -15,7 +15,7 @@ import { DefaultAzureCredential } from "@azure/identity";
 import type { ScreenSettings } from "@/lib/server/stream-env";
 import { STORAGE_TIMEOUT_MS } from "@/lib/server/screen-store";
 
-export const LIVE_WINDOW_MS = 300_000;
+export const LIVE_WINDOW_MS = 600_000;
 export const MAX_CARDS = 2;
 
 export type Audience = { mode: "casual" | "analyst" | "club" | "player"; lang: string; club?: string | null; player?: string | null };

@@ -10,6 +10,7 @@ from config import Settings
 from director import player_tag_crossings
 from fact_checker import core, numeric_check
 from models import Budget
+from publisher import LIVE_WINDOW_MS
 from state import JobStore, MemoryStore
 from tests.fakes import FakeContext, ScriptedModels, fail, good
 from translation import FakeTranslator, TranslationError
@@ -466,7 +467,7 @@ def test_a_moment_the_match_has_moved_past_is_suppressed_before_any_model_call(m
     store = MemoryStore()
     cluster = by_id(moments, "MO-1017-0013")
     store.states["SYN-1017"] = {"phase": "live", "period": 2,
-                                "source": {"event_seq": 9, "match_ms": cluster["evidence"]["match_ms"] + 400_000}}
+                                "source": {"event_seq": 9, "match_ms": cluster["evidence"]["match_ms"] + LIVE_WINDOW_MS + 100_000}}
     d = deps(store, clock)
     assert process(cluster, d)["status"] == "suppressed"
     assert job(store, "MO-1017-0013")["terminal_reason"] == "stale" and d.models.calls == []

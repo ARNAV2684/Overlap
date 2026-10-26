@@ -21,7 +21,9 @@ from director import player_tag_crossings
 from state import PreconditionFailed, Store
 
 log = logging.getLogger("publisher")
-LIVE_WINDOW_MS = 300_000
+# A card can still go on screen this long after its moment (CONTRACTS.md §10.6). 10 match minutes is 30 wall seconds at
+# 20x, which a 25 s job deadline fits inside; at 1x a card is ready long before.
+LIVE_WINDOW_MS = 600_000
 RESERVE_RETRIES = 5
 
 

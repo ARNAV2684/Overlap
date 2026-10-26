@@ -258,7 +258,10 @@ class Models:
         if approx_tokens(instructions) + approx_tokens(message) > self.settings.max_input_tokens:
             raise ModelFailed("input_too_large")              # never truncate evidence silently
         from agent_framework import Agent
-        options: dict[str, Any] = {"max_tokens": self.settings.max_output_tokens}
+        # The recap writer writes every recap line in one call (and rewrites them in one): on SYN-3013 its rewrite
+        # spent all 800 tokens on reasoning and returned nothing, so every recap line fell back to the template
+        cap = self.settings.recap_max_output_tokens if name == "recap_writer" else self.settings.max_output_tokens
+        options: dict[str, Any] = {"max_tokens": cap}
         if self.settings.provider == "azure":
             # The Azure model is a GPT-5 reasoning model: it rejects temperature, and the Agent Framework sends
             # max_tokens as max_completion_tokens (which also covers its reasoning tokens)

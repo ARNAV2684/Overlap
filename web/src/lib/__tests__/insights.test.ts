@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createInsightFeed, keyNumber, overlayText, parseInsight } from "@/lib/live/insights";
+import { createInsightFeed, keyNumber, LIVE_FOR_MS, overlayText, parseInsight } from "@/lib/live/insights";
 import { audienceGroup, effectiveMode, parsePreferences } from "@/lib/preferences";
 import { isViewerGroup, parseGroups } from "@/lib/server/pubsub-token";
 
@@ -90,7 +90,7 @@ describe("createInsightFeed", () => {
   it("drops a card that is too old to be live", () => {
     const feed = createInsightFeed();
     add(feed, overlay("OV-0901-02", 10_000));
-    feed.tick(400_000, 1, 0);
+    feed.tick(10_000 + LIVE_FOR_MS + 1, 1, 0);
     expect(feed.getState().current).toBeNull();
   });
 

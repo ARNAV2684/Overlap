@@ -6,7 +6,7 @@ import pytest
 
 import workflow as W
 from config import Settings
-from publisher import Publisher, eligibility
+from publisher import LIVE_WINDOW_MS, Publisher, eligibility
 from state import JobStore, MemoryStore
 from translation import FakeTranslator
 
@@ -54,8 +54,8 @@ def test_eligibility_rules():
     m = {"period": 2, "show": 4_000_000}
     live = {"phase": "live", "period": 2, "source": {"match_ms": 4_000_000}}
     assert eligibility("overlay", m["period"], m["show"], live) == "live"
-    assert eligibility("overlay", 2, m["show"], {**live, "source": {"match_ms": 4_300_000}}) == "live"
-    assert eligibility("overlay", 2, m["show"], {**live, "source": {"match_ms": 4_300_001}}) == "late"
+    assert eligibility("overlay", 2, m["show"], {**live, "source": {"match_ms": 4_600_000}}) == "live"
+    assert eligibility("overlay", 2, m["show"], {**live, "source": {"match_ms": 4_600_001}}) == "late"
     assert eligibility("overlay", 2, m["show"], {**live, "source": {"match_ms": 3_999_000}}) == "early"
     assert eligibility("overlay", 1, m["show"], live) == "late"                        # a new half
     assert eligibility("overlay", 2, m["show"], {**live, "phase": "full_time"}) == "late"
@@ -103,7 +103,7 @@ def test_an_early_card_waits_and_an_unknown_playhead_sends_nothing(moments, cloc
     assert "sent" in run(pub.run_once("SYN-1017"))
 
 
-@pytest.mark.parametrize("state_change", [{"offset_ms": 300_001}, {"period": 3}, {"phase": "full_time"}])
+@pytest.mark.parametrize("state_change", [{"offset_ms": LIVE_WINDOW_MS + 1}, {"period": 3}, {"phase": "full_time"}])
 def test_a_late_card_expires_without_a_number(moments, clock, state_change):
     store, overlays, sender = played(moments, clock, CARD), MemoryStore(), Sender()
     m = by_id(moments, CARD)
@@ -154,7 +154,7 @@ def test_one_audience_sent_and_another_expired_is_partially_expired(moments, clo
     m = by_id(moments, CARD)
     store.states["SYN-1017"] = state_at(m)
     run(Publisher(store, overlays, Sender(fail_groups={"match-SYN-1017-casual-hi"}), SETTINGS).run_once("SYN-1017"))
-    store.states["SYN-1017"] = state_at(m, offset_ms=400_000)
+    store.states["SYN-1017"] = state_at(m, offset_ms=LIVE_WINDOW_MS + 100_000)
     totals = run(Publisher(store, overlays, Sender(), SETTINGS).run_once("SYN-1017"))
     assert totals == {"expired": 1}
     assert run(store.read("SYN-1017", f"job:{CARD}"))[0]["state"] == "partially_expired"

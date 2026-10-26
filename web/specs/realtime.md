@@ -220,7 +220,7 @@ unnumbered have no envelope and are left out). A replay shows each card when the
 
 **Scheduler** (`createInsightFeed`). Cards dedupe by `overlay_id`, so a reconnect, the snapshot and the live stream
 never show one card twice. A card goes on screen when the playhead (§2 of `pitch.md`: the smooth motion playhead) is at
-or past `show_at_ms` in the same period, and is dropped if the playhead is more than 300,000 match ms past it
+or past `show_at_ms` in the same period, and is dropped if the playhead is more than 600,000 match ms past it
 (`CONTRACTS.md` §10.6 expiry). One card at a time, for `duration_ms` of wall time (6 s by default, at most 12 s); at
 most two wait, high priority first, then the newest moment. Every card received stays in the feed, newest first; in
 a replay only those whose moment has been reached are listed.

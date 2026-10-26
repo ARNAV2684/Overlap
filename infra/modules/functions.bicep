@@ -154,6 +154,9 @@ resource apps 'Microsoft.Web/sites@2024-04-01' = [for a in appsToRun: {
         // In-process MCP freed 4-5 s per job; 6 s lets the narrator, fact-checker and translator calls finish
         // (narrator p50 2.7 s, max 3.7 s on 25 Oct) while the 15 s job deadline still bounds every card
         { name: 'OVERLAP_MODEL_TIMEOUT_S', value: '6' }
+        // 25 s per moment (default 15): at 20x jobs took 13.9 s p50 against 15 s on 26 Oct (SYN-3013), so translation,
+        // the last stage, ran out of time; the 10-minute live window (30 wall s at 20x) still holds every card
+        { name: 'OVERLAP_MOMENT_DEADLINE_S', value: '25' }
         // Two jobs per match share one breaker. At 3 failures and 60 s it paused the model for most of a match on
         // 25 Oct (SYN-3012: 41 calls skipped as breaker_open); a real outage still pauses it after 5 (workflow.md §3)
         { name: 'OVERLAP_MODEL_BREAKER_FAILURES', value: '5' }

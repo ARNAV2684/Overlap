@@ -150,6 +150,15 @@ def ask(m, deadline=100.0, payload=None):
                              deadline_utc=deadline))
 
 
+
+def test_the_recap_writer_gets_its_own_output_allowance(monkeypatch):
+    # It writes (and rewrites) every recap line in one call; 800 tokens left nothing after gpt-5 reasoning (SYN-3013)
+    m = models_with(monkeypatch, '{"decision": "a"}', '{"decision": "b"}')
+    asyncio.run(m.ask("recap_writer", "rules", {"x": 1}, Out, match_id="M", moment_id="RC", deadline_utc=100.0))
+    ask(m)
+    assert ScriptedAgent.seen[0][1]["options"]["max_tokens"] == m.settings.recap_max_output_tokens == 2400
+    assert ScriptedAgent.seen[1][1]["options"]["max_tokens"] == 800
+
 def test_ask_parses_a_fenced_reply(monkeypatch):
     m = models_with(monkeypatch, '```json\n{"decision": "admit"}\n```')
     assert ask(m).decision == "admit"

@@ -132,7 +132,7 @@ export function keyNumber(text: string): { before: string; number: string; after
 // ---------------------------------------------------------------------------------------------------------------
 
 /** A card can still go on screen this long after its moment (CONTRACTS.md §10.6 expiry). */
-export const LIVE_FOR_MS = 300_000;
+export const LIVE_FOR_MS = 600_000;
 /** How long a card stays up, in wall-clock ms (the overlay's duration_ms is wall time on screen). */
 export const DEFAULT_SHOW_MS = 6000;
 

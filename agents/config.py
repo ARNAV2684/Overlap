@@ -40,6 +40,7 @@ ENV = {
     "OVERLAP_MAX_TOKENS_PER_MATCH": "max_tokens_per_match",
     "OVERLAP_MAX_INPUT_TOKENS": "max_input_tokens",
     "OVERLAP_MAX_OUTPUT_TOKENS": "max_output_tokens",
+    "OVERLAP_RECAP_MAX_OUTPUT_TOKENS": "recap_max_output_tokens",
     "OVERLAP_TRANSLATOR": "translator",
     "OVERLAP_TRANSLATOR_ENDPOINT": "translator_endpoint",
     "OVERLAP_TRANSLATOR_REGION": "translator_region",
@@ -90,6 +91,7 @@ class Settings:
     max_tokens_per_match: int = 400_000
     max_input_tokens: int = 3000
     max_output_tokens: int = 800
+    recap_max_output_tokens: int = 2400         # the recap writes every line at once; gpt-5 reasoning counts too
     translator: str = "fake"
     translator_endpoint: str = ""
     translator_region: str = ""
@@ -206,7 +208,7 @@ class Settings:
             if getattr(self, name) <= 0:
                 raise SettingsError(f"{name} must be positive")
         for name in ("max_calls_per_moment", "max_calls_per_match", "max_tokens_per_match", "max_input_tokens",
-                     "max_output_tokens", "max_model_jobs_per_match"):
+                     "max_output_tokens", "recap_max_output_tokens", "max_model_jobs_per_match"):
             if getattr(self, name) < 1:
                 raise SettingsError(f"{name} must be at least 1")
 

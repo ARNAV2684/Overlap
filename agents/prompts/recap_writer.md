@@ -29,7 +29,9 @@ One entry per requested id; `claims` lists every number in `text`, in the order 
 ## Rules
 
 - Numbers only from `recap.facts`, as digits, exactly as stored. The final score is `home_goals–away_goals`, written
-  `3–0` with both claims in that order. No minutes or clock times, no number words.
+  `3–0` with both claims in that order. No minutes or clock times, no number words (not even "once" or "twice"), no
+  ranges such as `2–3` other than the score.
+- `claims` lists exactly the numbers in `text`: a line with no number has `"claims": []`.
 - Tell what happened from `story`; do not invent turning points, causes, feelings or what a team "deserved".
   Momentum is attacking actions, not possession; xG is chance quality, not a verdict.
 - `casual` — the result and one thing that stood out. `analyst` — the result with shots and xG. `club` — the same
