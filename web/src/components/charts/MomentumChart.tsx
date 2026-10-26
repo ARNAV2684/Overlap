@@ -110,8 +110,8 @@ export function MomentumChart({
         const up = g.side === "home";
         return (
           <g key={i} aria-label={`Goal at ${g.clock}`}>
-            <line x1={x} x2={x} y1={MID} y2={up ? 26 : H - 26} stroke="#ff4f38" strokeWidth="1.2" strokeDasharray="2 2" />
-            <circle cx={x} cy={up ? 22 : H - 22} r="9" fill="#ff4f38" />
+            <line x1={x} x2={x} y1={MID} y2={up ? 26 : H - 26} stroke="#e5484d" strokeWidth="1.2" strokeDasharray="2 2" />
+            <circle cx={x} cy={up ? 22 : H - 22} r="9" fill="#e5484d" />
             <text x={x} y={(up ? 22 : H - 22) + 3} textAnchor="middle" className="fill-white font-mono text-[10px] font-black">
               G
             </text>

@@ -90,7 +90,7 @@ export function AnalysisPanel({ focus }: { focus: Focus }) {
   const followed = prefs.player ? memory.players().get(prefs.player) ?? null : null;
   const colours = setup
     ? { home: overlayColour(setup.teams.home.colours), away: overlayColour(setup.teams.away.colours) }
-    : { home: "#2bb3c0", away: "#ff4f38" };
+    : { home: "#2bb3c0", away: "#e5484d" };
   const team = setup?.teams[side] ?? null;
   const teams = {
     home: { name: setup?.teams.home.name ?? "Home", colour: colours.home },

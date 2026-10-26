@@ -8,7 +8,7 @@
 import type { KeyEvent } from "@/lib/live/charts";
 
 const ICON: Record<KeyEvent["kind"], { glyph: string; cls: string; label: string }> = {
-  goal: { glyph: "⚽", cls: "bg-accent text-white", label: "Goal" },
+  goal: { glyph: "⚽", cls: "bg-accent text-on-accent", label: "Goal" },
   yellow: { glyph: "", cls: "bg-[#f5c518]", label: "Yellow card" },
   red: { glyph: "", cls: "bg-[#e5383b]", label: "Red card" },
   sub: { glyph: "⇄", cls: "bg-ink/10 text-ink/70", label: "Substitution" },

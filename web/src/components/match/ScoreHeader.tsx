@@ -147,7 +147,7 @@ export function ScoreHeader() {
   }, [memory, tick]);
   const colours = {
     home: home ? overlayColour(home.colours) : "#2bb3c0",
-    away: away ? overlayColour(away.colours) : "#ff4f38",
+    away: away ? overlayColour(away.colours) : "#e5484d",
   };
 
   // Flash the score when it changes (not on the first value)

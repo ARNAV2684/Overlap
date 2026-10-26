@@ -1,7 +1,9 @@
 @import "tailwindcss";
 
-/* Overlap theme. Warm paper in light mode, near-black in dark (the default), one coral accent, Outfit for words and
-   Geist Mono for numbers and small labels. Components read these tokens through Tailwind (bg-surface, text-ink, …)
+/* Overlap theme. Chalk and ink: warm paper in light mode, near-black in dark (the default). The accent is the ink
+   itself (near-black in light, chalk in dark), with one small brass detail: the wordmark's dot, "AI · checked", focus
+   rings and the pitch's label numbers. Red is kept for goals and cards, green for "live", blue for analysis. Outfit
+   for words and Geist Mono for numbers and small labels. Components read these tokens through Tailwind (bg-surface, text-ink, …)
    or as CSS variables; no component hard-codes a colour except team kits, which come from the match setup. */
 
 @custom-variant dark (&:where(.dark, .dark *));
@@ -13,13 +15,16 @@
   --color-ink: var(--ov-ink);
   --color-ink-2: var(--ov-ink-2);
   --color-ink-3: var(--ov-ink-3);
-  --color-accent: #ff4f38;
-  --color-accent-soft: rgb(255 79 56 / 0.14);
+  --color-accent: var(--ov-accent);
+  --color-accent-soft: color-mix(in srgb, var(--ov-accent) 12%, transparent);
+  /* Text on an accent fill (ink on chalk, chalk on ink) */
+  --color-on-accent: var(--ov-on-accent);
+  --color-brass: var(--ov-brass);
   --color-live: #4ade80;
   --color-win: rgb(74 222 128 / 0.85);
   --color-draw: rgb(160 160 170 / 0.5);
   --color-loss: rgb(248 113 113 / 0.75);
-  --color-shot-goal: #ff4f38;
+  --color-shot-goal: #e5484d;
   --color-shot-saved: #4a90d9;
   --color-shot-missed: #7a7a92;
   --color-shot-blocked: #e8a838;
@@ -52,6 +57,9 @@
   --ov-ink-3: #9b98a3;
   /* rgb triplet of the ink, for hairlines and washes at any opacity */
   --ov-ink-rgb: 23, 21, 26;
+  --ov-accent: #121212;
+  --ov-on-accent: #f7f5f0;
+  --ov-brass: #8c6a22;
 }
 
 .dark {
@@ -63,6 +71,9 @@
   --ov-ink-2: #a0a0b8;
   --ov-ink-3: #66667e;
   --ov-ink-rgb: 255, 255, 255;
+  --ov-accent: #f2efe8;
+  --ov-on-accent: #121212;
+  --ov-brass: #d8b46a;
 }
 
 html,
@@ -190,7 +201,7 @@ select optgroup {
 }
 
 :focus-visible {
-  outline: 2px solid #ff4f38;
+  outline: 2px solid var(--ov-brass);
   outline-offset: 2px;
 }
 
@@ -217,7 +228,7 @@ select optgroup {
 .ov-tag b {
   font-family: var(--font-mono);
   font-weight: 900;
-  color: #ff4f38;
+  color: #d8b46a;
 }
 /* Opacity only: the position lives in `transform`, which an animation must not touch */
 @keyframes ov-fade {
@@ -294,11 +305,11 @@ select optgroup {
 
 @keyframes ov-score {
   0% {
-    color: #ff4f38;
+    color: var(--ov-brass);
     transform: scale(1.25);
   }
   60% {
-    color: #ff4f38;
+    color: var(--ov-brass);
   }
   100% {
     transform: none;

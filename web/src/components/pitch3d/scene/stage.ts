@@ -328,7 +328,7 @@ export function createStage(canvas: HTMLCanvasElement): Stage {
     }
   }
 
-  const colourOf = (side: Side) => (setup ? overlayColour(setup.teams[side].colours) : side === "home" ? "#2bb3c0" : "#ff4f38");
+  const colourOf = (side: Side) => (setup ? overlayColour(setup.teams[side].colours) : side === "home" ? "#2bb3c0" : "#e5484d");
   // Story lines (shape, pass network, lane) use the visual kit's blue, not kit colours, and stay quieter than the
   // play: the caption says whose story it is. Only the territory tide keeps both teams' colours
   const STORY_BLUE = "#3b8ef0";
@@ -539,7 +539,7 @@ export function createStage(canvas: HTMLCanvasElement): Stage {
           // Legs step by the ground covered on screen; how hard they run comes from the tracked speed
           const moved = renderedTravel(previousSample, sample, id).distance;
           entry.figure.update(w.x, w.z, p.speedKmh / 3.6, fx, fz, u.dt, moved);
-          entry.figure.setHighlight(u.highlight.has(id), "#ff4f38");
+          entry.figure.setHighlight(u.highlight.has(id), "#d8b46a");
         }
         const booked = new Map<string, { x: number; z: number }>();
         for (const id of u.bookings.keys()) {
@@ -553,7 +553,7 @@ export function createStage(canvas: HTMLCanvasElement): Stage {
       } else {
         ball.visible = ballShadow.visible = false;
         figures.forEach((e) => (e.figure.root.visible = false));
-        tide.set(0, "#2bb3c0", "#ff4f38", u.time, 0);
+        tide.set(0, "#2bb3c0", "#e5484d", u.time, 0);
       }
       previousSample = sample;
       eventMarks.update(u.time);
