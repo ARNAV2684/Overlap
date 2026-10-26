@@ -90,7 +90,7 @@ fixes since, and the share each run reached, are in
 
 ## Live AI share on Azure (25 Oct)
 
-Five full 20× matches on Azure, each after one more fix. "AI · checked" means a line gpt-5-mini wrote and the
+Six full 20× matches on Azure, each after one more fix. "AI · checked" means a line gpt-5-mini wrote and the
 fact-checker passed; the rest of the cards were checked templates ("Stat line · checked"). At 20× a card is live for
 15 real seconds, so a model line that is late is replaced by its template.
 
@@ -101,6 +101,7 @@ fact-checker passed; the rest of the cards were checked templates ("Stat line ·
 | SYN-3011 | Two jobs per match at once, parallel translation, 30 model jobs (#103) | 14% | Model lines failed the numeric check on form (264 `text_differs`, 163 `unit_wrong`), and the rewrites ran 27 of 47 jobs past 15 s | #106 |
 | SYN-3012 | Fact-checker lenient on precision, strict on meaning (#106) | 48 of 291 (16%) | The fact-check fell to 14 ms p50 and one round, but the model breaker kept opening: 22 narrator, 11 analyst and 8 spotter calls skipped as `breaker_open` | #108 |
 | SYN-3013 (26 Oct) | Breaker counts only full-length timeouts; tracing in Bicep (#108, #109); `main` @ `109c071` | 18 of 118 sent (15%); **English 13 of 31 (42%)** | No `breaker_open` at all. Jobs now take 13.9 s p50 and 14.9 s p95 against the 15 s deadline, so translation is cut short: 29 of 33 translator calls hit the deadline or timed out, and Spanish (0 of 31), French (1 of 31) and Hindi (4 of 25) fall back to templates; 302 deliveries expired against 118 sent; the recap was the template. Archive complete: 2,212 of 2,212 events, 30,673 frames, no gaps; 3,409 function runs, 0 failed | [`live-SYN-3013`](../agents/evals/results/live-SYN-3013/report.md) |
+| SYN-3014 (26 Oct) | 25 s per card, a 10-minute live window, the recap writer's own allowance (#114) | 42 of 285 sent (15%); English 29 of 81 (36%) | 14 jobs published (6 on SYN-3013) and 285 cards sent (118); 210 deliveries expired (302); translator 21 calls ok (4). Moments took 26 s p50 from moment to card. The recap writer could finish its answer but timed out at the 6 s per-call limit, so its own timeout and deadline followed (#114) | [`live-SYN-3014`](../agents/evals/results/live-SYN-3014/report.md) |
 
 Each run removed one cause and exposed the next. After #108 the model is never paused; what is left is time: at 20×
 a job has 15 real seconds, and the translator calls come last. The next lever is the job deadline at 20× (or showing

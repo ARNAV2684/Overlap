@@ -12,6 +12,7 @@ analyst, a club's supporter, a follower of one player, in English, Spanish, Hind
   (the Azure pipeline is paused between test windows: replays play and the start button is hidden)
 - **Video:** coming
 - **Judge's guide:** [`docs/testing.md`](docs/testing.md)
+- **Category:** Best Multi-Agent System ([why seven agents](#why-seven-agents-and-not-one))
 
 ## What it does
 
@@ -93,6 +94,22 @@ One job per moment, saved stage by stage in Cosmos `moments`, so a crashed run r
 twice. Any model failure falls back to the checked template for that step only. Details:
 [`agents/README.md`](agents/README.md).
 
+## Why seven agents, and not one
+
+What the Best Multi-Agent System category asks for, and where it is in Overlap:
+
+| The category asks for | In Overlap |
+|---|---|
+| **Specialised agents with distinct roles** | Seven, each owning one job (table above). The analyst never writes a number, the narrator never checks one, the fact-checker never writes a line; the director is rules only. |
+| **Coordination through shared state** | One job record per moment in Azure Cosmos DB. Each agent saves its output on it before the next starts, so every stage reads the evidence and the earlier stages from the same place, never from another agent's memory. |
+| **Effective handoffs** | Spotter → analyst (through our MCP server) → narrator → fact-checker → translator → director; at full time, recap writer → fact-checker → translator → director. The fact-checker hands a failing line back to the narrator with its reasons, at most twice. |
+| **Recovery from failures** | A lease claims each moment once, so a duplicate notification or a second worker never runs it twice, and a crashed run resumes from its last saved stage. A model breaker pauses calls during an outage. Any failed step falls back to a checked template for that step only; a translation that fails its re-check becomes the template in that language, and English is never held back. |
+| **An outcome one agent could not achieve** | On gpt-5-mini, same 17 moments: a single narrator agent published 65 of 109 lines that no check could tie to the evidence; the seven agents published none ([`docs/evaluation.md`](docs/evaluation.md#single-vs-multi-agent-w3)). |
+
+**See it on the site:** every card has **How this card was made**, a drawer read from that card's job record. It
+shows which agents ran and for how long, each model call, the MCP tools the analyst used and what it concluded, what
+the fact-checker sent back and why, and which translations were kept.
+
 ## Personalisation
 
 - **Modes:** Casual, Analyst, My club, Player focus.
@@ -122,10 +139,12 @@ Single agent against the seven, on gpt-5-mini (same 17 moments): the narrator al
 check could tie to the evidence; the seven agents published none, rewrote 69 and replaced the rest with checked stat
 lines ([`docs/evaluation.md`](docs/evaluation.md#single-vs-multi-agent-w3)).
 
-Known gap: at 20× a card is live for only 15 real seconds, and on Azure most cards are still checked templates
-(**Stat line · checked**). Across four matches on 25 Oct the model-written share was 5–16%; each run removed one cause
-(a slow MCP start, one job at a time, a strict numeric check, a breaker that paused the model) and the next fix is in
-review. Every run is in [`docs/evaluation.md`](docs/evaluation.md#live-ai-share-on-azure-25-oct).
+Known gap: at 20× a whole match takes under 7 minutes, so the agents have seconds per card, and on Azure most cards
+are still checked templates (**Stat line · checked**). Six matches from 25 to 26 Oct each removed one cause (a slow
+MCP start, one job at a time, a strict numeric check, a breaker that paused the model, a 15-second deadline). On
+SYN-3014 (26 Oct, 25 s per card) 14 jobs published against 6 the day before and 285 cards went out against 118; 42 of
+them, 15%, were written by the model and passed the fact-checker, 29 of 81 in English. Every card says which it is,
+and every run is in [`docs/evaluation.md`](docs/evaluation.md#live-ai-share-on-azure-25-oct).
 
 ## Run locally
 
