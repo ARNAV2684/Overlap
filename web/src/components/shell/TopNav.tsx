@@ -21,8 +21,8 @@ const LINKS = [
 export function Wordmark({ className = "" }: { className?: string }) {
   return (
     <span className={`font-black tracking-tight ${className}`}>
-      <span className="text-accent">over</span>
-      <span className="text-ink/90">lap</span>
+      <span className="text-ink">overlap</span>
+      <span className="text-brass">.</span>
     </span>
   );
 }

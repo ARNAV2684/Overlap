@@ -272,7 +272,7 @@ export class LaneBand {
   private opacity = 0;
 
   constructor() {
-    this.uniforms = { uTime: { value: 0 }, uColour: { value: new THREE.Color("#ff4f38") }, uOpacity: { value: 0 }, uDir: { value: 1 } };
+    this.uniforms = { uTime: { value: 0 }, uColour: { value: new THREE.Color("#f2efe8") }, uOpacity: { value: 0 }, uDir: { value: 1 } };
     const material = new THREE.ShaderMaterial({
       uniforms: this.uniforms,
       transparent: true,

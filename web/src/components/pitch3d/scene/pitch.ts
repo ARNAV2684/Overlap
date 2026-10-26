@@ -297,7 +297,7 @@ export function createPitch(maxAnisotropy: number) {
   group.add(floor);
 
   const boardMat = new THREE.MeshStandardMaterial({ color: 0x15161a, roughness: 0.6, metalness: 0.2 });
-  const glowMat = new THREE.MeshBasicMaterial({ color: 0xff4f38 });
+  const glowMat = new THREE.MeshBasicMaterial({ color: 0xd8b46a });
   const boards: [number, number, number, number][] = [
     [0, -(PITCH_H / 2 + APRON - 1.2), PITCH_W + 8, 0],
     [0, PITCH_H / 2 + APRON - 1.2, PITCH_W + 8, 0],

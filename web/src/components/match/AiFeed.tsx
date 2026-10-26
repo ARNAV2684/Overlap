@@ -36,7 +36,7 @@ export function AiFeed({ onShowChart }: { onShowChart?: ShowChart }) {
     <div className="ov-card flex min-h-0 flex-col" id="commentary">
       <div className="flex items-center justify-between border-b border-ink/[0.06] px-4 py-3">
         <div className="flex items-center gap-2">
-          <span className="grid h-6 w-6 place-items-center rounded-full bg-accent font-mono text-[10px] font-black text-white">AI</span>
+          <span className="grid h-6 w-6 place-items-center rounded-full bg-accent font-mono text-[10px] font-black text-on-accent">AI</span>
           <p className="ov-eyebrow">Commentary</p>
         </div>
         <span className="ov-sub" title="Lines written by the agents and passed by the fact-checker, out of every moment">

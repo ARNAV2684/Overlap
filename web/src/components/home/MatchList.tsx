@@ -63,7 +63,7 @@ export function MatchList() {
               </div>
             ))}
             <div className="mt-1 flex gap-2">
-              <Link href={`/match/${m.match_id}`} className="rounded-full bg-accent px-3.5 py-1.5 text-[12.5px] font-bold text-white hover:bg-accent/90">
+              <Link href={`/match/${m.match_id}`} className="rounded-full bg-accent px-3.5 py-1.5 text-[12.5px] font-bold text-on-accent hover:bg-accent/90">
                 {m.status === "live" ? "Watch live" : "Watch replay"}
               </Link>
               {m.status === "finished" && (

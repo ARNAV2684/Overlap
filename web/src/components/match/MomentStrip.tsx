@@ -31,8 +31,8 @@ export function SourceBadge({ card, tone = "light" }: { card: Pick<Overlay, "ver
   const style =
     source === "ai"
       ? tone === "dark"
-        ? "bg-[#4ade80]/15 text-[#4ade80]"
-        : "bg-[#4ade80]/15 text-[#16a34a] dark:text-[#4ade80]"
+        ? "bg-[#d8b46a]/15 text-[#d8b46a]"
+        : "bg-brass/15 text-brass"
       : tone === "dark"
         ? "bg-white/10 text-white/65"
         : "bg-ink/[0.07] text-ink/55";

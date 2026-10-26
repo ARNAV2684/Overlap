@@ -65,7 +65,7 @@ export function RecapView({ matchId }: { matchId: string }) {
       </section>
       <section className="ov-card mt-4 border-accent/25 p-5">
         <div className="flex items-center gap-2">
-          <span className="grid h-6 w-6 place-items-center rounded-full bg-accent font-mono text-[10px] font-black text-white">AI</span>
+          <span className="grid h-6 w-6 place-items-center rounded-full bg-accent font-mono text-[10px] font-black text-on-accent">AI</span>
           <p className="ov-eyebrow">The recap</p>
         </div>
         {state === "loading" && <p className="mt-3 text-ink/50">Loading…</p>}
@@ -96,7 +96,7 @@ export function RecapView({ matchId }: { matchId: string }) {
                     <span className="font-mono text-[12px] font-black">{c.clock.split(":")[0]}′</span>
                     <span
                       className={`rounded-full px-1.5 py-0.5 font-mono text-[8.5px] font-black uppercase tracking-[1px] ${
-                        c.verified ? "bg-[#4ade80]/15 text-[#16a34a] dark:text-[#4ade80]" : "bg-ink/10 text-ink/55"
+                        c.verified ? "bg-brass/15 text-brass" : "bg-ink/10 text-ink/55"
                       }`}
                     >
                       {c.verified ? "✓ verified" : c.fallback ? "template" : "unverified"}

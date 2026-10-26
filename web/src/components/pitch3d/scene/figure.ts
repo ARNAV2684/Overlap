@@ -236,7 +236,7 @@ export function createFigure(kit: Kit, seed: number): Figure {
   base.position.y = 0.035;
   base.scale.setScalar(FIGURE_SCALE);
   root.add(base);
-  const ringMat = new THREE.MeshBasicMaterial({ color: 0xff4f38, transparent: true, opacity: 0.95, depthWrite: false });
+  const ringMat = new THREE.MeshBasicMaterial({ color: 0xd8b46a, transparent: true, opacity: 0.95, depthWrite: false });
   const ring = new THREE.Mesh(g.ring, ringMat);
   ring.rotation.x = -Math.PI / 2;
   ring.position.y = 0.04;

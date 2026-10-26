@@ -56,7 +56,7 @@ export function StartMatchButton() {
         type="button"
         onClick={start}
         disabled={phase.kind === "starting" || phase.kind === "started"}
-        className="inline-flex items-center gap-2 rounded-full bg-accent px-4 py-2 text-[13px] font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+        className="inline-flex items-center gap-2 rounded-full bg-accent px-4 py-2 text-[13px] font-bold text-on-accent transition-opacity hover:opacity-90 disabled:opacity-60"
       >
         <span className="ov-live-dot" />
         {phase.kind === "starting" ? "Starting…" : phase.kind === "started" ? "Kicking off…" : "Start a live match"}

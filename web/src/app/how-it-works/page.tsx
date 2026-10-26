@@ -85,7 +85,7 @@ export default function HowItWorksPage() {
         ))}
       </div>
 
-      <Link href="/" className="mt-12 inline-flex rounded-full bg-accent px-5 py-2.5 text-[14px] font-bold text-white hover:bg-accent/90">
+      <Link href="/" className="mt-12 inline-flex rounded-full bg-accent px-5 py-2.5 text-[14px] font-bold text-on-accent hover:bg-accent/90">
         Watch a match →
       </Link>
     </main>

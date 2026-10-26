@@ -55,7 +55,7 @@ const ICONS: Record<FieldEvent["kind"], string> = {
 
 /** Trail colours of a shot's flight, by outcome (the shot map's colours); a lofted ball leaves a white trail. */
 const SHOT_TRAIL: Record<ShotFlight["outcome"], string> = {
-  goal: "#ff4f38",
+  goal: "#e5484d",
   saved: "#4a90d9",
   missed: "#a4a4bc",
   blocked: "#e8a838",
