@@ -38,6 +38,14 @@ def kickoff(matchweek: int) -> str:
     return (SEASON_START + dt.timedelta(days=7 * (matchweek - 1))).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+def season_fixture(team_ids: list[str], number: int, seed: int = 1) -> tuple[str, str]:
+    """(home, away) for match number `number` (SYN-NNNN): the season's round robin in order, wrapping round, so
+    consecutive live matches are different fixtures of the same league as the season pages."""
+    plan = fixtures(team_ids, seed)
+    _, home, away = plan[(number - 1) % len(plan)]
+    return home, away
+
+
 def fixtures(team_ids: list[str], seed: int) -> list[tuple[int, str, str]]:
     """(matchweek, home, away): circle-method round robin, shuffled by the seed; the second half mirrors the first."""
     teams = sorted(team_ids)

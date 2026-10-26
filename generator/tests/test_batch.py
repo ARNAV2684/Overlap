@@ -37,6 +37,23 @@ def test_fixtures_depend_on_the_seed_and_handle_an_odd_league():
     assert len(batch.fixtures(teams, 1)) == 6
 
 
+
+def test_live_matches_take_consecutive_fixtures_of_the_season():
+    ids = ["CAL", "DTN", "KES", "ORR", "THW", "BRM", "ASH", "ELV", "HLW", "WEX"]
+    plan = batch.fixtures(ids, 1)
+    first = [batch.season_fixture(ids, n) for n in range(1, len(plan) + 1)]
+    assert first == [(h, a) for _, h, a in plan]                               # match N plays fixture N
+    assert batch.season_fixture(ids, len(plan) + 3) == first[2]                 # and wraps round after the season
+    week = [batch.season_fixture(ids, n) for n in range(3015, 3020)]
+    assert len(set(week)) == 5 and all(h != a for h, a in week)                # five different fixtures in a row
+    assert len({c for f in week for c in f}) >= 6                               # more than the two reference clubs
+
+
+def test_from_season_picks_the_clubs_itself(capsys):
+    import cli
+    assert cli.main(["live", "--from-season", "--home", "CAL", "--first-match", "3015"]) == 2
+    assert "leave out --home and --away" in capsys.readouterr().err
+
 def test_two_reference_clubs_make_a_two_match_season():
     assert [(h, a) for _, h, a in batch.fixtures(["CAL", "DTN"], 1)] in (
         [("CAL", "DTN"), ("DTN", "CAL")], [("DTN", "CAL"), ("CAL", "DTN")])

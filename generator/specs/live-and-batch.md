@@ -112,7 +112,7 @@ Run from `generator/` (`uv run python cli.py …`):
 |---|---|---|
 | `world` | Builds and saves the world | `--season S1`, `--seed` |
 | `play` | Plays one match and records it | `--home CAL --away DTN`, `--match-id`, `--seed`, `--out` |
-| `live` | Plays and streams one or more matches | `--home`, `--away` (repeatable), `--speed 1|5|20`, `--hubs emulator|azure|off`, `--namespace` (from configuration), `--stdout`, `--record` |
+| `live` | Plays and streams one or more matches | `--home`, `--away` (repeatable), or `--from-season` (the clubs of the season's fixture number `--first-match`, round robin, wrapping round: each new match on Azure is a different fixture of the league), `--speed 1|5|20`, `--hubs emulator|azure|off`, `--namespace` (from configuration), `--stdout`, `--record` |
 | `season` | Plays a full season, or a repeat run with `--repeat N` | `--season`, `--seed`, `--repeat`, `--keep-tracking`, `--jobs`, `--report` |
 | `report` | Writes the realism report for a season or run | `--season` or `--run` |
 | `validate` | Plays matches and checks contracts, invariants and same-seed reproducibility | `--matches N`, `--seed` |
