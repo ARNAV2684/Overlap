@@ -6,8 +6,6 @@ No sign-in, no install: everything runs in the browser.
 
 https://ca-overlap-web.agreeablestone-46edcfef.swedencentral.azurecontainerapps.io
 
-- The first visit may take **about 10 s**: between test windows the web app scales to zero and wakes on the first
-  request. Reload once if the page is still blank.
 - The home page opens on a live match if one is playing; otherwise it plays a **replay** at 5× (one of our showcase
   matches) and says so. On a first visit a short panel above the pitch explains what you are seeing; **Got it** hides
   it.
@@ -17,8 +15,8 @@ https://ca-overlap-web.agreeablestone-46edcfef.swedencentral.azurecontainerapps.
 
 Open **Matches** and pick a finished match, then **Watch replay** (or open `/replay/<match id>` directly).
 
-- Recommended: **SYN-3003**, a full match played on Azure on 24 Oct
-  (`/replay/SYN-3003`). _A showcase replay from the next Azure run will replace this recommendation._
+- Recommended: **SYN-3013**, a full match played on Azure on 26 Oct with today's code (`/replay/SYN-3013`): six
+  goals, and in English about two cards in five written by the agents (**AI · checked**).
 - Replay controls over the pitch: play and pause, **1× · 5× · 20×**, a progress line with a mark for each moment,
   and restart.
 - **Watch / Analyse** above the pitch: Analyse (the default) adds the story caption and chips (territory tide, team

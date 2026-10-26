@@ -86,10 +86,12 @@ agent and model counts are sampled under load, so at 20× read them as rates and
 ## Pause (after a run) and resume
 
 Pausing removes everything billed by the hour and keeps the public link with its replays (Cosmos DB, storage, the web
-app at zero replicas, the registry):
+app, the registry). The web app keeps **one replica** while paused (`WEB_MIN_REPLICAS` stays `1`), so the judges' link
+never waits for a cold start (about 25 s from zero); it costs at most about $1.30 a day (0.5 vCPU and 1 GiB at the
+active rate, less when idle):
 
 ```bash
-azd env set LIVE_PIPELINE false; azd env set WEB_MIN_REPLICAS 0; azd env set DEPLOY_MODEL false
+azd env set LIVE_PIPELINE false; azd env set DEPLOY_MODEL false
 azd env set WEBPUBSUB_SKU Free_F1; azd env set COSMOS_THROUGHPUT 1000
 azd provision                                      # never deletes, so then:
 az functionapp delete -g rg-overlap -n <AZURE_FUNCTIONS_APP_NAME>
@@ -98,9 +100,14 @@ az appservice plan delete -g rg-overlap -n asp-overlap-<token> --yes
 az containerapp delete -g rg-overlap -n ca-overlap-stats --yes
 az containerapp job delete -g rg-overlap -n caj-overlap-generator --yes
 az eventhubs namespace delete -g rg-overlap -n evhns-overlap-<token>
+# The checkpoints name the namespace, which resume recreates empty with the same name: delete them too, or the
+# relay, archiver and stats engine keep failing on every partition that has one ("supplied offset is invalid",
+# seen on SYN-3013, 26 Oct) and a match on that partition never reaches the screen or the archive
+az storage blob delete-batch --account-name <AZURE_STORAGE_ACCOUNT> -s azure-webjobs-eventhub --auth-mode login
+az storage blob delete-batch --account-name <AZURE_STORAGE_ACCOUNT> -s stats-checkpoints --auth-mode login
 ```
 
-To resume, set those five values back (`true`, `1`, `true`, `Standard_S1`, `4000`), `azd provision`, and deploy the
+To resume, set those four values back (`true`, `true`, `Standard_S1`, `4000`), `azd provision`, and deploy the
 Functions zip again. To remove everything: `azd down --purge` (only after judging, `specs/costs.md` §3).
 
 ## Local release patch: prerequisites before enabling starts

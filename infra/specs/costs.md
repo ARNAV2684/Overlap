@@ -65,6 +65,7 @@ before A1, then replaced by measured cost after A8):
 | Cosmos DB at 4,000 RU/s during live runs (3,000 above the free tier) | $5.8 while set; set it back to 1,000 between runs |
 | Container Apps (stats + web at 1 replica each) | $1–2 |
 | Container registry Basic | $0.17 |
+| Web app kept at 1 replica while paused (no cold start for judges) | at most about $1.30 (0.5 vCPU, 1 GiB, active rate; less when idle and before the monthly free grant) |
 | Log Analytics (0.5 GB daily cap) | ≤ $1.4 (normally far less) |
 | Cosmos DB free tier, Storage, Translator F0 | ~$0 |
 | **Total** | **about $5.5–8**, plus Cosmos while at 4,000 RU/s |

@@ -11,7 +11,7 @@
 | [`responsible-ai.md`](responsible-ai.md) | Synthetic data, the fact-checker and templates, honest labels, translation checks, no personal data, cost caps |
 | [`demo-script.md`](demo-script.md) | The 2-minute demo video, beat by beat |
 
-Diagrams, exported from the team's Lucid data flow diagrams: [Azure deployment](img/azure-deployment.png),
+Diagrams: [Azure deployment](img/azure-deployment.png) (as deployed on 26 Oct),
 [main data flow](img/main-dfd.png), [each layer opened up](img/expanded-dfd.png).
 
 ## Release notes
