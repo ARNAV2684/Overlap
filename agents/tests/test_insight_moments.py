@@ -1,6 +1,6 @@
 """Head-to-head, connection and workhorse moments through the agents' code paths.
 
-Spec: CONTRACTS.md §5, §10.6; stats/specs/triggers.md §1; plans/active/PLAN_cross_live-insight-moments.md.
+Spec: CONTRACTS.md §5, §10.6; stats/specs/triggers.md §1; plans/done/PLAN_cross_live-insight-moments.md.
 The moments are the stats engine's own, from its fixture match (mcp_server/tests/data/SYN-1017-insight-moments.json).
 """
 import json

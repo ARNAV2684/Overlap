@@ -91,7 +91,7 @@ describe("listMatches (this app's /api/matches)", () => {
     expect(await lists().listMatches()).toEqual([]);
   });
 
-  it("rejects the mock's old bare list, an unknown status and an extra field (invalid-response)", async () => {
+  it("rejects an old bare list, an unknown status and an extra field (invalid-response)", async () => {
     for (const body of [[], { matches: [{ ...live, status: "abandoned" }] }, { matches: [{ ...live, group: "match-SYN-0505" }] }]) {
       respond = (_req, res) => json(res, body);
       expect((await failure(lists().listMatches())).kind).toBe("invalid-response");

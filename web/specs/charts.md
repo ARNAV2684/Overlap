@@ -5,11 +5,11 @@
 
 Owners: Arnav, Azeem. Written 24 Oct for [`PLAN_web_live-home`](../../plans/active/PLAN_web_live-home.md). Built in
 `src/components/charts/`, with the data shaped by pure functions in `src/lib/live/charts.ts` (tested in
-`__tests__/charts-data.test.ts`). The earlier chart specs are kept in [`vedant-frontend/`](../../vedant-frontend/README.md).
+`__tests__/charts-data.test.ts`).
 
 ## 1. Shared rules
 
-- Pitch charts draw on `MiniPitch` (viewBox in metres, 105 × 68), always in the **team frame**: the team attacks left →
+- Pitch charts draw a pitch in metres (105 × 68), always in the **team frame**: the team attacks left →
   right. Events already are (`CONTRACTS.md` §1.1); tracking-based heat is turned per period.
 - Team colours go through `overlayColour()` (see `design-system.md` §2).
 - A value sent as `null` (`low_sample`) shows "–", never 0.

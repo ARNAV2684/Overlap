@@ -3,7 +3,7 @@
 // Purpose: check the groups a viewer asks for, and make a short-lived, receive-only client URL for them
 // Inputs:  PubSubSettings from stream-env.ts; the `groups` query parameter
 // Outputs: parseGroups(), createTokenIssuer(settings): TokenIssuer, PubSubError, TOKEN_LIFETIME_MINUTES, MAX_GROUPS
-// Spec:    web/specs/realtime.md §1.1. Plan: vedant-frontend/plans/active/PLAN_web_realtime-routes.md
+// Spec:    web/specs/realtime.md §1.1
 //
 // The token may join and leave only the requested groups and may not send; the relay stays the only sender on
 // match-<id> (CONTRACTS.md §7.1). The local stand-in accepts any token, so locally it is signed with a fixed,

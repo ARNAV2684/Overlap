@@ -3,7 +3,7 @@
 // Purpose: keep only the newest N items (the timeline keeps 600 rows per category) without ever growing or shifting
 // Inputs:  a capacity, then items pushed one at a time
 // Outputs: the newest items first, on request
-// Spec:    vedant-frontend/web/IMPLEMENTATION_PLAN.md Phase 5.1
+// Spec:    web/specs/realtime.md §2
 
 export class RingBuffer<T> {
   private readonly items: (T | undefined)[];

@@ -63,7 +63,7 @@ GitHub Actions runs these on every pull request into `main`. **Blocking** checks
 | **Secrets scan** | Keys, tokens and connection strings in the PR's commits (gitleaks) | Blocking |
 | **Scope and spec gate** | Changed code whose governing spec isn't `agreed`; a PR with no plan in `plans/active/` | Warning |
 | **Scope comment** | One bot comment on the PR, updated on every push: layers and hot shared files touched, owners to tell (from `plans/REGISTRY.md`), and other open PRs or active plans touching the same files | Information |
-| **Python** | `ruff check` on changed `.py` files; `pytest` for each changed project with tests; `uv run mock validate` when `mock/` changes | Blocking |
+| **Python** | `ruff check` on changed `.py` files; `pytest` for each changed project with tests | Blocking |
 | **Web** | Lint, typecheck and build, once `web/package.json` exists | Blocking |
 | **Infra** | `bicep build` and `bicep lint` on changed `.bicep` files | Blocking |
 

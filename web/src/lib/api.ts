@@ -4,8 +4,7 @@
 //          Every response is validated; every failure becomes an ApiError
 // Inputs:  match ids, group names
 // Outputs: negotiate(), getSnapshot(), listMatches(), createApiClient(), createMatchListClient(), ApiError
-// Spec:    web/specs/realtime.md §1.1 (negotiate), §3.1 (snapshot), §5.3 (match list). Plan:
-//          vedant-frontend/plans/active/PLAN_web_realtime-routes.md
+// Spec:    web/specs/realtime.md §1.1 (negotiate), §3.1 (snapshot), §5.3 (match list)
 //
 // Same origin: the base URL is empty in the browser; tests pass a fake server's address. No custom request headers,
 // so nothing here depends on CORS. The routes answer with Cache-Control: no-store. Never log the negotiate token.

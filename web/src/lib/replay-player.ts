@@ -5,7 +5,7 @@
 // Inputs:  a match store (store.ts), a replay client (replay-client.ts), the match id
 // Outputs: createReplayPlayer(): getState(), subscribe(), start(), stop(), play(), pause(), setSpeed(), retry(),
 //          restart(); replayNotices
-// Spec:    web/specs/realtime.md §5.2. Plan: vedant-frontend/plans/active/PLAN_web_replay.md
+// Spec:    web/specs/realtime.md §5.2
 //
 // How it works
 //  - Outside React, like the store. A 100 ms timer moves the playhead by the wall time elapsed × speed.

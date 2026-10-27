@@ -83,9 +83,6 @@ jobs:
           else
             echo "No tests in ${{ matrix.project }} yet."
           fi
-      - name: Mock contract validation
-        if: matrix.project == 'mock'
-        run: uv run mock validate
 
   ci-scripts:
     name: CI script tests

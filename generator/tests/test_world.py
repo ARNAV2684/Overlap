@@ -331,10 +331,6 @@ def _duplicate_name(d):
     d["clubs"][1]["squad"][0]["name"] = d["clubs"][0]["squad"][0]["name"]
 
 
-def _mock_team_id(d):
-    d["clubs"][0]["team_id"] = "NBR"
-
-
 def _unknown_field(d):
     d["clubs"][0]["squad"][0]["speed"] = 90
 
@@ -394,7 +390,6 @@ def _missing_set_piece_kind(d):
     (_unreadable_kit, "contrast"),
     (_xi_wrong_position, "can't play GK"),
     (_duplicate_name, "name used 2 times"),
-    (_mock_team_id, "reserved for the mock"),
     (_unknown_field, "unknown fields"),
     (_style_out_of_range, "style values must be 0–1"),
     (_outfield_goalkeeping, "goalkeeping must be 20 or less"),

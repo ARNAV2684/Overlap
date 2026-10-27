@@ -3,15 +3,15 @@
 > **Status: merged for review in #19 (16 Oct); not yet marked agreed.** Answers §1 (connection), §2 (store), §3
 > (catch-up) and adds §6 (testing and checks) for the live match screen. §4 (overlay scheduler) is **not started**.
 > `stats` envelopes and the store's `stats` slice (§1, §2) are **written for review** (22 Oct) for
-> [`PLAN_web_stat-charts`](../../vedant-frontend/plans/active/PLAN_web_stat-charts.md).
+> `PLAN_web_stat-charts` (in the git history).
 > §4 (insights) is **built** (24 Oct) for [`PLAN_web_live-home`](../../plans/active/PLAN_web_live-home.md).
-> §5 (replay) is **written for review** (20 Oct) for [`PLAN_web_replay`](../../vedant-frontend/plans/active/PLAN_web_replay.md); no
+> §5 (replay) is **written for review** (20 Oct) for `PLAN_web_replay` (in the git history); no
 > replay code exists yet. The live screen's code is on `main` (#43, #48). Plan:
-> [`PLAN_web_live-match-viewer`](../../vedant-frontend/plans/active/PLAN_web_live-match-viewer.md). The `status` and `positions`
+> `PLAN_web_live-match-viewer` (in the git history). The `status` and `positions`
 > payloads and the snapshot shape are now in `CONTRACTS.md` §7.2–§7.3. The app's own negotiate and snapshot routes
 > (§1.1, §3.1) replace the stream server's and end the mock dependency: **written for review** (23 Oct, approach agreed
-> in person) for [`PLAN_web_realtime-routes`](../../vedant-frontend/plans/active/PLAN_web_realtime-routes.md). §5.3 (the match list, this app's own route, replacing the
-> mock's) is **written for review** (22 Oct) for [`PLAN_web_match-list`](../../vedant-frontend/plans/active/PLAN_web_match-list.md).
+> in person) for `PLAN_web_realtime-routes` (in the git history). §5.3 (the match list, this app's own route, replacing the
+> mock's) is **written for review** (22 Oct) for `PLAN_web_match-list` (in the git history).
 
 Decides how messages reach the screen and stay in order.
 
@@ -231,7 +231,7 @@ a replay only those whose moment has been reached are listed.
 
 _Answer:_
 
-Plan: [`PLAN_web_replay`](../../vedant-frontend/plans/active/PLAN_web_replay.md). Replay plays a **finished** match from the archiver's
+Replay plays a **finished** match from the archiver's
 storage (`CONTRACTS.md` §4.1, `archiver/specs/storage.md` §3) through the same store and panels as the live screen.
 The web app's own route reads storage on the server and sends §7 envelopes, a minute at a time; a player in the
 browser releases them at the chosen speed.
@@ -346,8 +346,8 @@ browser releases them at the chosen speed.
 
 ### 5.3 Match list `GET /api/matches`
 
-Plan: [`PLAN_web_match-list`](../../vedant-frontend/plans/active/PLAN_web_match-list.md). The list behind the match picker
-(`screens.md` §1), read from the same archive as replay. It replaced the mock's provisional `GET /mock/matches`, so the
+The list behind the match picker
+(`screens.md` §1), read from the same archive as replay. It replaced the earlier mock feed's provisional match list, so the
 picker works the same with the local stand-in (which has no list) and on Azure.
 
 - **Runtime and settings:** a Node.js route handler, always dynamic, read-only, with the settings of §5.1. Only Cosmos

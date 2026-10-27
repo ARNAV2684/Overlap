@@ -138,7 +138,6 @@ BALL_SPEED_KMH = {
 }
 LOFTED = {"long_pass", "cross", "switch", "clearance", "goal_kick"}
 PEAK_M = {"long_pass": (4, 10), "cross": (3, 7), "switch": (5, 10), "clearance": (8, 14), "goal_kick": (10, 16)}
-ROLL_DECEL = 0.8                     # m/s² rolling friction (0.6 on a wet pitch)
 LONG_PASS_M = 32.0
 SWITCH_DY_M = 35.0
 

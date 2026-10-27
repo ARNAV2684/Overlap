@@ -4,7 +4,7 @@
 //          CONTRACTS.md. Unknown fields are rejected: "a typo fails loudly" (CONTRACTS.md §1.3)
 // Inputs:  raw parsed JSON from the stream (Web PubSub, snapshot, replay file)
 // Outputs: schemas, types, and parseEnvelope(), which never throws
-// Spec:    CONTRACTS.md §1–§4 and §7 (§7.4 stat panels). vedant-frontend/web/IMPLEMENTATION_PLAN.md Phase 4.1
+// Spec:    CONTRACTS.md §1–§4 and §7 (§7.4 stat panels)
 //
 // This file mirrors CONTRACTS.md. Change a shape only in a PR that edits CONTRACTS.md too, with both sides agreeing.
 
@@ -79,7 +79,7 @@ export const teamSchema = z
     });
   });
 
-/** Weather and crowd, decided before kickoff. The generator always sends it; the mock leaves it out. */
+/** Weather and crowd, decided before kickoff. The generator always sends it; older recordings may leave it out. */
 export const conditionsSchema = z.strictObject({
   temperature_c: z.number(),
   precipitation: z.enum(["none", "light", "heavy"]),
@@ -628,7 +628,6 @@ export const seasonDocumentSchema = z.strictObject({
 });
 
 export type SeasonShot = z.infer<typeof seasonShotSchema>;
-export type SeasonDna = z.infer<typeof seasonDnaSchema>;
 export type SeasonTeam = z.infer<typeof seasonTeamSchema>;
 export type SeasonMatch = z.infer<typeof seasonMatchSchema>;
 export type SeasonPlayer = z.infer<typeof seasonPlayerSchema>;

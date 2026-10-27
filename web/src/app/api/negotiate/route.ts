@@ -3,7 +3,7 @@
 // Purpose: return a short-lived, receive-only Web PubSub client URL for the viewer's match group
 // Inputs:  HTTP GET ?groups=match-<id>[,…]; Web PubSub settings through src/lib/server/stream-env.ts
 // Outputs: JSON { baseUrl, url, token }, or { error } (codes in web/specs/realtime.md §1.1)
-// Spec:    web/specs/realtime.md §1.1. Plan: vedant-frontend/plans/active/PLAN_web_realtime-routes.md
+// Spec:    web/specs/realtime.md §1.1
 //
 // Replaces the stream server's GET /negotiate, so the browser only ever calls this app. The token and the URL carry
 // the right to connect: neither is logged. Settings never appear in a response or a log line.

@@ -56,7 +56,7 @@ Verified 19 October 2026 against main `a61166b`. This describes recorded respons
 | Why it matters | A mismatch here can block the connected component; do not create a private contract to work around it. |
 | Done when | An agreed replay adapter and recorded reader-to-screen check, or a linked blocking issue. |
 | Status | Evidenced by the requester (23 Oct). The adapter is the web app's replay route, which reads the §4.1 archive directly (Cosmos and Blob; no change in `archiver/`) and serves §7 envelopes, separate from live snapshot catch-up. Checked on the local stack: archived `SYN-0501` (6–0) replays all 2,363 events, 30,619 frames and 6,125 panels with 0 rejected, and plays in Chrome to full time at 20× with the archived score. Arnav's agreement to the direct read (R-01 of the replay plan) is not recorded yet. |
-| Decision evidence / due date | Replay merged in [#72](https://github.com/ARNAV2684/Overlap/pull/72) and [#75](https://github.com/ARNAV2684/Overlap/pull/75); checks in the handover of [`PLAN_web_replay.md`](../../vedant-frontend/plans/active/PLAN_web_replay.md) (main `3353483`). Azure read roles for the web app are still open (R-02). No deadline agreed. |
+| Decision evidence / due date | Replay merged in [#72](https://github.com/ARNAV2684/Overlap/pull/72) and [#75](https://github.com/ARNAV2684/Overlap/pull/75) (main `3353483`). Azure read roles for the web app are still open (R-02). No deadline agreed. |
 
 
 

@@ -4,7 +4,7 @@
 //          latest positions and its envelopes, but of the stats envelopes only the newest and the newest heavy one
 // Inputs:  ScreenSettings from stream-env.ts
 // Outputs: createScreenStore(settings): ScreenStore, ScreenStoreError, STORAGE_TIMEOUT_MS
-// Spec:    web/specs/realtime.md §3.1; functions/specs/screen-relay.md §4. Plan: vedant-frontend/plans/active/PLAN_web_realtime-routes.md
+// Spec:    web/specs/realtime.md §3.1; functions/specs/screen-relay.md §4
 //
 // Read-only, and every query stays in the match's partition (/match_id). The stats filter is in the queries, so the
 // thousands of older panels are never read; snapshot.ts applies the same rule again, so the result is right either

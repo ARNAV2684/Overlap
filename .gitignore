@@ -49,3 +49,8 @@ Thumbs.db
 # Local knowledge graphs and isolated Graphify environment
 graphify-out/
 .graphify-venv/
+
+# Local build and debug leftovers (never committed)
+web/tailwindcss-*.log
+functions/functions.zip
+agents/evals/*.zip

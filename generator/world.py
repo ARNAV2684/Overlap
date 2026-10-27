@@ -150,7 +150,6 @@ REFERENCE_SQUAD_SIZE = (22, 28)
 MIN_GOALKEEPERS = 2
 MIN_SLOT_COVER = 2  # players able to play each slot of the club's formation
 MAX_OUTFIELD_GOALKEEPING = 20
-MOCK_TEAM_IDS = frozenset({"NBR", "HBA", "IVC", "SMW", "LKR", "GWA"})  # reserved while mock/ exists
 
 TEAM_ID = re.compile(r"^[A-Z]{3}$")
 MATCH_ID = re.compile(r"^SYN-\d{4}$")
@@ -297,8 +296,6 @@ def _club_problems(club: Club) -> list[str]:
     problems = []
     if not isinstance(tid, str) or not TEAM_ID.match(tid):
         problems.append(f"{tid}: team_id must be 3 capital letters")
-    if tid in MOCK_TEAM_IDS:
-        problems.append(f"{tid}: team_id is reserved for the mock")
     if set(club.venue) != {"name", "city"}:
         problems.append(f"{tid}: venue needs exactly name and city")
     if club.formation not in FORMATIONS:

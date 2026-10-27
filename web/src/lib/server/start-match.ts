@@ -17,7 +17,6 @@ import { DefaultAzureCredential, type TokenCredential } from "@azure/identity";
 /** Matches started on Azure count up from here, clear of the numbers local runs use. */
 export const AZURE_FIRST_MATCH = 3000;
 export const MAX_MATCH_NUMBER = 9999;
-export const STARTS_PER_HOUR = 3;
 const ARM = "https://management.azure.com";
 const API = "2024-03-01";
 

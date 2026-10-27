@@ -5,7 +5,7 @@
 # Outputs: <out>/<match_id>/setup.json, events.ndjson, tracking.ndjson.gz, summary.json
 # Spec:    generator/specs/live-and-batch.md §2
 #
-# The layout is the mock's (minus the screen relay's envelopes), so replay readers built on it keep working.
+# The layout replay readers were built on (minus the screen relay's envelopes), so they keep working.
 
 from __future__ import annotations
 

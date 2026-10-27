@@ -17,10 +17,8 @@ This file is maintained by Arnav. AI assistants read it but never add or change 
 | 6 · Web PubSub | `infra/modules/web-pubsub.bicep` | Arnav (Pranav helping) |
 | Local development stack | `infra/local/`, `infra/specs/local-development.md` | Arnav (Pranav helping) |
 | 7 · Web app | `web/` | Arnav, Azeem |
-| 7 · Earlier web app, kept for reference (does not run) | `vedant-frontend/` | Arnav, Azeem (Vedant's work, from 15–22 Oct) |
 | Other infrastructure | `infra/` (other modules), `azure.yaml` | Unassigned (Arnav decides) |
 | Docs and scripts | `docs/`, `scripts/` | Unassigned (Arnav decides) |
-| Mock live feed (temporary, replaced by the generator) | `mock/` | Arnav |
 | Plans (shared) | `plans/` | Each author owns their own plan file; only Arnav edits `plans/REGISTRY.md` |
 
 A change to a folder you do not own needs that folder's owner to agree first, and goes in its own small commit.
@@ -44,7 +42,7 @@ AI assistants read this section as the source of truth for scope and never edit 
 | G6 | Batch mode: full synthetic seasons and the realism report | `batch.py`, `realism_report.py` | `specs/live-and-batch.md` |
 | — | Tests and calibration targets for all of the above | `tests/`, `CALIBRATION.md` | — |
 
-**Done when** `live.py` (G5) replaces `mock/` as the source of setup, events and tracking on Event Hubs, and the
+**Done when** `live.py` (G5) replaces the earlier mock feed (removed 27 Oct) as the source of setup, events and tracking on Event Hubs, and the
 realism report (G6) compares a generated season with `CALIBRATION.md`.
 
 ## Hot shared files

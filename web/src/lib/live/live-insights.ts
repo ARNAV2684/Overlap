@@ -5,7 +5,7 @@
 //          match's tempo (control vs chaos, and rhythm), and the honest label and kind of an AI moment card
 // Inputs:  the match events, the latest heavy block, the players from the setup
 // Outputs: plain data for the match screen; nothing here draws
-// Spec:    plans/active/PLAN_web_football-revamp_S8.md; web/specs/screens.md §2.8
+// Spec:    plans/done/PLAN_web_football-revamp_S8.md; web/specs/screens.md §2.8
 //
 // Every number comes from the events and the stats engine's heavy block: no model writes any of them. Event
 // coordinates are in the acting team's frame (x = 100 is the goal it attacks), so "forward" is always +x.

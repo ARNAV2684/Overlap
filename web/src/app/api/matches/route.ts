@@ -5,9 +5,9 @@
 //          archive-env.ts, the same as the replay route); OVERLAP_SHOWCASE_MATCH_IDS, read on every request so it can
 //          change without a rebuild
 // Outputs: JSON { matches: [...] }, or { error } (codes in web/specs/realtime.md §5.3)
-// Spec:    web/specs/realtime.md §5.3. Plan: vedant-frontend/plans/active/PLAN_web_match-list.md
+// Spec:    web/specs/realtime.md §5.3
 //
-// Replaces the mock's GET /mock/matches. The picker asks every 5 s, so only failures and left-out documents are
+// The picker asks every 5 s, so only failures and left-out documents are
 // logged. Settings and keys never appear in a response or a log line; storage errors are logged by operation only.
 
 import { connection } from "next/server";
