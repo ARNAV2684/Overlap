@@ -79,10 +79,8 @@ wrote, and the recap on top at full time.
 
 ## 6. Live matches
 
-The live pipeline (Event Hubs, Functions, stats engine, generator, model) runs only in announced test windows to
-keep costs down. **Live windows: to be announced.**
-
-During a window the home page shows **Start a live match**: it starts a full synthetic match on Azure at 20× (about
+The live pipeline (Event Hubs, Functions, stats engine, generator, model) stays on through judging, so the home page
+always shows **Start a live match**: it starts a full synthetic match on Azure at 20× (about
 7 minutes). One match runs at a time and each visitor can start 3 an hour; if one is already playing, the home page
 switches to it. Cards appear a few seconds after their moment.
 

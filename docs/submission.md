@@ -1,8 +1,7 @@
 # Overlap: portal submission text
 
 Ready to paste into the Innovation Studio project page, field by field (section 9 says which section goes where).
-Every number has its source in section 8. One value is filled in on submission day: the live-match times
-(`[[LIVE-WINDOWS]]`).
+Every number has its source in section 8.
 
 ---
 
@@ -145,7 +144,7 @@ Paste into the portal's testing field. **No sign-in, no credentials, no cost to 
 3. Watch the **commentary strip** under the pitch: the card on screen now, and the three before it. Each card shows its minute, the kind of moment, the sentence with its key number, and a badge. **AI · checked** means a model wrote the line and the fact-checker passed every number. **Stat line · checked** means a template wrote it from the verified numbers; it is never called AI. Click a card's chart link to open the chart or insight card it refers to, and **How this card was made** to see the agents' work behind it: each agent's time and model calls, the MCP tools the analyst used, and what the fact-checker sent back.
 4. Below the pitch, use the viewer bar to change **Mode** (Casual, Analyst, My club, Player focus), **Language** (English, Español, हिन्दी, Français), **Club** and **Follow** (a player). The next cards arrive in that voice. Casual and Analyst are two different screens: Casual keeps to the story and a few numbers, Analyst shows every number and the facts the fact-checker verified. Player focus shows the player's distance, top speed and sprints, and their numbers beside their opposite number's.
 5. Open the **recap** from `/matches` ("Recap") for the full-time summary written by the agents and every moment, and `/league` for the table, title race and style map. `/how-it-works` shows the pipeline and the seven agents.
-6. The site is **paused to replays only** to save cost, so the start button is hidden. Live matches run in announced windows: `[[LIVE-WINDOWS]]`. During a window, press **Start a live match** on the home page; it plays a full match at 20× in about 7 minutes, one at a time.
+6. The full live pipeline stays on through judging. Press **Start a live match** on the home page at any time: it plays a new league fixture at 20× in about 7 minutes, one match at a time (3 starts per visitor an hour). If a match is already playing, the home page switches to it.
 7. Reconnect and layout: the page recovers on its own if the network drops; it works at phone width and in light and dark themes.
 
 Source code: https://github.com/ARNAV2684/Overlap (judge's guide: `docs/testing.md`). All match data is synthetic.
