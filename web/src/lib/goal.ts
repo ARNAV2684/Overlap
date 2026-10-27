@@ -3,7 +3,7 @@
 // Purpose: decide whether a change of score is a goal worth flashing and announcing, and word the announcement
 // Inputs:  the score the screen showed before and the score it shows now; the match setup for club names
 // Outputs: goalBetween(), goalAnnouncement(). Pure functions, no state
-// Spec:    web/specs/screens.md (scoreboard, goal moment). vedant-frontend/web/IMPLEMENTATION_PLAN.md Phase 7
+// Spec:    web/specs/screens.md (scoreboard, goal moment)
 //
 // History is never a goal. A new session starts from reset(), which publishes an empty score before the snapshot is
 // read (src/lib/socket.ts catchUp), so the first score of a session always follows null: snapshot history, or the

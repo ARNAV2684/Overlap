@@ -69,7 +69,7 @@ local keys are Microsoft's public, documented values, not secrets; Azure never u
 3. Start the relay: `func start` in `functions/dist/` (see `functions/README.md`; it also runs the archiver and step 6),
    or `relay_runner.py` (add `--from-latest` if matches streamed while it was off) and `uv run python main.py` in
    `archiver/` (`--from-latest` likewise).
-4. Open the screen: Vedant's app or, until it exists, `mock/single-match-demo/` on 8788 (moved to the protocol).
+4. Open the screen: `npm run dev` in `web/` (http://localhost:3000).
 5. Start the stats engine: `uv run python main.py live` in `stats/` (moments, `match_state`, stat panels).
 6. Start the insights flow (skip with `func start`, which runs it): `uv run python ../functions/moment_trigger.py` in `agents/` (polls moments, runs the
    agents, the recap at full time and the publisher, which sends cards and player tags to the stand-in's audience

@@ -4,7 +4,7 @@
 //          relay's Cosmos container
 // Inputs:  HTTP GET; Cosmos `screen` through src/lib/server/screen-store.ts (settings: stream-env.ts)
 // Outputs: JSON { match_id, setup, status, envelopes, rejected }, or { error } (codes in web/specs/realtime.md §3.1)
-// Spec:    web/specs/realtime.md §3.1; CONTRACTS.md §7.3. Plan: vedant-frontend/plans/active/PLAN_web_realtime-routes.md
+// Spec:    web/specs/realtime.md §3.1; CONTRACTS.md §7.3
 //
 // Replaces the stream server's snapshot route, so the browser only ever calls this app. Of the stat panels only the
 // newest and the newest heavy one are sent (snapshot.ts). Settings never appear in a response or a log line; storage

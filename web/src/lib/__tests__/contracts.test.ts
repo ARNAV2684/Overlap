@@ -137,7 +137,7 @@ describe("setup and tracking frames", () => {
     expect(matchSetupSchema.safeParse({ ...makeSetup(), conditions }).success).toBe(true);
   });
 
-  it("accepts a setup without conditions, as the mock sends it", () => {
+  it("accepts a setup without conditions, as older recordings send it", () => {
     expect(matchSetupSchema.safeParse(makeSetup()).success).toBe(true);
   });
 

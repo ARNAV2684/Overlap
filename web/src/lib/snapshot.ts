@@ -4,7 +4,7 @@
 //          the newest status, and the envelopes in seq order, with the ones that fail the envelope check counted
 // Inputs:  a match id; its documents from Cosmos `screen` (functions/specs/screen-relay.md §4), in any order
 // Outputs: buildSnapshot(), envelopeProblem(), SnapshotBody, MAX_REJECTION_SAMPLES
-// Spec:    web/specs/realtime.md §3.1; CONTRACTS.md §7.3. Plan: vedant-frontend/plans/active/PLAN_web_realtime-routes.md
+// Spec:    web/specs/realtime.md §3.1; CONTRACTS.md §7.3
 //
 // A port of infra/local/webpubsub_standin/standin/snapshot.py (same checks, same error codes), plus one rule: of the
 // stats envelopes only the newest panel and the newest panel with a heavy block are kept. Panels are cumulative and

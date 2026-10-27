@@ -5,7 +5,7 @@
 //          everything else
 // Inputs:  each new text via push(text); onAnnounce(text) callback; minGapMs (default 3000)
 // Outputs: onAnnounce calls: at most one per minGapMs, always the newest text, and never for a change in numbers only
-// Spec:    web/specs/design-system.md §5 (accessibility). vedant-frontend/web/IMPLEMENTATION_PLAN.md Phase 6 (NoticeBar)
+// Spec:    web/specs/design-system.md §5 (accessibility)
 //
 // Rules:
 //   1. A text whose wording matches the last announced one apart from its numbers is not announced again.

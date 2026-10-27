@@ -4,8 +4,7 @@
 > [`PLAN_web_football-revamp`](../../plans/active/PLAN_web_football-revamp.md) (agreed by Azeem, 23 Oct 2026).
 
 Owners: Arnav, Azeem. Written 24 Oct for [`PLAN_web_live-home`](../../plans/active/PLAN_web_live-home.md). Built in
-`src/app/globals.css` and `src/app/layout.tsx`. The earlier design system is kept in
-[`vedant-frontend/`](../../vedant-frontend/README.md).
+`src/app/globals.css` and `src/app/layout.tsx`.
 
 ## 1. Look
 

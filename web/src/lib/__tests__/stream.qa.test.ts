@@ -9,8 +9,7 @@
 //          default SYN-9001), QA_APP_URL (default http://localhost:3000). Start the local stack (generator, relay,
 //          Web PubSub stand-in, stats engine; infra/specs/local-development.md) and `npm run dev` first
 // Outputs: a pass or fail, plus one summary line per match (event types, goals, cards, substitutions)
-// Spec:    web/specs/realtime.md §6. vedant-frontend/web/IMPLEMENTATION_PLAN.md Phase 10 step 7. Plan AC-03, AC-06;
-//          vedant-frontend/plans/active/PLAN_web_e2e-stats-run.md AC-08
+// Spec:    web/specs/realtime.md §6
 //
 // Run:     QA_STREAM=1 npx vitest run src/lib/__tests__/stream.qa.test.ts
 // Joining mid-match is fine: the snapshot fills in the history, and totals count history and live rows alike.

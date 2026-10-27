@@ -7,7 +7,6 @@ and the match analytics underneath. One message format (the envelope in
 socket and the archive replay alike.
 
 Owners: Arnav and Azeem ([registry](../plans/REGISTRY.md)). Plan: [`PLAN_web_live-home`](../plans/active/PLAN_web_live-home.md).
-The earlier screens are kept in [`../vedant-frontend/`](../vedant-frontend/README.md).
 
 ## Run locally
 

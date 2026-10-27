@@ -238,9 +238,5 @@ def offside(m, passer: Body, receiver: Body, action: str, rng) -> bool:
     return rng.random() < min(max(p, 0.0), 0.9)
 
 
-def offside_spot(m, receiver: Body) -> tuple[float, float]:
-    return receiver.x, receiver.y
-
-
 def distance(a: Body, b: Body) -> float:
     return math.hypot(a.x - b.x, a.y - b.y)

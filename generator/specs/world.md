@@ -65,9 +65,8 @@ resembles anyone. As with the reference clubs, nothing about a league club's ide
 real club a template resembles is recorded only in the private file (§5). The demo and the video feature league
 clubs, while the reference clubs remain the engine's answer key.
 
-**Ids.** Hand-chosen for every club. Every id must be unique in the world, must not be one of the mock's ids (`NBR`, `HBA`,
-`IVC`, `SMW`, `LKR`, `GWA`) while `mock/` exists, and must not be a well-known real club's abbreviation (checked in
-review). The build fails on a clash.
+**Ids.** Hand-chosen for every club. Every id must be unique in the world and must not be a well-known real club's abbreviation (checked
+in review). The build fails on a clash.
 
 ## 2. Squads
 
@@ -249,7 +248,7 @@ Reference club B (proposed): `press_intensity` 0.45, `directness` 0.60, `width` 
 directness, line height, build-up, counter-press, press height, counter-attack and set-piece focus, and is clearly weaker, so A vs B should show A dominating the ball and
 territory while B's chances come from counters and set pieces.
 
-**Formations.** `4-3-3`, `4-2-3-1`, `4-4-2`, `4-1-4-1`, `3-4-3`, `5-3-2` (the six the mock already uses) plus
+**Formations.** `4-3-3`, `4-2-3-1`, `4-4-2`, `4-1-4-1`, `3-4-3`, `5-3-2` plus
 `5-4-1`, which reference club B plays. Each formation's slot order (goalkeeper first) and position labels live in
 `world.py`; `5-4-1` is GK, RWB, CB, CB, CB, LWB, RM, CM, CM, LM, ST. Anchor positions on the pitch, and how they
 shift, belong to [`movement.md`](movement.md) §1.

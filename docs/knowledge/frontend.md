@@ -10,8 +10,8 @@ for the viewer's mode and language, and the match analytics.
 
 ## Ownership
 
-Registry: Arnav, Azeem (from 24 Oct). See [registry](../../plans/REGISTRY.md). The earlier web app (Vedant, 15–22 Oct)
-is kept for reference in [`vedant-frontend/`](../../vedant-frontend/README.md); its data layer is still live in `web/`.
+Registry: Arnav, Azeem (from 24 Oct). See [registry](../../plans/REGISTRY.md). The earlier web app's UI (Vedant, 15–22 Oct)
+was removed on 27 Oct and stays in the git history; its data layer is still live in `web/`.
 
 ## Inputs and outputs
 
@@ -58,6 +58,6 @@ Azure model (templates locally).
 | Responsible person / basis | Recorded work | Governing reference | Current integration boundary |
 |---|---|---|---|
 | Arnav, Azeem; see Ownership above | 3D live screen and homepage on `web/live-home` (24 Oct) | [`PLAN_web_live-home`](../../plans/active/PLAN_web_live-home.md) | Local stack verified; Azure not started |
-| Vedant (15–22 Oct) | Data layer (routes, socket, store, replay engine) still live; earlier UI in `vedant-frontend/` | [`vedant-frontend/README.md`](../../vedant-frontend/README.md) | Reference only |
+| Vedant (15–22 Oct) | Data layer (routes, socket, store, replay engine) still live; earlier UI removed 27 Oct (in the git history) | `web/src/lib/`, `web/src/providers/` | Live |
 
 [Project map](README.md) · [Rebuild and verification](setup.md)

@@ -8,7 +8,7 @@
 //          tempo (control vs chaos, and rhythm)
 // Inputs:  the match memory (events, heavy block, players, playhead) and the setup; the viewer's club
 // Outputs: UI
-// Spec:    web/specs/screens.md §2.8; plans/active/PLAN_web_football-revamp_S8.md
+// Spec:    web/specs/screens.md §2.8; plans/done/PLAN_web_football-revamp_S8.md
 //
 // Every number is worked out in the browser from the event stream and the stats engine's heavy block; no model writes
 // any of them, and each card says so.

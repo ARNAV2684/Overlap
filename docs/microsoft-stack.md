@@ -150,7 +150,7 @@ the change they describe.
 | Workflow | Jobs |
 |---|---|
 | [`pr-checks.yml`](../.github/workflows/pr-checks.yml) | Policy (commit identity, branch name, template, attribution); private blocklist; secrets scan (gitleaks over the PR's commits); scope and spec gate (layers and shared files touched, plan present, overlaps with other open PRs) |
-| [`python.yml`](../.github/workflows/python.yml) | Detect changed projects; ruff on changed files; pytest per changed project with a locked `uv sync` (and the mock feed's contract check); tests of the CI scripts; one result job |
+| [`python.yml`](../.github/workflows/python.yml) | Detect changed projects; ruff on changed files; pytest per changed project with a locked `uv sync`; tests of the CI scripts; one result job |
 | [`web.yml`](../.github/workflows/web.yml) | Web lint, type check and production build |
 | [`infra.yml`](../.github/workflows/infra.yml) | Bicep build and lint |
 | [`main.yml`](../.github/workflows/main.yml) | After every merge, on the whole of `main`: every Python project's tests, ruff, the web lint, types, tests and build, and the Bicep template |

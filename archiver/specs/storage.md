@@ -1,7 +1,7 @@
 # Storage spec
 
 > **Status: agreed.** Approved by Vedant (consumer, web replay) on 20 Oct 2026; see
-> [`PLAN_web_replay`](../../plans/active/PLAN_web_replay.md) R-04. Plan:
+> `PLAN_web_replay` R-04 (in the git history). Plan:
 > [`PLAN_archiver_archive-flow`](../../plans/active/PLAN_archiver_archive-flow.md). Stored format:
 > [`CONTRACTS.md`](../../CONTRACTS.md) §4.1.
 

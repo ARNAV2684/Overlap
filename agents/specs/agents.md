@@ -8,7 +8,7 @@
 Seven agents with distinct roles share one job record per moment and hand off explicitly. Every moment type the
 stats engine writes is in scope: `goal`, `red_card`, `penalty`, `big_chance`, `shot_cluster`, `momentum_swing`,
 `press_change`, `milestone`, and the insight moments `head_to_head`, `connection` and `workhorse` (24 Oct,
-[`PLAN_cross_live-insight-moments`](../../plans/active/PLAN_cross_live-insight-moments.md); `sprint` is deferred by
+[`PLAN_cross_live-insight-moments`](../../plans/done/PLAN_cross_live-insight-moments.md); `sprint` is deferred by
 the stats engine). Numbers come only from the moment's `evidence.facts`; names only from `context` (a head-to-head's
 rival, on the other team, is in `context.players`).
 

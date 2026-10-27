@@ -29,7 +29,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - id: p
         run: |
-          projects=$(git ls-files '*/pyproject.toml' | grep -v '^vedant-frontend/' | xargs -n1 dirname \
+          projects=$(git ls-files '*/pyproject.toml' | xargs -n1 dirname \
             | python3 -c 'import json, sys; print(json.dumps(sorted(l.strip() for l in sys.stdin if l.strip())))')
           echo "projects=${projects}" >> "$GITHUB_OUTPUT"
           echo "Python projects: ${projects}"
@@ -70,9 +70,6 @@ jobs:
           else
             echo "No tests in ${{ matrix.project }}."
           fi
-      - name: Mock contract validation
-        if: matrix.project == 'mock'
-        run: uv run mock validate
 
   web:
     name: Web (lint, typecheck, tests, build)

@@ -5,8 +5,7 @@
 > [`engine.md`](engine.md), whose output (setup, events, tracking frames) this spec sends, records and summarises.
 
 Decides how matches are played out: streamed live, or generated as a full season with a realism report. Where the
-temporary `mock/` already made a choice that other layers build against, this spec keeps it, so nothing changes for
-them when the generator replaces the mock.
+earlier mock feed (removed 27 Oct) made a choice that other layers build against, this spec keeps it.
 
 ## 1. Live mode
 
@@ -50,7 +49,7 @@ a reconnect may duplicate messages; consumers drop a `seq` they already applied 
 
 _Answer:_
 
-One folder per match, `<match_id>/` (the mock's layout, unchanged):
+One folder per match, `<match_id>/`:
 
 | File | Contents |
 |---|---|
@@ -59,7 +58,7 @@ One folder per match, `<match_id>/` (the mock's layout, unchanged):
 | `tracking.ndjson.gz` | One tracking frame per line, gzipped |
 | `summary.json` | Score, shots, possession, the seed and the `world_version` used |
 
-The browser-envelope file the mock also writes (`envelopes.ndjson.gz`) belongs to the screen relay and is not written
+The browser-envelope file (`envelopes.ndjson.gz`) belongs to the screen relay and is not written
 by the generator. **Where:** generated matches go to `data/generated/matches/` (gitignored); a few curated samples
 are copied to `data/recorded/` and committed, small enough to review.
 
