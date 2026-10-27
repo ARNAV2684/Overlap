@@ -32,10 +32,10 @@ Overlap is a working answer on synthetic data: explainable, personalised match i
 
 ### The five stages
 
-1. **Ingest.** A synthetic match generator plays whole matches possession by possession and streams events, plus every player's position at 5 Hz, into Azure Event Hubs. All clubs, players and matches are invented.
+1. **Ingest.** A synthetic match generator plays whole matches possession by possession and streams events, plus every player's position at 5 Hz, into Azure Event Hubs. Each live match is the next fixture of a ten-club league, the same league the site's table and club pages show. All clubs, players and matches are invented.
 2. **Interpret.** A stats engine on Azure Container Apps turns the stream into expected goals, pass difficulty, speeds and sprints, pressing, momentum, and rolling windows. Plain code, no AI. It also flags moments worth explaining and packages each one with an evidence pack: the only numbers an agent may cite. There are eleven moment types: goal, red card, penalty, milestone, shot cluster, big chance, momentum swing, press change, head-to-head, connection and workhorse.
 3. **Explain.** Seven agents work on each flagged moment (below) and write why it matters, not just that it happened.
-4. **Render.** A Next.js app shows a 3D pitch built from the tracking data, the live commentary strip, and insight cards (head-to-head by role, passing connections, engine room, tempo: control versus chaos and rhythm), through Azure Web PubSub. Cards are timed overlays tied to the match clock, and they are saved, so replays carry them too.
+4. **Render.** A Next.js app shows a 3D pitch built from the tracking data, the live commentary strip, and insight cards (head-to-head by role, passing connections, engine room, tempo: control versus chaos and rhythm), through Azure Web PubSub. Cards are timed overlays tied to the match clock, and they are saved, so replays carry them too. Every card opens **How this card was made**: which agents ran and for how long, each model call, the MCP tools the analyst used and what it concluded, what the fact-checker sent back and why, and which translations were kept, read from the job record the agents share.
 5. **Personalise.** Four modes (Casual, Analyst, My club, Player focus), four languages (English, Spanish, Hindi, French), a favourite club and a followed player. Each audience gets its own ordered stream of cards.
 
 ### The seven agents and MCP
@@ -66,10 +66,10 @@ All measured on Azure (Sweden Central) or on the evaluation bench; nothing here 
 
 - **Pipeline on Azure, 24 Oct.** Nine of nine full 20× matches (SYN-3000 to SYN-3008) archived identical to their recordings. In the final run every reader was 0 s behind Event Hubs at p50, 1 s at p95 and 3 s at worst, across 3,009 function runs with none failed. A full match plays in 6 min 40 s.
 - **Agents bench, 24 generated matches (538 moments).** Detection recall on every labelled trigger was 100% (195 of 195: goals, red cards, penalties, milestones, shot clusters). 0 wrong numbers in 12,236 published lines on the template path, and 0 in 2,996 more lines on a local-model subset. Fault injection on 33 labelled lines: all 11 numeric faults caught, 9 of 9 meaning faults the code can judge caught, and 0 false rejections of the 12 valid lines.
-- **Cards written by the model.** At 20× a whole match takes under 7 minutes, so the agents have seconds per card. Every card says who wrote it: "AI · checked" when gpt-5-mini wrote it and the fact-checker passed it, "Stat line · checked" when a template did. Six full 20× matches on Azure (25–26 Oct) each removed one cause of late model lines: a slow MCP start, one job at a time, a strict numeric check, a breaker that paused the model, and a 15-second deadline. In the latest (SYN-3014), 285 cards went out (118 the day before), 42 of them model-written, 29 of 81 in English.
+- **Cards written by the model.** At 20× a whole match takes under 7 minutes, so the agents have seconds per card. Every card says who wrote it: "AI · checked" when gpt-5-mini wrote it and the fact-checker passed it, "Stat line · checked" when a template did. Six full 20× matches on Azure (25–26 Oct) each removed one cause of late model lines: a slow MCP start, one job at a time, a strict numeric check, a breaker that paused the model, and a 15-second deadline. With 25 seconds per card (SYN-3014), 285 cards went out (118 the day before), 42 of them model-written, 29 of 81 in English. The full-time recap is now written by the model: 6 of its 7 lines passed the fact-checker on SYN-3302 (none on 25 Oct).
 - **Single agent versus the full pipeline.** On the same 17 moments on gpt-5-mini, the narrator alone published 65 of 109 lines that no check could tie to the evidence (a value attached to the wrong fact, a score told from the trailing side, a missing unit). The seven agents published none of those: they rewrote 69 lines and replaced the rest with checked stat lines.
 - **Line quality, scored in Foundry.** Azure AI Evaluation on 60 published lines of an Azure match (all 25 model lines and 35 templates): groundedness 98.3%, relevance 91.7%, fluency 100%.
-- **Tests.** 1,256 automated tests pass across the agents, MCP server, stats engine, Functions, archiver, generator and web app, with CI on every pull request.
+- **Tests.** 1,272 automated tests pass across the agents, MCP server, stats engine, Functions, archiver, generator and web app, with CI on every pull request.
 
 ### Responsible AI
 
@@ -90,7 +90,7 @@ All measured on Azure (Sweden Central) or on the evaluation bench; nothing here 
 
 ### What is next
 
-Raise the model-written share at 20× and show it on more replays; a "how this card was made" view on each card; follow several players at once, and a single-metric mode; show live ball speed on its own; and automatic eventing from video, the one optional stretch goal from the challenge we did not attempt.
+Raise the model-written share at 20× (the agents now have 25 seconds a card; a 5× showcase gives them more); follow several players at once, and a single-metric mode; show live ball speed on its own; and automatic eventing from video, the one optional stretch goal from the challenge we did not attempt.
 
 ---
 
@@ -141,10 +141,10 @@ Overlap is a multi-agent system with distinct roles and one shared record. Seven
 Paste into the portal's testing field. **No sign-in, no credentials, no cost to you.**
 
 1. Open **https://ca-overlap-web.agreeablestone-46edcfef.swedencentral.azurecontainerapps.io**.
-2. The home page plays a recorded match on a 3D pitch. For a good one, open `/matches` and choose **Watch replay** on **SYN-3013** or **SYN-3014** (full matches played on Azure on 26 Oct). Use **5×** or **20×**, with pause and restart over the pitch.
+2. The home page plays a recorded match on a 3D pitch. For a good one, open `/matches` and choose **Watch replay** on **SYN-3302**, Calverholme Athletic 4–1 Orrinford Albion: five goals, a penalty, a red card and a model-written recap. SYN-3015, SYN-3016 and SYN-3301 are other fixtures of the league. Use **5×** or **20×**, with pause and restart over the pitch.
 3. Watch the **commentary strip** under the pitch: the card on screen now, and the three before it. Each card shows its minute, the kind of moment, the sentence with its key number, and a badge. **AI · checked** means a model wrote the line and the fact-checker passed every number. **Stat line · checked** means a template wrote it from the verified numbers; it is never called AI. Click a card's chart link to open the chart or insight card it refers to, and **How this card was made** to see the agents' work behind it: each agent's time and model calls, the MCP tools the analyst used, and what the fact-checker sent back.
 4. Below the pitch, use the viewer bar to change **Mode** (Casual, Analyst, My club, Player focus), **Language** (English, Español, हिन्दी, Français), **Club** and **Follow** (a player). The next cards arrive in that voice. Casual and Analyst are two different screens: Casual keeps to the story and a few numbers, Analyst shows every number and the facts the fact-checker verified. Player focus shows the player's distance, top speed and sprints, and their numbers beside their opposite number's.
-5. Open the **recap** from `/matches` ("Recap") for the full-time summary and every moment, and `/league` for the table, title race and style map. `/how-it-works` shows the pipeline and the seven agents.
+5. Open the **recap** from `/matches` ("Recap") for the full-time summary written by the agents and every moment, and `/league` for the table, title race and style map. `/how-it-works` shows the pipeline and the seven agents.
 6. The site is **paused to replays only** to save cost, so the start button is hidden. Live matches run in announced windows: `[[LIVE-WINDOWS]]`. During a window, press **Start a live match** on the home page; it plays a full match at 20× in about 7 minutes, one at a time.
 7. Reconnect and layout: the page recovers on its own if the network drops; it works at phone width and in light and dark themes.
 
@@ -162,6 +162,7 @@ Source code: https://github.com/ARNAV2684/Overlap (judge's guide: `docs/testing.
 | 2 | Match with commentary | `/replay/<showcase id>`, scroll so the commentary strip and the insight cards share the frame | Commentary strip with at least one "AI · checked" and one "Stat line · checked" card, replay bar with moment marks, head-to-head card | "Live commentary: every line says who wrote it, and every number is checked in code." |
 | 3 | Player Focus | Same match, Mode set to Player focus, a player followed | Ring and name tag on the pitch, the Player focus panel with the opposite number's comparison, a card centred on that player | "Player focus: the same moment, from one player's night, against their opposite number." |
 | 4 | Recap | `/match/<showcase id>/recap` in Analyst mode, language Hindi if the cards are clean, otherwise English | Final score, the recap text, the moment timeline | "The full-time recap, written from a fact pack built by code, in the viewer's mode and language." |
+| 4b | How this card was made | `/replay/SYN-3302`, Analyst, a goal card's **How this card was made** open | The drawer: agents in order with their times, model call chips, the analyst's MCP tools, the fact-check rounds | "Every card shows the agents at work: who ran, what they read through MCP, and what the fact-checker sent back." |
 | 5 | Architecture | `docs/img/azure-deployment.png` | Generator, Event Hubs, the two Functions apps, Container Apps, Cosmos DB, Blob, Web PubSub, Foundry (gpt-5-mini), Translator, Application Insights, the viewer; managed identity noted | "Deployed on Azure, Sweden Central: event-driven, keyless, defined in Bicep." |
 
 Optional sixth: the **Overlap live run** workbook in Application Insights during a live window (cards sent and expired, agent stage times, model calls), if it is deployed by then.
@@ -204,8 +205,10 @@ Every count and number above, with where it comes from. Checked 25 Oct 2026 agai
 | Pause and resume | five settings | `infra/README.md` "Pause" and "Resume" |
 | In-process MCP | removes a 4–5 s process start per job | `docs/release-readiness.md` (lines 29–35) |
 | CI | workflows `infra.yml`, `pr-checks.yml`, `python.yml`, `web.yml` | `.github/workflows` |
-| Tests | 1,256 passing | Run on `main` at `109c071` on 26 Oct: agents 281; MCP 150 (3 skipped); stats 76 (1 skipped); functions 20; generator 112 (2 skipped); archiver 5 (2 skipped, need the storage emulators); web 612 (4 skipped). The same table is in `README.md` |
+| Tests | 1,272 passing | Run on `main` at `f8e455a` on 27 Oct: agents 284; MCP 150 (3 skipped); stats 76 (1 skipped); functions 20; generator 114 (2 skipped); archiver 5 (2 skipped, need the storage emulators); web 623 (4 skipped). The same table is in `README.md` |
 | Model-written share on Azure | 42 of 285 cards on SYN-3014 (29 of 81 in English); 5–16% across the four 25 Oct runs | `docs/evaluation.md`, "Live AI share on Azure"; `agents/evals/results/live-SYN-3014/report.md` |
+| Model-written recap | 6 of 7 recap lines on SYN-3302 (26 Oct); 0 of 7 on SYN-3013 | `agents/evals/results/live-SYN-3302/recap.md`; the recap timeout #114 fixed in `live-SYN-3014/report.md` |
+| League fixtures live | Each live match is the season's next round-robin fixture (10 clubs, 90 fixtures) | `generator/batch.py` (`season_fixture`), `infra/containers/generator.Dockerfile` (`--from-season`) |
 | Time per card at 20× | 25 s per moment on Azure (15 s until 26 Oct); a card may show up to 10 match minutes after its moment | `infra/modules/functions.bicep` (`OVERLAP_MOMENT_DEADLINE_S`); `CONTRACTS.md` §10.6 |
 | Single vs multi-agent | Same 17 moments; single agent 65 of 109 lines refused by the code check; seven agents 0, 69 rewritten | `agents/evals/results/single-vs-multi-azure/report.md`; `docs/evaluation.md` |
 | Foundry evaluation | 60 lines (25 model, 35 template): groundedness 98.3%, relevance 91.7%, fluency 100% | `agents/evals/results/foundry-1/report.md` |

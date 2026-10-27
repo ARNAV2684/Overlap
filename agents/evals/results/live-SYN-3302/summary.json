@@ -1,0 +1,77 @@
+{
+ "match_id": "SYN-3302",
+ "final_phase": "full_time",
+ "final_score": {
+  "home": 4,
+  "away": 1
+ },
+ "moments": 30,
+ "moments_by_trigger": {
+  "goal": 5,
+  "penalty": 1,
+  "momentum_swing": 5,
+  "connection": 3,
+  "press_change": 7,
+  "shot_cluster": 2,
+  "head_to_head": 3,
+  "big_chance": 1,
+  "workhorse": 1,
+  "red_card": 1,
+  "milestone": 1
+ },
+ "jobs_by_state": {
+  "published": 8,
+  "suppressed": 9,
+  "expired": 14
+ },
+ "terminal_reasons": {
+  "queue_overflow": 3,
+  "merge_into": 2,
+  "stale": 4
+ },
+ "model_jobs": 21,
+ "deliveries": {
+  "player_tag:sent": 56,
+  "overlay:sent": 125,
+  "overlay:expired": 297,
+  "recap:sent": 28
+ },
+ "sent_cards": {
+  "verified": 10,
+  "template": 115
+ },
+ "player_tags": 14,
+ "model_calls": {
+  "analyst:ok": 21,
+  "fact_checker:ok": 44,
+  "fact_checker:timeout": 1,
+  "narrator:input_too_large": 3,
+  "narrator:ok": 71,
+  "narrator:timeout": 2,
+  "recap_writer:ok": 3,
+  "spotter:ok": 14,
+  "translator:deadline": 5,
+  "translator:ok": 32,
+  "translator:timeout": 5
+ },
+ "latency_moment_to_send_s": {
+  "all": {
+   "n": 7,
+   "p50": 26,
+   "p95": 31,
+   "max": 31
+  },
+  "model": {
+   "n": 7,
+   "p50": 26,
+   "p95": 31,
+   "max": 31
+  },
+  "template": {
+   "n": 0,
+   "p50": null,
+   "p95": null,
+   "max": null
+  }
+ }
+}

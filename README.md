@@ -172,17 +172,17 @@ match, pause and resume). Costs and budgets: [`infra/specs/costs.md`](infra/spec
 
 ## Tests and CI
 
-| Suite | Tests passing on `main`, 26 Oct (opt-in tests skipped) |
+| Suite | Tests passing on `main`, 27 Oct (opt-in tests skipped) |
 |---|---|
-| Agents | 281 |
+| Agents | 284 |
 | MCP server | 150 (3 skipped) |
 | Stats engine | 76 (1 skipped) |
 | Functions | 20 |
-| Web app | 612 (4 skipped) |
-| Generator | 112 (2 skipped) |
+| Web app | 623 (4 skipped) |
+| Generator | 114 (2 skipped) |
 | Archiver | 5 (2 skipped, need the storage emulators) |
 
-1,256 tests pass in all.
+1,272 tests pass in all.
 
 Python suites run with `uv run pytest` in each folder; the web app with `npx vitest run`. GitHub Actions runs 11 jobs
 on every pull request: ruff and pytest for each changed Python project, web lint, type check and build, Bicep build and lint, a secrets scan, and policy and scope checks ([`.github/workflows/`](.github/workflows)).
