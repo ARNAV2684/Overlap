@@ -127,9 +127,10 @@ From [`infra/specs/costs.md`](../infra/specs/costs.md):
 
 ## Pause and resume
 
-**Paused now** (since the 25 Oct runs): Event Hubs, the Functions plan and both apps, the stats engine, the generator job and
-the model deployment are deleted; Web PubSub is on Free, Cosmos DB on its free 1,000 RU/s, and the web app keeps one
-replica, so the link opens at once. The public link still serves the home page and every replay; the start button is hidden.
+**Live now** (resumed 26 Oct, kept on through judging): the whole pipeline runs and the start button shows. **When
+paused**, Event Hubs, the Functions plan and both apps, the stats engine, the generator job and the model deployment are
+deleted; Web PubSub goes to Free, Cosmos DB to its free 1,000 RU/s, and the web app keeps one replica, so the link still
+serves the home page and every replay with the start button hidden.
 
 **Resume:** set four `azd` values back (`LIVE_PIPELINE=true`, `DEPLOY_MODEL=true`,
 `WEBPUBSUB_SKU=Standard_S1`, `COSMOS_THROUGHPUT=4000`), run `azd provision`, and deploy the Functions zip. Commands:

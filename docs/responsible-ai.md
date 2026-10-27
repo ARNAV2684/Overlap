@@ -101,4 +101,4 @@ rejected ([`evaluation.md`](evaluation.md)).
 - **The model deployment** has a small tokens-per-minute limit and a $25 budget with alerts at 50, 80 and 100 %; at
   100 % the deployment is removed and the site keeps working on templates.
 - **The subscription** has budget alerts at every $25 up to $200; live matches start only from a rate-limited button,
-  and the whole live pipeline is deleted between test windows ([`infra/specs/costs.md`](../infra/specs/costs.md)).
+  and the whole live pipeline can be deleted in one step when judging ends ([`infra/specs/costs.md`](../infra/specs/costs.md)).

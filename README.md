@@ -9,7 +9,7 @@ happens, check every number before it reaches the screen, and write it for the p
 analyst, a club's supporter, a follower of one player, in English, Spanish, Hindi or French.
 
 - **Live link:** https://ca-overlap-web.agreeablestone-46edcfef.swedencentral.azurecontainerapps.io
-  (the Azure pipeline is paused between test windows: replays play and the start button is hidden)
+  (the full Azure pipeline stays live through judging: press **Start a live match** on the home page)
 - **Video:** [Overlap in 2 minutes](https://www.youtube.com/watch?v=o707LHVlM3Q)
 - **Judge's guide:** [`docs/testing.md`](docs/testing.md)
 - **Category:** Best Multi-Agent System ([why seven agents](#why-seven-agents-and-not-one))
