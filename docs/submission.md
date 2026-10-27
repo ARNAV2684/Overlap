@@ -1,8 +1,8 @@
 # Overlap: portal submission text
 
 Ready to paste into the Innovation Studio project page, field by field (section 9 says which section goes where).
-Every number has its source in section 8. Two values are filled in on submission day: the demo video's public URL
-(`[[VIDEO-URL]]`) and the live-match times (`[[LIVE-WINDOWS]]`).
+Every number has its source in section 8. One value is filled in on submission day: the live-match times
+(`[[LIVE-WINDOWS]]`).
 
 ---
 
@@ -69,7 +69,7 @@ All measured on Azure (Sweden Central) or on the evaluation bench; nothing here 
 - **Cards written by the model.** At 20× a whole match takes under 7 minutes, so the agents have seconds per card. Every card says who wrote it: "AI · checked" when gpt-5-mini wrote it and the fact-checker passed it, "Stat line · checked" when a template did. Six full 20× matches on Azure (25–26 Oct) each removed one cause of late model lines: a slow MCP start, one job at a time, a strict numeric check, a breaker that paused the model, and a 15-second deadline. With 25 seconds per card (SYN-3014), 285 cards went out (118 the day before), 42 of them model-written, 29 of 81 in English. The full-time recap is now written by the model: 6 of its 7 lines passed the fact-checker on SYN-3302 (none on 25 Oct).
 - **Single agent versus the full pipeline.** On the same 17 moments on gpt-5-mini, the narrator alone published 65 of 109 lines that no check could tie to the evidence (a value attached to the wrong fact, a score told from the trailing side, a missing unit). The seven agents published none of those: they rewrote 69 lines and replaced the rest with checked stat lines.
 - **Line quality, scored in Foundry.** Azure AI Evaluation on 60 published lines of an Azure match (all 25 model lines and 35 templates): groundedness 98.3%, relevance 91.7%, fluency 100%.
-- **Tests.** 1,272 automated tests pass across the agents, MCP server, stats engine, Functions, archiver, generator and web app, with CI on every pull request.
+- **Tests.** 1,271 automated tests pass across the agents, MCP server, stats engine, Functions, archiver, generator and web app, with CI on every pull request.
 
 ### Responsible AI
 
@@ -205,7 +205,7 @@ Every count and number above, with where it comes from. Checked 25 Oct 2026 agai
 | Pause and resume | five settings | `infra/README.md` "Pause" and "Resume" |
 | In-process MCP | removes a 4–5 s process start per job | `docs/release-readiness.md` (lines 29–35) |
 | CI | workflows `infra.yml`, `pr-checks.yml`, `python.yml`, `web.yml` | `.github/workflows` |
-| Tests | 1,272 passing | Run on `main` at `f8e455a` on 27 Oct: agents 284; MCP 150 (3 skipped); stats 76 (1 skipped); functions 20; generator 114 (2 skipped); archiver 5 (2 skipped, need the storage emulators); web 623 (4 skipped). The same table is in `README.md` |
+| Tests | 1,271 passing | Run on `main` at `0ac714b` on 27 Oct: agents 284; MCP 150 (3 skipped); stats 76 (1 skipped); functions 20; generator 113 (2 skipped); archiver 5 (2 skipped, need the storage emulators); web 623 (4 skipped). The same table is in `README.md` |
 | Model-written share on Azure | 42 of 285 cards on SYN-3014 (29 of 81 in English); 5–16% across the four 25 Oct runs | `docs/evaluation.md`, "Live AI share on Azure"; `agents/evals/results/live-SYN-3014/report.md` |
 | Model-written recap | 6 of 7 recap lines on SYN-3302 (26 Oct); 0 of 7 on SYN-3013 | `agents/evals/results/live-SYN-3302/recap.md`; the recap timeout #114 fixed in `live-SYN-3014/report.md` |
 | League fixtures live | Each live match is the season's next round-robin fixture (10 clubs, 90 fixtures) | `generator/batch.py` (`season_fixture`), `infra/containers/generator.Dockerfile` (`--from-season`) |
@@ -228,7 +228,7 @@ Every count and number above, with where it comes from. Checked 25 Oct 2026 agai
 | Description | Section 3 plus the chosen paragraph from section 5 at the end |
 | Technologies | Section 4 |
 | Category | Best Multi-Agent System (section 5) |
-| Demo video URL | `[[VIDEO-URL]]` (public YouTube or Vimeo, under 2:00) |
+| Demo video URL | https://www.youtube.com/watch?v=o707LHVlM3Q (public YouTube, under 2:00) |
 | Repository URL | https://github.com/ARNAV2684/Overlap |
 | Live URL | https://ca-overlap-web.agreeablestone-46edcfef.swedencentral.azurecontainerapps.io |
 | Testing instructions | Section 6 |
