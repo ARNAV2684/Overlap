@@ -10,7 +10,7 @@ analyst, a club's supporter, a follower of one player, in English, Spanish, Hind
 
 - **Live link:** https://ca-overlap-web.agreeablestone-46edcfef.swedencentral.azurecontainerapps.io
   (the Azure pipeline is paused between test windows: replays play and the start button is hidden)
-- **Video:** coming
+- **Video:** [Overlap in 2 minutes](https://www.youtube.com/watch?v=o707LHVlM3Q)
 - **Judge's guide:** [`docs/testing.md`](docs/testing.md)
 - **Category:** Best Multi-Agent System ([why seven agents](#why-seven-agents-and-not-one))
 
@@ -179,10 +179,10 @@ match, pause and resume). Costs and budgets: [`infra/specs/costs.md`](infra/spec
 | Stats engine | 76 (1 skipped) |
 | Functions | 20 |
 | Web app | 623 (4 skipped) |
-| Generator | 114 (2 skipped) |
+| Generator | 113 (2 skipped) |
 | Archiver | 5 (2 skipped, need the storage emulators) |
 
-1,272 tests pass in all.
+1,271 tests pass in all.
 
 Python suites run with `uv run pytest` in each folder; the web app with `npx vitest run`. GitHub Actions runs 11 jobs
 on every pull request: ruff and pytest for each changed Python project, web lint, type check and build, Bicep build and lint, a secrets scan, and policy and scope checks ([`.github/workflows/`](.github/workflows)).
